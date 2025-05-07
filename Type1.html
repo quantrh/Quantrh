@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IBFT Inquiry Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+    h1 { color: #004080; }
+    textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
+    button { margin: 10px 0; padding: 8px 16px; background-color: #004080; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #003060; }
+    .form-container { background: #fff; padding: 20px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; color: #004080; }
+    fieldset { margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; padding: 10px 15px; }
+    legend { font-weight: bold; padding: 0 5px; }
+    .form-group { display: flex; margin-bottom: 8px; }
+    .form-group label { width: 180px; font-weight: bold; color: #333; }
+    .form-group input { flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; background-color: #eef; }
+  </style>
+</head>
+<body>
+  <h1>IBFT Inquiry Viewer</h1>
+  <textarea id="logInput" placeholder="Dán log request và response vào đây..."></textarea>
+  <button id="renderBtn">Hiển thị</button>
+  <div id="output"></div>
+
+  <script>
+    document.getElementById('renderBtn').addEventListener('click', function() {
+      const input = document.getElementById('logInput').value;
+      if (!input.trim()) {
+        alert('Vui lòng dán log trước khi hiển thị.');
+        return;
+      }
+
+      // Tách phần Request và Response dựa vào dòng gồm >=6 dấu '='
+      const sections = input.split(/^={6,}$/m);
+      const reqSection = sections[0] ? sections[0].trim() : '';
+      const resSection = sections[1] ? sections[1].trim() : '';
+
+      function extract(section) {
+        const lines = section.split(/\r?\n/);
+        const tsMatch = lines[0].match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+)/);
+        const timestamp = tsMatch ? tsMatch[1] : '';
+        const xmlStart = section.indexOf('<?xml');
+        const xml = xmlStart >= 0 ? section.substring(xmlStart) : lines.slice(1).join('\n');
+        return { timestamp, xml };
+      }
+
+      const req = extract(reqSection);
+      const res = extract(resSection);
+
+      function parseXml(xmlStr) {
+        return new DOMParser().parseFromString(xmlStr, 'application/xml');
+      }
+      const reqDoc = parseXml(req.xml);
+      const resDoc = parseXml(res.xml);
+
+      function getText(doc, tag) {
+        const el = doc.getElementsByTagNameNS('*', tag)[0];
+        return el ? el.textContent.trim() : '';
+      }
+
+      const requestData = {
+        BusinessDomain: getText(reqDoc, 'BusinessDomain'),
+        ServiceVersion: getText(reqDoc, 'ServiceVersion'),
+        MessageId: getText(reqDoc, 'MessageId'),
+        MessageTimestamp: getText(reqDoc, 'MessageTimestamp'),
+        SourceAppID: getText(reqDoc, 'SourceAppID'),
+        Channel: getText(reqDoc, 'Channel'),
+        Branch: getText(reqDoc, 'Branch'),
+        SenderPan: getText(reqDoc, 'SenderPan'),
+        TransAmount: getText(reqDoc, 'TransAmount'),
+        TransDateTime: getText(reqDoc, 'TransDateTime'),
+        SystemTrace: getText(reqDoc, 'SystemTrace'),
+        LocalTime: getText(reqDoc, 'LocalTime'),
+        LocalDate: getText(reqDoc, 'LocalDate'),
+        CardAcceptTermIden: getText(reqDoc, 'CardAcceptTermIden'),
+        CardAcceptTermCode: getText(reqDoc, 'CardAcceptTermCode'),
+        CardAcceptName: getText(reqDoc, 'CardAcceptName'),
+        ReceiverPan: getText(reqDoc, 'ReceiverPan'),
+        TransDesc: getText(reqDoc, 'TransDesc'),
+        Language: getText(reqDoc, 'Language')
+      };
+
+      const responseData = {
+        Status: getText(resDoc, 'Status'),
+        GlobalErrorCode: getText(resDoc, 'GlobalErrorCode'),
+        GlobalErrorDescription: getText(resDoc, 'GlobalErrorDescription'),
+        ErrorCode: getText(resDoc, 'ErrorCode'),
+        ErrorDesc: getText(resDoc, 'ErrorDesc'),
+        TransAmount: getText(resDoc, 'TransAmount'),
+        BIDVAmount: getText(resDoc, 'BIDVAmount'),
+        AvailableBalance: getText(resDoc, 'AvailableBalance'),
+        RetrievalRefNum: getText(resDoc, 'RetrievalRefNum'),
+        ReceiverInstIdenName: getText(resDoc, 'ReceiverInstIdenName'),
+        SenderName: getText(resDoc, 'SenderName')
+      };
+
+      let out = '';
+      out += '<div class="form-container">';
+      out += `<h2>Request IBFT Inquiry</h2><p><em>Timestamp:</em> ${req.timestamp}</p>`;
+      out += '<form>';
+      out += '<fieldset><legend>Common Header</legend>';
+      ['BusinessDomain','ServiceVersion','MessageId','MessageTimestamp'].forEach(key => {
+        out += `<div class="form-group"><label>${key}:</label><input type="text" value="${requestData[key]}" readonly></div>`;
+      });
+      out += '</fieldset>';
+      out += '<fieldset><legend>Client</legend>';
+      out += `<div class="form-group"><label>SourceAppID:</label><input type="text" value="${requestData.SourceAppID}" readonly></div>`;
+      out += '</fieldset>';
+      out += '<fieldset><legend>Body Request</legend>';
+      ['Channel','Branch','SenderPan','TransAmount','TransDateTime','SystemTrace','LocalTime','LocalDate','CardAcceptTermIden','CardAcceptTermCode','CardAcceptName','ReceiverPan','TransDesc','Language'].forEach(key => {
+        out += `<div class="form-group"><label>${key}:</label><input type="text" value="${requestData[key]}" readonly></div>`;
+      });
+      out += '</fieldset></form></div>';
+
+      out += '<div class="form-container">';
+      out += `<h2>Response IBFT Inquiry</h2><p><em>Timestamp:</em> ${res.timestamp}</p>`;
+      out += '<form>';
+      out += '<fieldset><legend>Response Status</legend>';
+      ['Status','GlobalErrorCode','GlobalErrorDescription','ErrorCode','ErrorDesc'].forEach(key => {
+        out += `<div class="form-group"><label>${key}:</label><input type="text" value="${responseData[key]}" readonly></div>`;
+      });
+      out += '</fieldset>';
+      out += '<fieldset><legend>Body Response</legend>';
+      ['TransAmount','BIDVAmount','AvailableBalance','RetrievalRefNum','ReceiverInstIdenName','SenderName'].forEach(key => {
+        out += `<div class="form-group"><label>${key}:</label><input type="text" value="${responseData[key]}" readonly></div>`;
+      });
+      out += '</fieldset></form></div>';
+
+      document.getElementById('output').innerHTML = out;
+    });
+  </script>
+</body>
+</html>
