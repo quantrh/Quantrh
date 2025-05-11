@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Đặt phòng họp - BIDV</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h1><img src="logo.png" alt="BIDV" style="width:100px;"/></h1>
+      <button onclick="showTab('calendar')">📅 Lịch họp</button>
+      <button onclick="showTab('parameters')">⚙️ Tham số</button>
+      <hr/>
+      <p>Bộ lọc:</p>
+      <select id="filterRoom" onchange="loadReservations()">
+        <option value="">Tất cả phòng</option>
+      </select>
+      <select id="filterTeam" onchange="loadReservations()">
+        <option value="">Tất cả nhóm</option>
+      </select>
+    </div>
+    <div class="main-content">
+      <!-- Tab: Lịch họp -->
+      <div id="tab-calendar">
+        <h2>Lịch họp</h2>
+        <input type="date" id="selectedDate" onchange="loadReservations()"/>
+        <div id="reservationForm" style="margin:1em 0; padding:1em; background:#e8f5e9; border-radius:8px;">
+          <h3>Đặt lịch mới</h3>
+          <select id="roomSelect"><option value="">Chọn phòng</option></select>
+          <select id="teamSelect"><option value="">Chọn nhóm</option></select>
+          <input type="time" id="startTime"/>
+          <input type="time" id="endTime"/>
+          <input type="text" id="purpose" placeholder="Nội dung cuộc họp"/>
+          <button onclick="addReservation()">Đặt lịch</button>
+        </div>
+        <div id="calendarView"></div>
+      </div>
+
+      <!-- Tab: Quản lý tham số -->
+      <div id="tab-parameters" style="display:none;">
+        <h2>Quản lý tham số</h2>
+        <div class="subtabs">
+          <button onclick="showSubTab('rooms')">🏢 Phòng họp</button>
+          <button onclick="showSubTab('teams')">👥 Nhóm làm việc</button>
+        </div>
+        
+        <!-- Subtab: Phòng họp -->
+        <div id="subtab-rooms">
+          <h3>Phòng họp</h3>
+          <input id="roomName" placeholder="Tên phòng"/>
+          <input id="roomLocation" placeholder="Vị trí"/>
+          <button onclick="addRoom()">Thêm phòng</button>
+          <table border="1" width="100%">
+            <thead><tr><th>Tên</th><th>Vị trí</th><th>Sửa</th><th>Xóa</th></tr></thead>
+            <tbody id="roomTable"></tbody>
+          </table>
+        </div>
+        
+        <!-- Subtab: Nhóm làm việc -->
+        <div id="subtab-teams" style="display:none;">
+          <h3>Nhóm làm việc</h3>
+          <input id="teamName" placeholder="Tên nhóm"/>
+          <select id="teamType">
+            <option value="nội bộ">Nội bộ</option>
+            <option value="bên ngoài">Bên ngoài</option>
+          </select>
+          <button onclick="addTeam()">Thêm nhóm</button>
+          <table border="1" width="100%">
+            <thead><tr><th>Tên</th><th>Loại</th><th>Sửa</th><th>Xóa</th></tr></thead>
+            <tbody id="teamTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
