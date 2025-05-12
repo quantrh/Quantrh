@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Biên Tập Tài Liệu Trợ Giúp</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --light-bg: #f3f4f6;
+            --dark-bg: #1f2937;
+            --light-text: #f9fafb;
+            --dark-text: #111827;
+            --border-light: #e5e7eb;
+            --border-dark: #374151;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+        
+        .dark-mode {
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .dark-mode header {
+            background-color: #111827;
+            border-bottom: 1px solid var(--border-dark);
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f3f4f6;
+        }
+        
+        button:hover {
+            background-color: #e5e7eb;
+        }
+        
+        .dark-mode button {
+            background-color: #374151;
+            color: white;
+        }
+        
+        .dark-mode button:hover {
+            background-color: #4b5563;
+        }
+        
+        .active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .dark-mode .active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .main {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-light);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .dark-mode .sidebar {
+            background-color: #111827;
+            border-right: 1px solid var(--border-dark);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .dark-mode .sidebar h2 {
+            border-bottom: 1px solid var(--border-dark);
+        }
+        
+        .document-list {
+            list-style: none;
+        }
+        
+        .document-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .document-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .dark-mode .document-item:hover {
+            background-color: #374151;
+        }
+        
+        .document-item.selected {
+            background-color: #e5e7eb;
+        }
+        
+        .dark-mode .document-item.selected {
+            background-color: #4b5563;
+        }
+        
+        .document-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .document-date {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .dark-mode .document-date {
+            color: #9ca3af;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .editor {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .preview {
+            flex: 1;
+            padding: 20px;
+            background-color: white;
+            border-left: 1px solid var(--border-light);
+            overflow-y: auto;
+        }
+        
+        .dark-mode .preview {
+            background-color: #111827;
+            border-left: 1px solid var(--border-dark);
+        }
+        
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        
+        .editor-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .dark-mode .editor-input {
+            background-color: #374151;
+            border: 1px solid var(--border-dark);
+            color: white;
+        }
+        
+        textarea.editor-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .dark-mode .section {
+            background-color: #1f2937;
+            border: 1px solid var(--border-dark);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .section-title {
+            padding: 5px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background-color: #f9fafb;
+        }
+        
+        .dark-mode .section-title {
+            background-color: #374151;
+            border: 1px solid var(--border-dark);
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .add-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .table-of-contents {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border-radius: 4px;
+        }
+        
+        .dark-mode .table-of-contents {
+            background-color: #374151;
+        }
+        
+        .toc-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .toc-list {
+            list-style-position: inside;
+            margin-left: 10px;
+        }
+        
+        .toc-item {
+            margin-bottom: 5px;
+        }
+        
+        .toc-link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .toc-link:hover {
+            text-decoration: underline;
+        }
+        
+        .callout {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border-left-width: 4px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .callout-info {
+            background-color: #eff6ff;
+            border-left-color: #3b82f6;
+        }
+        
+        .callout-warning {
+            background-color: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+        
+        .callout-tip {
+            background-color: #ecfdf5;
+            border-left-color: #10b981;
+        }
+        
+        .callout-note {
+            background-color: #f3f4f6;
+            border-left-color: #6b7280;
+        }
+        
+        .dark-mode .callout-info {
+            background-color: #1e3a8a;
+            border-left-color: #3b82f6;
+        }
+        
+        .dark-mode .callout-warning {
+            background-color: #78350f;
+            border-left-color: #f59e0b;
+        }
+        
+        .dark-mode .callout-tip {
+            background-color: #064e3b;
+            border-left-color: #10b981;
+        }
+        
+        .dark-mode .callout-note {
+            background-color: #374151;
+            border-left-color: #9ca3af;
+        }
+        
+        .callout-icon {
+            margin-right: 10px;
+        }
+        
+        .callout-content {
+            flex: 1;
+        }
+        
+        .callout-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: capitalize;
+        }
+        
+        .steps-list {
+            list-style: none;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #e0f2fe;
+            color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .dark-mode .step-number {
+            background-color: #075985;
+            color: #e0f2fe;
+        }
+        
+        .step-input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+        }
+        
+        .dark-mode .step-input {
+            background-color: #374151;
+            border: 1px solid var(--border-dark);
+            color: white;
+        }
+        
+        .document-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .dark-mode .document-footer {
+            border-top: 1px solid var(--border-dark);
+            color: #9ca3af;
+        }
+        
+        .status-bar {
+            padding: 10px 15px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .dark-mode .status-bar {
+            background-color: #111827;
+            border-top: 1px solid var(--border-dark);
+        }
+        
+        .saved-message {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Công Cụ Biên Tập Tài Liệu Trợ Giúp</div>
+        <div class="toolbar">
+            <button id="editor-btn" class="active" title="Chế độ biên tập">✏️ Biên tập</button>
+            <button id="preview-btn" title="Chế độ xem trước">👁️ Xem trước</button>
+            <button id="split-btn" title="Chế độ chia đôi">⊞ Chia đôi</button>
+            <button id="save-btn" title="Lưu tài liệu">💾 Lưu</button>
+            <button id="dark-mode-btn" title="Chuyển đổi chế độ tối/sáng">🌓</button>
+        </div>
+    </header>
+    
+    <div class="main">
+        <div class="sidebar">
+            <h2>Tài liệu</h2>
+            <ul class="document-list">
+                <li class="document-item selected">
+                    <div class="document-title">Bắt đầu với Sản phẩm X</div>
+                    <div class="document-date">Cập nhật: 13/05/2025</div>
+                </li>
+                <li class="document-item">
+                    <div class="document-title">Hướng dẫn cài đặt</div>
+                    <div class="document-date">Cập nhật: 10/05/2025</div>
+                </li>
+                <li class="document-item">
+                    <div class="document-title">Xử lý sự cố thường gặp</div>
+                    <div class="document-date">Cập nhật: 05/05/2025</div>
+                </li>
+            </ul>
+            <button style="width: 100%; margin-top: 15px;">+ Tài liệu mới</button>
+        </div>
+        
+        <div class="content-area">
+            <div class="editor">
+                <input type="text" class="editor-input" value="Bắt đầu với Sản phẩm X" placeholder="Tiêu đề tài liệu">
+                
+                <div class="tab-navigation">
+                    <button class="active">Nội dung</button>
+                    <button>Mẫu</button>
+                    <button>Thành phần</button>
+                    <button>Sắp xếp</button>
+                    <button>Xuất bản</button>
+                </div>
+                
+                <textarea class="editor-input" placeholder="Mô tả tài liệu">Học cách thiết lập và sử dụng các tính năng cơ bản của Sản phẩm X</textarea>
+                
+                <h3 style="margin-bottom: 15px;">Các phần</h3>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <input type="text" class="section-title" value="Giới thiệu">
+                        <div class="section-actions">
+                            <button>🔼</button>
+                            <button>🔽</button>
+                            <button style="color: #ef4444;">🗑️</button>
+                        </div>
+                    </div>
+                    <textarea class="editor-input">Chào mừng đến với Sản phẩm X! Hướng dẫn này sẽ giúp bạn bắt đầu với các tính năng cơ bản.</textarea>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <input type="text" class="section-title" value="Cài đặt">
+                        <div class="section-actions">
+                            <button>🔼</button>
+                            <button>🔽</button>
+                            <button style="color: #ef4444;">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <input type="text" class="step-input" value="Tải trình cài đặt từ trang web của chúng tôi">
+                            <button style="color: #ef4444; margin-left: 5px;">❌</button>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <input type="text" class="step-input" value="Chạy trình cài đặt và làm theo hướng dẫn">
+                            <button style="color: #ef4444; margin-left: 5px;">❌</button>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <input type="text" class="step-input" value="Khởi chạy ứng dụng từ máy tính hoặc menu Start">
+                            <button style="color: #ef4444; margin-left: 5px;">❌</button>
+                        </div>
+                    </div>
+                    <button style="color: #3b82f6; margin-top: 10px;">+ Thêm bước</button>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <input type="text" class="section-title" value="Lưu ý quan trọng">
+                        <div class="section-actions">
+                            <button>🔼</button>
+                            <button>🔽</button>
+                            <button style="color: #ef4444;">🗑️</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <select style="padding: 5px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                            <option value="info">Thông tin</option>
+                            <option value="warning">Cảnh báo</option>
+                            <option value="tip">Mẹo</option>
+                            <option value="note">Ghi chú</option>
+                        </select>
+                    </div>
+                    <textarea class="editor-input">Đảm bảo bạn có quyền quản trị trước khi cài đặt.</textarea>
+                </div>
+                
+                <div class="add-buttons">
+                    <button>+ Thêm phần văn bản</button>
+                    <button>+ Thêm các bước</button>
+                    <button>+ Thêm ghi chú</button>
+                </div>
+            </div>
+            
+            <div class="preview" style="display: none;">
+                <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 15px;">Bắt đầu với Sản phẩm X</h1>
+                <p style="font-size: 16px; margin-bottom: 20px;">Học cách thiết lập và sử dụng các tính năng cơ bản của Sản phẩm X</p>
+                
+                <div class="table-of-contents">
+                    <div class="toc-title">Mục lục</div>
+                    <ul class="toc-list">
+                        <li class="toc-item"><a href="#section-0" class="toc-link">Giới thiệu</a></li>
+                        <li class="toc-item"><a href="#section-1" class="toc-link">Cài đặt</a></li>
+                        <li class="toc-item"><a href="#section-2" class="toc-link">Lưu ý quan trọng</a></li>
+                    </ul>
+                </div>
+                
+                <div id="section-0" style="margin-bottom: 20px;">
+                    <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Giới thiệu</h2>
+                    <p>Chào mừng đến với Sản phẩm X! Hướng dẫn này sẽ giúp bạn bắt đầu với các tính năng cơ bản.</p>
+                </div>
+                
+                <div id="section-1" style="margin-bottom: 20px;">
+                    <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Cài đặt</h2>
+                    <ol style="list-style-position: inside; margin-left: 15px;">
+                        <li style="margin-bottom: 10px;"><span>Tải trình cài đặt từ trang web của chúng tôi</span></li>
+                        <li style="margin-bottom: 10px;"><span>Chạy trình cài đặt và làm theo hướng dẫn</span></li>
+                        <li style="margin-bottom: 10px;"><span>Khởi chạy ứng dụng từ máy tính hoặc menu Start</span></li>
+                    </ol>
+                </div>
+                
+                <div id="section-2" style="margin-bottom: 20px;">
+                    <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Lưu ý quan trọng</h2>
+                    <div class="callout callout-info">
+                        <div class="callout-icon">ℹ️</div>
+                        <div class="callout-content">
+                            <div class="callout-title">Thông tin</div>
+                            <div>Đảm bảo bạn có quyền quản trị trước khi cài đặt.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="document-footer">
+                    <div>Cập nhật lần cuối: 13/05/2025</div>
+                    <div>Phiên bản: 1.0.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <div>3 phần</div>
+        <div class="saved-message" id="saved-message"></div>
+    </div>
+    
+    <script>
+        // Chức năng cơ bản
+        const editorBtn = document.getElementById('editor-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const splitBtn = document.getElementById('split-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const darkModeBtn = document.getElementById('dark-mode-btn');
+        const editor = document.querySelector('.editor');
+        const preview = document.querySelector('.preview');
+        const savedMessage = document.getElementById('saved-message');
+        
+        // Thay đổi chế độ xem
+        editorBtn.addEventListener('click', () => {
+            editorBtn.classList.add('active');
+            previewBtn.classList.remove('active');
+            splitBtn.classList.remove('active');
+            editor.style.display = 'block';
+            preview.style.display = 'none';
+            editor.style.width = '100%';
+        });
+        
+        previewBtn.addEventListener('click', () => {
+            editorBtn.classList.remove('active');
+            previewBtn.classList.add('active');
+            splitBtn.classList.remove('active');
+            editor.style.display = 'none';
+            preview.style.display = 'block';
+            preview.style.width = '100%';
+        });
+        
+        splitBtn.addEventListener('click', () => {
+            editorBtn.classList.remove('active');
+            previewBtn.classList.remove('active');
+            splitBtn.classList.add('active');
+            editor.style.display = 'block';
+            preview.style.display = 'block';
+            editor.style.width = '50%';
+            preview.style.width = '50%';
+        });
+        
+        // Lưu tài liệu
+        saveBtn.addEventListener('click', () => {
+            savedMessage.textContent = 'Đã lưu tài liệu!';
+            setTimeout(() => {
+                savedMessage.textContent = '';
+            }, 3000);
+        });
+        
+        // Chế độ tối
+        darkModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
