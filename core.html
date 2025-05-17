@@ -1160,129 +1160,166 @@
 
         // Event listener for PDF export button
         exportPdfBtn.addEventListener('click', async () => {
-             loadingIndicator.style.display = 'flex'; // Show loading indicator
-             exportPdfBtn.disabled = true; // Disable button during export
+    loadingIndicator.style.display = 'flex'; // Show loading indicator
+    exportPdfBtn.disabled = true; // Disable button during export
 
-            const input = document.getElementById('performance-dashboard');
-
-            try {
-                // Clone the element to avoid modifying the live DOM during capture
-                const inputClone = input.cloneNode(true);
-                // Remove elements that should not be in the PDF, e.g., buttons
-                inputClone.querySelector('.tab-buttons').remove(); // Remove tab buttons row
-                inputClone.querySelector('#export-pdf-btn').remove(); // Remove the export button itself
-
-
-                 // Temporarily show all views in the clone for capture
-                 inputClone.querySelector('#online-view').style.display = 'block';
-                 inputClone.querySelector('#eod-view').style.display = 'block';
-                 inputClone.querySelector('#key-changes-view').style.display = 'block'; // Show Key Changes view in clone
-                 inputClone.querySelector('#table-view').style.display = 'block';
-
-                 // Ensure utilization chart is visible in the clone if checked in the original view
-                 const originalUtilizationCheckbox = document.getElementById('utilization-checkbox');
-                 if (originalUtilizationCheckbox.checked) {
-                     inputClone.querySelector('#utilization-chart-section').style.display = 'block';
-                 } else {
-                     inputClone.querySelector('#utilization-chart-section').style.display = 'none';
-                 }
-
-                 // Ensure all key changes details are visible in the clone for capture
-                 inputClone.querySelectorAll('#key-changes-view .key-changes-details').forEach(detail => detail.style.display = 'block');
-
-
-                 // Temporarily append clone to body to ensure styles are applied
-                 document.body.appendChild(inputClone);
-
-                // Render charts in the cloned element before capturing
-                 const ctxTpsFinClone = inputClone.querySelector('#tpsFinChart').getContext('2d');
-                 new Chart(ctxTpsFinClone, tpsFinChartConfig);
-
-                 const ctxTpsNonFinClone = inputClone.querySelector('#tpsNonFinChart').getContext('2d');
-                 new Chart(ctxTpsNonFinClone, tpsNonFinChartConfig);
-
-                 const ctxResponseTimeClone = inputClone.querySelector('#responseTimeChart').getContext('2d');
-                 new Chart(ctxResponseTimeClone, responseTimeChartConfig);
-
-                 const ctxEodClone = inputClone.querySelector('#eodChart').getContext('2d');
-                 new Chart(ctxEodClone, eodChartConfig);
-
-                 const ctxTransactionVolumeClone = inputClone.querySelector('#transactionVolumeChart').getContext('2d');
-                 new Chart(ctxTransactionVolumeClone, transactionVolumeChartConfig);
-
-                 const ctxCustomerGrowthClone = inputClone.querySelector('#customerGrowthChart').getContext('2d');
-                 new Chart(ctxCustomerGrowthClone, customerGrowthChartConfig);
-
-                 const keyChangesPieCanvasClone = inputClone.querySelector('#keyChangesPieChart');
-                 if (keyChangesPieCanvasClone) {
-                      const ctxKeyChangesPieClone = keyChangesPieCanvasClone.getContext('2d');
-                      new Chart(ctxKeyChangesPieClone, keyChangesPieChartConfig);
-                 }
-
-
-                 if (originalUtilizationCheckbox.checked) {
-                     const ctxUtilizationClone = inputClone.querySelector('#utilizationChart').getContext('2d');
-                     new Chart(ctxUtilizationClone, utilizationChartConfig);
-                 }
-
-                 // Render table in the cloned element
-                 const tableBodyClone = inputClone.querySelector('#performance-table tbody');
-                 tableBodyClone.innerHTML = ''; // Clear existing rows
-                 // Iterate through performanceData (Golive, Y1, Y2) to build rows for the clone
-                 performanceData.forEach((rowData, index) => {
-                    const row = tableBodyClone.insertRow();
-                    row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                    row.insertCell().textContent = rowData.name;
-                    row.insertCell().textContent = rowData.tpsFin;
-                    row.insertCell().textContent = rowData.tpsNonFin;
-                    row.insertCell().textContent = utilizationData[index].nonFinUtilizationRate + '%'; // Use calculated utilization
-                    row.insertCell().textContent = rowData.tpsFinCapacity;
-                    row.insertCell().textContent = rowData.responseTime;
-                    row.insertCell().textContent = rowData.eod;
-                    row.insertCell().textContent = utilizationData[index].utilizationRate + '%'; // Use calculated utilization
-                    row.insertCell().textContent = utilizationData[index].nonFinUtilizationRate + '%'; // Use calculated non-fin utilization
-                    row.insertCell().textContent = rowData.transactionVolume;
-                     row.insertCell().textContent = utilizationData[index].transactionVolumeGrowth !== null ? utilizationData[index].transactionVolumeGrowth + '%' : '-';
-                     const customerDataForYear = customerData.find(customerItem => customerItem.name === rowData.name); // Use customerData here
-                     row.insertCell().textContent = customerDataForYear ? customerDataForYear.count : '-'; // Customer Count
-                     const customerGrowthForYear = customerGrowthData.find(customerItem => customerItem.name === rowData.name); // Use customerGrowthData here
-                     row.insertCell().textContent = customerGrowthForYear && customerGrowthForYear.growthRate !== null ? customerGrowthForYear.growthRate + '%' : '-'; // Customer Growth Rate
-                });
-
-
-                const canvas = await html2canvas(inputClone, { scale: 2 });
-                const imgData = canvas.toDataURL('image/png');
-
-                // Remove the clone from the body
-                document.body.removeChild(inputClone);
-
-
-                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
-                const imgWidth = 210;
-                const pageHeight = 297;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-
-                pdf.save('core-banking-performance.pdf');
-            } catch (error) {
-                console.error("Error during PDF export:", error);
-                alert("Failed to export PDF. Please try again."); // Simple error notification
-            } finally {
-                 loadingIndicator.style.display = 'none'; // Hide loading indicator
-                 exportPdfBtn.disabled = false; // Re-enable button
-            }
+    try {
+        // Clone the dashboard container
+        const dashboardContainer = document.getElementById('performance-dashboard');
+        const cloneContainer = dashboardContainer.cloneNode(true);
+        
+        // Thiết lập style cho clone để có thể render tốt hơn
+        cloneContainer.style.width = '960px'; // Đặt chiều rộng cố định
+        cloneContainer.style.padding = '20px';
+        cloneContainer.style.backgroundColor = '#ffffff';
+        cloneContainer.style.position = 'absolute';
+        cloneContainer.style.left = '-9999px'; // Di chuyển ra khỏi viewport nhưng vẫn trong DOM
+        cloneContainer.style.top = '0';
+        
+        // Loại bỏ các phần không cần thiết trong PDF
+        cloneContainer.querySelector('.tab-buttons').remove();
+        const exportBtn = cloneContainer.querySelector('#export-pdf-btn');
+        if (exportBtn) exportBtn.remove();
+        
+        // Hiển thị tất cả các view trong bản sao
+        const onlineViewClone = cloneContainer.querySelector('#online-view');
+        const eodViewClone = cloneContainer.querySelector('#eod-view');
+        const keyChangesViewClone = cloneContainer.querySelector('#key-changes-view');
+        const fisIssuesViewClone = cloneContainer.querySelector('#fis-issues-view');
+        const tableViewClone = cloneContainer.querySelector('#table-view');
+        
+        // Hiển thị tất cả các phần
+        if (onlineViewClone) onlineViewClone.style.display = 'block';
+        if (eodViewClone) eodViewClone.style.display = 'block';
+        if (keyChangesViewClone) keyChangesViewClone.style.display = 'block';
+        if (fisIssuesViewClone) fisIssuesViewClone.style.display = 'block';
+        if (tableViewClone) tableViewClone.style.display = 'block';
+        
+        // Đảm bảo phần utilization chart hiển thị nếu được chọn
+        const utilizationCheckbox = document.getElementById('utilization-checkbox');
+        const utilizationChartSectionClone = cloneContainer.querySelector('#utilization-chart-section');
+        if (utilizationChartSectionClone) {
+            utilizationChartSectionClone.style.display = utilizationCheckbox.checked ? 'block' : 'none';
+        }
+        
+        // Đảm bảo tất cả các chi tiết của key changes đều hiển thị
+        const keyChangesDetailsClone = cloneContainer.querySelectorAll('.key-changes-details');
+        keyChangesDetailsClone.forEach(detail => {
+            detail.style.display = 'block';
         });
+        
+        // Thêm clone vào body
+        document.body.appendChild(cloneContainer);
+        
+        // Render bảng dữ liệu
+        const tableBodyClone = cloneContainer.querySelector('#performance-table tbody');
+        if (tableBodyClone) {
+            tableBodyClone.innerHTML = '';
+            performanceData.forEach((rowData, index) => {
+                const row = tableBodyClone.insertRow();
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                
+                row.insertCell().textContent = rowData.name;
+                row.insertCell().textContent = rowData.tpsFin;
+                row.insertCell().textContent = rowData.tpsNonFin;
+                row.insertCell().textContent = rowData.tpsNonFinCapacity;
+                row.insertCell().textContent = rowData.tpsFinCapacity;
+                row.insertCell().textContent = rowData.responseTime;
+                row.insertCell().textContent = rowData.eod;
+                row.insertCell().textContent = utilizationData[index].utilizationRate + '%';
+                row.insertCell().textContent = utilizationData[index].nonFinUtilizationRate + '%';
+                row.insertCell().textContent = rowData.transactionVolume;
+                
+                const customerDataForYear = customerData.find(item => item.name === rowData.name);
+                row.insertCell().textContent = customerDataForYear ? customerDataForYear.count : '-';
+                
+                const customerGrowthForYear = customerGrowthData.find(item => item.name === rowData.name);
+                row.insertCell().textContent = customerGrowthForYear && customerGrowthForYear.growthRate !== null ? 
+                    customerGrowthForYear.growthRate + '%' : '-';
+            });
+        }
+        
+        // Tạo và vẽ các biểu đồ mới trong clone
+        const canvasIds = [
+            'tpsFinChart', 'tpsNonFinChart', 'responseTimeChart', 'transactionVolumeChart', 
+            'customerGrowthChart', 'utilizationChart', 'eodChart', 'keyChangesPieChart'
+        ];
+        
+        const chartConfigs = [
+            tpsFinChartConfig, tpsNonFinChartConfig, responseTimeChartConfig, transactionVolumeChartConfig,
+            customerGrowthChartConfig, utilizationChartConfig, eodChartConfig, keyChangesPieChartConfig
+        ];
+        
+        // Tạo tất cả các biểu đồ trong clone
+        const chartInstances = [];
+        for (let i = 0; i < canvasIds.length; i++) {
+            const canvasClone = cloneContainer.querySelector(`#${canvasIds[i]}`);
+            if (canvasClone) {
+                const ctx = canvasClone.getContext('2d');
+                const chart = new Chart(ctx, chartConfigs[i]);
+                chartInstances.push(chart);
+            }
+        }
+        
+        // Chờ các biểu đồ render xong
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Chụp với html2canvas
+        const canvas = await html2canvas(cloneContainer, {
+            scale: 2,
+            allowTaint: true,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        });
+        
+        // Xóa đối tượng clone khỏi DOM
+        document.body.removeChild(cloneContainer);
+        
+        // Hủy các biểu đồ để tránh rò rỉ bộ nhớ
+        chartInstances.forEach(chart => chart.destroy());
+        
+        // Chuyển đổi canvas thành dữ liệu hình ảnh
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Tạo PDF với nhiều trang nếu cần
+        const pdf = new window.jspdf.jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        const imgWidth = 190; // Giảm chiều rộng để có lề
+        const pageHeight = 280; // Giảm chiều cao để có lề
+        const margin = 10; // Lề 10mm
+        
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = margin; // Bắt đầu từ lề trên
+        
+        // Thêm trang đầu tiên
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        // Thêm các trang bổ sung nếu cần
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight + margin;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        // Lưu PDF
+        pdf.save('core-banking-performance.pdf');
+        
+    } catch (error) {
+        console.error("Error during PDF export:", error);
+        alert("Failed to export PDF. Please try again: " + error.message);
+    } finally {
+        loadingIndicator.style.display = 'none';
+        exportPdfBtn.disabled = false;
+    }
+});
 
 
         // Initial render on page load
