@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sony TV Remote Controller</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2);
+            border: 1px solid #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00a8ff;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .status.connected {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+        .status.disconnected {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        .settings {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            margin: 2px;
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, #0088ff, #0066cc);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #0099ff, #0077dd);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: linear-gradient(145deg, #666, #555);
+            color: white;
+        }
+        .remote-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .power-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .power-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            transition: all 0.2s;
+        }
+        .power-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        .nav-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-btn:hover {
+            background: linear-gradient(145deg, #3d566e, #34495e);
+            transform: translateY(-1px);
+        }
+        .ok-btn {
+            background: linear-gradient(145deg, #27ae60, #219a52) !important;
+            font-weight: bold;
+        }
+        .volume-section, .channel-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .vol-ch-btn {
+            padding: 12px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #7f8c8d, #6c7b7d);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .vol-ch-btn:hover {
+            background: linear-gradient(145deg, #8d9a9b, #7f8c8d);
+        }
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .num-btn {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .num-btn:hover {
+            background: linear-gradient(145deg, #3d566e, #34495e);
+            transform: translateY(-1px);
+        }
+        .function-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .func-btn {
+            padding: 10px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #8e44ad, #7d3c98);
+            border: none;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .func-btn:hover {
+            background: linear-gradient(145deg, #9b59b6, #8e44ad);
+        }
+        .color-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .color-btn {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-btn.red { background: linear-gradient(145deg, #e74c3c, #c0392b); }
+        .color-btn.green { background: linear-gradient(145deg, #27ae60, #219a52); }
+        .color-btn.yellow { background: linear-gradient(145deg, #f39c12, #d68910); }
+        .color-btn.blue { background: linear-gradient(145deg, #3498db, #2980b9); }
+        .scan-result {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #444;
+            border-radius: 50%;
+            border-top-color: #0088ff;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">SONY TV Remote</div>
+            <div id="status" class="status disconnected">Chưa kết nối</div>
+        </div>
+
+        <div class="settings">
+            <div class="input-group">
+                <label>IP Address TV:</label>
+                <input type="text" id="tvIP" placeholder="192.168.1.100" value="">
+            </div>
+            <div class="input-group">
+                <label>PSK (Pre-Shared Key):</label>
+                <input type="password" id="tvPSK" placeholder="0000" value="">
+            </div>
+            <button class="btn btn-primary" onclick="scanForTV()">
+                <span id="scanBtn">🔍 Quét TV</span>
+            </button>
+            <button class="btn btn-primary" onclick="connectTV()">Kết nối</button>
+            <button class="btn btn-secondary" onclick="saveSettings()">Lưu cài đặt</button>
+        </div>
+
+        <div id="scanResults"></div>
+
+        <div class="remote-grid">
+            <div class="power-section">
+                <button class="power-btn" onclick="sendCommand('Power',this)" title="Power">⏻</button>
+            </div>
+
+            <div class="nav-section">
+                <button class="nav-btn" onclick="sendCommand('Up',this)" title="Lên">▲</button>
+                <div></div>
+                <button class="nav-btn" onclick="sendCommand('Up',this)" title="Lên">▲</button>
+                
+                <button class="nav-btn" onclick="sendCommand('Left',this)" title="Trái">◀</button>
+                <button class="nav-btn ok-btn" onclick="sendCommand('Confirm',this)" title="OK">OK</button>
+                <button class="nav-btn" onclick="sendCommand('Right',this)" title="Phải">▶</button>
+                
+                <button class="nav-btn" onclick="sendCommand('Down',this)" title="Xuống">▼</button>
+                <div></div>
+                <button class="nav-btn" onclick="sendCommand('Down',this)" title="Xuống">▼</button>
+            </div>
+
+            <div class="volume-section">
+                <button class="vol-ch-btn" onclick="sendCommand('VolumeUp',this)">Vol +</button>
+                <span style="font-size: 12px; color: #999;">VOLUME</span>
+                <button class="vol-ch-btn" onclick="sendCommand('VolumeDown',this)">Vol -</button>
+            </div>
+
+            <div class="channel-section">
+                <button class="vol-ch-btn" onclick="sendCommand('ChannelUp',this)">CH +</button>
+                <span style="font-size: 12px; color: #999;">CHANNEL</span>
+                <button class="vol-ch-btn" onclick="sendCommand('ChannelDown',this)">CH -</button>
+            </div>
+
+            <div class="number-pad">
+                <button class="num-btn" onclick="sendCommand('Num1',this)">1</button>
+                <button class="num-btn" onclick="sendCommand('Num2',this)">2</button>
+                <button class="num-btn" onclick="sendCommand('Num3',this)">3</button>
+                <button class="num-btn" onclick="sendCommand('Num4',this)">4</button>
+                <button class="num-btn" onclick="sendCommand('Num5',this)">5</button>
+                <button class="num-btn" onclick="sendCommand('Num6',this)">6</button>
+                <button class="num-btn" onclick="sendCommand('Num7',this)">7</button>
+                <button class="num-btn" onclick="sendCommand('Num8',this)">8</button>
+                <button class="num-btn" onclick="sendCommand('Num9',this)">9</button>
+                <button class="num-btn" onclick="sendCommand('Num0',this)">0</button>
+                <button class="num-btn" onclick="sendCommand('Display',this)">-/-</button>
+                <button class="num-btn" onclick="sendCommand('Enter',this)">ENT</button>
+            </div>
+
+            <div class="color-buttons">
+                <button class="color-btn red" onclick="sendCommand('Red',this)" title="Đỏ"></button>
+                <button class="color-btn green" onclick="sendCommand('Green',this)" title="Xanh lá"></button>
+                <button class="color-btn yellow" onclick="sendCommand('Yellow',this)" title="Vàng"></button>
+                <button class="color-btn blue" onclick="sendCommand('Blue',this)" title="Xanh dương"></button>
+            </div>
+
+            <div class="function-buttons">
+                <button class="func-btn" onclick="sendCommand('Home',this)">HOME</button>
+                <button class="func-btn" onclick="sendCommand('Menu',this)">MENU</button>
+                <button class="func-btn" onclick="sendCommand('Input',this)">INPUT</button>
+                <button class="func-btn" onclick="sendCommand('Guide',this)">GUIDE</button>
+                <button class="func-btn" onclick="sendCommand('Info',this)">INFO</button>
+                <button class="func-btn" onclick="sendCommand('Exit',this)">EXIT</button>
+                <button class="func-btn" onclick="sendCommand('Return',this)">RETURN</button>
+                <button class="func-btn" onclick="sendCommand('Options',this)">OPTIONS</button>
+                <button class="func-btn" onclick="sendCommand('Netflix',this)">NETFLIX</button>
+                <button class="func-btn" onclick="sendCommand('YouTube',this)">YOUTUBE</button>
+                <button class="func-btn" onclick="sendCommand('GooglePlay',this)">PLAY STORE</button>
+                <button class="func-btn" onclick="sendCommand('GoogleAssistant',this)">ASSISTANT</button>
+            </div>
+
+            <div class="function-buttons">
+                <button class="func-btn" onclick="sendCommand('Play',this)">▶ PLAY</button>
+                <button class="func-btn" onclick="sendCommand('Pause',this)">⏸ PAUSE</button>
+                <button class="func-btn" onclick="sendCommand('Stop',this)">⏹ STOP</button>
+                <button class="func-btn" onclick="sendCommand('Rewind',this)">⏪ REW</button>
+                <button class="func-btn" onclick="sendCommand('FastForward',this)">⏩ FF</button>
+                <button class="func-btn" onclick="sendCommand('Record',this)">⏺ REC</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tvSettings = { ip: '', psk: '', connected: false };
+
+        window.onload = function() {
+            const saved = localStorage.getItem('sonyTVSettings');
+            if (saved) {
+                tvSettings = JSON.parse(saved);
+                document.getElementById('tvIP').value  = tvSettings.ip;
+                document.getElementById('tvPSK').value = tvSettings.psk;
+            }
+            updateStatus();
+        };
+
+        function saveSettings() {
+            tvSettings.ip  = document.getElementById('tvIP').value;
+            tvSettings.psk = document.getElementById('tvPSK').value;
+            localStorage.setItem('sonyTVSettings', JSON.stringify(tvSettings));
+            alert('Cài đặt đã được lưu vào localStorage');
+        }
+
+        function updateStatus() {
+            const statusEl = document.getElementById('status');
+            if (tvSettings.connected) {
+                statusEl.className = 'status connected';
+                statusEl.textContent = `Đã kết nối: ${tvSettings.ip}`;
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = 'Chưa kết nối';
+            }
+        }
+
+        async function scanForTV() {
+            const scanBtn = document.getElementById('scanBtn');
+            const scanResults = document.getElementById('scanResults');
+            scanBtn.innerHTML = '<span class="loading"></span> Đang quét...';
+            scanResults.innerHTML = '';
+
+            const localIP = await getLocalIP();
+            const baseIP = localIP.substring(0, localIP.lastIndexOf('.') + 1);
+            scanResults.innerHTML = `<div class="scan-result">Đang quét dải mạng ${baseIP}1-254...</div>`;
+
+            const foundTVs = [], promises = [];
+            for (let i = 1; i <= 254; i++) promises.push(checkSonyTV(baseIP + i));
+
+            try {
+                const results = await Promise.allSettled(promises);
+                results.forEach((r, idx) => { if (r.status==='fulfilled' && r.value) foundTVs.push(baseIP + (idx+1)); });
+
+                if (foundTVs.length) {
+                    let html = '<div class="scan-result"><strong>Tìm thấy Sony TV:</strong><br>';
+                    foundTVs.forEach(ip => html += `<button class="btn btn-primary" onclick="selectTV('${ip}')">${ip}</button><br>`);
+                    scanResults.innerHTML = html + '</div>';
+                    if (foundTVs.length===1) selectTV(foundTVs[0]);
+                } else {
+                    scanResults.innerHTML = '<div class="scan-result">Không tìm thấy Sony TV nào trong mạng.</div>';
+                }
+            } catch(err) {
+                scanResults.innerHTML = `<div class="scan-result">Lỗi khi quét: ${err.message}</div>`;
+            }
+            scanBtn.innerHTML = '🔍 Quét TV';
+        }
+
+        async function getLocalIP() {
+            return new Promise(resolve => {
+                const pc = new (window.RTCPeerConnection || window.webkitRTCPeerConnection)({iceServers:[]});
+                pc.createDataChannel('');
+                pc.createOffer().then(pc.setLocalDescription.bind(pc));
+                pc.onicecandidate = ice => {
+                    if (ice.candidate && ice.candidate.candidate) {
+                        const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(ice.candidate.candidate)[1];
+                        resolve(ip); pc.onicecandidate = () => {};
+                    }
+                };
+            });
+        }
+
+        async function checkSonyTV(ip) {
+            try {
+                const ctl = new AbortController();
+                const to = setTimeout(() => ctl.abort(), 2000);
+                const res = await fetch(`http://${ip}/sony/system`, {
+                    method:'POST',
+                    headers:{ 'Content-Type':'application/json','X-Auth-PSK':'0000' },
+                    body: JSON.stringify({ method:'getSystemInformation', params:[], id:1, version:'1.0' }),
+                    signal: ctl.signal
+                });
+                clearTimeout(to);
+                return res.ok;
+            } catch { return false; }
+        }
+
+        function selectTV(ip) {
+            document.getElementById('tvIP').value = ip;
+            tvSettings.ip = ip;
+        }
+
+        async function connectTV() {
+            const ip = document.getElementById('tvIP').value;
+            const psk = document.getElementById('tvPSK').value;
+            if (!ip) return alert('Vui lòng nhập IP của TV');
+            try {
+                const res = await fetch(`http://${ip}/sony/system`, {
+                    method:'POST',
+                    headers:{ 'Content-Type':'application/json','X-Auth-PSK':psk||'0000' },
+                    body: JSON.stringify({ method:'getSystemInformation', params:[], id:1, version:'1.0' })
+                });
+                if (!res.ok) throw '';
+                await res.json();
+                tvSettings.ip = ip; tvSettings.psk = psk; tvSettings.connected = true;
+                updateStatus(); alert('Kết nối thành công!');
+            } catch {
+                tvSettings.connected = false; updateStatus();
+                alert('Không thể kết nối đến TV. Kiểm tra IP và PSK.');
+            }
+        }
+
+        async function sendCommand(cmd, btn) {
+            if (!tvSettings.connected) return alert('Vui lòng kết nối TV trước!');
+            const map = {
+                Power:'AAAAAQAAAAEAAAAVAw==',Up:'AAAAAQAAAAEAAAB0Aw==',Down:'AAAAAQAAAAEAAAB1Aw==',
+                Left:'AAAAAQAAAAEAAAA0Aw==',Right:'AAAAAQAAAAEAAAAzAw==',Confirm:'AAAAAQAAAAEAAABlAw==',
+                Home:'AAAAAQAAAAEAAABgAw==',Menu:'AAAAAQAAAAEAAAAoAw==',Return:'AAAAAgAAAJcAAAAjAw==',
+                Exit:'AAAAAQAAAAEAAABjAw==',VolumeUp:'AAAAAQAAAAEAAAASAw==',VolumeDown:'AAAAAQAAAAEAAAATAw==',
+                ChannelUp:'AAAAAQAAAAEAAAAQAw==',ChannelDown:'AAAAAQAAAAEAAAARAw==',Mute:'AAAAAQAAAAEAAAAUAw==',
+                Input:'AAAAAQAAAAEAAAAlAw==',Netflix:'AAAAAgAAABoAAAB+Aw==',YouTube:'AAAAAgAAAMQAAABHAw==',
+                GooglePlay:'AAAAAgAAAMQAAABGAw==',GoogleAssistant:'AAAAAgAAAMQAAABDAw==',
+                Num1:'AAAAAQAAAAEAAAAAAw==',Num2:'AAAAAQAAAAEAAAABAw==',Num3:'AAAAAQAAAAEAAAACAw==',
+                Num4:'AAAAAQAAAAEAAAADAw==',Num5:'AAAAAQAAAAEAAAAEAw==',Num6:'AAAAAQAAAAEAAAAFAw==',
+                Num7:'AAAAAQAAAAEAAAAGAw==',Num8:'AAAAAQAAAAEAAAAHAw==',Num9:'AAAAAQAAAAEAAAAIAw==',
+                Num0:'AAAAAQAAAAEAAAAJAw==',Play:'AAAAAgAAAJcAAAAaAw==',Pause:'AAAAAgAAAJcAAAAZAw==',
+                Stop:'AAAAAgAAAJcAAAAYAw==',FastForward:'AAAAAgAAAJcAAAAcAw==',Rewind:'AAAAAgAAAJcAAAAbAw==',
+                Record:'AAAAAgAAAJcAAAAgAw==',Red:'AAAAAgAAAJcAAABbAw==',Green:'AAAAAgAAAJcAAABcAw==',
+                Yellow:'AAAAAgAAAJcAAABdAw==',Blue:'AAAAAgAAAJcAAABeAw==',Guide:'AAAAAgAAAJcAAABWAw==',
+                Info:'AAAAAQAAAAEAAAA6Aw==',Options:'AAAAAgAAAJcAAABYAw==',Display:'AAAAAQAAAAEAAAA6Aw==',
+                Enter:'AAAAAQAAAAEAAAALAw=='
+
+            };
+            const code = map[cmd];
+            try {
+                const res = await fetch(`http://${tvSettings.ip}/sony/IRCC`, {
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'text/xml; charset=UTF-8',
+                        'SOAPAction':'"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"',
+                        'X-Auth-PSK':tvSettings.psk||'0000'
+                    },
+                    body:`<?xml version="1.0"?>
+                        <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+                            <s:Body>
+                                <u:X_SendIRCC xmlns:u="urn:schemas-sony-com:service:IRCC:1">
+                                    <IRCCCode>${code}</IRCCCode>
+                                </u:X_SendIRCC>
+                            </s:Body>
+                        </s:Envelope>`
+                });
+                if (res.ok) {
+                    const orig = btn.style.background;
+                    btn.style.background = 'linear-gradient(145deg, #27ae60, #219a52)';
+                    setTimeout(() => btn.style.background = orig, 200);
+                } else {
+                    console.error(`Lỗi gửi lệnh ${cmd}:`, res.status);
+                }
+            } catch (e) {
+                console.error(`Lỗi kết nối khi gửi lệnh ${cmd}:`, e);
+                alert('Lỗi kết nối. Kiểm tra lại IP và kết nối mạng.');
+            }
+        }
+    </script>
+</body>
+</html>
