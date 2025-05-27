@@ -1,0 +1,391 @@
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Demo Multi-Pocket</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .hidden { display: none; }
+    .container { max-width: 900px; margin: 20px auto; padding: 0 10px; }
+    .card { position: relative; border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin: 10px; display: inline-block; width: calc(48% - 22px); vertical-align: top; }
+    .card h4 { margin: 0 0 5px; }
+    .card .actions { position: absolute; top: 5px; right: 5px; }
+    .actions button { margin-left: 5px; background: #ddd; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px; }
+    .actions .delete-btn { background: #e74c3c; color: #fff; }
+    .actions .edit-btn   { background: #3498db; color: #fff; }
+    .progress { background: #eee; border-radius: 4px; overflow: hidden; height: 10px; margin: 5px 0; }
+    .progress-bar { height: 10px; background: #4caf50; width: 0; }
+    .form-group { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 3px; font-weight: bold; }
+    input, select, button { width: 100%; padding: 6px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+    .modal, .popup { position: fixed; background: #fff; border: 1px solid #888; border-radius: 4px; padding: 15px; z-index: 10; }
+    .modal { width: 300px; top: 50px; right: 50px; }
+    .popup { top: 20px; right: 20px; display: none; }
+    h3 { margin-top: 30px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div id="login-form" class="container">
+  <h2>Đăng nhập / eKYC</h2>
+  <div class="form-group"><label for="fullName">Họ và tên</label><input id="fullName" type="text"></div>
+  <div class="form-group"><label for="idNumber">CMND/CCCD</label><input id="idNumber" type="text"></div>
+  <button id="loginBtn">Xác thực</button>
+</div>
+
+<div id="app" class="container hidden">
+  <h2>Multi-Pocket Demo</h2>
+
+  <!-- Tổng quan và quản lý ngăn -->
+  <section id="overview">
+    <h3>Tổng quan tài khoản</h3>
+    <div id="pockets"></div>
+    <button id="addPocketBtn">Tạo ngăn mới</button>
+  </section>
+
+  <!-- Cấu hình tỷ lệ phân bổ -->
+  <section id="allocation">
+    <h3>Cấu hình tỷ lệ phân bổ</h3>
+    <table id="allocTable">
+      <thead><tr><th>Ngăn</th><th>Tỷ lệ (%)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button id="saveAlloc">Lưu tỷ lệ</button>
+  </section>
+
+  <!-- Nộp tiền vào ví -->
+  <section id="deposit">
+    <h3>Nộp tiền vào ví</h3>
+    <div class="form-group"><label for="depositAmount">Số tiền</label><input id="depositAmount" type="number"></div>
+    <button id="depositBtn">Nộp tiền</button>
+  </section>
+
+  <!-- Rút tiền từ ví -->
+  <section id="withdraw">
+    <h3>Rút tiền từ ví</h3>
+    <div class="form-group"><label for="withdrawAmount">Số tiền</label><input id="withdrawAmount" type="number"></div>
+    <button id="withdrawBtn">Rút tiền</button>
+  </section>
+
+  <!-- Định kỳ trích nợ -->
+  <section id="recurring">
+    <h3>Thiết lập định kỳ</h3>
+    <div class="form-group"><label for="rPocket">Chọn ngăn</label><select id="rPocket"></select></div>
+    <div class="form-group"><label for="rAmount">Số tiền</label><input id="rAmount" type="number"></div>
+    <div class="form-group"><label for="rFreq">Tần suất</label><select id="rFreq">
+      <option>Hàng ngày</option><option>Hàng tuần</option><option>Hàng tháng</option>
+    </select></div>
+    <div class="form-group"><label for="rDate">Ngày bắt đầu</label><input id="rDate" type="date"></div>
+    <button id="saveRecurring">Lưu cấu hình</button>
+  </section>
+
+  <!-- Lịch sử giao dịch -->
+  <section id="transactions">
+    <h3>Lịch sử giao dịch</h3>
+    <table>
+      <thead><tr><th>Ngày/Giờ</th><th>Số tiền</th><th>Ngăn</th><th>Danh mục</th><th>Số dư</th></tr></thead>
+      <tbody id="txBody"></tbody>
+    </table>
+  </section>
+
+  <!-- Dashboard đồ họa -->
+  <section id="charts">
+    <h3>Dashboard</h3>
+    <canvas id="pieChart" width="400" height="200"></canvas>
+    <canvas id="barChart" width="400" height="200"></canvas>
+  </section>
+</div>
+
+<!-- Modal tạo/chỉnh sửa ngăn -->
+<div id="pocketModal" class="modal hidden">
+  <h4>Tạo/Chỉnh sửa ngăn</h4>
+  <div class="form-group"><label for="pName">Tên ngăn</label><input id="pName" type="text"></div>
+  <div class="form-group"><label for="pIcon">Biểu tượng</label><select id="pIcon">
+    <option>💰 Tiết kiệm</option><option>🛒 Chi tiêu</option><option>🎁 Khác</option>
+  </select></div>
+  <div class="form-group"><label for="pLimit">Hạn mức / Mục tiêu</label><input id="pLimit" type="number"></div>
+  <button id="savePocket">Lưu</button>
+</div>
+
+<div id="popup" class="popup"></div>
+
+<script>
+(function(){
+  const pocketsKey = 'mp_pockets', txKey = 'mp_txs', rcKey = 'mp_recurring';
+  const load = (k,def)=> JSON.parse(localStorage.getItem(k))||def;
+  const save = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
+
+  // Khởi tạo dữ liệu mặc định
+  if(!localStorage.getItem(pocketsKey)){
+    const defaultP = [
+      {id:1,type:'spend',name:'Chi tiêu',icon:'🛒',balance:0,limit:1000000},
+      {id:2,type:'save', name:'Tiết kiệm',icon:'💰',balance:0,target:500000}
+    ];
+    // gán tỷ lệ mặc định đều nhau
+    defaultP.forEach(p => p.ratio = 1/defaultP.length);
+    save(pocketsKey, defaultP);
+  }
+  if(!localStorage.getItem(txKey)) save(txKey, []);
+  if(!localStorage.getItem(rcKey)) save(rcKey, []);
+
+  const popup = msg => {
+    const p = document.getElementById('popup');
+    p.textContent = msg; p.style.display='block';
+    setTimeout(()=>p.style.display='none',3000);
+  };
+
+  // Render danh sách ngăn
+  function renderPockets(){
+    const cont = document.getElementById('pockets');
+    cont.innerHTML = '';
+    const pockets = load(pocketsKey,[]);
+    // đảm bảo có ratio
+    if(!pockets.every(p=>p.ratio!=null)){
+      const r = 1/pockets.length;
+      pockets.forEach(p=>p.ratio = r);
+      save(pocketsKey,pockets);
+    }
+    pockets.forEach(p=>{
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML = `
+        <div class="actions">
+          <button class="edit-btn" data-id="${p.id}">Sửa</button>
+          <button class="delete-btn" data-id="${p.id}">Xóa</button>
+        </div>
+        <h4>${p.icon} ${p.name}</h4>
+        <p>Số dư: ${p.balance.toLocaleString()}</p>
+        ${p.type==='save'
+          ? `<div class="progress"><div class="progress-bar" style="width:${Math.min(100,(p.balance/p.target*100).toFixed(1))}%"></div></div>
+             <p>${(p.balance/p.target*100).toFixed(1)}% hoàn thành</p>`
+          : `<p>Hạn mức: ${p.limit.toLocaleString()}</p>`}
+      `;
+      cont.appendChild(card);
+    });
+    bindPocketActions();
+    renderAllocTable();
+    renderRecurringSelect();
+  }
+
+  // Xử lý nút Sửa/Xóa
+  function bindPocketActions(){
+    const pockets = load(pocketsKey,[]);
+    document.querySelectorAll('.delete-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = +btn.dataset.id;
+        let arr = load(pocketsKey,[]);
+        const p = arr.find(x=>x.id===id);
+        // lưu lịch sử giao dịch
+        const txs = load(txKey,[]);
+        txs.push({
+          datetime: new Date().toLocaleString(),
+          amount: p.balance,
+          pocket: p.name,
+          category: 'Xóa ngăn',
+          postBalance: 0
+        });
+        save(txKey,txs);
+        arr = arr.filter(x=>x.id!==id);
+        save(pocketsKey,arr);
+        renderPockets(); renderTxs(); renderCharts();
+        popup(`Đã xóa ngăn "${p.name}"`);
+      };
+    });
+    document.querySelectorAll('.edit-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = +btn.dataset.id;
+        const p = load(pocketsKey,[]).find(x=>x.id===id);
+        editingId = id;
+        document.getElementById('pName').value = p.name;
+        document.getElementById('pIcon').value = (p.type==='save'?'💰 Tiết kiệm':'🛒 Chi tiêu');
+        document.getElementById('pLimit').value = p.type==='save'? p.target : p.limit;
+        document.getElementById('pocketModal').classList.remove('hidden');
+      };
+    });
+  }
+
+  // Render bảng tỷ lệ phân bổ
+  function renderAllocTable(){
+    const tbody = document.querySelector('#allocTable tbody');
+    tbody.innerHTML = '';
+    load(pocketsKey,[]).forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.name}</td>
+        <td><input type="number" min="0" max="100" data-id="${p.id}" value="${(p.ratio*100).toFixed(0)}"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Render lựa chọn định kỳ
+  function renderRecurringSelect(){
+    const sel = document.getElementById('rPocket');
+    sel.innerHTML = load(pocketsKey,[]).map(p=>
+      `<option value="${p.id}">${p.name}</option>`
+    ).join('');
+  }
+
+  // Render giao dịch
+  function renderTxs(){
+    const tbody = document.getElementById('txBody');
+    tbody.innerHTML = '';
+    load(txKey,[]).forEach(tx=>{
+      const row = `<tr>
+        <td>${tx.datetime}</td>
+        <td>${tx.amount.toLocaleString()}</td>
+        <td>${tx.pocket}</td>
+        <td>${tx.category}</td>
+        <td>${tx.postBalance.toLocaleString()}</td>
+      </tr>`;
+      tbody.insertAdjacentHTML('beforeend',row);
+    });
+  }
+
+  // Render biểu đồ
+  function renderCharts(){
+    const pockets = load(pocketsKey,[]);
+    const spending = pockets.filter(p=>p.type==='spend').reduce((s,p)=>s+p.balance,0);
+    const saving   = pockets.filter(p=>p.type==='save').reduce((s,p)=>s+p.balance,0);
+    new Chart(document.getElementById('pieChart'), {
+      type:'pie',
+      data:{labels:['Chi tiêu','Tiết kiệm'],datasets:[{data:[spending,saving]}]}
+    });
+    new Chart(document.getElementById('barChart'), {
+      type:'bar',
+      data:{
+        labels:['Thg1','Thg2','Thg3','Thg4','Thg5'],
+        datasets:[{label:'Chi tiêu',data:[200,300,250,400,350]}]
+      }
+    });
+  }
+
+  // Nạp dữ liệu và hiển thị
+  document.getElementById('loginBtn').onclick = ()=>{
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    renderPockets(); renderTxs(); renderCharts();
+  };
+
+  // Tạo / Sửa ngăn
+  let editingId = null;
+  document.getElementById('addPocketBtn').onclick = ()=>{
+    editingId = null;
+    document.getElementById('pName').value = '';
+    document.getElementById('pIcon').value = '💰 Tiết kiệm';
+    document.getElementById('pLimit').value = '';
+    document.getElementById('pocketModal').classList.remove('hidden');
+  };
+  document.getElementById('savePocket').onclick = ()=>{
+    const name = document.getElementById('pName').value;
+    const icon = document.getElementById('pIcon').value.split(' ')[0];
+    const lim  = Number(document.getElementById('pLimit').value) || 0;
+    const arr = load(pocketsKey,[]);
+    if(editingId){
+      const p = arr.find(x=>x.id===editingId);
+      p.name=name; p.icon=icon;
+      if(p.type==='save') p.target=lim; else p.limit=lim;
+    } else {
+      const id = Date.now();
+      const type = document.getElementById('pIcon').value.includes('Tiết')?'save':'spend';
+      arr.push({
+        id, type, name, icon, balance:0,
+        ...(type==='save'?{target:lim}:{limit:lim}),
+        ratio:1/arr.length
+      });
+      // điều chỉnh lại ratio đều nhau
+      const newRatio = 1/arr.length;
+      arr.forEach(x=>x.ratio=newRatio);
+    }
+    save(pocketsKey,arr);
+    document.getElementById('pocketModal').classList.add('hidden');
+    renderPockets(); renderCharts();
+    popup('Đã lưu ngăn');
+  };
+
+  // Lưu tỷ lệ phân bổ
+  document.getElementById('saveAlloc').onclick = ()=>{
+    const inputs = document.querySelectorAll('#allocTable input');
+    const arr = load(pocketsKey,[]);
+    let sum=0;
+    inputs.forEach(i=> sum+=Number(i.value));
+    if(sum!==100){ popup('Tổng tỷ lệ phải là 100%'); return; }
+    inputs.forEach(i=>{
+      const p = arr.find(x=>x.id===+i.dataset.id);
+      p.ratio = Number(i.value)/100;
+    });
+    save(pocketsKey,arr);
+    popup('Đã lưu tỷ lệ phân bổ');
+  };
+
+  // Nộp tiền
+  document.getElementById('depositBtn').onclick = ()=>{
+    const amt = Number(document.getElementById('depositAmount').value);
+    if(amt<=0){ popup('Số tiền không hợp lệ'); return; }
+    const arr = load(pocketsKey,[]);
+    const txs = load(txKey,[]);
+    let remainder = amt;
+    arr.forEach((p,i)=>{
+      const share = Math.floor(amt * p.ratio);
+      p.balance += share;
+      remainder -= share;
+      txs.push({
+        datetime: new Date().toLocaleString(),
+        amount: share,
+        pocket: p.name,
+        category: 'Nộp tiền',
+        postBalance: p.balance
+      });
+    });
+    // phần dư còn lại cộng vào ngăn đầu tiên
+    if(remainder>0 && arr.length){
+      arr[0].balance += remainder;
+      txs.push({
+        datetime: new Date().toLocaleString(),
+        amount: remainder,
+        pocket: arr[0].name,
+        category: 'Nộp tiền (phần dư)',
+        postBalance: arr[0].balance
+      });
+    }
+    save(pocketsKey,arr);
+    save(txKey,txs);
+    renderPockets(); renderTxs(); renderCharts();
+    popup('Nộp tiền thành công');
+  };
+
+  // Rút tiền
+  document.getElementById('withdrawBtn').onclick = ()=>{
+    const amt = Number(document.getElementById('withdrawAmount').value);
+    if(amt<=0){ popup('Số tiền không hợp lệ'); return; }
+    const arr = load(pocketsKey,[]);
+    const txs = load(txKey,[]);
+    let totalDeducted = 0;
+    arr.forEach(p=>{
+      const ded = Math.min(Math.floor(amt * p.ratio), p.balance);
+      p.balance -= ded;
+      totalDeducted += ded;
+      txs.push({
+        datetime: new Date().toLocaleString(),
+        amount: -ded,
+        pocket: p.name,
+        category: 'Rút tiền',
+        postBalance: p.balance
+      });
+    });
+    if(totalDeducted < amt) popup('Không đủ số dư theo tỷ lệ, đã rút tối đa có thể');
+    save(pocketsKey,arr);
+    save(txKey,txs);
+    renderPockets(); renderTxs(); renderCharts();
+  };
+
+})();
+</script>
+</body>
+</html>
+```
