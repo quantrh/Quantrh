@@ -14,8 +14,8 @@
             --card-background: #2a2a2a;
             --button-background: #008C89;
             --button-hover: #005A58;
-            --balance-positive: #4CAF50; /* Green for positive balance changes */
-            --balance-negative: #F44336; /* Red for negative balance changes */
+            --balance-positive: #66BB6A; /* Brighter Green for positive balance changes */
+            --balance-negative: #EF5350; /* Brighter Red for negative balance changes */
         }
 
         body {
@@ -106,8 +106,9 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .pocket-item:first-of-type {
-            background-color: var(--bidv-green); /* Main Account special background */
+        /* Specific style for Main Account pocket */
+        .pocket-item.main-account-item {
+            background-color: var(--bidv-green);
             color: var(--text-color);
         }
 
@@ -423,15 +424,19 @@
         /* Reporting Specific Styles */
         .chart-container {
             width: 100%;
-            height: 200px; /* Fixed height for charts */
-            background-color: var(--dark-background);
+            height: 500px; /* Increased height for charts */
+            background-color: white; /* Changed from var(--dark-background) to white */
             border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--bidv-green); /* Changed from rgba(255, 255, 255, 0.5) to a darker color */
             font-size: 0.9em;
             margin-bottom: 20px;
+            padding: 10px; /* Add padding for content */
+            box-sizing: border-box; /* Include padding in width/height */
+            flex-direction: column; /* Allow content to stack */
+            text-align: center;
         }
 
         .summary-stats {
@@ -482,55 +487,12 @@
         <div id="homeScreen" class="screen">
             <div class="balance-card">
                 <div class="label">BALANCE</div>
-                <div class="total-balance">$<span id="totalBalance">2,500.00</span></div>
-                <div class="tktt-balance">Main Account Balance: $<span id="tkttBalance">1,200.00</span></div>
-                <div class="min-max-balance">Plan: min $<span id="minBalance">500.00</span> / max $<span id="maxBalance">1,500.00</span> per month</div>
+                <div class="total-balance"><span id="totalBalance"></span></div>
+                <div class="tktt-balance">Số dư Tài khoản chính: <span id="tkttBalance"></span></div>
+                <div class="min-max-balance">Kế hoạch: min <span id="minBalance"></span> / max <span id="maxBalance"></span></div>
             </div>
 
             <div class="pocket-list" id="pocketList">
-                <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon"><i class="fa-solid fa-building-columns"></i></span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Main Account</div>
-                            <div class="pocket-min-max">Plan: $600.00 / month</div>
-                        </div>
-                    </div>
-                    <div class="pocket-balance">$1,200.00</div>
-                    <div class="pocket-actions">
-                        <button onclick="showHistory('TTTK')">History</button>
-                        <button onclick="openManagePocket('TTTK')">Manage</button>
-                    </div>
-                </div>
-
-                <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon">🛒</span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Groceries</div>
-                        </div>
-                    </div>
-                    <div class="pocket-balance">$500.00</div>
-                    <div class="pocket-actions">
-                        <button onclick="showHistory('Groceries')">History</button>
-                        <button onclick="openManagePocket('Groceries')">Manage</button>
-                    </div>
-                </div>
-
-                <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon">💰</span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Savings</div>
-                        </div>
-                    </div>
-                    <div class="pocket-balance">$800.00</div>
-                    <div class="pocket-actions">
-                        <button onclick="showHistory('Savings')">History</button>
-                        <button onclick="openManagePocket('Savings')">Manage</button>
-                    </div>
-                </div>
-
                 </div>
 
             <div class="quick-actions">
@@ -544,7 +506,8 @@
             <div class="modal-header">
                 <span class="modal-close" onclick="goHomeFromHistory()">&times;</span>
                 <h2 id="historyHeaderTitle">Lịch sử giao dịch</h2>
-                <div></div> </div>
+                <div></div>
+            </div>
             <div class="history-list" id="transactionHistoryList">
                 </div>
         </div>
@@ -556,42 +519,7 @@
                 <div></div>
             </div>
             <div class="pocket-list" id="managePocketList">
-                <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon"><i class="fa-solid fa-building-columns"></i></span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Main Account</div>
-                        </div>
-                    </div>
-                    <div class="pocket-actions">
-                        <button onclick="openEditPocket('TTTK')">Sửa</button>
-                    </div>
                 </div>
-                 <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon">🛒</span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Groceries</div>
-                        </div>
-                    </div>
-                    <div class="pocket-actions">
-                        <button onclick="openEditPocket('Groceries')">Sửa</button>
-                        <button onclick="deletePocket('Groceries')">Xóa</button>
-                    </div>
-                </div>
-                 <div class="pocket-item">
-                    <div class="pocket-info">
-                        <span class="pocket-icon">💰</span>
-                        <div class="pocket-details">
-                            <div class="pocket-name">Savings</div>
-                        </div>
-                    </div>
-                    <div class="pocket-actions">
-                        <button onclick="openEditPocket('Savings')">Sửa</button>
-                        <button onclick="deletePocket('Savings')">Xóa</button>
-                    </div>
-                </div>
-            </div>
             <button class="quick-actions" style="margin: 15px; background-color: var(--button-background);" onclick="openModal('createEditPocketModal')">Thêm Pocket Mới</button>
             <button class="quick-actions" style="margin: 15px; background-color: var(--button-background);" onclick="openModal('allocationSettingsModal')">Cài đặt tỷ lệ phân bổ</button>
         </div>
@@ -604,27 +532,29 @@
             </div>
             <div style="padding: 15px;">
                 <h3>Tỷ trọng số dư các Pocket</h3>
-                <div class="chart-container">
+                <div class="chart-container" id="pieChartContainer">
                     <p>Biểu đồ tròn (Pie Chart) sẽ hiển thị ở đây</p>
+                    <canvas id="pieChartCanvas" style="width: 100%; height: 100%;"></canvas>
                 </div>
 
                 <h3>Thu - Chi theo tháng</h3>
-                <div class="chart-container">
+                <div class="chart-container" id="barChartContainer">
                     <p>Biểu đồ đường/cột (Line/Bar Chart) sẽ hiển thị ở đây</p>
+                    <canvas id="barChartCanvas" style="width: 100%; height: 100%;"></canvas>
                 </div>
 
                 <div class="summary-stats">
                     <div class="stat-item">
                         <div class="stat-label">Tổng Thu</div>
-                        <div class="stat-value">$<span id="totalIncome">0.00</span></div>
+                        <div class="stat-value"><span id="totalIncome">0</span></div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Tổng Chi</div>
-                        <div class="stat-value">$<span id="totalExpense">0.00</span></div>
+                        <div class="stat-value"><span id="totalExpense">0</span></div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Tổng Tiết kiệm</div>
-                        <div class="stat-value">$<span id="totalSavings">0.00</span></div>
+                        <div class="stat-value"><span id="totalSavings">0</span></div>
                     </div>
                 </div>
             </div>
@@ -667,7 +597,8 @@
                     </select>
 
                 <label for="transferDestination">Đích:</label>
-                <input type="text" id="transferDestination" value="Tài khoản CASA tại BIDV" readonly>
+                <select id="transferDestination">
+                    </select>
 
                 <label for="transferAmount">Số tiền:</label>
                 <input type="number" id="transferAmount" placeholder="Nhập số tiền" min="0" step="1000">
@@ -744,8 +675,8 @@
                 <label for="pocketName">Tên ví:</label>
                 <input type="text" id="pocketName" placeholder="Tên Pocket">
 
-                <label for="pocketIcon">Icon (Emoji hoặc URL ảnh):</label>
-                <input type="text" id="pocketIcon" placeholder="Ví dụ: 🛒 hoặc https://example.com/icon.png">
+                <label for="pocketIcon">Icon (Emoji hoặc Font Awesome class, ví dụ: fa-car):</label>
+                <input type="text" id="pocketIcon" placeholder="Ví dụ: 🛒 hoặc fa-car">
 
                 <label for="pocketType">Loại ví:</label>
                 <select id="pocketType">
@@ -790,6 +721,33 @@
             </div>
         </div>
 
+        <div id="customAlertDialog" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="alertDialogTitle">Thông báo</h2>
+                    <span class="modal-close" onclick="closeModal('customAlertDialog')">&times;</span>
+                </div>
+                <p id="alertDialogMessage"></p>
+                <div class="modal-buttons">
+                    <button class="btn-primary" onclick="closeModal('customAlertDialog')">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="customConfirmDialog" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="confirmDialogTitle">Xác nhận</h2>
+                    <span class="modal-close" onclick="closeModal('customConfirmDialog')">&times;</span>
+                </div>
+                <p id="confirmDialogMessage"></p>
+                <div class="modal-buttons">
+                    <button class="btn-cancel" onclick="handleConfirm(false)">Hủy</button>
+                    <button class="btn-primary" onclick="handleConfirm(true)">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+
 
         <div class="bottom-nav">
             <a href="#" class="nav-item active" id="navHome" onclick="showScreen('homeScreen', this)">
@@ -811,13 +769,13 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // --- Data Storage and Initialization ---
         let pockets = JSON.parse(localStorage.getItem('pockets')) || [
             { id: 'TTTK', name: 'Main Account', icon: '<i class="fa-solid fa-building-columns"></i>', balance: 1200000, type: 'TTTK', minBalance: 500000, maxBalance: 1500000 },
             { id: 'groceries', name: 'Groceries', icon: '🛒', balance: 500000, type: 'Chi tiêu', limit: 600000 },
             { id: 'savings', name: 'Savings', icon: '💰', balance: 800000, type: 'Tiết kiệm', limit: null },
-            // Add more sample pockets if needed, up to 4 user-defined pockets
         ];
 
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
@@ -827,16 +785,14 @@
             maxBalance: {}  // { pocketId: percentage, ... }
         };
 
-        // --- Utility Functions ---
-        function saveToLocalStorage() {
-            localStorage.setItem('pockets', JSON.stringify(pockets));
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            localStorage.setItem('allocationSettings', JSON.stringify(allocationSettings));
-            renderHomePage(); // Re-render after saving
-        }
+        // Biến toàn cục để lưu trữ instance của Chart.js
+        let pieChartInstance = null;
+        let barChartInstance = null;
 
+        // --- Utility Functions ---
         function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(amount);
+            // Chuyển đổi sang định dạng tiền tệ Việt Nam Đồng (VND)
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 }).format(amount);
         }
 
         function getCurrentDateTime() {
@@ -850,9 +806,36 @@
                 second: '2-digit'
             });
         }
+        
+        function populatePocketSelect(selectId, pocketArray, includeExternalOption = false) {
+            const selectElement = document.getElementById(selectId);
+            selectElement.innerHTML = ''; // Clear existing options
+
+            pocketArray.forEach(pocket => {
+                const option = document.createElement('option');
+                option.value = pocket.id;
+                option.textContent = pocket.name;
+                selectElement.appendChild(option);
+            });
+
+            if (includeExternalOption) {
+                const externalOption = document.createElement('option');
+                externalOption.value = 'CASA_BIDV_EXTERNAL';
+                externalOption.textContent = 'Tài khoản CASA bên ngoài BIDV';
+                selectElement.appendChild(externalOption);
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('pockets', JSON.stringify(pockets));
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('allocationSettings', JSON.stringify(allocationSettings));
+            // Call renderHomePage after saving to ensure UI is updated
+            renderHomePage(); 
+        }
 
         // --- Rendering Functions ---
-
+        // All rendering functions are defined before being called by other functions
         function renderHomePage() {
             const totalBalanceElem = document.getElementById('totalBalance');
             const tkttBalanceElem = document.getElementById('tkttBalance');
@@ -871,59 +854,65 @@
                 const pocketItem = document.createElement('div');
                 pocketItem.className = 'pocket-item';
                 if (pocket.id === 'TTTK') {
-                    pocketItem.style.backgroundColor = 'var(--bidv-green)';
-                    pocketItem.style.color = 'var(--text-color)';
-                } else {
-                    pocketItem.style.backgroundColor = 'var(--card-background)';
+                    pocketItem.classList.add('main-account-item'); // Add class for main account styling
                 }
 
-                let minMaxHtml = '';
-                if (pocket.id === 'TTTK' && tkttPocket) {
-                    tkttBalanceElem.textContent = tkttPocket.balance.toLocaleString('en-US');
-                    minBalanceElem.textContent = (tkttPocket.minBalance || 0).toLocaleString('en-US');
-                    maxBalanceElem.textContent = (tkttPocket.maxBalance || 0).toLocaleString('en-US');
-                    minMaxHtml = `<div class="pocket-min-max">Plan: ${formatCurrency(tkttPocket.minBalance || 0)} / month</div>`; // Simplified for display
-                } else if (pocket.limit !== null) {
-                    minMaxHtml = `<div class="pocket-min-max">Limit: ${formatCurrency(pocket.limit)}</div>`;
-                }
-
-
-                pocketItem.innerHTML = `
+                let pocketInfoHTML = `
                     <div class="pocket-info">
                         <span class="pocket-icon">${pocket.icon}</span>
                         <div class="pocket-details">
                             <div class="pocket-name">${pocket.name}</div>
-                            ${minMaxHtml}
+                `;
+                if (pocket.id === 'TTTK' && tkttPocket) {
+                    pocketInfoHTML += `<div class="pocket-min-max">Min: ${formatCurrency(tkttPocket.minBalance || 0)} / Max: ${formatCurrency(tkttPocket.maxBalance || 0)}</div>`;
+                } else if (pocket.limit !== null) {
+                    pocketInfoHTML += `<div class="pocket-min-max">Hạn mức: ${formatCurrency(pocket.limit)}</div>`;
+                }
+                pocketInfoHTML += `
                         </div>
                     </div>
                     <div class="pocket-balance">${formatCurrency(pocket.balance)}</div>
                     <div class="pocket-actions">
-                        <button onclick="showHistory('${pocket.id}')">History</button>
-                        <button onclick="openManagePocket('${pocket.id}')">Manage</button>
+                        <button onclick="showHistory('${pocket.id}')">Lịch sử</button>
+                        <button onclick="openManagePocket('${pocket.id}')">Quản lý</button>
                     </div>
                 `;
+                pocketItem.innerHTML = pocketInfoHTML;
                 pocketListElem.appendChild(pocketItem);
             });
 
-            totalBalanceElem.textContent = totalBalance.toLocaleString('en-US');
+            totalBalanceElem.textContent = formatCurrency(totalBalance);
+            tkttBalanceElem.textContent = formatCurrency(tkttPocket.balance);
+            minBalanceElem.textContent = formatCurrency(tkttPocket.minBalance);
+            maxBalanceElem.textContent = formatCurrency(tkttPocket.maxBalance);
+
+            // Populate dropdowns for modals
+            // addMoneyDestination should now include all pockets
+            populatePocketSelect('addMoneyDestination', pockets, false); // No external option for direct deposit
+            // transferSource and transferDestination should now include TTTK
+            populatePocketSelect('transferSource', pockets, false); // Source for internal/external transfers
+            populatePocketSelect('transferDestination', pockets, true); // Destination for internal/external transfers
         }
 
         function renderManagePocketList() {
             const managePocketListElem = document.getElementById('managePocketList');
-            managePocketListElem.innerHTML = ''; // Clear existing list
+            managePocketListElem.innerHTML = ''; // Clear existing pockets
 
             pockets.forEach(pocket => {
                 const pocketItem = document.createElement('div');
                 pocketItem.className = 'pocket-item';
-                pocketItem.style.backgroundColor = 'var(--card-background)'; // All managed pockets use this style
                 if (pocket.id === 'TTTK') {
-                    pocketItem.style.backgroundColor = 'var(--bidv-green)'; // TTTK special styling
-                    pocketItem.style.color = 'var(--text-color)';
+                    pocketItem.classList.add('main-account-item');
                 }
 
-                let deleteButtonHtml = '';
-                if (pocket.id !== 'TTTK') {
-                    deleteButtonHtml = `<button onclick="deletePocket('${pocket.id}')">Xóa</button>`;
+                let pocketActionsHTML = '';
+                if (pocket.id === 'TTTK') {
+                    pocketActionsHTML = `<button onclick="openEditPocket('TTTK')">Sửa</button>`;
+                } else {
+                    pocketActionsHTML = `
+                        <button onclick="openEditPocket('${pocket.id}')">Sửa</button>
+                        <button onclick="deletePocket('${pocket.id}')">Xóa</button>
+                    `;
                 }
 
                 pocketItem.innerHTML = `
@@ -934,8 +923,7 @@
                         </div>
                     </div>
                     <div class="pocket-actions">
-                        <button onclick="openEditPocket('${pocket.id}')">Sửa</button>
-                        ${deleteButtonHtml}
+                        ${pocketActionsHTML}
                     </div>
                 `;
                 managePocketListElem.appendChild(pocketItem);
@@ -945,39 +933,96 @@
         function renderTransactionHistory(filterPocketId = null) {
             const transactionHistoryListElem = document.getElementById('transactionHistoryList');
             transactionHistoryListElem.innerHTML = '';
-            document.getElementById('historyHeaderTitle').textContent = filterPocketId ? `Lịch sử: ${pockets.find(p => p.id === filterPocketId)?.name || ''}` : 'Lịch sử giao dịch';
+            const historyHeaderTitle = document.getElementById('historyHeaderTitle');
 
-            const filteredTransactions = filterPocketId
-                ? transactions.filter(t => t.sourceId === filterPocketId || t.destinationId === filterPocketId)
-                : transactions;
+            const filteredTransactions = filterPocketId ? transactions.filter(t => t.sourceId === filterPocketId || t.destinationId === filterPocketId) : transactions;
+
+            if (filterPocketId) {
+                const pocket = pockets.find(p => p.id === filterPocketId);
+                historyHeaderTitle.textContent = `Lịch sử giao dịch của ${pocket ? pocket.name : 'không xác định'}`;
+            } else {
+                historyHeaderTitle.textContent = 'Lịch sử giao dịch chung';
+            }
+
 
             if (filteredTransactions.length === 0) {
-                transactionHistoryListElem.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Chưa có giao dịch nào.</p>';
+                transactionHistoryListElem.innerHTML = '<p style="text-align: center; margin-top: 20px; color: rgba(255,255,255,0.7);">Chưa có giao dịch nào.</p>';
                 return;
             }
 
             filteredTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by newest first
 
             filteredTransactions.forEach(t => {
-                const amountClass = t.type === 'Nạp' || (t.type === 'Chuyển' && t.destinationId === filterPocketId) || (t.type === 'InternalTransfer' && t.destinationId === filterPocketId) ? 'positive' : 'negative';
-                const displayAmount = t.type === 'Nạp' ? `+${formatCurrency(t.amount)}` : (t.type === 'Chuyển' ? (t.sourceId === filterPocketId ? `-${formatCurrency(t.amount)}` : `+${formatCurrency(t.amount)}`) : `-${formatCurrency(t.amount)}`);
-                const transactionType = t.type === 'InternalTransfer' ? 'Chuyển nội bộ' : t.type;
+                let amountClass = '';
+                let displayAmount = '';
+                let transactionDescription = t.type;
+
+                // Determine amount class and display based on transaction type and filterPocketId
+                if (t.type === 'Nạp') {
+                    amountClass = 'positive';
+                    displayAmount = `+${formatCurrency(t.amount)}`;
+                    transactionDescription = `Nạp tiền vào ${t.destinationName}`;
+                } else if (t.type === 'Thanh Toán') {
+                    amountClass = 'negative';
+                    displayAmount = `-${formatCurrency(t.amount)}`;
+                    transactionDescription = `Thanh toán ${t.destinationName}`;
+                } else if (t.type === 'Chuyển nội bộ') { // Changed from 'Chuyển'
+                    if (t.sourceId === filterPocketId) { // Money out from filtered pocket
+                        amountClass = 'negative';
+                        displayAmount = `-${formatCurrency(t.amount)}`;
+                        transactionDescription = `Chuyển tiền từ ${t.sourceName} đến ${t.destinationName}`;
+                    } else if (t.destinationId === filterPocketId) { // Money in to filtered pocket
+                        amountClass = 'positive';
+                        displayAmount = `+${formatCurrency(t.amount)}`;
+                        transactionDescription = `Chuyển tiền từ ${t.sourceName} đến ${t.destinationName}`;
+                    } else { // General transfer not directly involving filtered pocket (but might be in general history)
+                        amountClass = 'neutral'; // Or some other class
+                        displayAmount = formatCurrency(t.amount);
+                        transactionDescription = `Chuyển tiền từ ${t.sourceName} đến ${t.destinationName}`;
+                    }
+                } else if (t.type === 'Chuyển ra ngoài') { // New type for external transfers
+                     amountClass = 'negative';
+                     displayAmount = `-${formatCurrency(t.amount)}`;
+                     transactionDescription = `Chuyển tiền ra ngoài từ ${t.sourceName} đến ${t.destinationName}`;
+                } else if (t.type === 'Phân bổ tự động') {
+                    amountClass = 'positive';
+                    displayAmount = `+${formatCurrency(t.amount)}`;
+                    transactionDescription = `Phân bổ tự động từ ${t.sourceName} đến ${t.destinationName}`;
+                } else if (t.type === 'Bù đắp tự động') {
+                    amountClass = 'negative';
+                    displayAmount = `-${formatCurrency(t.amount)}`;
+                    transactionDescription = `Bù đắp tự động từ ${t.sourceName} đến ${t.destinationName}`;
+                } else if (t.type === 'InternalTransfer') { // For pocket deletion transfers
+                    if (t.sourceId === filterPocketId) {
+                        amountClass = 'negative';
+                        displayAmount = `-${formatCurrency(t.amount)}`;
+                    } else if (t.destinationId === filterPocketId) {
+                        amountClass = 'positive';
+                        displayAmount = `+${formatCurrency(t.amount)}`;
+                    } else {
+                        amountClass = 'neutral';
+                        displayAmount = formatCurrency(t.amount);
+                    }
+                    transactionDescription = `Chuyển nội bộ: ${t.note}`;
+                }
+
 
                 const item = document.createElement('div');
                 item.className = 'history-item';
                 item.innerHTML = `
                     <div class="row1">
-                        <span>${transactionType} - ${t.note || 'Không ghi chú'}</span>
+                        <span>${transactionDescription}</span>
                         <span class="history-amount ${amountClass}">${displayAmount}</span>
                     </div>
                     <div class="row2">
-                        <span>${t.sourceName} <i class="fas fa-arrow-right"></i> ${t.destinationName}</span>
+                        <span>${t.note || 'Không có ghi chú'}</span>
                         <span>${t.timestamp}</span>
                     </div>
                 `;
                 transactionHistoryListElem.appendChild(item);
             });
         }
+
 
         function renderAllocationSettings() {
             const minAllocationDiv = document.getElementById('minBalanceAllocation');
@@ -988,14 +1033,14 @@
             const userPockets = pockets.filter(p => p.id !== 'TTTK');
 
             if (userPockets.length === 0) {
-                minAllocationDiv.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Chưa có pocket nào để phân bổ.</p>';
-                maxAllocationDiv.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Chưa có pocket nào để phân bổ.</p>';
+                minAllocationDiv.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Hãy tạo thêm Pocket để cài đặt tỷ lệ phân bổ.</p>';
+                maxAllocationDiv.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Hãy tạo thêm Pocket để cài đặt tỷ lệ phân bổ.</p>';
                 return;
             }
 
             userPockets.forEach(pocket => {
-                const minAlloc = allocationSettings.minBalance[pocket.id] || (100 / userPockets.length).toFixed(0);
-                const maxAlloc = allocationSettings.maxBalance[pocket.id] || (100 / userPockets.length).toFixed(0);
+                const minAlloc = allocationSettings.minBalance[pocket.id] !== undefined ? allocationSettings.minBalance[pocket.id] : 0;
+                const maxAlloc = allocationSettings.maxBalance[pocket.id] !== undefined ? allocationSettings.maxBalance[pocket.id] : 0;
 
                 minAllocationDiv.innerHTML += `
                     <div>
@@ -1012,21 +1057,176 @@
             });
         }
 
-        function updateAllocationValue(slider) {
-            const pocketId = slider.dataset.pocketId;
-            const type = slider.dataset.type;
-            const valueSpan = document.getElementById(`${type}AllocValue-${pocketId}`);
-            valueSpan.textContent = slider.value;
+        function updateReportStats() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let totalSavings = 0;
 
-            // Optional: Implement logic to ensure total is 100% (e.g., dynamically adjust other sliders)
-            // For simplicity, this mock-up only updates the displayed value.
-            // A more robust solution would involve distributing changes or validating on save.
+            transactions.forEach(t => {
+                if (t.type === 'Nạp') {
+                    totalIncome += t.amount;
+                } else if (t.type === 'Thanh Toán') {
+                    totalExpense += t.amount;
+                } else if (t.type === 'Chuyển nội bộ' || t.type === 'Chuyển') { // Include internal transfers for savings
+                    // Check if it's a transfer *into* a savings pocket
+                    const destPocket = pockets.find(p => p.id === t.destinationId);
+                    if (destPocket && destPocket.type === 'Tiết kiệm') {
+                        totalSavings += t.amount;
+                    }
+                }
+                // For internal transfers (when deleting pockets), we don't count them as income/expense/savings here
+            });
+
+            document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+            document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
+            document.getElementById('totalSavings').textContent = formatCurrency(totalSavings);
         }
 
+        function calculateMonthlySummary() {
+            const monthlySummary = {}; // { 'MM/YYYY': { income: 0, expense: 0 } }
 
-        // --- Screen Navigation ---
+            transactions.forEach(t => {
+                const date = new Date(t.timestamp.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3')); // Convert DD/MM/YYYY to MM/DD/YYYY for Date object
+                const monthYear = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+
+                if (!monthlySummary[monthYear]) {
+                    monthlySummary[monthYear] = { income: 0, expense: 0 };
+                }
+
+                if (t.type === 'Nạp') {
+                    monthlySummary[monthYear].income += t.amount;
+                } else if (t.type === 'Thanh Toán') {
+                    monthlySummary[monthYear].expense += t.amount;
+                }
+                // For 'Chuyển', 'Phân bổ tự động', 'Bù đắp tự động', 'InternalTransfer',
+                // their impact on overall income/expense is more complex and depends on perspective.
+                // For simplicity, we're only counting 'Nạp' as income and 'Thanh Toán' as expense here.
+            });
+            return monthlySummary;
+        }
+
+        function renderReport() {
+            updateReportStats(); // Update summary stats
+
+            // Render Pie Chart for Pocket Balances
+            const pieCtx = document.getElementById('pieChartCanvas').getContext('2d');
+            if (pieChartInstance) {
+                pieChartInstance.destroy(); // Destroy existing chart instance
+            }
+
+            const pocketNames = pockets.map(p => p.name);
+            const pocketBalances = pockets.map(p => p.balance);
+            const backgroundColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED'
+            ]; // Example colors
+
+            pieChartInstance = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: pocketNames,
+                    datasets: [{
+                        data: pocketBalances,
+                        backgroundColor: backgroundColors.slice(0, pockets.length),
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'var(--bidv-green)' // Set legend text color to dark green
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Tỷ trọng số dư các Pocket',
+                            color: 'var(--bidv-green)' // Set title color to dark green
+                        }
+                    }
+                }
+            });
+
+            // Render Bar Chart for Monthly Income/Expense (Placeholder logic)
+            const barCtx = document.getElementById('barChartCanvas').getContext('2d');
+            if (barChartInstance) {
+                barChartInstance.destroy(); // Destroy existing chart instance
+            }
+
+            // Simplified monthly data for illustration
+            const monthlyData = calculateMonthlySummary();
+            const months = Object.keys(monthlyData).sort(); // Sort months chronologically
+            const incomes = months.map(month => monthlyData[month].income);
+            const expenses = months.map(month => monthlyData[month].expense);
+
+            barChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Tổng Thu',
+                            data: incomes,
+                            backgroundColor: 'var(--balance-positive)', /* Sử dụng màu xanh sáng hơn */
+                            borderColor: 'var(--balance-positive)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Tổng Chi',
+                            data: expenses,
+                            backgroundColor: 'var(--balance-negative)', /* Sử dụng màu đỏ sáng hơn */
+                            borderColor: 'var(--balance-negative)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'var(--bidv-green)' // Set legend text color to dark green
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Thu - Chi theo tháng',
+                            color: 'var(--bidv-green)' // Set title color to dark green
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: 'var(--bidv-green)' // X-axis label color to dark green
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)' // X-axis grid color to light black
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: 'var(--bidv-green)', // Y-axis label color to dark green
+                                callback: function(value) {
+                                    return formatCurrency(value); // Format Y-axis labels
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)' // Y-axis grid color to light black
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Modal & Screen Management ---
         let currentScreen = 'homeScreen';
         let currentNavActive = 'navHome';
+
+        // Global callback for confirm dialog
+        let _onConfirmCallback = null; 
 
         function showScreen(screenId, navElement = null) {
             document.querySelectorAll('.screen').forEach(screen => {
@@ -1043,28 +1243,26 @@
                 currentNavActive = navElement.id;
             }
 
-            // Specific actions when showing a screen
-            if (screenId === 'historyScreen') {
-                renderTransactionHistory();
+            // Re-render content when screen is shown
+            if (screenId === 'homeScreen') {
+                renderHomePage();
+            } else if (screenId === 'historyScreen') {
+                renderTransactionHistory(); // Show all history by default
             } else if (screenId === 'pocketsScreen') {
                 renderManagePocketList();
-            }
-            // Report screen rendering will be basic placeholder in this version
-            // For actual charts, you'd integrate a charting library here (e.g., Chart.js)
-            if (screenId === 'reportScreen') {
-                updateReportStats();
-                // Placeholder for chart rendering
-                document.querySelector('#reportScreen .chart-container:nth-of-type(1) p').textContent = 'Biểu đồ tròn (Pie Chart) sẽ hiển thị ở đây';
-                document.querySelector('#reportScreen .chart-container:nth-of-type(2) p').textContent = 'Biểu đồ đường/cột (Line/Bar Chart) sẽ hiển thị ở đây';
+            } else if (screenId === 'reportScreen') {
+                renderReport();
             }
         }
 
         function goHomeFromHistory() {
             showScreen('homeScreen', document.getElementById('navHome'));
         }
+
         function goHomeFromPockets() {
             showScreen('homeScreen', document.getElementById('navHome'));
         }
+
         function goHomeFromReport() {
             showScreen('homeScreen', document.getElementById('navHome'));
         }
@@ -1076,16 +1274,24 @@
 
             // Populate dropdowns for Add/Transfer money
             if (modalId === 'addMoneyModal') {
-                populatePocketDropdown('addMoneyDestination');
+                populatePocketSelect('addMoneyDestination', pockets, false); // All internal pockets can be destination
             } else if (modalId === 'transferMoneyModal') {
-                populatePocketDropdown('transferSource');
+                populatePocketSelect('transferSource', pockets, false); // All internal pockets can be source
+                populatePocketSelect('transferDestination', pockets, true); // All internal pockets + external can be destination
             } else if (modalId === 'createEditPocketModal') {
+                // Reset form for new pocket creation
                 document.getElementById('createEditPocketTitle').textContent = 'Tạo Pocket Mới';
                 document.getElementById('pocketName').value = '';
                 document.getElementById('pocketIcon').value = '';
                 document.getElementById('pocketType').value = 'Chi tiêu';
                 document.getElementById('pocketLimit').value = '';
                 document.getElementById('createEditPocketModal').dataset.editId = ''; // Clear edit ID
+                // Enable all fields for new pocket
+                document.getElementById('pocketName').readOnly = false;
+                document.getElementById('pocketIcon').readOnly = false;
+                document.getElementById('pocketType').disabled = false;
+                document.getElementById('pocketLimit').style.display = 'block';
+                document.querySelector('label[for="pocketLimit"]').style.display = 'block';
             } else if (modalId === 'allocationSettingsModal') {
                 renderAllocationSettings();
             }
@@ -1095,255 +1301,437 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        function populatePocketDropdown(selectId) {
-            const selectElement = document.getElementById(selectId);
-            selectElement.innerHTML = ''; // Clear existing options
+        // Custom Alert/Confirm functions
+        function showAlert(message, title = 'Thông báo') {
+            document.getElementById('alertDialogTitle').textContent = title;
+            document.getElementById('alertDialogMessage').textContent = message;
+            openModal('customAlertDialog');
+        }
 
-            pockets.forEach(pocket => {
-                const option = document.createElement('option');
-                option.value = pocket.id;
-                option.textContent = pocket.name;
-                selectElement.appendChild(option);
+        function showConfirm(message, onConfirm, title = 'Xác nhận') {
+            document.getElementById('confirmDialogTitle').textContent = title;
+            document.getElementById('confirmDialogMessage').textContent = message;
+            _onConfirmCallback = onConfirm;
+            openModal('customConfirmDialog');
+        }
+
+        function handleConfirm(isConfirmed) {
+            closeModal('customConfirmDialog');
+            if (_onConfirmCallback) {
+                _onConfirmCallback(isConfirmed);
+                _onConfirmCallback = null; // Clear callback
+            }
+        }
+
+        // Hàm khởi tạo cài đặt phân bổ mặc định hoặc cập nhật khi có thay đổi pockets
+        function initializeAllocationSettings() {
+            const userPockets = pockets.filter(p => p.id !== 'TTTK');
+            const newMinBalanceAlloc = {};
+            const newMaxBalanceAlloc = {};
+
+            // Nếu không có pocket phụ nào, reset cài đặt
+            if (userPockets.length === 0) {
+                allocationSettings.minBalance = {};
+                allocationSettings.maxBalance = {};
+                return;
+            }
+
+            let totalMinPercent = 0;
+            let totalMaxPercent = 0;
+
+            userPockets.forEach(pocket => {
+                // Giữ lại tỷ lệ cũ nếu pocket đã tồn tại, nếu không thì mặc định 0
+                newMinBalanceAlloc[pocket.id] = allocationSettings.minBalance[pocket.id] !== undefined ? allocationSettings.minBalance[pocket.id] : 0;
+                newMaxBalanceAlloc[pocket.id] = allocationSettings.maxBalance[pocket.id] !== undefined ? allocationSettings.maxBalance[pocket.id] : 0;
+                
+                totalMinPercent += newMinBalanceAlloc[pocket.id];
+                totalMaxPercent += newMaxBalanceAlloc[pocket.id];
             });
+
+            // Nếu tổng tỷ lệ không phải 100%, có thể cần phân bổ lại đều hoặc thông báo cho người dùng
+            // Hoặc nếu tổng là 0 (chưa cài đặt), phân bổ đều
+            if (totalMinPercent === 0 && userPockets.length > 0) {
+                const defaultPercent = Math.floor(100 / userPockets.length);
+                userPockets.forEach((pocket, index) => {
+                    newMinBalanceAlloc[pocket.id] = (index === userPockets.length - 1) ? (100 - (defaultPercent * (userPockets.length - 1))) : defaultPercent;
+                });
+            } else if (totalMinPercent !== 100) {
+                 console.warn("Tổng tỷ lệ phân bổ minBalance không bằng 100%. Vui lòng cài đặt lại.");
+            }
+
+            if (totalMaxPercent === 0 && userPockets.length > 0) {
+                const defaultPercent = Math.floor(100 / userPockets.length);
+                userPockets.forEach((pocket, index) => {
+                    newMaxBalanceAlloc[pocket.id] = (index === userPockets.length - 1) ? (100 - (defaultPercent * (userPockets.length - 1))) : defaultPercent;
+                });
+            } else if (totalMaxPercent !== 100) {
+                console.warn("Tổng tỷ lệ phân bổ maxBalance không bằng 100%. Vui lòng cài đặt lại.");
+            }
+
+            allocationSettings.minBalance = newMinBalanceAlloc;
+            allocationSettings.maxBalance = newMaxBalanceAlloc;
+
+            saveToLocalStorage(); // Lưu cấu hình phân bổ mới
         }
 
         // --- Pocket Management ---
+        let currentEditPocketId = null; // To store which pocket is being edited
+
         function openManagePocket(pocketId) {
             if (pocketId === 'TTTK') {
-                const ttk = pockets.find(p => p.id === 'TTTK');
-                document.getElementById('tttkMinBalance').value = ttk.minBalance || '';
-                document.getElementById('tttkMaxBalance').value = ttk.maxBalance || '';
+                const ttkttPocket = pockets.find(p => p.id === 'TTTK');
+                document.getElementById('tttkMinBalance').value = ttkttPocket.minBalance || 0;
+                document.getElementById('tttkMaxBalance').value = ttkttPocket.maxBalance || 0;
                 openModal('manageTTTKModal');
             } else {
-                // This is now handled by openEditPocket from the pockets management screen
-                // For now, this button on home screen acts as a shortcut to manage that specific pocket.
-                showScreen('pocketsScreen', document.getElementById('navPockets'));
-                openEditPocket(pocketId); // Open edit modal for that pocket directly
+                showScreen('pocketsScreen', document.getElementById('navPockets')); // Navigate to Pockets screen
+                openEditPocket(pocketId); // Then open edit modal for the specific pocket
             }
         }
 
         function openEditPocket(pocketId) {
-            const pocketToEdit = pockets.find(p => p.id === pocketId);
-            if (!pocketToEdit) return;
+            currentEditPocketId = pocketId;
+            const pocket = pockets.find(p => p.id === pocketId);
+            if (!pocket) return;
 
-            if (pocketId === 'TTTK') {
-                const ttk = pockets.find(p => p.id === 'TTTK');
-                document.getElementById('tttkMinBalance').value = ttk.minBalance || '';
-                document.getElementById('tttkMaxBalance').value = ttk.maxBalance || '';
-                openModal('manageTTTKModal');
+            document.getElementById('createEditPocketTitle').textContent = 'Chỉnh sửa Pocket';
+            document.getElementById('pocketName').value = pocket.name;
+            // Extract Font Awesome class if it's an <i> tag, otherwise use as is
+            if (pocket.icon.includes('<i class="fa-solid ')) {
+                const match = pocket.icon.match(/fa-solid (fa-[a-z0-9-]+)/);
+                document.getElementById('pocketIcon').value = match ? match[1] : '';
             } else {
-                document.getElementById('createEditPocketTitle').textContent = 'Chỉnh sửa Pocket';
-                document.getElementById('pocketName').value = pocketToEdit.name;
-                document.getElementById('pocketIcon').value = pocketToEdit.icon.includes('<i') ? '' : pocketToEdit.icon; // Don't pre-fill if it's a Font Awesome icon
-                document.getElementById('pocketType').value = pocketToEdit.type;
-                document.getElementById('pocketLimit').value = pocketToEdit.limit || '';
-                document.getElementById('createEditPocketModal').dataset.editId = pocketId;
-                openModal('createEditPocketModal');
+                document.getElementById('pocketIcon').value = pocket.icon;
             }
+            document.getElementById('pocketType').value = pocket.type;
+            document.getElementById('pocketLimit').value = pocket.limit !== null ? pocket.limit : '';
+
+            // Disable editing for TTTK's name, icon, and type if needed
+            document.getElementById('pocketName').readOnly = (pocketId === 'TTTK');
+            document.getElementById('pocketIcon').readOnly = (pocketId === 'TTTK');
+            document.getElementById('pocketType').disabled = (pocketId === 'TTTK');
+            
+            // Hide limit for TTTK
+            document.getElementById('pocketLimit').style.display = (pocketId === 'TTTK' ? 'none' : 'block');
+            document.querySelector('label[for="pocketLimit"]').style.display = (pocketId === 'TTTK' ? 'none' : 'block');
+
+            openModal('createEditPocketModal');
         }
 
         function savePocket() {
-            const pocketName = document.getElementById('pocketName').value;
-            let pocketIcon = document.getElementById('pocketIcon').value;
-            const pocketType = document.getElementById('pocketType').value;
-            const pocketLimit = parseFloat(document.getElementById('pocketLimit').value) || null;
-            const editId = document.getElementById('createEditPocketModal').dataset.editId;
+            const name = document.getElementById('pocketName').value.trim();
+            let icon = document.getElementById('pocketIcon').value.trim();
+            const type = document.getElementById('pocketType').value;
+            const limit = parseFloat(document.getElementById('pocketLimit').value) || null;
 
-            if (!pocketName) {
-                alert('Tên ví không được để trống!');
+            if (!name) {
+                showAlert('Tên ví không được để trống.');
                 return;
             }
 
-            // Basic check for Font Awesome icon format if user directly enters class
-            if (pocketIcon.startsWith('fa-')) {
-                pocketIcon = `<i class="fa-solid ${pocketIcon}"></i>`;
-            } else if (!pocketIcon) { // Default icon if empty
-                pocketIcon = '💸'; // Default emoji
+            // Convert Font Awesome class to <i> tag if detected
+            if (icon.startsWith('fa-')) {
+                icon = `<i class="fa-solid ${icon}"></i>`;
+            } else if (!icon) { // Default icon if empty
+                icon = '💸'; // Default emoji
             }
 
-            if (editId) {
-                // Edit existing pocket
-                const index = pockets.findIndex(p => p.id === editId);
-                if (index !== -1) {
-                    pockets[index].name = pocketName;
-                    pockets[index].icon = pocketIcon;
-                    pockets[index].type = pocketType;
-                    pockets[index].limit = pocketLimit;
+            if (currentEditPocketId) { // Editing existing pocket
+                const pocket = pockets.find(p => p.id === currentEditPocketId);
+                if (pocket) {
+                    pocket.name = name;
+                    pocket.icon = icon;
+                    pocket.type = type;
+                    pocket.limit = limit;
                 }
-            } else {
-                // Create new pocket
+            } else { // Creating new pocket
+                // Allow up to 4 user-defined pockets + 1 TTTK
                 if (pockets.filter(p => p.id !== 'TTTK').length >= 4) {
-                    alert('Bạn chỉ có thể tạo tối đa 4 pocket khác ngoài Tài khoản thanh toán chung.');
+                    showAlert('Bạn chỉ có thể tạo tối đa 4 Pocket phụ.');
+                    closeModal('createEditPocketModal');
                     return;
                 }
-                const newPocket = {
-                    id: 'pocket_' + Date.now(), // Simple unique ID
-                    name: pocketName,
-                    icon: pocketIcon,
-                    balance: 0,
-                    type: pocketType,
-                    limit: pocketLimit
-                };
-                pockets.push(newPocket);
+
+                const newId = 'pocket_' + Date.now(); // Simple unique ID
+                // Check if name already exists (optional, but good practice)
+                if (pockets.some(p => p.id !== 'TTTK' && p.name.toLowerCase() === name.toLowerCase())) {
+                    showAlert('Tên ví đã tồn tại. Vui lòng chọn tên khác.');
+                    return;
+                }
+                pockets.push({ id: newId, name, icon, balance: 0, type, limit });
+                initializeAllocationSettings(); // Cập nhật cài đặt phân bổ khi thêm pocket mới
             }
+            currentEditPocketId = null; // Reset
             saveToLocalStorage();
-            renderManagePocketList(); // Re-render the manage list
+            renderManagePocketList();
             closeModal('createEditPocketModal');
+            showAlert('Đã lưu Pocket.');
         }
 
         function deletePocket(pocketId) {
             if (pocketId === 'TTTK') {
-                alert('Không thể xóa Tài khoản thanh toán chung.');
+                showAlert('Không thể xóa Tài khoản thanh toán chung.');
                 return;
             }
+            showConfirm(`Bạn có chắc chắn muốn xóa Pocket "${pockets.find(p => p.id === pocketId).name}"? Toàn bộ số dư sẽ được chuyển về Tài khoản chính.`, (confirmed) => {
+                if (confirmed) {
+                    const pocketToDelete = pockets.find(p => p.id === pocketId);
+                    const ttkttPocket = pockets.find(p => p.id === 'TTTK');
 
-            if (!confirm(`Bạn có chắc chắn muốn xóa pocket "${pockets.find(p => p.id === pocketId)?.name}"? Toàn bộ số dư và lịch sử giao dịch sẽ chuyển về Tài khoản thanh toán chung.`)) {
-                return;
-            }
+                    if (pocketToDelete && ttkttPocket) {
+                        // Chuyển toàn bộ số dư về TTTK
+                        ttkttPocket.balance += pocketToDelete.balance;
+                        
+                        // Ghi lại giao dịch chuyển nội bộ khi xóa pocket
+                        transactions.push({
+                            id: 'txn_' + Date.now(),
+                            type: 'InternalTransfer',
+                            sourceId: pocketToDelete.id,
+                            sourceName: pocketToDelete.name,
+                            destinationId: 'TTTK',
+                            destinationName: ttkttPocket.name,
+                            amount: pocketToDelete.balance,
+                            note: `Chuyển số dư khi xóa Pocket "${pocketToDelete.name}"`,
+                            timestamp: getCurrentDateTime()
+                        });
 
-            const deletedPocket = pockets.find(p => p.id === pocketId);
-            if (!deletedPocket) return;
-
-            const ttkPocket = pockets.find(p => p.id === 'TTTK');
-            if (ttkPocket) {
-                ttkPocket.balance += deletedPocket.balance; // Transfer balance to TTTK
-            }
-
-            // Transfer transaction history
-            transactions.forEach(t => {
-                if (t.sourceId === pocketId) {
-                    t.sourceId = 'TTTK';
-                    t.sourceName = 'Main Account';
-                    t.type = 'InternalTransfer'; // Mark as internal transfer
-                }
-                if (t.destinationId === pocketId) {
-                    t.destinationId = 'TTTK';
-                    t.destinationName = 'Main Account';
-                    t.type = 'InternalTransfer'; // Mark as internal transfer
+                        pockets = pockets.filter(p => p.id !== pocketId);
+                        initializeAllocationSettings(); // Cập nhật cài đặt phân bổ khi xóa pocket
+                        saveToLocalStorage();
+                        renderManagePocketList();
+                        showAlert('Đã xóa Pocket và chuyển số dư về Tài khoản chính.');
+                    }
                 }
             });
-
-            pockets = pockets.filter(p => p.id !== pocketId);
-            saveToLocalStorage();
-            renderManagePocketList(); // Re-render the manage list
         }
 
         function saveTTTKSettings() {
-            const ttk = pockets.find(p => p.id === 'TTTK');
-            if (ttk) {
-                ttk.minBalance = parseFloat(document.getElementById('tttkMinBalance').value) || 0;
-                ttk.maxBalance = parseFloat(document.getElementById('tttkMaxBalance').value) || 0;
-                saveToLocalStorage();
-                closeModal('manageTTTKModal');
+            const ttkttPocket = pockets.find(p => p.id === 'TTTK');
+            const newMin = parseFloat(document.getElementById('tttkMinBalance').value);
+            const newMax = parseFloat(document.getElementById('tttkMaxBalance').value);
+
+            if (isNaN(newMin) || newMin < 0 || isNaN(newMax) || newMax < 0) {
+                showAlert('Vui lòng nhập số dư tối thiểu và tối đa hợp lệ (không âm).');
+                return;
             }
+
+            if (newMin > newMax) {
+                showAlert('Số dư tối thiểu không thể lớn hơn số dư tối đa.');
+                return;
+            }
+
+            ttkttPocket.minBalance = newMin;
+            ttkttPocket.maxBalance = newMax;
+            saveToLocalStorage();
+            closeModal('manageTTTKModal');
+            showAlert('Đã cập nhật cài đặt Tài khoản thanh toán chung.');
         }
 
         // --- Transaction Functions ---
+
+        function addTransaction(type, sourceId, destinationId, amount, note, sourceName, destinationName) {
+            transactions.push({
+                id: 'txn_' + Date.now(),
+                type: type,
+                sourceId: sourceId,
+                destinationId: destinationId,
+                amount: amount,
+                note: note,
+                timestamp: getCurrentDateTime(),
+                sourceName: sourceName,
+                destinationName: destinationName
+            });
+            saveToLocalStorage();
+        }
+
         function executeAddMoney() {
             const destinationId = document.getElementById('addMoneyDestination').value;
-            const amount = parseFloat(document.getElementById('addMoneyAmount').value);
+            let amount = parseFloat(document.getElementById('addMoneyAmount').value);
             const note = document.getElementById('addMoneyNote').value;
 
             if (isNaN(amount) || amount <= 0) {
-                alert('Vui lòng nhập số tiền hợp lệ.');
+                showAlert('Vui lòng nhập số tiền hợp lệ.');
                 return;
             }
 
             const destinationPocket = pockets.find(p => p.id === destinationId);
-            if (destinationPocket) {
-                destinationPocket.balance += amount;
-                transactions.push({
-                    id: 'txn_' + Date.now(),
-                    type: 'Nạp',
-                    timestamp: getCurrentDateTime(),
-                    sourceId: 'CASA_BIDV',
-                    sourceName: 'Tài khoản CASA tại BIDV',
-                    destinationId: destinationId,
-                    destinationName: destinationPocket.name,
-                    amount: amount,
-                    note: note
-                });
-                saveToLocalStorage();
-                closeModal('addMoneyModal');
-            } else {
-                alert('Pocket đích không hợp lệ.');
+            if (!destinationPocket) {
+                showAlert('Không tìm thấy ví đích.');
+                return;
             }
+
+            // Add money to the selected destination pocket
+            destinationPocket.balance += amount;
+            addTransaction('Nạp', 'Nguồn bên ngoài', destinationPocket.id, amount, note, 'Tài khoản CASA tại BIDV', destinationPocket.name);
+
+            // --- Apply maxBalance rule ONLY if the destination is TTTK ---
+            if (destinationPocket.id === 'TTTK' && destinationPocket.balance > destinationPocket.maxBalance) {
+                const excessAmount = destinationPocket.balance - destinationPocket.maxBalance;
+                let distributedAmount = 0;
+
+                const userPockets = pockets.filter(p => p.id !== 'TTTK');
+                if (userPockets.length > 0) {
+                    let remainingExcess = excessAmount;
+
+                    const sortedAllocations = Object.entries(allocationSettings.maxBalance)
+                                                    .sort(([,a],[,b]) => b - a);
+
+                    for (const [pocketId, percentage] of sortedAllocations) {
+                        if (percentage > 0 && remainingExcess > 0) {
+                            const targetPocket = pockets.find(p => p.id === pocketId);
+                            if (targetPocket) {
+                                const amountToDistribute = Math.min(remainingExcess, (excessAmount * percentage / 100)); 
+                                
+                                if (amountToDistribute > 0) {
+                                    targetPocket.balance += amountToDistribute;
+                                    destinationPocket.balance -= amountToDistribute; // Deduct from TTTK
+                                    distributedAmount += amountToDistribute;
+                                    remainingExcess -= amountToDistribute;
+
+                                    addTransaction('Phân bổ tự động', 'TTTK', targetPocket.id, amountToDistribute, `Phân bổ tự động từ TKTT (vượt maxBalance) theo tỷ lệ ${percentage}%`, destinationPocket.name, targetPocket.name);
+                                }
+                            }
+                        }
+                    }
+                    showAlert(`Đã nạp ${formatCurrency(amount)} vào ${destinationPocket.name}. Số dư vượt hạn mức. Đã tự động phân bổ ${formatCurrency(distributedAmount)} vào các ngăn ví khác.`);
+                } else {
+                    showAlert(`Đã nạp ${formatCurrency(amount)} vào ${destinationPocket.name}. Số dư vượt hạn mức nhưng không có ngăn ví phụ nào để phân bổ.`);
+                }
+            } else {
+                showAlert(`Đã nạp ${formatCurrency(amount)} vào ${destinationPocket.name}.`);
+            }
+
+            saveToLocalStorage();
+            closeModal('addMoneyModal');
         }
 
         function executeTransferMoney() {
             const sourceId = document.getElementById('transferSource').value;
-            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const destinationId = document.getElementById('transferDestination').value;
+            let amount = parseFloat(document.getElementById('transferAmount').value);
             const note = document.getElementById('transferNote').value;
 
             if (isNaN(amount) || amount <= 0) {
-                alert('Vui lòng nhập số tiền hợp lệ.');
+                showAlert('Vui lòng nhập số tiền hợp lệ.');
+                return;
+            }
+
+            if (sourceId === destinationId) {
+                showAlert('Không thể chuyển tiền giữa cùng một ví.');
                 return;
             }
 
             const sourcePocket = pockets.find(p => p.id === sourceId);
-            if (sourcePocket && sourcePocket.balance >= amount) {
-                sourcePocket.balance -= amount;
-                // For this mock, we're assuming transfer to external CASA, so only deduct.
-                // If it were internal, we'd add to another pocket.
-                transactions.push({
-                    id: 'txn_' + Date.now(),
-                    type: 'Chuyển',
-                    timestamp: getCurrentDateTime(),
-                    sourceId: sourceId,
-                    sourceName: sourcePocket.name,
-                    destinationId: 'CASA_BIDV_EXTERNAL',
-                    destinationName: 'Tài khoản CASA tại BIDV', // External
-                    amount: amount,
-                    note: note
-                });
-                saveToLocalStorage();
-                closeModal('transferMoneyModal');
-            } else if (sourcePocket && sourcePocket.balance < amount) {
-                alert('Số dư không đủ để thực hiện giao dịch.');
-            } else {
-                alert('Pocket nguồn không hợp lệ.');
+            if (!sourcePocket) {
+                showAlert('Không tìm thấy ví nguồn.');
+                return;
             }
+
+            if (sourcePocket.balance < amount) {
+                showAlert('Số dư trong ví nguồn không đủ.');
+                return;
+            }
+
+            sourcePocket.balance -= amount;
+
+            let destinationName = '';
+            if (destinationId === 'CASA_BIDV_EXTERNAL') {
+                destinationName = 'Tài khoản CASA bên ngoài BIDV';
+                addTransaction('Chuyển ra ngoài', sourcePocket.id, destinationId, amount, note, sourcePocket.name, destinationName);
+                showAlert(`Đã chuyển ${formatCurrency(amount)} từ ${sourcePocket.name} sang ${destinationName}.`);
+            } else {
+                const destinationPocket = pockets.find(p => p.id === destinationId);
+                if (!destinationPocket) {
+                    showAlert('Không tìm thấy ví đích hợp lệ.');
+                    // Revert sourcePocket balance
+                    sourcePocket.balance += amount;
+                    return;
+                }
+                destinationPocket.balance += amount;
+                destinationName = destinationPocket.name;
+                addTransaction('Chuyển nội bộ', sourcePocket.id, destinationId, amount, note, sourcePocket.name, destinationName);
+                showAlert(`Đã chuyển ${formatCurrency(amount)} từ ${sourcePocket.name} sang ${destinationName}.`);
+            }
+
+            saveToLocalStorage();
+            closeModal('transferMoneyModal');
         }
 
         function executePay() {
             const sourceId = 'TTTK'; // Always from TTTK
             const service = document.getElementById('payService').value;
-            const amount = parseFloat(document.getElementById('payAmount').value);
+            let amount = parseFloat(document.getElementById('payAmount').value);
             const note = document.getElementById('payNote').value;
 
             if (isNaN(amount) || amount <= 0) {
-                alert('Vui lòng nhập số tiền hợp lệ.');
+                showAlert('Vui lòng nhập số tiền hợp lệ.');
                 return;
             }
 
-            const ttkPocket = pockets.find(p => p.id === sourceId);
-            if (ttkPocket && ttkPocket.balance >= amount) {
-                ttkPocket.balance -= amount;
-                transactions.push({
-                    id: 'txn_' + Date.now(),
-                    type: 'Thanh Toán',
-                    timestamp: getCurrentDateTime(),
-                    sourceId: sourceId,
-                    sourceName: ttkPocket.name,
-                    destinationId: service, // Service name as destination ID
-                    destinationName: service,
-                    amount: amount,
-                    note: note
-                });
-                saveToLocalStorage();
-                closeModal('payModal');
-            } else if (ttkPocket && ttkPocket.balance < amount) {
-                alert('Số dư Tài khoản thanh toán chung không đủ để thực hiện thanh toán.');
-            } else {
-                alert('Lỗi: Không tìm thấy Tài khoản thanh toán chung.');
+            const ttkttPocket = pockets.find(p => p.id === sourceId);
+            if (!ttkttPocket) {
+                showAlert('Không tìm thấy Tài khoản thanh toán chung.');
+                return;
             }
+
+            // Check if TTTK balance is sufficient for payment
+            if (ttkttPocket.balance < amount) {
+                // --- Quy luật giao dịch: Khi chuyển tiền lấy nguồn từ TKTT, nếu sau khi rút số dư của TTTK nhỏ hơn minBalance thì phần chênh lệch sẽ được lấy từ các ngăn ví khác theo tỷ lệ đã khai báo ---
+                const amountNeeded = amount - ttkttPocket.balance; // Amount to try and replenish
+                let replenishedAmount = 0;
+
+                const userPockets = pockets.filter(p => p.id !== 'TTTK');
+                if (userPockets.length > 0) {
+                    let remainingNeeded = amountNeeded;
+
+                    // Sort pockets by allocation percentage (descending)
+                    const sortedAllocations = Object.entries(allocationSettings.minBalance)
+                                                    .sort(([,a],[,b]) => b - a);
+
+                    for (const [pocketId, percentage] of sortedAllocations) {
+                        if (percentage > 0 && remainingNeeded > 0) {
+                            const sourcePocket = pockets.find(p => p.id === pocketId);
+                            if (sourcePocket && sourcePocket.balance > 0) {
+                                // Amount to replenish is limited by remaining needed, percentage, and source pocket's balance
+                                const amountToReplenish = Math.min(remainingNeeded, (amountNeeded * percentage / 100), sourcePocket.balance); 
+
+                                if (amountToReplenish > 0) {
+                                    sourcePocket.balance -= amountToReplenish;
+                                    ttkttPocket.balance += amountToReplenish;
+                                    replenishedAmount += amountToReplenish;
+                                    remainingNeeded -= amountToReplenish;
+
+                                    addTransaction('Bù đắp tự động', sourcePocket.id, 'TTTK', amountToReplenish, `Bù đắp tự động vào TKTT (dưới minBalance) theo tỷ lệ ${percentage}%`, sourcePocket.name, ttkttPocket.name);
+                                }
+                            }
+                        }
+                    }
+
+                    if (ttkttPocket.balance < amount) { // Still not enough after replenishment
+                        showAlert(`Số dư Tài khoản chính và các ngăn ví phụ không đủ để thanh toán ${formatCurrency(amount)}. Vui lòng nạp thêm tiền.`);
+                        return;
+                    } else {
+                         showAlert(`Số dư Tài khoản chính không đủ. Đã tự động bù đắp ${formatCurrency(replenishedAmount)} từ các ngăn ví phụ để thanh toán.`);
+                    }
+
+                } else {
+                    showAlert(`Số dư Tài khoản chính không đủ để thanh toán ${formatCurrency(amount)}. Không có ngăn ví phụ nào để bù đắp.`);
+                    return;
+                }
+            }
+
+            // Proceed with payment if funds are sufficient (either initially or after replenishment)
+            ttkttPocket.balance -= amount;
+            addTransaction('Thanh Toán', sourceId, service, amount, note, ttkttPocket.name, service);
+            showAlert(`Đã thanh toán ${formatCurrency(amount)} cho dịch vụ "${service}".`);
+            saveToLocalStorage();
+            closeModal('payModal');
         }
 
         function showHistory(pocketId = null) {
             showScreen('historyScreen');
             renderTransactionHistory(pocketId);
         }
-
 
         // --- Allocation Settings Functions ---
         function saveAllocationSettings() {
@@ -1368,12 +1756,13 @@
                 totalMaxPercent += value;
             });
 
-            if (totalMinPercent !== 100 && Object.keys(newMinAlloc).length > 0) {
-                alert('Tổng tỷ lệ phân bổ khi TKTT ≤ minBalance phải bằng 100%!');
+            // Validate total percentages
+            if (Object.keys(newMinAlloc).length > 0 && totalMinPercent !== 100) {
+                showAlert(`Tổng tỷ lệ phân bổ khi TKTT dưới minBalance phải bằng 100%. Hiện tại là ${totalMinPercent}%.`);
                 return;
             }
-            if (totalMaxPercent !== 100 && Object.keys(newMaxAlloc).length > 0) {
-                alert('Tổng tỷ lệ phân bổ khi TKTT ≥ maxBalance phải bằng 100%!');
+            if (Object.keys(newMaxAlloc).length > 0 && totalMaxPercent !== 100) {
+                showAlert(`Tổng tỷ lệ phân bổ khi TKTT vượt maxBalance phải bằng 100%. Hiện tại là ${totalMaxPercent}%.`);
                 return;
             }
 
@@ -1381,46 +1770,164 @@
             allocationSettings.maxBalance = newMaxAlloc;
             saveToLocalStorage();
             closeModal('allocationSettingsModal');
-            alert('Cài đặt tỷ lệ phân bổ đã được lưu.');
+            showAlert('Cài đặt tỷ lệ phân bổ đã được lưu.');
         }
 
-        // --- Reporting Functions (Placeholder) ---
-        function updateReportStats() {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalSavings = 0;
+        function updateAllocationValue(slider) {
+            const pocketId = slider.dataset.pocketId;
+            const type = slider.dataset.type; // 'minBalance' or 'maxBalance'
+            
+            // Find the label element which is the previous sibling of the slider
+            const labelElement = slider.previousElementSibling;
+            // Find the span element within that label
+            const valueSpan = labelElement ? labelElement.querySelector('span') : null;
 
-            transactions.forEach(t => {
-                if (t.type === 'Nạp') {
-                    totalIncome += t.amount;
-                } else if (t.type === 'Thanh Toán') {
-                    totalExpense += t.amount;
-                } else if (t.type === 'Chuyển') {
-                    // Check if it's a transfer *into* a savings pocket
-                    const destPocket = pockets.find(p => p.id === t.destinationId);
-                    if (destPocket && destPocket.type === 'Tiết kiệm') {
-                        totalSavings += t.amount;
-                    }
-                }
-                // For internal transfers (when deleting pockets), we don't count them as income/expense/savings here
+            if (!valueSpan) {
+                console.error(`Error: Could not find span for pocketId: ${pocketId}, type: ${type}`);
+                return; // Exit if element not found
+            }
+
+            let newValue = parseInt(slider.value);
+            valueSpan.textContent = newValue;
+
+            // Get the current allocation object (e.g., allocationSettings.minBalance)
+            const currentAllocationMap = allocationSettings[type];
+            const userPockets = pockets.filter(p => p.id !== 'TTTK');
+
+            // Set the new value for the changed pocket
+            currentAllocationMap[pocketId] = newValue;
+
+            // Calculate the sum of all current allocations
+            let currentTotal = 0;
+            userPockets.forEach(p => {
+                currentTotal += currentAllocationMap[p.id] || 0;
             });
 
-            document.getElementById('totalIncome').textContent = totalIncome.toLocaleString('en-US');
-            document.getElementById('totalExpense').textContent = totalExpense.toLocaleString('en-US');
-            document.getElementById('totalSavings').textContent = totalSavings.toLocaleString('en-US');
+            // If the total is not 100%, redistribute
+            if (currentTotal !== 100) {
+                let remainingPercentage = 100 - newValue; // Percentage left for other pockets
+                let sumOfOtherPocketsCurrent = 0;
 
-            // Chart rendering logic would go here. For example, using Chart.js:
-            // const ctxPie = document.getElementById('pieChartCanvas').getContext('2d');
-            // const pocketBalances = pockets.map(p => p.balance);
-            // const pocketNames = pockets.map(p => p.name);
-            // new Chart(ctxPie, { type: 'pie', data: { labels: pocketNames, datasets: [{ data: pocketBalances }] } });
+                // Calculate sum of current allocations for *other* pockets (excluding the one just changed)
+                userPockets.forEach(p => {
+                    if (p.id !== pocketId) {
+                        sumOfOtherPocketsCurrent += currentAllocationMap[p.id] || 0;
+                    }
+                });
+
+                if (sumOfOtherPocketsCurrent === 0) {
+                    // If all other pockets are currently 0, and there are other pockets to distribute to
+                    if (remainingPercentage > 0 && userPockets.length > 1) {
+                        const numOtherPockets = userPockets.length - 1;
+                        const baseAmountPerOther = Math.floor(remainingPercentage / numOtherPockets);
+                        let remainder = remainingPercentage % numOtherPockets;
+
+                        userPockets.forEach(p => {
+                            if (p.id !== pocketId) {
+                                let distributedVal = baseAmountPerOther;
+                                if (remainder > 0) {
+                                    distributedVal += 1;
+                                    remainder--;
+                                }
+                                currentAllocationMap[p.id] = distributedVal;
+                                const otherValueSpan = document.getElementById(`${type}AllocValue-${p.id}`);
+                                if (otherValueSpan) {
+                                    otherValueSpan.textContent = distributedVal;
+                                }
+                                const otherSlider = document.querySelector(`input[data-pocket-id="${p.id}"][data-type="${type}"]`);
+                                if (otherSlider) {
+                                    otherSlider.value = distributedVal;
+                                }
+                            }
+                        });
+                    } else if (remainingPercentage === 0) {
+                        // If current slider is 100, set all others to 0
+                        userPockets.forEach(p => {
+                            if (p.id !== pocketId) {
+                                currentAllocationMap[p.id] = 0;
+                                const otherValueSpan = document.getElementById(`${type}AllocValue-${p.id}`);
+                                if (otherValueSpan) {
+                                    otherValueSpan.textContent = 0;
+                                }
+                                const otherSlider = document.querySelector(`input[data-pocket-id="${p.id}"][data-type="${type}"]`);
+                                if (otherSlider) {
+                                    otherSlider.value = 0;
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    // Proportional redistribution among other pockets
+                    let adjustedSumForOthers = 0;
+                    userPockets.forEach((p, index) => {
+                        if (p.id !== pocketId) {
+                            // Calculate new value proportionally
+                            let newOtherValue = Math.round((currentAllocationMap[p.id] / sumOfOtherPocketsCurrent) * remainingPercentage);
+                            
+                            // Ensure value doesn't go below 0
+                            newOtherValue = Math.max(0, newOtherValue);
+
+                            currentAllocationMap[p.id] = newOtherValue;
+                            const otherValueSpan = document.getElementById(`${type}AllocValue-${p.id}`);
+                            if (otherValueSpan) {
+                                otherValueSpan.textContent = newOtherValue;
+                            }
+                            const otherSlider = document.querySelector(`input[data-pocket-id="${p.id}"][data-type="${type}"]`);
+                            if (otherSlider) {
+                                otherSlider.value = newOtherValue;
+                            }
+                            adjustedSumForOthers += newOtherValue;
+                        }
+                    });
+
+                    // Handle potential rounding errors to ensure total is exactly 100
+                    let finalTotal = newValue + adjustedSumForOthers;
+                    let diff = 100 - finalTotal;
+
+                    if (diff !== 0) {
+                        // Distribute the difference to the first available other pocket that can absorb it
+                        const firstAdjustablePocket = userPockets.find(p => p.id !== pocketId && (currentAllocationMap[p.id] + diff >= 0 && currentAllocationMap[p.id] + diff <= 100));
+                        
+                        if (firstAdjustablePocket) {
+                            currentAllocationMap[firstAdjustablePocket.id] += diff;
+                            const otherValueSpan = document.getElementById(`${type}AllocValue-${firstAdjustablePocket.id}`);
+                            if (otherValueSpan) {
+                                otherValueSpan.textContent = currentAllocationMap[firstAdjustablePocket.id];
+                            }
+                            const otherSlider = document.querySelector(`input[data-pocket-id="${firstAdjustablePocket.id}"][data-type="${type}"]`);
+                            if (otherSlider) {
+                                otherSlider.value = currentAllocationMap[firstAdjustablePocket.id];
+                            }
+                        } else {
+                            // Fallback: if no single pocket can absorb the diff without going out of bounds,
+                            // try to apply to the first one, capping if necessary.
+                            const anyOtherPocket = userPockets.find(p => p.id !== pocketId);
+                            if (anyOtherPocket) {
+                                currentAllocationMap[anyOtherPocket.id] = Math.max(0, Math.min(100, currentAllocationMap[anyOtherPocket.id] + diff));
+                                const otherValueSpan = document.getElementById(`${type}AllocValue-${anyOtherPocket.id}`);
+                                if (otherValueSpan) {
+                                    otherValueSpan.textContent = currentAllocationMap[anyOtherPocket.id];
+                                }
+                                const otherSlider = document.querySelector(`input[data-pocket-id="${anyOtherPocket.id}"][data-type="${type}"]`);
+                                if (otherSlider) {
+                                    otherSlider.value = currentAllocationMap[anyOtherPocket.id];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Save to local storage after all adjustments
+            saveToLocalStorage();
         }
 
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderHomePage();
-            showScreen('homeScreen', document.getElementById('navHome')); // Ensure home screen is active on load
+            // Ensure all necessary functions are defined before calling them
+            initializeAllocationSettings(); 
+            showScreen('homeScreen', document.getElementById('navHome')); 
         });
     </script>
 </body>
