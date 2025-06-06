@@ -155,6 +155,49 @@
             </ul>
         </div>
 
+        <!-- New: User Guide Section -->
+        <div class="space-y-4 pt-6 border-t border-gray-200">
+            <button id="toggle-user-guide-btn"
+                    class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 shadow-md">
+                Hướng dẫn sử dụng
+            </button>
+            <div id="user-guide-content" class="min-h-[50px] mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-auto shadow-inner hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Chào mừng bạn đến với Ứng dụng Bài Tập Tiếng Anh Hàng Ngày!</h3>
+                <p>Ứng dụng này được thiết kế để giúp bạn cải thiện kỹ năng tiếng Anh thông qua các bài tập được tạo bởi AI.</p>
+                <h4 class="font-semibold text-lg text-gray-700 mt-4">Cách sử dụng:</h4>
+                <ol class="list-decimal list-inside">
+                    <li><strong>Chọn trình độ:</strong> Chọn trình độ (Dễ, Trung bình, Khó, Cực khó) phù hợp với bạn ở đầu trang.</li>
+                    <li><strong>Lấy Bài Tập Mới:</strong> Nhấn nút "Lấy Bài Tập Mới" để AI tạo một bài tập tiếng Anh độc đáo.</li>
+                    <li>
+                        <strong>Nhập câu trả lời:</strong>
+                        <p class="mt-1">Sau khi bài tập xuất hiện, hãy nhập câu trả lời của bạn vào ô văn bản ở cuối màn hình. Dưới đây là hướng dẫn cụ thể cho các dạng bài tập khác nhau:</p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>Bài tập điền từ/điền câu:</strong> Nhập trực tiếp các từ hoặc câu trả lời vào ô.</li>
+                            <li><strong>Bài tập nhiều câu hỏi:</strong> Nếu bài tập có nhiều câu hỏi (ví dụ: Q1, Q2, Q3), hãy nhập câu trả lời của bạn cho từng câu hỏi và phân tách chúng bằng dấu chấm câu hoặc xuống dòng. Ví dụ:
+                                <br><em>1. Câu trả lời của tôi cho câu 1.</em>
+                                <br><em>2. Đây là câu trả lời cho câu 2.</em>
+                                <br><em>3. Và đây là câu 3.</em>
+                            </li>
+                            <li><strong>Bài tập viết đoạn văn/bài luận:</strong> Viết toàn bộ đoạn văn hoặc bài luận của bạn vào ô văn bản.</li>
+                            <li><strong>Bài tập chọn đáp án (A, B, C...):</strong> Nếu bài tập là trắc nghiệm, bạn có thể chỉ cần ghi chữ cái của đáp án hoặc cả câu trả lời. Ví dụ:
+                                <br><em>1. A</em>
+                                <br><em>2. False</em>
+                            </li>
+                        </ul>
+                        <p class="mt-2">AI sẽ cố gắng hiểu câu trả lời của bạn tốt nhất có thể dựa trên ngữ cảnh bài tập.</p>
+                    </li>
+                    <li><strong>Gửi và Đánh giá:</strong> Nhấn "Gửi Câu Trả Lời và Đánh Giá bằng AI" để nhận phản hồi và điểm số từ AI.</li>
+                    <li><strong>Xem Lịch sử:</strong> Mọi bài tập đã làm và kết quả đánh giá sẽ được lưu trong phần "Lịch sử bài tập" ở cuối trang. Bạn có thể nhấn "Xem chi tiết" để xem lại.</li>
+                </ol>
+                <h4 class="font-semibold text-lg text-gray-700 mt-4">Tính năng hỗ trợ AI:</h4>
+                <ul class="list-disc list-inside">
+                    <li><strong>Hiển thị Giải pháp:</strong> Nếu bạn gặp khó khăn, hãy nhấn nút này để xem giải pháp cho bài tập hiện tại.</li>
+                    <li><strong>Giải thích Khái niệm:</strong> Nhập một khái niệm ngữ pháp hoặc từ vựng vào ô và nhấn "Giải thích Khái niệm" để AI cung cấp lời giải thích chi tiết.</li>
+                </ul>
+                <p class="mt-4">Hãy bắt đầu và tận hưởng quá trình học tiếng Anh của bạn!</p>
+            </div>
+        </div>
+
         <p class="text-sm text-gray-500 text-center mt-4 text-gray-600">
             Ứng dụng này cung cấp bài tập tiếng Anh hàng ngày được tạo và hỗ trợ bởi AI, theo dõi tiến độ của bạn.
         </p>
@@ -216,6 +259,11 @@
         const noHistoryMessage = document.getElementById('no-history-message');
 
         const scrollToTopBtn = document.getElementById('scroll-to-top-btn'); // Reference to the new button
+
+        // New references for User Guide
+        const toggleUserGuideBtn = document.getElementById('toggle-user-guide-btn');
+        const userGuideContentDiv = document.getElementById('user-guide-content');
+
 
         const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -628,6 +676,11 @@
             } else {
                 scrollToTopBtn.classList.add('hidden');
             }
+        });
+
+        // Toggle User Guide visibility
+        toggleUserGuideBtn.addEventListener('click', () => {
+            userGuideContentDiv.classList.toggle('hidden');
         });
 
         // Tải lịch sử bài tập khi trang được tải
