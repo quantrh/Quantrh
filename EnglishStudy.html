@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bài Tập Tiếng Anh Hàng Ngày</title>
-    <!-- Google Fonts - Be Vietnam Pro -->
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Be Vietnam Pro', sans-serif; /* Changed font for better Vietnamese support */
-            background-color: #e2e8f0; /* Slightly darker background for contrast */
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #e2e8f0;
         }
         /* Custom spinner */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #3b82f6; /* Tailwind primary blue */
+            border-left-color: #3b82f6;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -64,12 +62,10 @@
             Bài Tập Tiếng Anh Hàng Ngày 15 Phút
         </h1>
 
-        <!-- Program Poster Section -->
         <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
             <img src="Banner1.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
         </div>
 
-        <!-- Difficulty Selection -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <label for="difficulty-select" class="text-lg font-semibold text-gray-700">Chọn trình độ:</label>
             <select id="difficulty-select"
@@ -81,18 +77,15 @@
             </select>
         </div>
 
-        <!-- Exercise Display Area -->
         <div id="exercise-content" class="min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-auto shadow-inner">
             <p class="text-center text-gray-500">Chọn trình độ và nhấn "Lấy Bài Tập Mới" để bắt đầu bài tập tiếng Anh của bạn.</p>
         </div>
 
-        <!-- Loading Indicator for Exercise -->
         <div id="loading-exercise-indicator" class="flex justify-center items-center py-4 hidden">
             <div class="spinner"></div>
             <span class="ml-3 text-lg font-medium text-blue-600">Đang tạo bài tập...</span>
         </div>
 
-        <!-- User Answer Input -->
         <div id="answer-section" class="space-y-4 hidden">
             <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
             <textarea id="user-answer-input"
@@ -104,7 +97,6 @@
             </button>
         </div>
 
-        <!-- AI Evaluation Results -->
         <div id="evaluation-results" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800">Kết quả đánh giá</h2>
             <div id="evaluation-content" class="min-h-[50px] bg-purple-50 p-4 rounded-lg border border-purple-200 text-gray-800 leading-relaxed overflow-auto shadow-inner"></div>
@@ -114,17 +106,14 @@
             </div>
         </div>
 
-        <!-- Get New Exercise Button -->
         <button id="get-exercise-btn"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg">
             Lấy Bài Tập Mới
         </button>
 
-        <!-- AI Helper Features Section -->
         <div id="ai-features-section" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Tính năng AI hỗ trợ</h2>
 
-            <!-- Show Solution -->
             <div>
                 <button id="show-solution-btn"
                         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 shadow-md">
@@ -137,7 +126,6 @@
                 </div>
             </div>
 
-            <!-- Explain Concept -->
             <div>
                 <div class="flex items-center space-x-2 mb-2">
                     <input type="text" id="concept-input" placeholder="Nhập khái niệm cần giải thích (ví dụ: Past Simple)"
@@ -155,11 +143,9 @@
             </div>
         </div>
 
-        <!-- New: Past Exercises History -->
         <div id="history-section" class="space-y-4 pt-6 border-t border-gray-200">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Lịch sử bài tập</h2>
-            <div id="user-id-display" class="text-sm text-gray-600 text-center mb-4"></div>
-            <ul id="past-exercises-list" class="list-disc list-inside bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
+            <div id="user-id-display" class="text-sm text-gray-600 text-center mb-4 hidden"></div> <ul id="past-exercises-list" class="list-disc list-inside bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
                 <p class="text-center text-gray-500" id="no-history-message">Chưa có bài tập nào được hoàn thành.</p>
             </ul>
         </div>
@@ -170,82 +156,12 @@
     </div>
 
     <script type="module">
-        // Firebase imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, onSnapshot, collection, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Đã loại bỏ các import Firebase
 
-        // CẤU HÌNH FIREBASE CỦA DỰ ÁN CỦA BẠN (CẦN THAY THẾ TOÀN BỘ ĐỐI TƯỢNG NÀY BẰNG CẤU HÌNH TỪ DỰ ÁN FIREBASE CỦA BẠN)
-        // Bạn lấy cấu hình này từ Firebase Console: Project settings -> Your apps -> Chọn ứng dụng web của bạn
-        const firebaseConfig = {
-            apiKey: "AIzaSyCyzG3sYbvAYjxooEf-qOgrSXh7czNIFS0", // <<< KHÓA API FIREBASE CỦA BẠN
-            authDomain: "quan-26d00.firebaseapp.com", // <<< TÊN MIỀN XÁC THỰC CỦA BẠN
-            projectId: "quan-26d00",   // <<< ID DỰ ÁN CỦA BẠN
-            storageBucket: "quan-26d00.firebasestorage.app", // <<< STORAGE BUCKET CỦA BẠN
-            messagingSenderId: "871607346190", // <<< MESSAGING SENDER ID CỦA BẠN
-            appId: "1:871607346190:web:e143128121d7417609c85f", // <<< APP ID CỦA BẠN
-            measurementId: "G-LK8B3TYVV4" // Đây là tùy chọn, không cần thiết cho xác thực Firebase cốt lõi
-        };
-
-        // Ghi log cấu hình Firebase để kiểm tra trong console của trình duyệt
-        console.log("Firebase Config (kiểm tra lại các giá trị này!):", firebaseConfig);
-
-        // CÁC BIẾN TOÀN CỤC (ĐỪNG THAY ĐỔI CÁC DÒNG NÀY SAU KHI ĐIỀN firebaseConfig)
-        const appId = firebaseConfig.appId; // Lấy appId từ cấu hình Firebase
-        const initialAuthToken = null; // Biến này chỉ có giá trị trong môi trường Canvas, luôn là null khi chạy ngoài Canvas
-
-        // Firebase Initialization
-        let app;
-        let db;
-        let auth;
-        let userId = null; // Biến để lưu userId
-        let isAuthReady = false; // Biến để kiểm tra trạng thái xác thực
-
-        const USER_EXERCISES_COLLECTION = `/artifacts/${appId}/users/`; // Đường dẫn bộ sưu tập cho dữ liệu người dùng
-
-        try {
-            // Khởi tạo Firebase với cấu hình của bạn
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            // Lắng nghe thay đổi trạng thái xác thực của người dùng
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid; // Người dùng đã xác thực
-                    console.log("Người dùng đã xác thực:", userId);
-                } else {
-                    // Nếu không có người dùng, cố gắng đăng nhập ẩn danh (phương án dự phòng cho môi trường ngoài Canvas)
-                    try {
-                        // initialAuthToken sẽ luôn là null khi không chạy trong môi trường Canvas
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                            userId = auth.currentUser.uid;
-                            console.log("Đăng nhập bằng custom token thành công:", userId);
-                        } else {
-                            // Đăng nhập ẩn danh
-                            await signInAnonymously(auth);
-                            userId = auth.currentUser.uid;
-                            console.log("Đăng nhập ẩn danh thành công:", userId);
-                        }
-                    } catch (error) {
-                        console.error("Firebase authentication error:", error);
-                        // Dự phòng: Sử dụng userId ngẫu nhiên nếu xác thực thất bại
-                        userId = crypto.randomUUID();
-                        console.log("Sử dụng userId ngẫu nhiên do lỗi xác thực:", userId);
-                    }
-                }
-                isAuthReady = true; // Đánh dấu là đã sẵn sàng xác thực
-                document.getElementById('user-id-display').textContent = `ID người dùng: ${userId}`;
-                loadPastExercises(); // Tải lịch sử bài tập sau khi xác thực
-            });
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-            // Dự phòng: Nếu Firebase không thể khởi tạo, vẫn cho phép ứng dụng chạy một phần
-            userId = crypto.randomUUID(); // Sử dụng userId ngẫu nhiên
-            isAuthReady = true;
-            document.getElementById('user-id-display').textContent = `ID người dùng: ${userId} (Không được xác thực)`;
-        }
+        // CÁC BIẾN TOÀN CỤC
+        // Không còn userId và isAuthReady vì không dùng Firebase Auth
+        let currentExercisePrompt = ""; // Lưu trữ văn bản bài tập gốc
+        let currentExerciseSolution = ""; // Lưu trữ giải pháp do AI tạo cho bài tập hiện tại
 
         // Tham chiếu đến các phần tử HTML
         const difficultySelect = document.getElementById('difficulty-select');
@@ -273,8 +189,9 @@
         const pastExercisesList = document.getElementById('past-exercises-list');
         const noHistoryMessage = document.getElementById('no-history-message');
 
-        let currentExercisePrompt = ""; // Lưu trữ văn bản bài tập gốc
-        let currentExerciseSolution = ""; // Lưu trữ giải pháp do AI tạo cho bài tập hiện tại
+        // KHÓA API GEMINI CỦA BẠN (CẦN THAY THẾ BẰNG KHÓA THỰC TẾ CỦA BẠN)
+        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN TỪ GOOGLE AI STUDIO
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 
         /**
@@ -293,18 +210,14 @@
             loadingConceptIndicator.classList.remove('hidden');
             explainConceptBtn.disabled = true;
 
-            // Cập nhật prompt để yêu cầu HTML hợp lệ, không Markdown
             const prompt = `Giải thích khái niệm tiếng Anh sau đây một cách rõ ràng và ngắn gọn, phù hợp cho người học tiếng Việt: "${concept}". Cung cấp ví dụ nếu có thể. Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào. Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung. Trả lời bằng tiếng Việt.`;
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            // KHÓA API GEMINI CỦA BẠN (CẦN THAY THẾ BẰNG KHÓA THỰC TẾ CỦA BẠN)
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN TỪ GOOGLE AI STUDIO
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(GEMINI_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -321,9 +234,7 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    // Loại bỏ các ký tự Markdown block thừa nếu có
                     text = text.replace(/^```html\n?/, '').replace(/\n?```$/, '');
-                    // Hiển thị trực tiếp HTML từ AI, vẫn thay thế xuống dòng phòng trường hợp AI vẫn trả về '\n'
                     conceptExplanationContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
                 } else {
                     conceptExplanationContentDiv.innerHTML = '<p class="text-red-500">Không thể giải thích khái niệm. Vui lòng thử lại.</p>';
@@ -348,8 +259,8 @@
             solutionContentDiv.classList.add('hidden');
             conceptExplanationContentDiv.classList.add('hidden');
             aiFeaturesSection.classList.add('hidden');
-            answerSection.classList.add('hidden'); // Ẩn phần trả lời ban đầu
-            evaluationResultsDiv.classList.add('hidden'); // Ẩn kết quả đánh giá ban đầu
+            answerSection.classList.add('hidden');
+            evaluationResultsDiv.classList.add('hidden');
 
             loadingExerciseIndicator.classList.remove('hidden');
             getExerciseBtn.disabled = true;
@@ -357,12 +268,11 @@
             explainConceptBtn.disabled = true;
             submitAnswerBtn.disabled = true;
 
-            const selectedDifficulty = difficultySelect.value; // Lấy trình độ đã chọn
+            const selectedDifficulty = difficultySelect.value;
 
-            // Lời nhắc để lấy cả bài tập và giải pháp, bao gồm trình độ
-            const prompt = `Tạo một bài tập tiếng Anh ngắn gọn, kéo dài khoảng 15 phút, tập trung vào ngữ pháp, từ vựng hoặc kỹ năng đọc hiểu. 
+            const prompt = `Tạo một bài tập tiếng Anh ngắn gọn, kéo dài khoảng 15 phút, tập trung vào ngữ pháp, từ vựng hoặc kỹ năng đọc hiểu.
                             Trình độ: ${selectedDifficulty}.
-                            Cung cấp bài tập và sau đó là ĐÁP ÁN CHÍNH XÁC CỦA NÓ. 
+                            Cung cấp bài tập và sau đó là ĐÁP ÁN CHÍNH XÁC CỦA NÓ.
                             Định dạng phản hồi là HTML hợp lệ.
                             Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung.
                             Phần bài tập cần có các câu hỏi hoặc nhiệm vụ rõ ràng để người dùng trả lời.
@@ -372,12 +282,9 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(GEMINI_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -394,25 +301,21 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let fullText = result.candidates[0].content.parts[0].text;
-                    // Remove potential leading/trailing Markdown code block delimiters
                     fullText = fullText.replace(/^```html\n?/, '').replace(/\n?```$/, '');
 
-                    // Cố gắng tách bài tập và giải pháp dựa trên một dấu phân cách
-                    // Giả sử AI đặt giải pháp trong một thẻ <div id="solution-key"> để phân tích cú pháp
                     const solutionStartIndex = fullText.indexOf('<div id="solution-key">');
                     if (solutionStartIndex !== -1) {
                         currentExercisePrompt = fullText.substring(0, solutionStartIndex).replace(/\n/g, '<br>');
-                        currentExerciseSolution = fullText.substring(solutionStartIndex).replace(/\n/g, '<br>'); // Giữ giải pháp để đánh giá
+                        currentExerciseSolution = fullText.substring(solutionStartIndex).replace(/\n/g, '<br>');
                     } else {
-                        // Dự phòng nếu AI không sử dụng dấu phân cách
                         currentExercisePrompt = fullText.replace(/\n/g, '<br>');
-                        currentExerciseSolution = "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"; // Mặc định nếu không có giải pháp rõ ràng
+                        currentExerciseSolution = "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>";
                     }
 
                     exerciseContentDiv.innerHTML = `<div class="prose max-w-none">${currentExercisePrompt}</div>`;
                     aiFeaturesSection.classList.remove('hidden');
-                    answerSection.classList.remove('hidden'); // Hiển thị phần trả lời sau khi tải bài tập
-                    userAnswerInput.value = ''; // Xóa câu trả lời cũ
+                    answerSection.classList.remove('hidden');
+                    userAnswerInput.value = '';
                 } else {
                     exerciseContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo bài tập. Vui lòng thử lại.</p>';
                     console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
@@ -425,7 +328,7 @@
                 getExerciseBtn.disabled = false;
                 showSolutionBtn.disabled = false;
                 explainConceptBtn.disabled = false;
-                submitAnswerBtn.disabled = false; // Bật nút gửi
+                submitAnswerBtn.disabled = false;
             }
         }
 
@@ -444,8 +347,6 @@
             loadingSolutionIndicator.classList.remove('hidden');
             showSolutionBtn.disabled = true;
 
-            // Lời nhắc để lấy giải pháp dưới dạng HTML
-            // Sử dụng giải pháp được lưu trữ nội bộ nếu có, nếu không thì yêu cầu AI tạo dựa trên lời nhắc
             const prompt = currentExerciseSolution && currentExerciseSolution !== "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"
                 ? `Đây là đáp án đã được tạo sẵn cho bài tập hiện tại. Vui lòng hiển thị nó: ${currentExerciseSolution}.`
                 : `Đây là một bài tập tiếng Anh: "${currentExercisePrompt}". Vui lòng cung cấp giải pháp hoặc câu trả lời chi tiết cho bài tập này. Nếu cần, hãy giải thích các bước hoặc ngữ pháp liên quan. Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào. Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung. Trả lời bằng tiếng Việt.`;
@@ -453,12 +354,9 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(GEMINI_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -475,7 +373,6 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    // Remove potential leading/trailing Markdown code block delimiters
                     text = text.replace(/^```html\n?/, '').replace(/\n?```$/, '');
                     solutionContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
                 } else {
@@ -492,7 +389,7 @@
         }
 
         /**
-         * Đánh giá câu trả lời của người dùng bằng mô hình AI và lưu kết quả vào Firestore.
+         * Đánh giá câu trả lời của người dùng bằng mô hình AI và lưu kết quả vào localStorage.
          */
         async function submitAnswer() {
             const userAnswer = userAnswerInput.value.trim();
@@ -506,9 +403,8 @@
             evaluationResultsDiv.classList.remove('hidden');
             loadingEvaluationIndicator.classList.remove('hidden');
             submitAnswerBtn.disabled = true;
-            getExerciseBtn.disabled = true; // Vô hiệu hóa cho đến khi đánh giá hoàn tất
+            getExerciseBtn.disabled = true;
 
-            // Lời nhắc cho đánh giá AI - đã cập nhật để xử lý các câu trả lời không liên quan VÀ cung cấp điểm số
             const prompt = `Đây là bài tập tiếng Anh: "${currentExercisePrompt}".
                             Đây là đáp án chính xác theo AI: "${currentExerciseSolution}".
                             Đây là câu trả lời của người dùng: "${userAnswer}".
@@ -524,14 +420,11 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             let evaluationText = "";
-            let score = "N/A"; // Điểm mặc định nếu không tìm thấy
+            let score = "N/A";
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(GEMINI_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -548,10 +441,9 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     evaluationText = result.candidates[0].content.parts[0].text;
-                    // Cố gắng trích xuất điểm số bằng regex
                     const scoreMatch = evaluationText.match(/Điểm số: (\d+)\/10/);
                     if (scoreMatch && scoreMatch[1]) {
-                        score = scoreMatch[1];
+                        score = parseInt(scoreMatch[1], 10); // Chuyển đổi điểm số thành số nguyên
                     }
                     evaluationContentDiv.innerHTML = `<div class="prose max-w-none">${evaluationText.replace(/\n/g, '<br>')}</div>`;
                 } else {
@@ -566,101 +458,70 @@
             } finally {
                 loadingEvaluationIndicator.classList.add('hidden');
                 submitAnswerBtn.disabled = false;
-                getExerciseBtn.disabled = false; // Bật lại nút lấy bài tập
+                getExerciseBtn.disabled = false;
 
-                // Lưu kết quả bài tập vào Firestore
-                if (isAuthReady && userId) {
-                    await saveExerciseResult({
-                        exercisePrompt: currentExercisePrompt,
-                        userAnswer: userAnswer,
-                        aiSolution: currentExerciseSolution,
-                        aiEvaluation: evaluationText,
-                        score: score, // Lưu điểm đã trích xuất
-                        timestamp: serverTimestamp() // Sử dụng dấu thời gian của máy chủ để nhất quán
-                    });
-                } else {
-                    console.warn("Người dùng chưa được xác thực hoặc userId không khả dụng. Kết quả bài tập không được lưu.");
-                }
-            }
-        }
-
-        /**
-         * Lưu kết quả bài tập vào Firestore.
-         */
-        async function saveExerciseResult(data) {
-            if (!isAuthReady || !userId) {
-                console.error("Không thể lưu dữ liệu: Xác thực chưa sẵn sàng hoặc userId bị thiếu.");
-                return;
-            }
-            try {
-                // Đường dẫn bộ sưu tập: /artifacts/{appId}/users/{userId}/user_exercises
-                const userExercisesRef = collection(db, `${USER_EXERCISES_COLLECTION}${userId}/user_exercises`);
-                await addDoc(userExercisesRef, data);
-                console.log("Kết quả bài tập đã được lưu thành công!");
-            } catch (e) {
-                console.error("Lỗi khi lưu tài liệu: ", e);
-            }
-        }
-
-        /**
-         * Tải các bài tập đã làm trước đây từ Firestore và hiển thị chúng theo thời gian thực.
-         */
-        async function loadPastExercises() {
-            if (!isAuthReady || !userId) {
-                console.warn("Không thể tải dữ liệu: Xác thực chưa sẵn sàng hoặc userId bị thiếu.");
-                return;
-            }
-
-            const userExercisesRef = collection(db, `${USER_EXERCISES_COLLECTION}${userId}/user_exercises`);
-            // Sắp xếp theo thời gian giảm dần
-            // Lưu ý: orderBy của Firestore có thể dẫn đến lỗi thiếu chỉ mục nếu không được xử lý bằng các chỉ mục phù hợp.
-            // Để đơn giản và tránh các vấn đề về chỉ mục, chúng ta sẽ tìm nạp tất cả và sắp xếp trong bộ nhớ nếu cần.
-            // const q = query(userExercisesRef, orderBy("timestamp", "desc")); // Đã loại bỏ orderBy
-
-            onSnapshot(userExercisesRef, (snapshot) => { // Lắng nghe tất cả các thay đổi trong bộ sưu tập
-                pastExercisesList.innerHTML = ''; // Xóa danh sách hiện tại
-                if (snapshot.empty) {
-                    noHistoryMessage.classList.remove('hidden');
-                    return;
-                }
-                noHistoryMessage.classList.add('hidden'); // Ẩn thông báo "Không có lịch sử"
-
-                // Sắp xếp các tài liệu trong bộ nhớ theo thời gian nếu cần (giảm dần)
-                const sortedDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-                    .sort((a, b) => b.timestamp?.toDate() - a.timestamp?.toDate());
-
-                sortedDocs.forEach((docData) => {
-                    const li = document.createElement('li');
-                    li.classList.add('p-2', 'border-b', 'border-gray-100', 'last:border-b-0', 'cursor-pointer', 'hover:bg-gray-100', 'rounded-md');
-                    const exerciseDate = docData.timestamp ? new Date(docData.timestamp.toDate()).toLocaleString('vi-VN') : 'Không rõ ngày';
-                    // Hiển thị điểm số trong danh sách lịch sử
-                    const contentHtml = `
-                        <strong class="text-blue-700">Bài tập ngày ${exerciseDate}</strong>
-                        <span class="ml-2 font-bold text-lg ${docData.score && docData.score >= 7 ? 'text-green-600' : (docData.score && docData.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
-                            Điểm: ${docData.score !== undefined ? docData.score : 'N/A'}/10
-                        </span>
-                        <p class="text-sm text-gray-700 mt-1 truncate">${docData.exercisePrompt.substring(0, 100)}...</p>
-                    `;
-                    li.innerHTML = contentHtml; // Đặt nội dung chính
-
-                    // Tạo phần tử nút riêng biệt
-                    const button = document.createElement('button');
-                    button.classList.add('text-xs', 'text-indigo-500', 'hover:underline', 'mt-1');
-                    button.textContent = 'Xem chi tiết';
-                    button.setAttribute('data-id', docData.id); // Thêm thuộc tính data-id
-
-                    // Thêm trình lắng nghe sự kiện vào nút trực tiếp
-                    button.addEventListener('click', () => showExerciseDetails(docData));
-
-                    // Thêm nút vào li
-                    li.appendChild(button);
-
-                    pastExercisesList.appendChild(li);
+                // Lưu kết quả bài tập vào localStorage
+                saveExerciseResult({
+                    exercisePrompt: currentExercisePrompt,
+                    userAnswer: userAnswer,
+                    aiSolution: currentExerciseSolution,
+                    aiEvaluation: evaluationText,
+                    score: score,
+                    timestamp: new Date().toISOString() // Lưu dưới dạng chuỗi ISO 8601
                 });
-            }, (error) => {
-                console.error("Lỗi khi tìm nạp các bài tập đã làm trước đây:", error);
-                pastExercisesList.innerHTML = `<p class="text-red-500">Lỗi khi tải lịch sử bài tập: ${error.message}</p>`;
-                noHistoryMessage.classList.add('hidden'); // Ẩn, vì thông báo lỗi được hiển thị
+            }
+        }
+
+        /**
+         * Lưu kết quả bài tập vào localStorage.
+         */
+        function saveExerciseResult(data) {
+            let history = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
+            history.push(data);
+            localStorage.setItem('exerciseHistory', JSON.stringify(history));
+            console.log("Kết quả bài tập đã được lưu vào localStorage!");
+            loadPastExercises(); // Tải lại lịch sử để cập nhật giao diện
+        }
+
+        /**
+         * Tải các bài tập đã làm trước đây từ localStorage và hiển thị chúng.
+         */
+        function loadPastExercises() {
+            let history = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
+            pastExercisesList.innerHTML = ''; // Xóa danh sách hiện tại
+
+            if (history.length === 0) {
+                noHistoryMessage.classList.remove('hidden');
+                return;
+            }
+            noHistoryMessage.classList.add('hidden');
+
+            // Sắp xếp các bài tập theo thời gian giảm dần
+            const sortedHistory = history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            sortedHistory.forEach((data) => {
+                const li = document.createElement('li');
+                li.classList.add('p-2', 'border-b', 'border-gray-100', 'last:border-b-0', 'cursor-pointer', 'hover:bg-gray-100', 'rounded-md');
+                const exerciseDate = data.timestamp ? new Date(data.timestamp).toLocaleString('vi-VN') : 'Không rõ ngày';
+
+                const contentHtml = `
+                    <strong class="text-blue-700">Bài tập ngày ${exerciseDate}</strong>
+                    <span class="ml-2 font-bold text-lg ${data.score !== "N/A" && data.score >= 7 ? 'text-green-600' : (data.score !== "N/A" && data.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
+                        Điểm: ${data.score !== undefined ? data.score : 'N/A'}/10
+                    </span>
+                    <p class="text-sm text-gray-700 mt-1 truncate">${data.exercisePrompt.substring(0, 100)}...</p>
+                `;
+                li.innerHTML = contentHtml;
+
+                const button = document.createElement('button');
+                button.classList.add('text-xs', 'text-indigo-500', 'hover:underline', 'mt-1');
+                button.textContent = 'Xem chi tiết';
+
+                button.addEventListener('click', () => showExerciseDetails(data));
+
+                li.appendChild(button);
+
+                pastExercisesList.appendChild(li);
             });
         }
 
@@ -668,7 +529,6 @@
          * Hiển thị hiển thị giống modal cho chi tiết bài tập.
          */
         function showExerciseDetails(data) {
-            // Tạo một modal đơn giản để hiển thị chi tiết
             const modal = document.createElement('div');
             modal.classList.add('fixed', 'inset-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'z-50', 'p-4');
             modal.innerHTML = `
@@ -679,7 +539,7 @@
                     <h3 class="text-xl font-bold mb-4 text-gray-800">Chi tiết bài tập</h3>
                     <div class="space-y-4">
                         <div class="text-center text-2xl font-bold mb-4">
-                            Điểm số: <span class="${data.score && data.score >= 7 ? 'text-green-600' : (data.score && data.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
+                            Điểm số: <span class="${data.score !== "N/A" && data.score >= 7 ? 'text-green-600' : (data.score !== "N/A" && data.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
                                 ${data.score !== undefined ? data.score : 'N/A'}/10
                             </span>
                         </div>
@@ -699,24 +559,22 @@
                             <h4 class="font-semibold text-lg text-gray-700">Đánh giá của AI:</h4>
                             <div class="bg-purple-50 p-3 rounded-md border border-purple-200 prose max-w-none">${data.aiEvaluation}</div>
                         </div>
-                        <p class="text-sm text-gray-500 text-right">Ngày làm: ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A'}</p>
+                        <p class="text-sm text-gray-500 text-right">Ngày làm: ${data.timestamp ? new Date(data.timestamp).toLocaleString('vi-VN') : 'N/A'}</p>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         }
 
-
         // Attach event listeners to buttons
         getExerciseBtn.addEventListener('click', fetchEnglishExercise);
         showSolutionBtn.addEventListener('click', fetchExerciseSolution);
         explainConceptBtn.addEventListener('click', fetchConceptExplanation);
-        submitAnswerBtn.addEventListener('click', submitAnswer); // New event listener
+        submitAnswerBtn.addEventListener('click', submitAnswer);
 
-        // Initial load (optional - decided against automatic load, user clicks button)
+        // Tải lịch sử bài tập khi trang được tải
         window.onload = function() {
-             // Do not auto-load exercise on page load, wait for user to click the button.
-             // This prevents unnecessary exercise generation when the page loads.
+            loadPastExercises();
         };
     </script>
 </body>
