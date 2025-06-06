@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bài Tập Tiếng Anh Hàng Ngày</title>
+    <!-- Google Fonts - Be Vietnam Pro -->
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
             background-color: #e2e8f0;
+            /* Added min-h-screen to ensure body is tall enough for fixed positioning */
+            min-height: 100vh;
         }
         /* Custom spinner */
         .spinner {
@@ -56,16 +60,19 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
-    <div class="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 space-y-6 border border-gray-100 transform hover:scale-[1.005] transition-transform duration-200">
+<body class="flex flex-col items-center justify-start min-h-screen p-4">
+    <!-- Main content wrapper -->
+    <div id="main-content-wrapper" class="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 space-y-6 border border-gray-100 transform hover:scale-[1.005] transition-transform duration-200 mb-8">
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-4 leading-tight">
             Bài Tập Tiếng Anh Hàng Ngày 15 Phút
         </h1>
 
+        <!-- Program Poster Section -->
         <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
             <img src="Banner1.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
         </div>
 
+        <!-- Difficulty Selection -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <label for="difficulty-select" class="text-lg font-semibold text-gray-700">Chọn trình độ:</label>
             <select id="difficulty-select"
@@ -77,26 +84,18 @@
             </select>
         </div>
 
+        <!-- Exercise Display Area -->
         <div id="exercise-content" class="min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-auto shadow-inner">
             <p class="text-center text-gray-500">Chọn trình độ và nhấn "Lấy Bài Tập Mới" để bắt đầu bài tập tiếng Anh của bạn.</p>
         </div>
 
+        <!-- Loading Indicator for Exercise -->
         <div id="loading-exercise-indicator" class="flex justify-center items-center py-4 hidden">
             <div class="spinner"></div>
             <span class="ml-3 text-lg font-medium text-blue-600">Đang tạo bài tập...</span>
         </div>
 
-        <div id="answer-section" class="space-y-4 hidden">
-            <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
-            <textarea id="user-answer-input"
-                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px] shadow-sm"
-                      placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
-            <button id="submit-answer-btn"
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 shadow-lg">
-                Gửi Câu Trả Lời và Đánh Giá bằng AI ✨
-            </button>
-        </div>
-
+        <!-- AI Evaluation Results -->
         <div id="evaluation-results" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800">Kết quả đánh giá</h2>
             <div id="evaluation-content" class="min-h-[50px] bg-purple-50 p-4 rounded-lg border border-purple-200 text-gray-800 leading-relaxed overflow-auto shadow-inner"></div>
@@ -106,14 +105,17 @@
             </div>
         </div>
 
+        <!-- Get New Exercise Button -->
         <button id="get-exercise-btn"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg">
             Lấy Bài Tập Mới
         </button>
 
+        <!-- AI Helper Features Section -->
         <div id="ai-features-section" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Tính năng AI hỗ trợ</h2>
 
+            <!-- Show Solution -->
             <div>
                 <button id="show-solution-btn"
                         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 shadow-md">
@@ -126,6 +128,7 @@
                 </div>
             </div>
 
+            <!-- Explain Concept -->
             <div>
                 <div class="flex items-center space-x-2 mb-2">
                     <input type="text" id="concept-input" placeholder="Nhập khái niệm cần giải thích (ví dụ: Past Simple)"
@@ -143,9 +146,11 @@
             </div>
         </div>
 
+        <!-- New: Past Exercises History -->
         <div id="history-section" class="space-y-4 pt-6 border-t border-gray-200">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Lịch sử bài tập</h2>
-            <div id="user-id-display" class="text-sm text-gray-600 text-center mb-4 hidden"></div> <ul id="past-exercises-list" class="list-disc list-inside bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
+            <div id="user-id-display" class="text-sm text-gray-600 text-center mb-4 hidden"></div>
+            <ul id="past-exercises-list" class="list-disc list-inside bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-inner">
                 <p class="text-center text-gray-500" id="no-history-message">Chưa có bài tập nào được hoàn thành.</p>
             </ul>
         </div>
@@ -155,15 +160,36 @@
         </p>
     </div>
 
-    <script type="module">
-        // Đã loại bỏ các import Firebase
+    <!-- User Answer Input - MOVED OUTSIDE main-content-wrapper -->
+    <div id="answer-section" class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-50 hidden">
+        <!-- Inner wrapper to align content with main-content-wrapper -->
+        <div class="max-w-3xl mx-auto space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
+            <textarea id="user-answer-input"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px] shadow-sm"
+                      placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
+            <button id="submit-answer-btn"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 shadow-lg">
+                Gửi Câu Trả Lời và Đánh Giá bằng AI ✨
+            </button>
+        </div>
+    </div>
 
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top-btn"
+            class="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg z-50 hidden transition-all duration-300 ease-in-out transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
+
+    <script type="module">
         // CÁC BIẾN TOÀN CỤC
-        // Không còn userId và isAuthReady vì không dùng Firebase Auth
-        let currentExercisePrompt = ""; // Lưu trữ văn bản bài tập gốc
-        let currentExerciseSolution = ""; // Lưu trữ giải pháp do AI tạo cho bài tập hiện tại
+        let currentExercisePrompt = "";
+        let currentExerciseSolution = "";
 
         // Tham chiếu đến các phần tử HTML
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
         const difficultySelect = document.getElementById('difficulty-select');
         const exerciseContentDiv = document.getElementById('exercise-content');
         const getExerciseBtn = document.getElementById('get-exercise-btn');
@@ -172,7 +198,7 @@
 
         const userAnswerInput = document.getElementById('user-answer-input');
         const submitAnswerBtn = document.getElementById('submit-answer-btn');
-        const answerSection = document.getElementById('answer-section');
+        const answerSection = document.getElementById('answer-section'); // This is now a direct child of body
         const evaluationResultsDiv = document.getElementById('evaluation-results');
         const evaluationContentDiv = document.getElementById('evaluation-content');
         const loadingEvaluationIndicator = document.getElementById('loading-evaluation-indicator');
@@ -189,8 +215,9 @@
         const pastExercisesList = document.getElementById('past-exercises-list');
         const noHistoryMessage = document.getElementById('no-history-message');
 
-        // KHÓA API GEMINI CỦA BẠN (CẦN THAY THẾ BẰNG KHÓA THỰC TẾ CỦA BẠN)
-        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN TỪ GOOGLE AI STUDIO
+        const scrollToTopBtn = document.getElementById('scroll-to-top-btn'); // Reference to the new button
+
+        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 
@@ -259,7 +286,6 @@
             solutionContentDiv.classList.add('hidden');
             conceptExplanationContentDiv.classList.add('hidden');
             aiFeaturesSection.classList.add('hidden');
-            answerSection.classList.add('hidden');
             evaluationResultsDiv.classList.add('hidden');
 
             loadingExerciseIndicator.classList.remove('hidden');
@@ -267,6 +293,12 @@
             showSolutionBtn.disabled = true;
             explainConceptBtn.disabled = true;
             submitAnswerBtn.disabled = true;
+
+            // Hide answer section initially
+            answerSection.classList.add('hidden');
+            // Remove any previous padding for the body
+            document.body.style.paddingBottom = '';
+
 
             const selectedDifficulty = difficultySelect.value;
 
@@ -314,8 +346,14 @@
 
                     exerciseContentDiv.innerHTML = `<div class="prose max-w-none">${currentExercisePrompt}</div>`;
                     aiFeaturesSection.classList.remove('hidden');
-                    answerSection.classList.remove('hidden');
                     userAnswerInput.value = '';
+
+                    // Show answer section and adjust body padding
+                    answerSection.classList.remove('hidden');
+                    // Calculate height dynamically
+                    const answerSectionHeight = answerSection.offsetHeight;
+                    document.body.style.paddingBottom = `${answerSectionHeight + 16}px`; // Add some extra padding for button
+
                 } else {
                     exerciseContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo bài tập. Vui lòng thử lại.</p>';
                     console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
@@ -399,6 +437,10 @@
                 return;
             }
 
+            // Hide answer section and reset body padding
+            answerSection.classList.add('hidden');
+            document.body.style.paddingBottom = ''; // Reset padding
+
             evaluationContentDiv.innerHTML = '<p class="text-center text-gray-500">Đang đánh giá câu trả lời của bạn...</p>';
             evaluationResultsDiv.classList.remove('hidden');
             loadingEvaluationIndicator.classList.remove('hidden');
@@ -443,7 +485,7 @@
                     evaluationText = result.candidates[0].content.parts[0].text;
                     const scoreMatch = evaluationText.match(/Điểm số: (\d+)\/10/);
                     if (scoreMatch && scoreMatch[1]) {
-                        score = parseInt(scoreMatch[1], 10); // Chuyển đổi điểm số thành số nguyên
+                        score = parseInt(scoreMatch[1], 10);
                     }
                     evaluationContentDiv.innerHTML = `<div class="prose max-w-none">${evaluationText.replace(/\n/g, '<br>')}</div>`;
                 } else {
@@ -467,7 +509,7 @@
                     aiSolution: currentExerciseSolution,
                     aiEvaluation: evaluationText,
                     score: score,
-                    timestamp: new Date().toISOString() // Lưu dưới dạng chuỗi ISO 8601
+                    timestamp: new Date().toISOString()
                 });
             }
         }
@@ -480,7 +522,7 @@
             history.push(data);
             localStorage.setItem('exerciseHistory', JSON.stringify(history));
             console.log("Kết quả bài tập đã được lưu vào localStorage!");
-            loadPastExercises(); // Tải lại lịch sử để cập nhật giao diện
+            loadPastExercises();
         }
 
         /**
@@ -488,7 +530,7 @@
          */
         function loadPastExercises() {
             let history = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
-            pastExercisesList.innerHTML = ''; // Xóa danh sách hiện tại
+            pastExercisesList.innerHTML = '';
 
             if (history.length === 0) {
                 noHistoryMessage.classList.remove('hidden');
@@ -496,7 +538,6 @@
             }
             noHistoryMessage.classList.add('hidden');
 
-            // Sắp xếp các bài tập theo thời gian giảm dần
             const sortedHistory = history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             sortedHistory.forEach((data) => {
@@ -572,10 +613,35 @@
         explainConceptBtn.addEventListener('click', fetchConceptExplanation);
         submitAnswerBtn.addEventListener('click', submitAnswer);
 
+        // Scroll to Top functionality
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Smooth scroll
+            });
+        });
+
+        // Show/hide scroll to top button based on scroll position
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) { // Show button after scrolling down 200px
+                scrollToTopBtn.classList.remove('hidden');
+            } else {
+                scrollToTopBtn.classList.add('hidden');
+            }
+        });
+
         // Tải lịch sử bài tập khi trang được tải
         window.onload = function() {
             loadPastExercises();
         };
+
+        // Add a resize event listener to adjust padding on screen resize
+        window.addEventListener('resize', () => {
+            if (!answerSection.classList.contains('hidden')) {
+                const answerSectionHeight = answerSection.offsetHeight;
+                document.body.style.paddingBottom = `${answerSectionHeight + 16}px`;
+            }
+        });
     </script>
 </body>
 </html>
