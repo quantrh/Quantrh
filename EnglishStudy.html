@@ -66,7 +66,7 @@
 
         <!-- Program Poster Section -->
         <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
-            <img src="Banner1.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
+            <img src="https://placehold.co/600x200/a78bfa/ffffff?text=English+Practice+AI" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
         </div>
 
         <!-- Difficulty Selection -->
@@ -175,63 +175,80 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, onSnapshot, collection, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // CẤU HÌNH FIREBASE CỦA DỰ ÁN CỦA BẠN (CẦN THAY THẾ TOÀN BỘ ĐỐI TƯỢNG NÀY BẰNG CẤU HÌNH TỪ DỰ ÁN FIREBASE CỦA BẠN)
+        // Bạn lấy cấu hình này từ Firebase Console: Project settings -> Your apps -> Chọn ứng dụng web của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyzG3sYbvAYjxooEf-qOgrSXh7czNIFS0", // <<< KHÓA API FIREBASE CỦA BẠN
+            authDomain: "quan-26d00.firebaseapp.com", // <<< TÊN MIỀN XÁC THỰC CỦA BẠN
+            projectId: "quan-26d00",   // <<< ID DỰ ÁN CỦA BẠN
+            storageBucket: "quan-26d00.firebasestorage.app", // <<< STORAGE BUCKET CỦA BẠN
+            messagingSenderId: "871607346190", // <<< MESSAGING SENDER ID CỦA BẠN
+            appId: "1:871607346190:web:e143128121d7417609c85f", // <<< APP ID CỦA BẠN
+            measurementId: "G-LK8B3TYVV4" // Đây là tùy chọn, không cần thiết cho xác thực Firebase cốt lõi
+        };
+
+        // Ghi log cấu hình Firebase để kiểm tra trong console của trình duyệt
+        console.log("Firebase Config (kiểm tra lại các giá trị này!):", firebaseConfig);
+
+        // CÁC BIẾN TOÀN CỤC (ĐỪNG THAY ĐỔI CÁC DÒNG NÀY SAU KHI ĐIỀN firebaseConfig)
+        const appId = firebaseConfig.appId; // Lấy appId từ cấu hình Firebase
+        const initialAuthToken = null; // Biến này chỉ có giá trị trong môi trường Canvas, luôn là null khi chạy ngoài Canvas
 
         // Firebase Initialization
         let app;
         let db;
         let auth;
-        let userId = null; // Variable to store userId
-        let isAuthReady = false; // Variable to check authentication status
+        let userId = null; // Biến để lưu userId
+        let isAuthReady = false; // Biến để kiểm tra trạng thái xác thực
 
-        const USER_EXERCISES_COLLECTION = `/artifacts/${appId}/users/`; // Collection path for user-specific data
+        const USER_EXERCISES_COLLECTION = `/artifacts/${appId}/users/`; // Đường dẫn bộ sưu tập cho dữ liệu người dùng
 
         try {
+            // Khởi tạo Firebase với cấu hình của bạn
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
 
-            // Listen for authentication state changes
+            // Lắng nghe thay đổi trạng thái xác thực của người dùng
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    userId = user.uid; // Authenticated user
-                    console.log("User authenticated:", userId);
+                    userId = user.uid; // Người dùng đã xác thực
+                    console.log("Người dùng đã xác thực:", userId);
                 } else {
-                    // If no user, try to sign in with custom token or anonymously
+                    // Nếu không có người dùng, cố gắng đăng nhập ẩn danh (phương án dự phòng cho môi trường ngoài Canvas)
                     try {
+                        // initialAuthToken sẽ luôn là null khi không chạy trong môi trường Canvas
                         if (initialAuthToken) {
                             await signInWithCustomToken(auth, initialAuthToken);
                             userId = auth.currentUser.uid;
-                            console.log("Signed in with custom token successfully:", userId);
+                            console.log("Đăng nhập bằng custom token thành công:", userId);
                         } else {
+                            // Đăng nhập ẩn danh
                             await signInAnonymously(auth);
                             userId = auth.currentUser.uid;
-                            console.log("Signed in anonymously successfully:", userId);
+                            console.log("Đăng nhập ẩn danh thành công:", userId);
                         }
                     } catch (error) {
                         console.error("Firebase authentication error:", error);
-                        // Fallback: Use a random userId if authentication fails
+                        // Dự phòng: Sử dụng userId ngẫu nhiên nếu xác thực thất bại
                         userId = crypto.randomUUID();
-                        console.log("Using random userId due to authentication error:", userId);
+                        console.log("Sử dụng userId ngẫu nhiên do lỗi xác thực:", userId);
                     }
                 }
-                isAuthReady = true; // Mark as authentication ready
+                isAuthReady = true; // Đánh dấu là đã sẵn sàng xác thực
                 document.getElementById('user-id-display').textContent = `ID người dùng: ${userId}`;
-                loadPastExercises(); // Load exercises once authenticated
+                loadPastExercises(); // Tải lịch sử bài tập sau khi xác thực
             });
         } catch (error) {
             console.error("Firebase initialization error:", error);
-            // Fallback: If Firebase cannot initialize, still allow the app to run partially
-            userId = crypto.randomUUID(); // Use random userId as a fallback
+            // Dự phòng: Nếu Firebase không thể khởi tạo, vẫn cho phép ứng dụng chạy một phần
+            userId = crypto.randomUUID(); // Sử dụng userId ngẫu nhiên
             isAuthReady = true;
             document.getElementById('user-id-display').textContent = `ID người dùng: ${userId} (Không được xác thực)`;
         }
 
-        // HTML element references
-        const difficultySelect = document.getElementById('difficulty-select'); // New
+        // Tham chiếu đến các phần tử HTML
+        const difficultySelect = document.getElementById('difficulty-select');
         const exerciseContentDiv = document.getElementById('exercise-content');
         const getExerciseBtn = document.getElementById('get-exercise-btn');
         const loadingExerciseIndicator = document.getElementById('loading-exercise-indicator');
@@ -256,8 +273,8 @@
         const pastExercisesList = document.getElementById('past-exercises-list');
         const noHistoryMessage = document.getElementById('no-history-message');
 
-        let currentExercisePrompt = ""; // Stores the raw exercise text
-        let currentExerciseSolution = ""; // Stores the AI-generated solution for the current exercise
+        let currentExercisePrompt = ""; // Lưu trữ văn bản bài tập gốc
+        let currentExerciseSolution = ""; // Lưu trữ giải pháp do AI tạo cho bài tập hiện tại
 
 
         /**
@@ -282,7 +299,8 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
+            // KHÓA API GEMINI CỦA BẠN (CẦN THAY THẾ BẰNG KHÓA THỰC TẾ CỦA BẠN)
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN TỪ GOOGLE AI STUDIO
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -303,7 +321,7 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    // Remove potential leading/trailing Markdown code block delimiters
+                    // Loại bỏ các ký tự Markdown block thừa nếu có
                     text = text.replace(/^```html\n?/, '').replace(/\n?```$/, '');
                     // Hiển thị trực tiếp HTML từ AI, vẫn thay thế xuống dòng phòng trường hợp AI vẫn trả về '\n'
                     conceptExplanationContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
@@ -321,8 +339,8 @@
         }
 
         /**
-         * Fetches an English exercise from the AI model via Gemini API.
-         * The prompt is designed to get both the exercise and its solution in HTML format.
+         * Lấy bài tập tiếng Anh từ mô hình AI thông qua Gemini API.
+         * Lời nhắc được thiết kế để lấy cả bài tập và giải pháp dưới dạng HTML.
          */
         async function fetchEnglishExercise() {
             exerciseContentDiv.innerHTML = '<p class="text-center text-gray-500">Đang tạo bài tập...</p>';
@@ -330,8 +348,8 @@
             solutionContentDiv.classList.add('hidden');
             conceptExplanationContentDiv.classList.add('hidden');
             aiFeaturesSection.classList.add('hidden');
-            answerSection.classList.add('hidden'); // Hide answer section initially
-            evaluationResultsDiv.classList.add('hidden'); // Hide evaluation results initially
+            answerSection.classList.add('hidden'); // Ẩn phần trả lời ban đầu
+            evaluationResultsDiv.classList.add('hidden'); // Ẩn kết quả đánh giá ban đầu
 
             loadingExerciseIndicator.classList.remove('hidden');
             getExerciseBtn.disabled = true;
@@ -339,9 +357,9 @@
             explainConceptBtn.disabled = true;
             submitAnswerBtn.disabled = true;
 
-            const selectedDifficulty = difficultySelect.value; // Get selected difficulty
+            const selectedDifficulty = difficultySelect.value; // Lấy trình độ đã chọn
 
-            // Prompt to get both exercise and its solution, including difficulty
+            // Lời nhắc để lấy cả bài tập và giải pháp, bao gồm trình độ
             const prompt = `Tạo một bài tập tiếng Anh ngắn gọn, kéo dài khoảng 15 phút, tập trung vào ngữ pháp, từ vựng hoặc kỹ năng đọc hiểu. 
                             Trình độ: ${selectedDifficulty}.
                             Cung cấp bài tập và sau đó là ĐÁP ÁN CHÍNH XÁC CỦA NÓ. 
@@ -354,7 +372,8 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
+            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -378,40 +397,40 @@
                     // Remove potential leading/trailing Markdown code block delimiters
                     fullText = fullText.replace(/^```html\n?/, '').replace(/\n?```$/, '');
 
-                    // Attempt to split exercise and solution based on a delimiter
-                    // Assuming AI puts solution in a <div id="solution-key"> for parsing
+                    // Cố gắng tách bài tập và giải pháp dựa trên một dấu phân cách
+                    // Giả sử AI đặt giải pháp trong một thẻ <div id="solution-key"> để phân tích cú pháp
                     const solutionStartIndex = fullText.indexOf('<div id="solution-key">');
                     if (solutionStartIndex !== -1) {
                         currentExercisePrompt = fullText.substring(0, solutionStartIndex).replace(/\n/g, '<br>');
-                        currentExerciseSolution = fullText.substring(solutionStartIndex).replace(/\n/g, '<br>'); // Keep solution for evaluation
+                        currentExerciseSolution = fullText.substring(solutionStartIndex).replace(/\n/g, '<br>'); // Giữ giải pháp để đánh giá
                     } else {
-                        // Fallback if AI doesn't use the delimiter
+                        // Dự phòng nếu AI không sử dụng dấu phân cách
                         currentExercisePrompt = fullText.replace(/\n/g, '<br>');
-                        currentExerciseSolution = "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"; // Default if no clear solution
+                        currentExerciseSolution = "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"; // Mặc định nếu không có giải pháp rõ ràng
                     }
 
                     exerciseContentDiv.innerHTML = `<div class="prose max-w-none">${currentExercisePrompt}</div>`;
                     aiFeaturesSection.classList.remove('hidden');
-                    answerSection.classList.remove('hidden'); // Show answer section after exercise loads
-                    userAnswerInput.value = ''; // Clear previous answer
+                    answerSection.classList.remove('hidden'); // Hiển thị phần trả lời sau khi tải bài tập
+                    userAnswerInput.value = ''; // Xóa câu trả lời cũ
                 } else {
                     exerciseContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo bài tập. Vui lòng thử lại.</p>';
-                    console.error("AI response structure unexpected or content missing:", result);
+                    console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
                 }
             } catch (error) {
                 exerciseContentDiv.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại.</p>`;
-                console.error("Error fetching English exercise:", error);
+                console.error("Lỗi khi lấy bài tập tiếng Anh:", error);
             } finally {
                 loadingExerciseIndicator.classList.add('hidden');
                 getExerciseBtn.disabled = false;
                 showSolutionBtn.disabled = false;
                 explainConceptBtn.disabled = false;
-                submitAnswerBtn.disabled = false; // Enable submit button
+                submitAnswerBtn.disabled = false; // Bật nút gửi
             }
         }
 
         /**
-         * Fetches a solution/hint for the current exercise from the AI model.
+         * Lấy giải pháp/gợi ý cho bài tập hiện tại từ mô hình AI.
          */
         async function fetchExerciseSolution() {
             if (!currentExercisePrompt) {
@@ -425,8 +444,8 @@
             loadingSolutionIndicator.classList.remove('hidden');
             showSolutionBtn.disabled = true;
 
-            // Prompt to get solution in HTML format
-            // Use the internally stored solution if available, otherwise ask AI to generate based on prompt
+            // Lời nhắc để lấy giải pháp dưới dạng HTML
+            // Sử dụng giải pháp được lưu trữ nội bộ nếu có, nếu không thì yêu cầu AI tạo dựa trên lời nhắc
             const prompt = currentExerciseSolution && currentExerciseSolution !== "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"
                 ? `Đây là đáp án đã được tạo sẵn cho bài tập hiện tại. Vui lòng hiển thị nó: ${currentExerciseSolution}.`
                 : `Đây là một bài tập tiếng Anh: "${currentExercisePrompt}". Vui lòng cung cấp giải pháp hoặc câu trả lời chi tiết cho bài tập này. Nếu cần, hãy giải thích các bước hoặc ngữ pháp liên quan. Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào. Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung. Trả lời bằng tiếng Việt.`;
@@ -434,7 +453,8 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
+            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -460,11 +480,11 @@
                     solutionContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
                 } else {
                     solutionContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo giải pháp. Vui lòng thử lại.</p>';
-                    console.error("AI response structure unexpected or content missing:", result);
+                    console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
                 }
             } catch (error) {
                 solutionContentDiv.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại.</p>`;
-                console.error("Error fetching exercise solution:", error);
+                console.error("Lỗi khi lấy giải pháp bài tập:", error);
             } finally {
                 loadingSolutionIndicator.classList.add('hidden');
                 showSolutionBtn.disabled = false;
@@ -472,7 +492,7 @@
         }
 
         /**
-         * Evaluates the user's answer using the AI model and stores the result in Firestore.
+         * Đánh giá câu trả lời của người dùng bằng mô hình AI và lưu kết quả vào Firestore.
          */
         async function submitAnswer() {
             const userAnswer = userAnswerInput.value.trim();
@@ -486,9 +506,9 @@
             evaluationResultsDiv.classList.remove('hidden');
             loadingEvaluationIndicator.classList.remove('hidden');
             submitAnswerBtn.disabled = true;
-            getExerciseBtn.disabled = true; // Disable until evaluation is done
+            getExerciseBtn.disabled = true; // Vô hiệu hóa cho đến khi đánh giá hoàn tất
 
-            // Prompt for AI evaluation - updated to handle irrelevant answers AND provide a score
+            // Lời nhắc cho đánh giá AI - đã cập nhật để xử lý các câu trả lời không liên quan VÀ cung cấp điểm số
             const prompt = `Đây là bài tập tiếng Anh: "${currentExercisePrompt}".
                             Đây là đáp án chính xác theo AI: "${currentExerciseSolution}".
                             Đây là câu trả lời của người dùng: "${userAnswer}".
@@ -504,11 +524,12 @@
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
+            // KHÓA API GEMINI CỦA BẠN TẠI ĐÂY
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // <<< THAY THẾ BẰNG KHÓA API GEMINI THỰC TẾ CỦA BẠN
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             let evaluationText = "";
-            let score = "N/A"; // Default score if not found
+            let score = "N/A"; // Điểm mặc định nếu không tìm thấy
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -527,7 +548,7 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     evaluationText = result.candidates[0].content.parts[0].text;
-                    // Attempt to extract score using a regex
+                    // Cố gắng trích xuất điểm số bằng regex
                     const scoreMatch = evaluationText.match(/Điểm số: (\d+)\/10/);
                     if (scoreMatch && scoreMatch[1]) {
                         score = scoreMatch[1];
@@ -536,75 +557,75 @@
                 } else {
                     evaluationText = '<p class="text-red-500">Không thể đánh giá câu trả lời. Vui lòng thử lại.</p>';
                     evaluationContentDiv.innerHTML = evaluationText;
-                    console.error("AI response structure unexpected or content missing:", result);
+                    console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
                 }
             } catch (error) {
                 evaluationText = `<p class="text-red-500">Đã xảy ra lỗi khi đánh giá: ${error.message}. Vui lòng thử lại.</p>`;
                 evaluationContentDiv.innerHTML = evaluationText;
-                console.error("Error evaluating answer:", error);
+                console.error("Lỗi khi đánh giá câu trả lời:", error);
             } finally {
                 loadingEvaluationIndicator.classList.add('hidden');
                 submitAnswerBtn.disabled = false;
-                getExerciseBtn.disabled = false; // Re-enable get exercise button
+                getExerciseBtn.disabled = false; // Bật lại nút lấy bài tập
 
-                // Save exercise result to Firestore
+                // Lưu kết quả bài tập vào Firestore
                 if (isAuthReady && userId) {
                     await saveExerciseResult({
                         exercisePrompt: currentExercisePrompt,
                         userAnswer: userAnswer,
                         aiSolution: currentExerciseSolution,
                         aiEvaluation: evaluationText,
-                        score: score, // Save the extracted score
-                        timestamp: serverTimestamp() // Use server timestamp for consistency
+                        score: score, // Lưu điểm đã trích xuất
+                        timestamp: serverTimestamp() // Sử dụng dấu thời gian của máy chủ để nhất quán
                     });
                 } else {
-                    console.warn("User not authenticated or userId not available. Exercise result not saved.");
+                    console.warn("Người dùng chưa được xác thực hoặc userId không khả dụng. Kết quả bài tập không được lưu.");
                 }
             }
         }
 
         /**
-         * Saves an exercise result to Firestore.
+         * Lưu kết quả bài tập vào Firestore.
          */
         async function saveExerciseResult(data) {
             if (!isAuthReady || !userId) {
-                console.error("Cannot save data: Authentication not ready or userId is missing.");
+                console.error("Không thể lưu dữ liệu: Xác thực chưa sẵn sàng hoặc userId bị thiếu.");
                 return;
             }
             try {
-                // Collection path: /artifacts/{appId}/users/{userId}/user_exercises
+                // Đường dẫn bộ sưu tập: /artifacts/{appId}/users/{userId}/user_exercises
                 const userExercisesRef = collection(db, `${USER_EXERCISES_COLLECTION}${userId}/user_exercises`);
                 await addDoc(userExercisesRef, data);
-                console.log("Exercise result saved successfully!");
+                console.log("Kết quả bài tập đã được lưu thành công!");
             } catch (e) {
-                console.error("Error saving document: ", e);
+                console.error("Lỗi khi lưu tài liệu: ", e);
             }
         }
 
         /**
-         * Loads past exercises from Firestore and displays them in real-time.
+         * Tải các bài tập đã làm trước đây từ Firestore và hiển thị chúng theo thời gian thực.
          */
         async function loadPastExercises() {
             if (!isAuthReady || !userId) {
-                console.warn("Cannot load data: Authentication not ready or userId is missing.");
+                console.warn("Không thể tải dữ liệu: Xác thực chưa sẵn sàng hoặc userId bị thiếu.");
                 return;
             }
 
             const userExercisesRef = collection(db, `${USER_EXERCISES_COLLECTION}${userId}/user_exercises`);
-            // Order by timestamp in descending order
-            // Note: Firestore orderBy can lead to index missing errors if not handled with proper indexes.
-            // For simplicity and avoiding index issues, we will fetch all and sort in memory if needed.
-            // const q = query(userExercisesRef, orderBy("timestamp", "desc")); // Removed orderBy
+            // Sắp xếp theo thời gian giảm dần
+            // Lưu ý: orderBy của Firestore có thể dẫn đến lỗi thiếu chỉ mục nếu không được xử lý bằng các chỉ mục phù hợp.
+            // Để đơn giản và tránh các vấn đề về chỉ mục, chúng ta sẽ tìm nạp tất cả và sắp xếp trong bộ nhớ nếu cần.
+            // const q = query(userExercisesRef, orderBy("timestamp", "desc")); // Đã loại bỏ orderBy
 
-            onSnapshot(userExercisesRef, (snapshot) => { // Listen to all changes in the collection
-                pastExercisesList.innerHTML = ''; // Clear current list
+            onSnapshot(userExercisesRef, (snapshot) => { // Lắng nghe tất cả các thay đổi trong bộ sưu tập
+                pastExercisesList.innerHTML = ''; // Xóa danh sách hiện tại
                 if (snapshot.empty) {
                     noHistoryMessage.classList.remove('hidden');
                     return;
                 }
-                noHistoryMessage.classList.add('hidden'); // Hide "No history" message
+                noHistoryMessage.classList.add('hidden'); // Ẩn thông báo "Không có lịch sử"
 
-                // Sort documents in memory by timestamp if needed (descending)
+                // Sắp xếp các tài liệu trong bộ nhớ theo thời gian nếu cần (giảm dần)
                 const sortedDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
                     .sort((a, b) => b.timestamp?.toDate() - a.timestamp?.toDate());
 
@@ -612,8 +633,7 @@
                     const li = document.createElement('li');
                     li.classList.add('p-2', 'border-b', 'border-gray-100', 'last:border-b-0', 'cursor-pointer', 'hover:bg-gray-100', 'rounded-md');
                     const exerciseDate = docData.timestamp ? new Date(docData.timestamp.toDate()).toLocaleString('vi-VN') : 'Không rõ ngày';
-
-                    // Create the inner HTML content without the button first
+                    // Hiển thị điểm số trong danh sách lịch sử
                     const contentHtml = `
                         <strong class="text-blue-700">Bài tập ngày ${exerciseDate}</strong>
                         <span class="ml-2 font-bold text-lg ${docData.score && docData.score >= 7 ? 'text-green-600' : (docData.score && docData.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
@@ -621,34 +641,34 @@
                         </span>
                         <p class="text-sm text-gray-700 mt-1 truncate">${docData.exercisePrompt.substring(0, 100)}...</p>
                     `;
-                    li.innerHTML = contentHtml; // Set the main content
+                    li.innerHTML = contentHtml; // Đặt nội dung chính
 
-                    // Create the button element separately
+                    // Tạo phần tử nút riêng biệt
                     const button = document.createElement('button');
                     button.classList.add('text-xs', 'text-indigo-500', 'hover:underline', 'mt-1');
                     button.textContent = 'Xem chi tiết';
-                    button.setAttribute('data-id', docData.id); // Add data-id attribute
+                    button.setAttribute('data-id', docData.id); // Thêm thuộc tính data-id
 
-                    // Add event listener to the button directly
+                    // Thêm trình lắng nghe sự kiện vào nút trực tiếp
                     button.addEventListener('click', () => showExerciseDetails(docData));
 
-                    // Append the button to the li
+                    // Thêm nút vào li
                     li.appendChild(button);
 
                     pastExercisesList.appendChild(li);
                 });
             }, (error) => {
-                console.error("Error fetching past exercises:", error);
+                console.error("Lỗi khi tìm nạp các bài tập đã làm trước đây:", error);
                 pastExercisesList.innerHTML = `<p class="text-red-500">Lỗi khi tải lịch sử bài tập: ${error.message}</p>`;
-                noHistoryMessage.classList.add('hidden'); // Hide, as an error message is shown
+                noHistoryMessage.classList.add('hidden'); // Ẩn, vì thông báo lỗi được hiển thị
             });
         }
 
         /**
-         * Shows a modal-like display for exercise details.
+         * Hiển thị hiển thị giống modal cho chi tiết bài tập.
          */
         function showExerciseDetails(data) {
-            // Create a simple modal for displaying details
+            // Tạo một modal đơn giản để hiển thị chi tiết
             const modal = document.createElement('div');
             modal.classList.add('fixed', 'inset-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'z-50', 'p-4');
             modal.innerHTML = `
