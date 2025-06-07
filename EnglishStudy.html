@@ -12,7 +12,6 @@
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
             background-color: #e2e8f0;
-            /* Added min-h-screen to ensure body is tall enough for fixed positioning */
             min-height: 100vh;
         }
         /* Custom spinner */
@@ -62,14 +61,14 @@
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
     <!-- Main content wrapper -->
-    <div id="main-content-wrapper" class="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 space-y-6 border border-gray-100 transform hover:scale-[1.005] transition-transform duration-200 mb-8">
+    <div id="main-content-wrapper" class="max-w-full w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 space-y-6 border border-gray-100 transform hover:scale-[1.005] transition-transform duration-200 mb-8 px-4">
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-4 leading-tight">
             Bài Tập Tiếng Anh Hàng Ngày 15 Phút
         </h1>
 
         <!-- Program Poster Section -->
         <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
-            <img src="Banner1.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
+            <img src="Cung_hoc_Ai.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
         </div>
 
         <!-- Difficulty Selection -->
@@ -84,10 +83,33 @@
             </select>
         </div>
 
-        <!-- Exercise Display Area -->
-        <div id="exercise-content" class="min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-auto shadow-inner">
-            <p class="text-center text-gray-500">Chọn trình độ và nhấn "Lấy Bài Tập Mới" để bắt đầu bài tập tiếng Anh của bạn.</p>
+        <!-- Exercise Display Area - Now split into two sections (top/bottom) -->
+        <!-- Removed md:flex-row to make it always flex-col for mobile-first -->
+        <div id="exercise-display-container" class="flex flex-col min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-hidden shadow-inner">
+            <!-- Reading Passage Section (top) -->
+            <!-- Changed width to w-full and removed responsive padding/border for vertical stacking -->
+            <div id="reading-column" class="w-full pb-4 overflow-y-auto max-h-[60vh]">
+                <p class="text-center text-gray-500">Bài đọc sẽ xuất hiện ở đây.</p>
+            </div>
+            
+            <!-- Questions and Answer Section (bottom) -->
+            <!-- Changed width to w-full, removed responsive padding/border for vertical stacking -->
+            <div id="questions-column" class="w-full pt-4 mt-4 border-t border-gray-200 overflow-y-auto max-h-[60vh] flex flex-col space-y-4">
+                <p class="text-center text-gray-500">Các câu hỏi sẽ xuất hiện ở đây.</p>
+                <!-- Answer input section remains here, moved from fixed position -->
+                <div id="answer-section" class="space-y-4 pt-4 border-t border-gray-200 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
+                    <div id="answer-inputs-container" class="space-y-4">
+                        <!-- Dynamic answer inputs will be inserted here by JavaScript -->
+                    </div>
+                    <button id="submit-answer-btn"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 shadow-lg">
+                        Gửi Câu Trả Lời và Đánh Giá bằng AI ✨
+                    </button>
+                </div>
+            </div>
         </div>
+
 
         <!-- Loading Indicator for Exercise -->
         <div id="loading-exercise-indicator" class="flex justify-center items-center py-4 hidden">
@@ -115,11 +137,11 @@
         <div id="ai-features-section" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Tính năng AI hỗ trợ</h2>
 
-            <!-- Show Solution -->
+            <!-- Solve Exercise -->
             <div>
                 <button id="show-solution-btn"
                         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 shadow-md">
-                    Hiển thị Giải pháp ✨
+                    Giải bài tập ✨
                 </button>
                 <div id="solution-content" class="min-h-[50px] mt-4 bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-gray-800 leading-relaxed overflow-auto shadow-inner hidden"></div>
                 <div id="loading-solution-indicator" class="flex justify-center items-center py-2 hidden">
@@ -170,28 +192,14 @@
                     <li><strong>Lấy Bài Tập Mới:</strong> Nhấn nút "Lấy Bài Tập Mới" để AI tạo một bài tập tiếng Anh độc đáo.</li>
                     <li>
                         <strong>Nhập câu trả lời:</strong>
-                        <p class="mt-1">Sau khi bài tập xuất hiện, hãy nhập câu trả lời của bạn vào ô văn bản ở cuối màn hình. Dưới đây là hướng dẫn cụ thể cho các dạng bài tập khác nhau:</p>
-                        <ul class="list-disc list-inside ml-4">
-                            <li><strong>Bài tập điền từ/điền câu:</strong> Nhập trực tiếp các từ hoặc câu trả lời vào ô.</li>
-                            <li><strong>Bài tập nhiều câu hỏi:</strong> Nếu bài tập có nhiều câu hỏi (ví dụ: Q1, Q2, Q3), hãy nhập câu trả lời của bạn cho từng câu hỏi và phân tách chúng bằng dấu chấm câu hoặc xuống dòng. Ví dụ:
-                                <br><em>1. Câu trả lời của tôi cho câu 1.</em>
-                                <br><em>2. Đây là câu trả lời cho câu 2.</em>
-                                <br><em>3. Và đây là câu 3.</em>
-                            </li>
-                            <li><strong>Bài tập viết đoạn văn/bài luận:</strong> Viết toàn bộ đoạn văn hoặc bài luận của bạn vào ô văn bản.</li>
-                            <li><strong>Bài tập chọn đáp án (A, B, C...):</strong> Nếu bài tập là trắc nghiệm, bạn có thể chỉ cần ghi chữ cái của đáp án hoặc cả câu trả lời. Ví dụ:
-                                <br><em>1. A</em>
-                                <br><em>2. False</em>
-                            </li>
-                        </ul>
-                        <p class="mt-2">AI sẽ cố gắng hiểu câu trả lời của bạn tốt nhất có thể dựa trên ngữ cảnh bài tập.</p>
+                        <p class="mt-1">Sau khi bài tập xuất hiện, bạn sẽ thấy các ô nhập liệu riêng biệt cho từng câu hỏi. Hãy điền câu trả lời của bạn vào các ô đó.</p>
                     </li>
                     <li><strong>Gửi và Đánh giá:</strong> Nhấn "Gửi Câu Trả Lời và Đánh Giá bằng AI" để nhận phản hồi và điểm số từ AI.</li>
                     <li><strong>Xem Lịch sử:</strong> Mọi bài tập đã làm và kết quả đánh giá sẽ được lưu trong phần "Lịch sử bài tập" ở cuối trang. Bạn có thể nhấn "Xem chi tiết" để xem lại.</li>
                 </ol>
                 <h4 class="font-semibold text-lg text-gray-700 mt-4">Tính năng hỗ trợ AI:</h4>
                 <ul class="list-disc list-inside">
-                    <li><strong>Hiển thị Giải pháp:</strong> Nếu bạn gặp khó khăn, hãy nhấn nút này để xem giải pháp cho bài tập hiện tại.</li>
+                    <li><strong>Giải bài tập:</strong> Nếu bạn gặp khó khăn, hãy nhấn nút này để xem giải pháp cho bài tập hiện tại.</li>
                     <li><strong>Giải thích Khái niệm:</strong> Nhập một khái niệm ngữ pháp hoặc từ vựng vào ô và nhấn "Giải thích Khái niệm" để AI cung cấp lời giải thích chi tiết.</li>
                 </ul>
                 <p class="mt-4">Hãy bắt đầu và tận hưởng quá trình học tiếng Anh của bạn!</p>
@@ -203,21 +211,6 @@
         </p>
     </div>
 
-    <!-- User Answer Input - MOVED OUTSIDE main-content-wrapper -->
-    <div id="answer-section" class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-50 hidden">
-        <!-- Inner wrapper to align content with main-content-wrapper -->
-        <div class="max-w-3xl mx-auto space-y-4">
-            <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
-            <textarea id="user-answer-input"
-                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px] shadow-sm"
-                      placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
-            <button id="submit-answer-btn"
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 shadow-lg">
-                Gửi Câu Trả Lời và Đánh Giá bằng AI ✨
-            </button>
-        </div>
-    </div>
-
     <!-- Scroll to Top Button -->
     <button id="scroll-to-top-btn"
             class="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg z-50 hidden transition-all duration-300 ease-in-out transform hover:scale-110">
@@ -227,21 +220,29 @@
     </button>
 
     <script type="module">
-        // CÁC BIẾN TOÀN CỤC
-        let currentExercisePrompt = "";
-        let currentExerciseSolution = "";
+        // GLOBAL VARIABLES
+        // Stores HTML versions for display
+        let currentExerciseQuestionsHtml = "";
+        let currentExerciseSolutionHtml = "";
+        // Stores plain text versions for AI prompts
+        let currentReadingPassageTextForAI = ""; 
+        let currentExerciseQuestionsTextForAI = "";
+        let currentExerciseSolutionTextForAI = "";
 
-        // Tham chiếu đến các phần tử HTML
+
+        // References to HTML elements
         const mainContentWrapper = document.getElementById('main-content-wrapper');
         const difficultySelect = document.getElementById('difficulty-select');
-        const exerciseContentDiv = document.getElementById('exercise-content');
+        const exerciseDisplayContainer = document.getElementById('exercise-display-container'); // New container for split view
+        const readingColumnDiv = document.getElementById('reading-column'); // New div for reading passage
+        const questionsColumnDiv = document.getElementById('questions-column'); // New div for questions
         const getExerciseBtn = document.getElementById('get-exercise-btn');
         const loadingExerciseIndicator = document.getElementById('loading-exercise-indicator');
         const aiFeaturesSection = document.getElementById('ai-features-section');
 
-        const userAnswerInput = document.getElementById('user-answer-input');
+        const answerInputsContainer = document.getElementById('answer-inputs-container'); // Container for dynamic answer inputs
         const submitAnswerBtn = document.getElementById('submit-answer-btn');
-        const answerSection = document.getElementById('answer-section'); // This is now a direct child of body
+        const answerSection = document.getElementById('answer-section'); // This is now inside questions-column
         const evaluationResultsDiv = document.getElementById('evaluation-results');
         const evaluationContentDiv = document.getElementById('evaluation-content');
         const loadingEvaluationIndicator = document.getElementById('loading-evaluation-indicator');
@@ -258,16 +259,87 @@
         const pastExercisesList = document.getElementById('past-exercises-list');
         const noHistoryMessage = document.getElementById('no-history-message');
 
-        const scrollToTopBtn = document.getElementById('scroll-to-top-btn'); // Reference to the new button
+        const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
 
-        // New references for User Guide
         const toggleUserGuideBtn = document.getElementById('toggle-user-guide-btn');
         const userGuideContentDiv = document.getElementById('user-guide-content');
 
-
-        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ";
+        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
+        /**
+         * Decodes HTML entities (e.g., &lt; to <, &amp; to &).
+         * @param {string} htmlString - The string potentially containing HTML entities.
+         * @returns {string} The string with HTML entities decoded.
+         */
+        function decodeHtmlEntities(htmlString) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = htmlString;
+            return textarea.value;
+        }
+
+        /**
+         * Prepares HTML content for display on the page.
+         * - Decodes HTML entities.
+         * - Converts Markdown-like bold (**text**, __text__) and italic (*text*, _text_) to HTML tags.
+         * - Consolidates multiple newlines into a single newline.
+         * - Converts single newlines to <br> tags.
+         * - Consolidates multiple <br> tags into a single <br> tag.
+         * @param {string} text - The input text to clean and format.
+         * @returns {string} The cleaned and HTML-formatted text.
+         */
+        function prepareHtmlForDisplay(text) {
+            // First, decode HTML entities
+            text = decodeHtmlEntities(text);
+
+            // Remove markdown code block fences (```html or ```) - assuming they are already decoded if AI sends them as entities
+            text = text.replace(/```html|```/g, '');
+
+            // Convert common Markdown to HTML (these should now apply to actual characters, not entities)
+            // Bold: **text** or __text__ to <strong>text</strong>
+            text = text.replace(/\*\*(.*?)\*\*|__(.*?)__/g, '<strong>$1$2</strong>');
+            // Italic: *text* or _text_ to <em>text</em>
+            text = text.replace(/(?<!\*)\*(.*?)\*(?!\*)|(?<!_)\_(.*?)\_(?!_)/g, '<em>$1$2</em>');
+
+            // Replace multiple newlines with a single newline, then convert to <br>
+            text = text.replace(/\n\s*\n/g, '\n'); // Consolidate multiple newlines
+            text = text.replace(/\n/g, '<br>'); // Convert single newlines to <br>
+            // Replace two or more <br> tags (with optional whitespace) with exactly one <br> tag
+            text = text.replace(/(<br\s*\/?>\s*){2,}/g, '<br>');
+
+            return text;
+        }
+
+        /**
+         * Prepares text for AI consumption by stripping HTML tags and consolidating newlines.
+         * Attempts to preserve paragraph/list structure by replacing block-level tags with newlines.
+         * @param {string} htmlString - The input HTML string.
+         * @returns {string} The cleaned plain text suitable for AI.
+         */
+        function prepareTextForAI(htmlString) {
+            let text = htmlString;
+
+            // Replace block-level closing tags with a newline for structure
+            text = text.replace(/<\/p>|<\/div>|<\/li>/g, '\n');
+            // Replace <br> tags with a newline
+            text = text.replace(/<br\s*\/?>/g, '\n');
+
+            // Strip all remaining HTML tags
+            text = text.replace(/<[^>]*>/g, '');
+
+            // Decode HTML entities (e.g., &amp; to &)
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = text;
+            text = tempDiv.textContent || tempDiv.innerText || '';
+
+            // Consolidate multiple newlines into a single newline
+            text = text.replace(/\n{2,}/g, '\n');
+
+            // Trim whitespace from start/end
+            text = text.trim();
+
+            return text;
+        }
 
         /**
          * Lấy giải thích cho một khái niệm tiếng Anh từ mô hình AI.
@@ -309,8 +381,8 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    text = text.replace(/^```html\n?/, '').replace(/\n?```$/, '');
-                    conceptExplanationContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
+                    text = prepareHtmlForDisplay(text); // Apply cleaning and markdown to HTML conversion
+                    conceptExplanationContentDiv.innerHTML = `<div class="prose max-w-none">${text}</div>`;
                 } else {
                     conceptExplanationContentDiv.innerHTML = '<p class="text-red-500">Không thể giải thích khái niệm. Vui lòng thử lại.</p>';
                     console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
@@ -329,8 +401,8 @@
          * Lời nhắc được thiết kế để lấy cả bài tập và giải pháp dưới dạng HTML.
          */
         async function fetchEnglishExercise() {
-            exerciseContentDiv.innerHTML = '<p class="text-center text-gray-500">Đang tạo bài tập...</p>';
-            exerciseContentDiv.classList.add('min-h-[200px]');
+            readingColumnDiv.innerHTML = '<p class="text-center text-gray-500">Đang tạo bài tập...</p>';
+            questionsColumnDiv.innerHTML = '<p class="text-center text-gray-500">Đang tạo câu hỏi...</p>';
             solutionContentDiv.classList.add('hidden');
             conceptExplanationContentDiv.classList.add('hidden');
             aiFeaturesSection.classList.add('hidden');
@@ -342,21 +414,18 @@
             explainConceptBtn.disabled = true;
             submitAnswerBtn.disabled = true;
 
-            // Hide answer section initially
+            // Hide the entire answer section div
             answerSection.classList.add('hidden');
-            // Remove any previous padding for the body
-            document.body.style.paddingBottom = '';
-
 
             const selectedDifficulty = difficultySelect.value;
 
             const prompt = `Tạo một bài tập tiếng Anh ngắn gọn, kéo dài khoảng 15 phút, tập trung vào ngữ pháp, từ vựng hoặc kỹ năng đọc hiểu.
                             Trình độ: ${selectedDifficulty}.
-                            Cung cấp bài tập và sau đó là ĐÁP ÁN CHÍNH XÁC CỦA NÓ.
-                            Định dạng phản hồi là HTML hợp lệ.
-                            Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung.
-                            Phần bài tập cần có các câu hỏi hoặc nhiệm vụ rõ ràng để người dùng trả lời.
-                            Phần đáp án cần được đánh dấu rõ ràng, ví dụ bằng một thẻ <div id="solution-key">.
+                            Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào.
+                            Phần bài tập cần được chia thành hai phần rõ ràng:
+                            1. Bài đọc (nếu có): Đặt trong <div id="reading-passage">...Nội dung bài đọc ở đây, sử dụng các thẻ HTML như p, strong, em, ul, li, br để định dạng...</div>
+                            2. Câu hỏi: Đặt trong <div id="exercise-questions">...Các câu hỏi ở đây, mỗi câu hỏi được đặt trong thẻ <p> hoặc <li>, ví dụ: <p>1. What is the main topic?</p> hoặc <li>What is the main topic?</li>...</div>
+                            Cung cấp ĐÁP ÁN CHÍNH XÁC của bài tập này, đặt trong một thẻ <div id="solution-key">...Đáp án chi tiết cho từng câu hỏi, giải thích đầy đủ...</div>.
                             Trả lời bằng tiếng Việt.`;
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
@@ -380,34 +449,71 @@
                 if (result.candidates && result.candidates.length > 0 &&
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
-                    let fullText = result.candidates[0].content.parts[0].text;
-                    fullText = fullText.replace(/^```html\n?/, '').replace(/\n?```$/, '');
+                    let rawTextFromAI = result.candidates[0].content.parts[0].text; // Get raw text first
 
-                    const solutionStartIndex = fullText.indexOf('<div id="solution-key">');
-                    if (solutionStartIndex !== -1) {
-                        currentExercisePrompt = fullText.substring(0, solutionStartIndex).replace(/\n/g, '<br>');
-                        currentExerciseSolution = fullText.substring(solutionStartIndex).replace(/\n/g, '<br>');
+                    // Extract HTML parts using regex on the raw text
+                    let readingPassageContentTemp = ''; // This holds the content INSIDE the div
+                    let exerciseQuestionsContentTemp = ''; // Holds content inside #exercise-questions
+                    let solutionKeyContentTemp = ''; // Holds content inside #solution-key
+
+                    const readingPassageMatch = rawTextFromAI.match(/<div id="reading-passage">([\s\S]*?)<\/div>/);
+                    if (readingPassageMatch && readingPassageMatch[1]) {
+                        readingPassageContentTemp = readingPassageMatch[1];
                     } else {
-                        currentExercisePrompt = fullText.replace(/\n/g, '<br>');
-                        currentExerciseSolution = "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>";
+                        console.warn("Không tìm thấy div #reading-passage trong phản hồi của AI.");
                     }
 
-                    exerciseContentDiv.innerHTML = `<div class="prose max-w-none">${currentExercisePrompt}</div>`;
-                    aiFeaturesSection.classList.remove('hidden');
-                    userAnswerInput.value = '';
+                    const questionsMatch = rawTextFromAI.match(/<div id="exercise-questions">([\s\S]*?)<\/div>/);
+                    if (questionsMatch && questionsMatch[1]) {
+                        exerciseQuestionsContentTemp = questionsMatch[1];
+                    } else {
+                        console.error("Không tìm thấy div #exercise-questions trong phản hồi của AI! Vui lòng kiểm tra phản hồi thô.");
+                    }
 
-                    // Show answer section and adjust body padding
+                    const solutionMatch = rawTextFromAI.match(/<div id="solution-key">([\s\S]*?)<\/div>/);
+                    if (solutionMatch && solutionMatch[1]) {
+                        solutionKeyContentTemp = solutionMatch[1];
+                    } else {
+                        console.error("Không tìm thấy div #solution-key trong phản hồi của AI! Vui lòng kiểm tra phản hồi thô.");
+                    }
+
+                    // Store HTML versions for display, applying prepareHtmlForDisplay to extracted raw content
+                    currentExerciseQuestionsHtml = prepareHtmlForDisplay(exerciseQuestionsContentTemp);
+                    currentExerciseSolutionHtml = prepareHtmlForDisplay(solutionKeyContentTemp);
+
+                    // Store plain text versions for AI prompts, applying prepareTextForAI to the *extracted raw content*
+                    currentReadingPassageTextForAI = prepareTextForAI(readingPassageContentTemp); 
+                    currentExerciseQuestionsTextForAI = prepareTextForAI(exerciseQuestionsContentTemp); 
+                    currentExerciseSolutionTextForAI = prepareTextForAI(solutionKeyContentTemp);
+
+                    readingColumnDiv.innerHTML = `<div class="prose max-w-none">${prepareHtmlForDisplay(readingPassageContentTemp) || '<p>Không có bài đọc cho bài tập này.</p>'}</div>`;
+                    
+                    // Clear existing content in questionsColumnDiv before adding questions and answer section
+                    questionsColumnDiv.innerHTML = ''; 
+                    
+                    // Add questions directly to questionsColumnDiv
+                    const questionsDiv = document.createElement('div');
+                    questionsDiv.classList.add('prose', 'max-w-none');
+                    questionsDiv.innerHTML = currentExerciseQuestionsHtml || '<p>Không có câu hỏi.</p>';
+                    questionsColumnDiv.appendChild(questionsDiv);
+
+                    // Re-append the answer section div within the questionsColumnDiv and show it
+                    questionsColumnDiv.appendChild(answerSection);
                     answerSection.classList.remove('hidden');
-                    // Calculate height dynamically
-                    const answerSectionHeight = answerSection.offsetHeight;
-                    document.body.style.paddingBottom = `${answerSectionHeight + 16}px`; // Add some extra padding for button
+
+                    aiFeaturesSection.classList.remove('hidden');
+
+                    // Render dynamic answer inputs based on questions
+                    renderAnswerInputs(currentExerciseQuestionsHtml);
 
                 } else {
-                    exerciseContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo bài tập. Vui lòng thử lại.</p>';
+                    readingColumnDiv.innerHTML = '<p class="text-red-500">Không thể tạo bài tập. Vui lòng thử lại.</p>';
+                    questionsColumnDiv.innerHTML = '';
                     console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
                 }
             } catch (error) {
-                exerciseContentDiv.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại.</p>`;
+                readingColumnDiv.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại.</p>`;
+                questionsColumnDiv.innerHTML = '';
                 console.error("Lỗi khi lấy bài tập tiếng Anh:", error);
             } finally {
                 loadingExerciseIndicator.classList.add('hidden');
@@ -419,12 +525,69 @@
         }
 
         /**
+         * Renders dynamic input fields for each question in the answer section.
+         * @param {string} questionsHtml - The HTML string containing the exercise questions.
+         */
+        function renderAnswerInputs(questionsHtml) {
+            answerInputsContainer.innerHTML = ''; // Clear previous inputs
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = questionsHtml;
+
+            // Target elements that could contain questions.
+            // This is crucial: we need to find actual questions, not just introductory text.
+            // Assuming questions are numbered like "1. What...", "2. How...", etc.
+            const potentialQuestionElements = tempDiv.querySelectorAll('p, li');
+
+            let questionCounter = 0; // To keep track of actual questions for numbering inputs
+            potentialQuestionElements.forEach((qEl) => {
+                const fullQuestionText = qEl.textContent.trim();
+                // Regex to find text starting with a number, a dot, and then capturing the rest.
+                // This helps distinguish actual questions from introductory sentences.
+                const questionRegex = /^\s*\d+\.\s*(.*)/;
+                const match = fullQuestionText.match(questionRegex);
+
+                if (match && match[1]) {
+                    // This is likely an actual numbered question
+                    questionCounter++;
+                    const questionTextWithoutNumber = match[1].trim(); // Get the part after the number and dot
+
+                    const answerItemDiv = document.createElement('div');
+                    answerItemDiv.classList.add('flex', 'flex-col', 'space-y-2');
+                    answerItemDiv.innerHTML = `
+                        <label for="answer-${questionCounter}" class="font-medium text-gray-700">
+                            ${questionCounter}. ${questionTextWithoutNumber.endsWith('?') ? questionTextWithoutNumber : questionTextWithoutNumber + '.'}
+                        </label>
+                        <textarea id="answer-${questionCounter}"
+                                  class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[50px] shadow-sm"
+                                  placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
+                    `;
+                    answerInputsContainer.appendChild(answerItemDiv);
+                }
+                // If it doesn't match the question pattern, it's ignored, which is what the user wants.
+            });
+
+            if (questionCounter === 0) {
+                // Fallback if no specific questions are found, still provide one input.
+                // This scenario might mean the AI didn't format questions as expected.
+                answerInputsContainer.innerHTML = `
+                    <p class="text-gray-500">Không tìm thấy câu hỏi cụ thể nào. Vui lòng nhập câu trả lời chung:</p>
+                    <textarea class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px] shadow-sm"
+                              placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
+                `;
+            }
+        }
+
+
+        /**
          * Lấy giải pháp/gợi ý cho bài tập hiện tại từ mô hình AI.
          */
         async function fetchExerciseSolution() {
-            if (!currentExercisePrompt) {
-                solutionContentDiv.innerHTML = '<p class="text-red-500">Chưa có bài tập nào để giải.</p>';
+            // Use the plain text version of the questions for the AI prompt
+            if (!currentExerciseQuestionsTextForAI) {
+                solutionContentDiv.innerHTML = '<p class="text-red-500">Chưa có bài tập nào để giải. Vui lòng lấy bài tập mới trước.</p>';
                 solutionContentDiv.classList.remove('hidden');
+                console.error("Lỗi: currentExerciseQuestionsTextForAI trống rỗng khi gọi fetchExerciseSolution.");
                 return;
             }
 
@@ -433,9 +596,13 @@
             loadingSolutionIndicator.classList.remove('hidden');
             showSolutionBtn.disabled = true;
 
-            const prompt = currentExerciseSolution && currentExerciseSolution !== "<p>Không tìm thấy đáp án cụ thể trong phản hồi AI.</p>"
-                ? `Đây là đáp án đã được tạo sẵn cho bài tập hiện tại. Vui lòng hiển thị nó: ${currentExerciseSolution}.`
-                : `Đây là một bài tập tiếng Anh: "${currentExercisePrompt}". Vui lòng cung cấp giải pháp hoặc câu trả lời chi tiết cho bài tập này. Nếu cần, hãy giải thích các bước hoặc ngữ pháp liên quan. Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào. Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung. Trả lời bằng tiếng Việt.`;
+            // Using currentReadingPassageTextForAI and currentExerciseQuestionsTextForAI for the prompt
+            const prompt = `Đây là bài đọc: "${currentReadingPassageTextForAI}". Đây là bài tập tiếng Anh: "${currentExerciseQuestionsTextForAI}".
+                            Vui lòng cung cấp ĐÁP ÁN cho bài tập này dựa trên bài đọc và câu hỏi.
+                            Sau đó, giải thích chi tiết TẠI SAO mỗi đáp án lại đúng, bao gồm các quy tắc ngữ pháp hoặc ý nghĩa từ vựng liên quan.
+                            Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào.
+                            Sử dụng các thẻ HTML như <h2>, <p>, <strong>, <em>, <ul>, <li>, <br> để định dạng nội dung.
+                            Trả lời bằng tiếng Việt.`;
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
@@ -459,8 +626,8 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    text = text.replace(/^```html\n?/, '').replace(/\n?```$/, '');
-                    solutionContentDiv.innerHTML = `<div class="prose max-w-none">${text.replace(/\n/g, '<br>')}</div>`;
+                    text = prepareHtmlForDisplay(text); // Apply cleaning and markdown to HTML conversion
+                    solutionContentDiv.innerHTML = `<div class="prose max-w-none">${text}</div>`;
                 } else {
                     solutionContentDiv.innerHTML = '<p class="text-red-500">Không thể tạo giải pháp. Vui lòng thử lại.</p>';
                     console.error("Cấu trúc phản hồi AI không mong muốn hoặc nội dung bị thiếu:", result);
@@ -478,16 +645,30 @@
          * Đánh giá câu trả lời của người dùng bằng mô hình AI và lưu kết quả vào localStorage.
          */
         async function submitAnswer() {
-            const userAnswer = userAnswerInput.value.trim();
-            if (!userAnswer || !currentExercisePrompt || !currentExerciseSolution) {
+            const answerInputs = document.querySelectorAll('#answer-inputs-container .user-answer-item');
+            let userAnswer = [];
+            let allAnswersEmpty = true;
+
+            answerInputs.forEach((input, index) => {
+                const answerText = input.value.trim();
+                if (answerText !== '') {
+                    allAnswersEmpty = false;
+                }
+                // Prepend question number to each answer for clarity in submission to AI
+                userAnswer.push(`${index + 1}. ${answerText}`);
+            });
+            const fullUserAnswer = userAnswer.join('\n'); // Join answers with newlines for AI
+
+            // Use the plain text versions for AI prompts
+            if (allAnswersEmpty || !currentExerciseQuestionsTextForAI || !currentExerciseSolutionTextForAI) {
                 evaluationContentDiv.innerHTML = '<p class="text-red-500">Vui lòng nhập câu trả lời và đảm bảo bài tập đã được tải.</p>';
                 evaluationResultsDiv.classList.remove('hidden');
                 return;
             }
 
-            // Hide answer section and reset body padding
+            // Hide the entire answer section div
             answerSection.classList.add('hidden');
-            document.body.style.paddingBottom = ''; // Reset padding
+
 
             evaluationContentDiv.innerHTML = '<p class="text-center text-gray-500">Đang đánh giá câu trả lời của bạn...</p>';
             evaluationResultsDiv.classList.remove('hidden');
@@ -495,9 +676,9 @@
             submitAnswerBtn.disabled = true;
             getExerciseBtn.disabled = true;
 
-            const prompt = `Đây là bài tập tiếng Anh: "${currentExercisePrompt}".
-                            Đây là đáp án chính xác theo AI: "${currentExerciseSolution}".
-                            Đây là câu trả lời của người dùng: "${userAnswer}".
+            const prompt = `Đây là bài tập tiếng Anh: "${currentExerciseQuestionsTextForAI}".
+                            Đây là đáp án chính xác theo AI: "${currentExerciseSolutionTextForAI}".
+                            Đây là câu trả lời của người dùng: "${fullUserAnswer}".
                             Hãy đánh giá câu trả lời của người dùng.
                             Nếu câu trả lời của người dùng dường như không liên quan hoặc không thể hiểu được trong ngữ cảnh của bài tập,
                             hãy giải thích rằng bạn không chắc câu trả lời đó dành cho câu hỏi nào và yêu cầu người dùng xem lại bài tập hoặc câu trả lời của họ.
@@ -531,11 +712,12 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     evaluationText = result.candidates[0].content.parts[0].text;
+                    evaluationText = prepareHtmlForDisplay(evaluationText); // Apply cleaning and markdown to HTML conversion
                     const scoreMatch = evaluationText.match(/Điểm số: (\d+)\/10/);
                     if (scoreMatch && scoreMatch[1]) {
                         score = parseInt(scoreMatch[1], 10);
                     }
-                    evaluationContentDiv.innerHTML = `<div class="prose max-w-none">${evaluationText.replace(/\n/g, '<br>')}</div>`;
+                    evaluationContentDiv.innerHTML = `<div class="prose max-w-none">${evaluationText}</div>`;
                 } else {
                     evaluationText = '<p class="text-red-500">Không thể đánh giá câu trả lời. Vui lòng thử lại.</p>';
                     evaluationContentDiv.innerHTML = evaluationText;
@@ -552,9 +734,11 @@
 
                 // Lưu kết quả bài tập vào localStorage
                 saveExerciseResult({
-                    exercisePrompt: currentExercisePrompt,
-                    userAnswer: userAnswer,
-                    aiSolution: currentExerciseSolution,
+                    exercisePromptHtml: currentExerciseQuestionsHtml, // Save HTML for display in history
+                    exercisePromptText: currentExerciseQuestionsTextForAI, // Save plain text for future AI use if needed
+                    userAnswer: fullUserAnswer,
+                    aiSolutionHtml: currentExerciseSolutionHtml, // Save HTML solution
+                    aiSolutionText: currentExerciseSolutionTextForAI, // Save plain text solution
                     aiEvaluation: evaluationText,
                     score: score,
                     timestamp: new Date().toISOString()
@@ -598,8 +782,8 @@
                     <span class="ml-2 font-bold text-lg ${data.score !== "N/A" && data.score >= 7 ? 'text-green-600' : (data.score !== "N/A" && data.score >= 4 ? 'text-orange-500' : 'text-red-600')}">
                         Điểm: ${data.score !== undefined ? data.score : 'N/A'}/10
                     </span>
-                    <p class="text-sm text-gray-700 mt-1 truncate">${data.exercisePrompt.substring(0, 100)}...</p>
-                `;
+                    <p class="text-sm text-gray-700 mt-1 truncate">${(data.exercisePromptHtml || data.exercisePrompt || '').substring(0, 100).replace(/<br>/g, ' ')}...</p>
+                `; // Use exercisePromptHtml or fallback to old structure
                 li.innerHTML = contentHtml;
 
                 const button = document.createElement('button');
@@ -634,15 +818,15 @@
                         </div>
                         <div>
                             <h4 class="font-semibold text-lg text-gray-700">Bài tập:</h4>
-                            <div class="bg-gray-50 p-3 rounded-md border border-gray-200 prose max-w-none">${data.exercisePrompt}</div>
+                            <div class="bg-gray-50 p-3 rounded-md border border-gray-200 prose max-w-none">${data.exercisePromptHtml || data.exercisePrompt}</div>
                         </div>
                         <div>
                             <h4 class="font-semibold text-lg text-gray-700">Câu trả lời của bạn:</h4>
-                            <div class="bg-blue-50 p-3 rounded-md border border-blue-200 prose max-w-none">${data.userAnswer.replace(/\n/g, '<br>')}</div>
+                            <div class="bg-blue-50 p-3 rounded-md border border-blue-200 prose max-w-none">${data.userAnswer}</div>
                         </div>
                         <div>
                             <h4 class="font-semibold text-lg text-gray-700">Giải pháp AI:</h4>
-                            <div class="bg-yellow-50 p-3 rounded-md border border-yellow-200 prose max-w-none">${data.aiSolution}</div>
+                            <div class="bg-yellow-50 p-3 rounded-md border border-yellow-200 prose max-w-none">${data.aiSolutionHtml || data.aiSolution}</div>
                         </div>
                         <div>
                             <h4 class="font-semibold text-lg text-gray-700">Đánh giá của AI:</h4>
@@ -688,13 +872,6 @@
             loadPastExercises();
         };
 
-        // Add a resize event listener to adjust padding on screen resize
-        window.addEventListener('resize', () => {
-            if (!answerSection.classList.contains('hidden')) {
-                const answerSectionHeight = answerSection.offsetHeight;
-                document.body.style.paddingBottom = `${answerSectionHeight + 16}px`;
-            }
-        });
     </script>
 </body>
 </html>
