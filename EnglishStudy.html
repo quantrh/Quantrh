@@ -34,6 +34,13 @@
             margin-bottom: 0.75em;
             color: #1a202c; /* gray-900 */
         }
+        .prose h3 { /* Added style for h3 to ensure consistent look */
+            font-size: 1.5rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #1a202c; /* gray-900 */
+        }
         .prose p {
             margin-bottom: 1em;
             line-height: 1.6;
@@ -87,6 +94,7 @@
         <div id="exercise-display-container" class="flex flex-col min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-hidden shadow-inner">
             <!-- Reading Passage Section (top) -->
             <div id="reading-column" class="w-full pb-4 overflow-y-auto max-h-[60vh]">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Bài đọc</h3>
                 <p class="text-center text-gray-500">Bài đọc sẽ xuất hiện ở đây.</p>
             </div>
             
@@ -98,7 +106,8 @@
                 <p class="text-center text-gray-500">Các câu hỏi sẽ xuất hiện ở đây.</p>
                 <!-- Answer input section remains here, moved from fixed position -->
                 <div id="answer-section" class="space-y-4 pt-4 border-t border-gray-200 hidden">
-                    <h2 class="text-2xl font-bold text-gray-800">Câu trả lời của bạn</h2>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Trả lời</h3>
+                    <h2 class="text-xl font-bold text-gray-800">Câu trả lời của bạn</h2>
                     <div id="answer-inputs-container" class="space-y-4">
                         <!-- Dynamic answer inputs will be inserted here by JavaScript -->
                     </div>
@@ -449,32 +458,35 @@
                 if (result.candidates && result.candidates.length > 0 &&
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
-                    let rawTextFromAI = result.candidates[0].content.parts[0].text; // Get raw text first
+                    let rawTextFromAI = result.candidates[0].content.parts[0].text;
 
-                    // Extract HTML parts using regex on the raw text
-                    let readingPassageContentTemp = ''; // This holds the content INSIDE the div
-                    let exerciseQuestionsContentTemp = ''; // Holds content inside #exercise-questions
-                    let solutionKeyContentTemp = ''; // Holds content inside #solution-key
+                    // Use DOMParser to safely extract content
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(rawTextFromAI, 'text/html');
 
-                    const readingPassageMatch = rawTextFromAI.match(/<div id="reading-passage">([\s\S]*?)<\/div>/);
-                    if (readingPassageMatch && readingPassageMatch[1]) {
-                        readingPassageContentTemp = readingPassageMatch[1];
+                    let readingPassageContentTemp = '';
+                    let exerciseQuestionsContentTemp = '';
+                    let solutionKeyContentTemp = '';
+
+                    const readingPassageDiv = doc.getElementById('reading-passage');
+                    if (readingPassageDiv) {
+                        readingPassageContentTemp = readingPassageDiv.innerHTML;
                     } else {
-                        console.warn("Không tìm thấy div #reading-passage trong phản hồi của AI.");
+                        console.warn("Không tìm thấy div #reading-passage trong phản hồi của AI. Nội dung raw từ AI:", rawTextFromAI);
                     }
 
-                    const questionsMatch = rawTextFromAI.match(/<div id="exercise-questions">([\s\S]*?)<\/div>/);
-                    if (questionsMatch && questionsMatch[1]) {
-                        exerciseQuestionsContentTemp = questionsMatch[1];
+                    const exerciseQuestionsDiv = doc.getElementById('exercise-questions');
+                    if (exerciseQuestionsDiv) {
+                        exerciseQuestionsContentTemp = exerciseQuestionsDiv.innerHTML;
                     } else {
-                        console.error("Không tìm thấy div #exercise-questions trong phản hồi của AI! Vui lòng kiểm tra phản hồi thô.");
+                        console.error("Không tìm thấy div #exercise-questions trong phản hồi của AI! Nội dung raw từ AI:", rawTextFromAI);
                     }
 
-                    const solutionMatch = rawTextFromAI.match(/<div id="solution-key">([\s\S]*?)<\/div>/);
-                    if (solutionMatch && solutionMatch[1]) {
-                        solutionKeyContentTemp = solutionMatch[1];
+                    const solutionKeyDiv = doc.getElementById('solution-key');
+                    if (solutionKeyDiv) {
+                        solutionKeyContentTemp = solutionKeyDiv.innerHTML;
                     } else {
-                        console.error("Không tìm thấy div #solution-key trong phản hồi của AI! Vui lòng kiểm tra phản hồi thô.");
+                        console.error("Không tìm thấy div #solution-key trong phản hồi của AI! Nội dung raw từ AI:", rawTextFromAI);
                     }
 
                     // Store HTML versions for display, applying prepareHtmlForDisplay to extracted raw content
