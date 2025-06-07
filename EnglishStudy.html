@@ -11,13 +11,13 @@
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #e2e8f0;
+            background-color: #e2e8f0; /* Keeping a light background for overall app, can be adjusted */
             min-height: 100vh;
         }
         /* Custom spinner */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #3b82f6;
+            border-left-color: #006B68; /* Use primary color for spinner */
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -66,16 +66,16 @@
             Bài Tập Tiếng Anh Hàng Ngày 15 Phút
         </h1>
 
-        <!-- Program Poster Section -->
-        <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
-            <img src="Banner1.png" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
+        <!-- Program Poster Section - Updated gradient to match new colors -->
+        <div class="bg-gradient-to-r from-[#006B68] to-[#FFC62F] p-4 rounded-lg shadow-md flex items-center justify-center mb-6">
+            <img src="https://placehold.co/800x200/006B68/FFFFFF?text=English+Practice+AI+Program+Poster" alt="English Practice AI Program Poster" class="rounded-md object-cover max-w-full h-auto">
         </div>
 
         <!-- Difficulty Selection -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <label for="difficulty-select" class="text-lg font-semibold text-gray-700">Chọn trình độ:</label>
             <select id="difficulty-select"
-                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800">
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#006B68] focus:border-[#006B68] bg-white text-gray-800">
                 <option value="easy">Dễ</option>
                 <option value="medium" selected>Trung bình</option>
                 <option value="hard">Khó</option>
@@ -84,16 +84,16 @@
         </div>
 
         <!-- Exercise Display Area - Now split into two sections (top/bottom) -->
-        <!-- Removed md:flex-row to make it always flex-col for mobile-first -->
         <div id="exercise-display-container" class="flex flex-col min-h-[200px] bg-gray-50 p-5 rounded-lg border border-gray-200 text-gray-800 leading-relaxed overflow-hidden shadow-inner">
             <!-- Reading Passage Section (top) -->
-            <!-- Changed width to w-full and removed responsive padding/border for vertical stacking -->
             <div id="reading-column" class="w-full pb-4 overflow-y-auto max-h-[60vh]">
                 <p class="text-center text-gray-500">Bài đọc sẽ xuất hiện ở đây.</p>
             </div>
             
+            <!-- Separator Line - Added for visual distinction -->
+            <div class="h-1 bg-[#006B68] w-full my-4 rounded-full"></div>
+
             <!-- Questions and Answer Section (bottom) -->
-            <!-- Changed width to w-full, removed responsive padding/border for vertical stacking -->
             <div id="questions-column" class="w-full pt-4 mt-4 border-t border-gray-200 overflow-y-auto max-h-[60vh] flex flex-col space-y-4">
                 <p class="text-center text-gray-500">Các câu hỏi sẽ xuất hiện ở đây.</p>
                 <!-- Answer input section remains here, moved from fixed position -->
@@ -114,22 +114,22 @@
         <!-- Loading Indicator for Exercise -->
         <div id="loading-exercise-indicator" class="flex justify-center items-center py-4 hidden">
             <div class="spinner"></div>
-            <span class="ml-3 text-lg font-medium text-blue-600">Đang tạo bài tập...</span>
+            <span class="ml-3 text-lg font-medium text-[#006B68]">Đang tạo bài tập...</span>
         </div>
 
         <!-- AI Evaluation Results -->
         <div id="evaluation-results" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800">Kết quả đánh giá</h2>
-            <div id="evaluation-content" class="min-h-[50px] bg-purple-50 p-4 rounded-lg border border-purple-200 text-gray-800 leading-relaxed overflow-auto shadow-inner"></div>
+            <div id="evaluation-content" class="min-h-[50px] bg-[#f0f8f8] p-4 rounded-lg border border-[#006B68] text-gray-800 leading-relaxed overflow-auto shadow-inner"></div>
             <div id="loading-evaluation-indicator" class="flex justify-center items-center py-2 hidden">
                 <div class="spinner"></div>
-                <span class="ml-3 text-sm font-medium text-purple-600">Đang đánh giá câu trả lời...</span>
+                <span class="ml-3 text-sm font-medium text-[#006B68]">Đang đánh giá câu trả lời...</span>
             </div>
         </div>
 
-        <!-- Get New Exercise Button -->
+        <!-- Get New Exercise Button - Updated color -->
         <button id="get-exercise-btn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg">
+                class="w-full bg-[#006B68] hover:bg-[#005a57] text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#006B68] focus:ring-opacity-50 shadow-lg">
             Lấy Bài Tập Mới
         </button>
 
@@ -137,33 +137,33 @@
         <div id="ai-features-section" class="space-y-4 pt-6 border-t border-gray-200 hidden">
             <h2 class="text-2xl font-bold text-gray-800 text-center">Tính năng AI hỗ trợ</h2>
 
-            <!-- Solve Exercise -->
+            <!-- Solve Exercise - Updated color -->
             <div>
                 <button id="show-solution-btn"
-                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 shadow-md">
+                        class="w-full bg-[#006B68] hover:bg-[#005a57] text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#006B68] focus:ring-opacity-50 shadow-md">
                     Giải bài tập ✨
                 </button>
-                <div id="solution-content" class="min-h-[50px] mt-4 bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-gray-800 leading-relaxed overflow-auto shadow-inner hidden"></div>
+                <div id="solution-content" class="min-h-[50px] mt-4 bg-[#fffbeb] p-4 rounded-lg border border-[#FFC62F] text-gray-800 leading-relaxed overflow-auto shadow-inner hidden"></div>
                 <div id="loading-solution-indicator" class="flex justify-center items-center py-2 hidden">
                     <div class="spinner"></div>
-                    <span class="ml-3 text-sm font-medium text-green-600">Đang tạo giải pháp...</span>
+                    <span class="ml-3 text-sm font-medium text-[#006B68]">Đang tạo giải pháp...</span>
                 </div>
             </div>
 
-            <!-- Explain Concept -->
+            <!-- Explain Concept - Updated color -->
             <div>
                 <div class="flex items-center space-x-2 mb-2">
                     <input type="text" id="concept-input" placeholder="Nhập khái niệm cần giải thích (ví dụ: Past Simple)"
-                           class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                           class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-[#006B68] focus:border-[#006B68] shadow-sm">
                     <button id="explain-concept-btn"
                             class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 shadow-md">
                         Giải thích Khái niệm ✨
                     </button>
                 </div>
-                <div id="concept-explanation-content" class="min-h-[50px] mt-2 bg-blue-50 p-4 rounded-lg border border-blue-200 text-gray-800 leading-relaxed overflow-auto shadow-inner hidden"></div>
+                <div id="concept-explanation-content" class="min-h-[50px] mt-2 bg-[#f0f8f8] p-4 rounded-lg border border-[#006B68] text-gray-800 leading-relaxed overflow-auto shadow-inner hidden"></div>
                 <div id="loading-concept-indicator" class="flex justify-center items-center py-2 hidden">
                     <div class="spinner"></div>
-                    <span class="ml-3 text-sm font-medium text-purple-600">Đang giải thích khái niệm...</span>
+                    <span class="ml-3 text-sm font-medium text-[#006B68]">Đang giải thích khái niệm...</span>
                 </div>
             </div>
         </div>
@@ -211,9 +211,9 @@
         </p>
     </div>
 
-    <!-- Scroll to Top Button -->
+    <!-- Scroll to Top Button - Updated color -->
     <button id="scroll-to-top-btn"
-            class="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg z-50 hidden transition-all duration-300 ease-in-out transform hover:scale-110">
+            class="fixed bottom-4 right-4 bg-[#006B68] hover:bg-[#005a57] text-white p-3 rounded-full shadow-lg z-50 hidden transition-all duration-300 ease-in-out transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
@@ -424,7 +424,7 @@
                             Phản hồi CHỈ được chứa HTML hợp lệ, không chứa bất kỳ Markdown nào.
                             Phần bài tập cần được chia thành hai phần rõ ràng:
                             1. Bài đọc (nếu có): Đặt trong <div id="reading-passage">...Nội dung bài đọc ở đây, sử dụng các thẻ HTML như p, strong, em, ul, li, br để định dạng...</div>
-                            2. Câu hỏi: Đặt trong <div id="exercise-questions">...Các câu hỏi ở đây, mỗi câu hỏi được đặt trong thẻ <p> hoặc <li>, ví dụ: <p>1. What is the main topic?</p> hoặc <li>What is the main topic?</li>...</div>
+                            2. Câu hỏi: Đặt trong <div id="exercise-questions">...Các câu hỏi ở đây, mỗi câu hỏi được đặt trong thẻ <p> hoặc <li> VÀ BẮT BUỘC phải được đánh số thứ tự (ví dụ: <p>1. What is the main topic?</p> hoặc <li>2. What is the main topic?</li>)...</div>
                             Cung cấp ĐÁP ÁN CHÍNH XÁC của bài tập này, đặt trong một thẻ <div id="solution-key">...Đáp án chi tiết cho từng câu hỏi, giải thích đầy đủ...</div>.
                             Trả lời bằng tiếng Việt.`;
             let chatHistory = [];
@@ -534,45 +534,35 @@
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = questionsHtml;
 
-            // Target elements that could contain questions.
-            // This is crucial: we need to find actual questions, not just introductory text.
-            // Assuming questions are numbered like "1. What...", "2. How...", etc.
+            // Select all direct child <p> or <li> elements within the questions HTML
             const potentialQuestionElements = tempDiv.querySelectorAll('p, li');
 
             let questionCounter = 0; // To keep track of actual questions for numbering inputs
             potentialQuestionElements.forEach((qEl) => {
                 const fullQuestionText = qEl.textContent.trim();
-                // Regex to find text starting with a number, a dot, and then capturing the rest.
-                // This helps distinguish actual questions from introductory sentences.
-                const questionRegex = /^\s*\d+\.\s*(.*)/;
-                const match = fullQuestionText.match(questionRegex);
-
-                if (match && match[1]) {
-                    // This is likely an actual numbered question
+                
+                // Only create an input field if the element has actual text content
+                if (fullQuestionText) {
                     questionCounter++;
-                    const questionTextWithoutNumber = match[1].trim(); // Get the part after the number and dot
-
                     const answerItemDiv = document.createElement('div');
                     answerItemDiv.classList.add('flex', 'flex-col', 'space-y-2');
                     answerItemDiv.innerHTML = `
                         <label for="answer-${questionCounter}" class="font-medium text-gray-700">
-                            ${questionCounter}. ${questionTextWithoutNumber.endsWith('?') ? questionTextWithoutNumber : questionTextWithoutNumber + '.'}
+                            ${questionCounter}. ${fullQuestionText.endsWith('?') ? fullQuestionText : fullQuestionText + '.'}
                         </label>
                         <textarea id="answer-${questionCounter}"
-                                  class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[50px] shadow-sm"
+                                  class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-[#006B68] focus:border-[#006B68] resize-y min-h-[50px] shadow-sm"
                                   placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
                     `;
                     answerInputsContainer.appendChild(answerItemDiv);
                 }
-                // If it doesn't match the question pattern, it's ignored, which is what the user wants.
             });
 
             if (questionCounter === 0) {
                 // Fallback if no specific questions are found, still provide one input.
-                // This scenario might mean the AI didn't format questions as expected.
                 answerInputsContainer.innerHTML = `
                     <p class="text-gray-500">Không tìm thấy câu hỏi cụ thể nào. Vui lòng nhập câu trả lời chung:</p>
-                    <textarea class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px] shadow-sm"
+                    <textarea class="user-answer-item w-full p-3 border border-gray-300 rounded-lg focus:ring-[#006B68] focus:border-[#006B68] resize-y min-h-[100px] shadow-sm"
                               placeholder="Nhập câu trả lời của bạn vào đây..."></textarea>
                 `;
             }
@@ -725,7 +715,6 @@
                 }
             } catch (error) {
                 evaluationText = `<p class="text-red-500">Đã xảy ra lỗi khi đánh giá: ${error.message}. Vui lòng thử lại.</p>`;
-                evaluationContentDiv.innerHTML = evaluationText;
                 console.error("Lỗi khi đánh giá câu trả lời:", error);
             } finally {
                 loadingEvaluationIndicator.classList.add('hidden');
