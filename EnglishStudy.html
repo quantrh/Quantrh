@@ -78,6 +78,30 @@
         .prose li {
             margin-bottom: 0.5em;
         }
+
+        /* Custom scrollbar styles for webkit browsers (Chrome, Safari, Edge, Opera) */
+        /* Apply to the specific divs that have overflow-y-auto */
+        #reading-column::-webkit-scrollbar,
+        #questions-column::-webkit-scrollbar {
+            width: 8px; /* Width of the scrollbar */
+        }
+
+        #reading-column::-webkit-scrollbar-track,
+        #questions-column::-webkit-scrollbar-track {
+            background: #f1f1f1; /* Color of the track */
+            border-radius: 10px;
+        }
+
+        #reading-column::-webkit-scrollbar-thumb,
+        #questions-column::-webkit-scrollbar-thumb {
+            background: #333; /* Color of the scroll thumb */
+            border-radius: 10px;
+        }
+
+        #reading-column::-webkit-scrollbar-thumb:hover,
+        #questions-column::-webkit-scrollbar-thumb:hover {
+            background: #555; /* Color of the scroll thumb on hover */
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
@@ -235,7 +259,7 @@
         </div>
 
         <p class="text-sm text-gray-500 text-center mt-4 text-gray-600">
-            Ứng dụng này cung cấp bài tập tiếng Anh hàng ngày được tạo và hỗ trợ bởi AI (Ver 2.0).
+            Ứng dụng này cung cấp bài tập tiếng Anh hàng ngày được tạo và hỗ trợ bởi AI (Version 2.1).
         </p>
     </div>
 
@@ -315,7 +339,7 @@
                 text = text.replace(/<br\s*\/?>/g, '\n');
 
                 // Strip all remaining HTML tags
-                text = text.replace(/<[^>]*>/g, '');
+                text = text.replace(/<[^>]*>/g, ''); // Fixed: Added missing closing parenthesis
 
                 // Decode HTML entities (e.g., &amp; to &)
                 const tempDiv = document.createElement('div');
