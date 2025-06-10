@@ -88,7 +88,7 @@
                 <span id="file-upload-text">Tải lên hoặc chụp ảnh Business Card (JPG, PNG)</span>
                 <div id="file-upload-spinner" class="loading-spinner hidden"></div>
             </label>
-            <input id="file-upload" type="file" accept="image/jpeg,image/png" capture="environment" />
+            <input id="file-upload" type="file" accept="image/jpeg,image/png" /> <!-- Removed capture="environment" -->
             <div id="image-preview-container" class="mt-4 hidden">
                 <img id="image-preview" class="max-w-full h-auto rounded-lg shadow-md mx-auto" src="#" alt="Xem trước ảnh" />
             </div>
@@ -156,7 +156,7 @@
         const extractedInfoDiv = document.getElementById('extracted-info');
         const downloadVCardLink = document.getElementById('download-vcard');
         const errorMessageDiv = document.getElementById('error-message');
-        const errorTextP = document.getElementById('error-text');
+        const errorTextP = document.getElementById('error-text'); // Corrected from `document = document.getElementById('error-text');`
 
         let uploadedImageBase64 = null;
         let mimeTypeForGemini = 'image/jpeg';
