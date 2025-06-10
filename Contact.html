@@ -156,7 +156,7 @@
         const extractedInfoDiv = document.getElementById('extracted-info');
         const downloadVCardLink = document.getElementById('download-vcard');
         const errorMessageDiv = document.getElementById('error-message');
-        const errorTextP = document.getElementById('error-text'); // Corrected from `document = document.getElementById('error-text');`
+        const errorTextP = document.getElementById('error-text');
 
         let uploadedImageBase64 = null;
         let mimeTypeForGemini = 'image/jpeg';
@@ -174,6 +174,7 @@
 
         /**
          * Encodes a string to Base64 format for VCF, handling UTF-8 characters and applying line folding.
+         * This function is now only used for fields that *must* be Base64 encoded (like photo data if implemented).
          * @param {string} str The string to encode.
          * @returns {string} The Base64 encoded string with line folding.
          */
@@ -181,7 +182,6 @@
             // Encode the string to UTF-8 bytes
             const utf8Bytes = new TextEncoder().encode(str);
             // Convert Uint8Array to a binary string
-            // Using fromCodePoint for full Unicode range support
             const binString = String.fromCodePoint(...utf8Bytes);
             // Encode the binary string to Base64
             let base64 = btoa(binString);
@@ -508,37 +508,35 @@
             let rawPhone = contactData["Số điện thoại"] || "";
             let email = contactData["Email"] || "";
             let website = contactData["Website"] || "";
-            let address = contactData["Địa chỉ"] || ""; // Lấy dữ liệu địa chỉ
+            let address = contactData["Địa chỉ"] || "";
             let socialMedia = contactData["Mạng xã hội"] || [];
 
             // Convert Vietnamese accented characters to non-accented
             fullName = removeVietnameseAccents(fullName);
             title = removeVietnameseAccents(title);
             organization = removeVietnameseAccents(organization);
-            // Kích hoạt lại việc removeVietnameseAccents cho địa chỉ
-            address = removeVietnameseAccents(address);
-            
+            address = removeVietnameseAccents(address); // Keep this to ensure non-accented for address
 
-            // Encode relevant fields using Base64 and apply line folding
-            const encodedFullName = utf8ToBase64AndFold(fullName);
-            const encodedTitle = utf8ToBase64AndFold(title);
-            const encodedOrganization = utf8ToBase64AndFold(organization);
-            // Không mã hóa Base64 cho địa chỉ nữa
-            // const encodedAddress = utf8ToBase64AndFold(address); 
+            // Apply line folding to string values that will be directly written (no Base64)
+            const foldedFullName = foldLine(fullName);
+            const foldedTitle = foldLine(title);
+            const foldedOrganization = foldLine(organization);
+            const foldedAddress = foldLine(address);
 
             // Split full name for N property (Last;First;Middle;;)
             const nameParts = fullName.split(' ');
             const lastName = nameParts.pop() || '';
-            const firstName = nameParts.join(' ') || ''; // Remaining as first name, assuming last word is family name
-            const encodedN = utf8ToBase64AndFold(`${lastName};${firstName};;;`); // VCF N-property format
+            const firstName = nameParts.join(' ') || ''; // Remaining as first name
+            // N property should also be plain text (folded)
+            const foldedN = foldLine(`${lastName};${firstName};;;`); 
 
             let vcfContent = `BEGIN:VCARD
 VERSION:2.1
 PRODID:-//Handcarved//NONSGML v1.0//EN
-N;CHARSET=UTF-8;ENCODING=B:${encodedN}
-FN;CHARSET=UTF-8;ENCODING=B:${encodedFullName}
-ORG;CHARSET=UTF-8;ENCODING=B:${encodedOrganization}
-TITLE;CHARSET=UTF-8;ENCODING=B:${encodedTitle}`;
+N;CHARSET=UTF-8:${foldedN}
+FN;CHARSET=UTF-8:${foldedFullName}
+ORG;CHARSET=UTF-8:${foldedOrganization}
+TITLE;CHARSET=UTF-8:${foldedTitle}`;
 
             // Handle multiple phone numbers and categorize them
             if (rawPhone) {
@@ -562,10 +560,8 @@ TITLE;CHARSET=UTF-8;ENCODING=B:${encodedTitle}`;
                 vcfContent += `\nURL:${website}`;
             }
             if (address) { // Thêm dòng địa chỉ nếu có dữ liệu
-                const foldedAddress = foldLine(address); // Gấp dòng địa chỉ
-                // Ghi địa chỉ trực tiếp mà không mã hóa Base64 hay thiết lập CHARSET/ENCODING cụ thể
-                // VCF 2.1 với charset=utf-8 trong Blob sẽ xử lý các ký tự UTF-8
-                vcfContent += `\nADR;TYPE=WORK:;;${foldedAddress};;;;`;
+                // Ghi địa chỉ trực tiếp mà không mã hóa Base64
+                vcfContent += `\nADR;TYPE=WORK;CHARSET=UTF-8:;;${foldedAddress};;;;`;
             }
             if (socialMedia.length > 0) {
                 socialMedia.forEach(link => {
