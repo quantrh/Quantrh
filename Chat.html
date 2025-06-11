@@ -233,28 +233,19 @@
 
     <!-- MAIN SCRIPT BLOCK -->
     <script type="module">
-        // Firebase SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         // Supabase Client SDK
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        // Biến toàn cục được cung cấp bởi môi trường Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
-        
-        // Supabase URL và Anon Key (cần được định nghĩa ở đây để hàm getGPTReply có thể truy cập)
+        // Biến toàn cục được cung cấp bởi môi trường Canvas (áp dụng cho Supabase)
         const supabaseUrl = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
 
-
-        let db;
-        let auth;
         let supabaseClient; // Biến cho Supabase Client
         let currentUserId = null;
-        let isAuthReady = false;
+        let isChatReady = false; // Đổi tên từ isAuthReady để phản ánh trạng thái sẵn sàng của ứng dụng chat tổng thể
+
+        // Mảng lưu trữ tin nhắn trong bộ nhớ cục bộ
+        let chatMessages = [];
 
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -270,6 +261,25 @@
         let selectedImageMimeType = null; // Lưu trữ MIME type của hình ảnh đã chọn
         let selectedImageFile = null; // Lưu trữ đối tượng File/Blob của hình ảnh đã chọn (để tải lên Supabase Storage)
 
+        // Hàm để tải tin nhắn từ LocalStorage
+        function loadMessagesFromLocalStorage() {
+            try {
+                const storedMessages = localStorage.getItem('chatMessages');
+                return storedMessages ? JSON.parse(storedMessages) : [];
+            } catch (error) {
+                console.error("Lỗi khi tải tin nhắn từ LocalStorage:", error);
+                return [];
+            }
+        }
+
+        // Hàm để lưu tin nhắn vào LocalStorage
+        function saveMessagesToLocalStorage(messages) {
+            try {
+                localStorage.setItem('chatMessages', JSON.stringify(messages));
+            } catch (error) {
+                console.error("Lỗi khi lưu tin nhắn vào LocalStorage:", error);
+            }
+        }
 
         // Hàm để hiển thị tin nhắn trong cửa sổ chat
         // Thay đổi tham số để nhận imageUrl thay vì imageData và imageMimeType
@@ -295,8 +305,13 @@
             const time = document.createElement('span');
             time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
             // Kiểm tra timestamp có tồn tại và hợp lệ không trước khi định dạng
-            if (timestamp && timestamp.seconds) {
-                time.textContent = new Date(timestamp.seconds * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            if (timestamp) { // timestamp ở đây là một string hoặc Date object, không phải object Firebase
+                const date = new Date(timestamp);
+                if (!isNaN(date)) { // Đảm bảo ngày hợp lệ
+                    time.textContent = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                }
             } else {
                 time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); // Sử dụng thời gian hiện tại nếu timestamp không có
             }
@@ -383,7 +398,7 @@
 
         // Hàm xử lý gửi tin nhắn
         async function sendMessage() {
-            if (!isAuthReady) {
+            if (!isChatReady) {
                 showTempMessage("Hệ thống chat chưa sẵn sàng. Vui lòng đợi.", "error");
                 return;
             }
@@ -439,28 +454,35 @@
             }
 
             try {
-                // Thêm tin nhắn của người dùng vào Firestore
-                // LƯU Ý: Chỉ lưu URL hình ảnh vào Firestore, không lưu dữ liệu Base64 đầy đủ
-                await addDoc(collection(db, `/artifacts/${appId}/public/data/chat_messages`), {
+                // Thêm tin nhắn của người dùng vào mảng cục bộ
+                const userMessage = {
                     text: message,
                     senderId: currentUserId,
-                    timestamp: serverTimestamp(), // Sử dụng timestamp của server
+                    timestamp: new Date().toISOString(), // Lưu trữ ISO string của thời gian hiện tại
                     type: 'user',
-                    imageUrl: uploadedImageUrl, // Lưu URL hình ảnh
-                    // Không lưu imageData và imageMimeType vào Firestore để tránh lỗi kích thước tài liệu
-                });
+                    imageUrl: uploadedImageUrl,
+                };
+                chatMessages.push(userMessage);
+                addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp, userMessage.imageUrl); // Hiển thị ngay lập tức
+
+                // Lưu tin nhắn vào LocalStorage
+                saveMessagesToLocalStorage(chatMessages);
 
                 // Gọi GPT Agent và lấy phản hồi
-                // Vẫn gửi imageData và imageMimeType đến Supabase Function để GPT xử lý (nếu có)
                 const gptReply = await getGPTReply(message, selectedImageData, selectedImageMimeType);
 
-                // Thêm phản hồi của GPT vào Firestore
-                await addDoc(collection(db, `/artifacts/${appId}/public/data/chat_messages`), {
+                // Thêm phản hồi của GPT vào mảng cục bộ
+                const botMessage = {
                     text: gptReply,
                     senderId: 'gpt_agent', // ID đặc biệt cho GPT
-                    timestamp: serverTimestamp(),
+                    timestamp: new Date().toISOString(), // Lưu trữ ISO string của thời gian hiện tại
                     type: 'bot'
-                });
+                };
+                chatMessages.push(botMessage);
+                addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp); // Hiển thị ngay lập tức
+
+                // Lưu tin nhắn vào LocalStorage sau khi có phản hồi của bot
+                saveMessagesToLocalStorage(chatMessages);
 
                 showTempMessage("Tin nhắn đã được gửi!", "success");
 
@@ -518,68 +540,33 @@
             imagePreview.src = '#';
         });
 
-        // Khởi tạo Firebase và đăng nhập
-        async function initializeFirebase() {
+        // Hàm khởi tạo ứng dụng chat (thay thế initializeFirebase)
+        async function initializeChatApp() {
             try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
                 // Khởi tạo Supabase Client
-                supabaseClient = createClient(supabaseUrl, supabaseAnonKey); // Dùng lại supabaseUrl và supabaseAnonKey đã định nghĩa
+                supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
-                        console.log("Người dùng đã đăng nhập:", currentUserId);
-                        isAuthReady = true;
+                // Lấy hoặc tạo UserId cục bộ
+                let storedUserId = localStorage.getItem('currentUserId');
+                if (!storedUserId) {
+                    storedUserId = crypto.randomUUID(); // Tạo UUID ngẫu nhiên
+                    localStorage.setItem('currentUserId', storedUserId);
+                }
+                currentUserId = storedUserId;
+                userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
 
-                        // Nghe thay đổi từ Firestore
-                        const q = query(collection(db, `/artifacts/${appId}/public/data/chat_messages`));
-                        onSnapshot(q, (snapshot) => {
-                            snapshot.docChanges().forEach((change) => {
-                                const data = change.doc.data();
-                                if (change.type === "added") {
-                                    // Truyền imageUrl khi thêm tin nhắn vào UI
-                                    addMessageToUI(data.text, data.senderId, data.timestamp, data.imageUrl);
-                                }
-                                // Có thể xử lý 'modified' và 'removed' nếu cần
-                            });
-                        }, (error) => {
-                            console.error("Lỗi khi nghe thay đổi Firestore:", error);
-                            showTempMessage("Không thể tải lịch sử chat. Lỗi kết nối Firestore.", "error");
-                        });
-
-                        // Tải lịch sử chat ban đầu (nếu có)
-                        const initialMessages = await getDocs(q);
-                        initialMessages.docs.forEach(doc => {
-                            const data = doc.data();
-                            // Truyền imageUrl khi tải lịch sử
-                            addMessageToUI(data.text, data.senderId, data.timestamp, data.imageUrl);
-                        });
-
-                    } else {
-                        // Người dùng chưa đăng nhập, thử đăng nhập bằng token hoặc ẩn danh
-                        try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (signInError) {
-                                console.error("Lỗi đăng nhập Firebase:", signInError);
-                                showTempMessage("Không thể đăng nhập vào Firebase. Lỗi xác thực.", "error");
-                                // Có thể tạo một ID người dùng ngẫu nhiên nếu không đăng nhập được
-                                currentUserId = crypto.randomUUID();
-                                userIdDisplay.textContent = `ID tạm thời: ${currentUserId}`;
-                                isAuthReady = true; // Cho phép sử dụng ứng dụng với ID tạm thời
-                        }
-                    }
+                // Tải tin nhắn từ LocalStorage và hiển thị
+                chatMessages = loadMessagesFromLocalStorage();
+                chatMessages.forEach(msg => {
+                    addMessageToUI(msg.text, msg.senderId, msg.timestamp, msg.imageUrl);
                 });
 
+                isChatReady = true;
+                showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
+
             } catch (error) {
-                console.error("Lỗi khởi tạo Firebase:", error);
-                showTempMessage("Không thể khởi tạo Firebase. Vui lòng kiểm tra cấu hình.", "error");
+                console.error("Lỗi khởi tạo ứng dụng chat:", error);
+                showTempMessage("Không thể khởi tạo ứng dụng chat. Vui lòng kiểm tra cấu hình.", "error");
             }
         }
 
@@ -593,8 +580,8 @@
             }
         });
 
-        // Khởi tạo Firebase khi DOM đã tải xong
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
+        // Khởi tạo ứng dụng chat khi DOM đã tải xong
+        document.addEventListener('DOMContentLoaded', initializeChatApp);
     </script>
 </body>
 </html>
