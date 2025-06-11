@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat với GPT Agent</title>
+    <!-- Tailwind CSS CDN để dễ dàng định kiểu -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Marked.js CDN để chuyển đổi Markdown sang HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            height: 80vh; /* Chiều cao cố định cho khung chat */
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4A90E2; /* Màu xanh dương hiện đại */
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .chat-window {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #EBF2FA; /* Màu nền nhẹ nhàng cho cửa sổ chat */
+            position: relative; /* Cho phép cuộn */
+        }
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #C8E6C9; /* Màu xanh lá nhạt cho người dùng */
+            color: #333;
+            border-bottom-right-radius: 4px; /* Góc nhọn */
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #DDEBF7; /* Màu xanh nhạt cho bot */
+            color: #333;
+            border-bottom-left-radius: 4px; /* Góc nhọn */
+        }
+        /* Định kiểu cho nội dung Markdown đã chuyển đổi */
+        .bot-message p:first-child {
+            margin-top: 0;
+        }
+        .bot-message p:last-child {
+            margin-bottom: 0;
+        }
+        .bot-message pre {
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .bot-message code {
+            font-family: monospace;
+            background-color: #d0d0d0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .bot-message ul, .bot-message ol {
+            margin-left: 20px;
+            margin-bottom: 5px;
+        }
+        .bot-message li {
+            margin-bottom: 5px;
+        }
+        .chat-input-area {
+            display: flex;
+            flex-direction: column; /* Thay đổi thành column để hình ảnh nằm trên input */
+            padding: 16px;
+            border-top: 1px solid #E0E0E0;
+            background-color: #FFFFFF;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .chat-input-area input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border: 1px solid #D0D0D0;
+            border-radius: 25px;
+            margin-right: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input-area input[type="text"]:focus {
+            border-color: #4A90E2;
+        }
+        .chat-input-area button {
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .chat-input-area button:hover {
+            background-color: #357ABD;
+            transform: translateY(-1px);
+        }
+        .chat-input-area button:active {
+            transform: translateY(0);
+        }
+        .loading-indicator {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+            margin-top: 10px;
+        }
+        .user-id-display {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            padding-bottom: 10px;
+        }
+        .image-preview-container {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+        .image-preview {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 4px;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .remove-image-button {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: auto;
+        }
+        .message-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: block;
+        }
+        .file-input-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            margin-right: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .file-input-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat với GPT Agent
+        </div>
+        <div class="chat-window" id="chat-window">
+            <!-- Tin nhắn sẽ được hiển thị ở đây -->
+        </div>
+        <div class="user-id-display" id="user-id-display">
+            <!-- ID người dùng sẽ được hiển thị ở đây -->
+        </div>
+        <div class="chat-input-area">
+            <div id="image-preview-container" class="image-preview-container hidden">
+                <img id="image-preview" class="image-preview" src="#" alt="Image preview">
+                <button id="remove-image-button" class="remove-image-button">&times;</button>
+            </div>
+            <div class="input-row">
+                <input type="file" id="image-input" accept="image/*" class="hidden">
+                <button id="attach-button" class="file-input-button">🖼️</button>
+                <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
+                <button id="send-button">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SCRIPT BLOCK -->
+    <script type="module">
+        // Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Supabase Client SDK
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Biến toàn cục được cung cấp bởi môi trường Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+        
+        // Supabase URL và Anon Key (cần được định nghĩa ở đây để hàm getGPTReply có thể truy cập)
+        const supabaseUrl = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
+
+
+        let db;
+        let auth;
+        let supabaseClient; // Biến cho Supabase Client
+        let currentUserId = null;
+        let isAuthReady = false;
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const imageInput = document.getElementById('image-input');
+        const attachButton = document.getElementById('attach-button');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const removeImageButton = document.getElementById('remove-image-button');
+
+        let selectedImageData = null; // Lưu trữ dữ liệu Base64 của hình ảnh đã chọn (để gửi tới Supabase Function)
+        let selectedImageMimeType = null; // Lưu trữ MIME type của hình ảnh đã chọn
+        let selectedImageFile = null; // Lưu trữ đối tượng File/Blob của hình ảnh đã chọn (để tải lên Supabase Storage)
+
+
+        // Hàm để hiển thị tin nhắn trong cửa sổ chat
+        // Thay đổi tham số để nhận imageUrl thay vì imageData và imageMimeType
+        function addMessageToUI(message, sender, timestamp, imageUrl = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-bubble');
+
+            if (sender === currentUserId) {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = message; // Tin nhắn người dùng không cần chuyển đổi Markdown
+            } else {
+                messageDiv.classList.add('bot-message');
+                messageDiv.innerHTML = marked.parse(message); // Chuyển đổi Markdown sang HTML cho tin nhắn bot
+            }
+
+            if (imageUrl) { // Kiểm tra nếu có imageUrl
+                const img = document.createElement('img');
+                img.src = imageUrl; // Sử dụng URL trực tiếp
+                img.classList.add('message-image');
+                messageDiv.appendChild(img);
+            }
+
+            const time = document.createElement('span');
+            time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
+            // Kiểm tra timestamp có tồn tại và hợp lệ không trước khi định dạng
+            if (timestamp && timestamp.seconds) {
+                time.textContent = new Date(timestamp.seconds * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            } else {
+                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); // Sử dụng thời gian hiện tại nếu timestamp không có
+            }
+            messageDiv.appendChild(time);
+            
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Cuộn xuống cuối
+        }
+
+        // Hàm hiển thị thông báo lỗi/thành công tạm thời
+        function showTempMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('loading-indicator');
+            messageDiv.textContent = message;
+            if (type === 'error') {
+                messageDiv.style.color = 'red';
+            } else if (type === 'success') {
+                messageDiv.style.color = 'green';
+            }
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            setTimeout(() => {
+                chatWindow.removeChild(messageDiv);
+            }, 3000); // Biến mất sau 3 giây
+        }
+
+        // Hàm để gọi API backend của GPT Agent thông qua Supabase Function
+        async function getGPTReply(message, imageData = null, imageMimeType = null) {
+            // Tên của Supabase Function của bạn (ví dụ: 'chat-with-gpt')
+            const functionName = 'chat-with-gpt';
+            const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+
+            // Mã của trợ lý GPT bạn muốn sử dụng
+            const gptAssistantId = 'asst_cBEmkFZvGPf4Qovx5mQOXOeO'; 
+
+            const payload = {
+                message: message, 
+                userId: currentUserId,
+                assistantId: gptAssistantId
+            };
+
+            if (imageData && imageMimeType) {
+                payload.imageData = imageData;
+                payload.imageMimeType = imageMimeType;
+            }
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey, 
+                        'Authorization': `Bearer ${supabaseAnonKey}` 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                    } catch (parseError) {
+                        errorDetails += ` - ${response.statusText}`;
+                    }
+                    throw new Error(`Lỗi từ Supabase Function: ${errorDetails}`);
+                }
+
+                const data = await response.json();
+                if (data && typeof data.reply === 'string') {
+                    return data.reply;
+                } else {
+                    throw new Error('Phản hồi không hợp lệ từ Supabase Function (thiếu trường "reply").');
+                }
+            } catch (error) {
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                    throw new Error('Không thể kết nối đến Supabase Function. Vui lòng kiểm tra URL, Anon Key, và cấu hình CORS trên Supabase.');
+                } else {
+                    console.error('Lỗi khi gọi Supabase Function:', error);
+                    throw new Error(`Không thể nhận phản hồi từ GPT Agent thông qua Supabase: ${error.message}.`);
+                }
+            }
+        }
+
+        // Hàm xử lý gửi tin nhắn
+        async function sendMessage() {
+            if (!isAuthReady) {
+                showTempMessage("Hệ thống chat chưa sẵn sàng. Vui lòng đợi.", "error");
+                return;
+            }
+
+            const message = userInput.value.trim();
+            // Cho phép gửi tin nhắn trống nếu có hình ảnh
+            if (message === '' && !selectedImageData) {
+                return;
+            }
+
+            userInput.value = ''; // Xóa ô nhập liệu
+            sendButton.disabled = true; // Tắt nút gửi
+            attachButton.disabled = true; // Tắt nút đính kèm
+            imageInput.disabled = true; // Tắt input file
+            showTempMessage("Đang gửi tin nhắn...", "info");
+
+            let uploadedImageUrl = null;
+
+            if (selectedImageData && selectedImageFile) { // Kiểm tra cả selectedImageFile
+                showTempMessage("Đang tải ảnh lên Supabase Storage...", "info");
+                try {
+                    // Tạo một đường dẫn duy nhất trong Supabase Storage
+                    const storagePath = `chatimages/${currentUserId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${selectedImageMimeType.split('/')[1]}`;
+                    
+                    // Tải tệp lên Supabase Storage
+                    const { data, error } = await supabaseClient.storage
+                        .from('chatimages') // Tên bucket của bạn trong Supabase Storage
+                        .upload(storagePath, selectedImageFile, {
+                            cacheControl: '3600',
+                            upsert: false // Không ghi đè nếu đã tồn tại
+                        });
+
+                    if (error) {
+                        throw new Error(`Lỗi tải ảnh lên Supabase Storage: ${error.message}`);
+                    }
+                    
+                    // Lấy URL công khai của ảnh đã tải lên
+                    const { data: publicUrlData } = supabaseClient.storage
+                        .from('chatimages')
+                        .getPublicUrl(storagePath);
+
+                    uploadedImageUrl = publicUrlData.publicUrl;
+
+                    showTempMessage("Ảnh đã tải lên Supabase Storage!", "success");
+                } catch (storageError) {
+                    console.error("Lỗi khi tải ảnh lên Supabase Storage:", storageError);
+                    showTempMessage("Lỗi khi tải ảnh lên. Vui lòng thử lại.", "error");
+                    sendButton.disabled = false;
+                    attachButton.disabled = false;
+                    imageInput.disabled = false;
+                    return; // Dừng quá trình gửi nếu tải ảnh thất bại
+                }
+            }
+
+            try {
+                // Thêm tin nhắn của người dùng vào Firestore
+                // LƯU Ý: Chỉ lưu URL hình ảnh vào Firestore, không lưu dữ liệu Base64 đầy đủ
+                await addDoc(collection(db, `/artifacts/${appId}/public/data/chat_messages`), {
+                    text: message,
+                    senderId: currentUserId,
+                    timestamp: serverTimestamp(), // Sử dụng timestamp của server
+                    type: 'user',
+                    imageUrl: uploadedImageUrl, // Lưu URL hình ảnh
+                    // Không lưu imageData và imageMimeType vào Firestore để tránh lỗi kích thước tài liệu
+                });
+
+                // Gọi GPT Agent và lấy phản hồi
+                // Vẫn gửi imageData và imageMimeType đến Supabase Function để GPT xử lý (nếu có)
+                const gptReply = await getGPTReply(message, selectedImageData, selectedImageMimeType);
+
+                // Thêm phản hồi của GPT vào Firestore
+                await addDoc(collection(db, `/artifacts/${appId}/public/data/chat_messages`), {
+                    text: gptReply,
+                    senderId: 'gpt_agent', // ID đặc biệt cho GPT
+                    timestamp: serverTimestamp(),
+                    type: 'bot'
+                });
+
+                showTempMessage("Tin nhắn đã được gửi!", "success");
+
+            } catch (error) {
+                console.error('Lỗi khi gửi/nhận tin nhắn:', error);
+                showTempMessage(`Lỗi: ${error.message}`, "error");
+            } finally {
+                sendButton.disabled = false; // Bật lại nút gửi
+                attachButton.disabled = false; // Bật lại nút đính kèm
+                imageInput.disabled = false; // Bật lại input file
+                // Xóa hình ảnh đã chọn sau khi gửi
+                selectedImageData = null;
+                selectedImageMimeType = null;
+                selectedImageFile = null; // Đặt lại file đã chọn
+                imageInput.value = ''; // Đặt lại input file để có thể chọn lại cùng một file
+                imagePreviewContainer.classList.add('hidden');
+                imagePreview.src = '#';
+            }
+        }
+
+        // Xử lý chọn hình ảnh
+        attachButton.addEventListener('click', () => {
+            imageInput.click(); // Kích hoạt input file ẩn
+        });
+
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                selectedImageFile = file; // Lưu trữ đối tượng File
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Lấy phần Base64 sau "base64,"
+                    const base64String = e.target.result.split(',')[1];
+                    selectedImageData = base64String;
+                    selectedImageMimeType = file.type;
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedImageData = null;
+                selectedImageMimeType = null;
+                selectedImageFile = null;
+                imagePreviewContainer.classList.add('hidden');
+                imagePreview.src = '#';
+            }
+        });
+
+        removeImageButton.addEventListener('click', () => {
+            selectedImageData = null;
+            selectedImageMimeType = null;
+            selectedImageFile = null;
+            imageInput.value = ''; // Xóa file đã chọn khỏi input
+            imagePreviewContainer.classList.add('hidden');
+            imagePreview.src = '#';
+        });
+
+        // Khởi tạo Firebase và đăng nhập
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                // Khởi tạo Supabase Client
+                supabaseClient = createClient(supabaseUrl, supabaseAnonKey); // Dùng lại supabaseUrl và supabaseAnonKey đã định nghĩa
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
+                        console.log("Người dùng đã đăng nhập:", currentUserId);
+                        isAuthReady = true;
+
+                        // Nghe thay đổi từ Firestore
+                        const q = query(collection(db, `/artifacts/${appId}/public/data/chat_messages`));
+                        onSnapshot(q, (snapshot) => {
+                            snapshot.docChanges().forEach((change) => {
+                                const data = change.doc.data();
+                                if (change.type === "added") {
+                                    // Truyền imageUrl khi thêm tin nhắn vào UI
+                                    addMessageToUI(data.text, data.senderId, data.timestamp, data.imageUrl);
+                                }
+                                // Có thể xử lý 'modified' và 'removed' nếu cần
+                            });
+                        }, (error) => {
+                            console.error("Lỗi khi nghe thay đổi Firestore:", error);
+                            showTempMessage("Không thể tải lịch sử chat. Lỗi kết nối Firestore.", "error");
+                        });
+
+                        // Tải lịch sử chat ban đầu (nếu có)
+                        const initialMessages = await getDocs(q);
+                        initialMessages.docs.forEach(doc => {
+                            const data = doc.data();
+                            // Truyền imageUrl khi tải lịch sử
+                            addMessageToUI(data.text, data.senderId, data.timestamp, data.imageUrl);
+                        });
+
+                    } else {
+                        // Người dùng chưa đăng nhập, thử đăng nhập bằng token hoặc ẩn danh
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (signInError) {
+                                console.error("Lỗi đăng nhập Firebase:", signInError);
+                                showTempMessage("Không thể đăng nhập vào Firebase. Lỗi xác thực.", "error");
+                                // Có thể tạo một ID người dùng ngẫu nhiên nếu không đăng nhập được
+                                currentUserId = crypto.randomUUID();
+                                userIdDisplay.textContent = `ID tạm thời: ${currentUserId}`;
+                                isAuthReady = true; // Cho phép sử dụng ứng dụng với ID tạm thời
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Lỗi khởi tạo Firebase:", error);
+                showTempMessage("Không thể khởi tạo Firebase. Vui lòng kiểm tra cấu hình.", "error");
+            }
+        }
+
+        // Gán sự kiện cho nút gửi
+        sendButton.addEventListener('click', sendMessage);
+
+        // Gán sự kiện nhấn Enter trong ô nhập liệu
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Khởi tạo Firebase khi DOM đã tải xong
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    </script>
+</body>
+</html>
