@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif; /* Font Inter hỗ trợ tiếng Việt tốt */
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
@@ -53,7 +53,7 @@
             align-items: center;
         }
         .new-thread-button {
-            background-color: #22c55e;
+            background-color: #006B68; /* Màu thương hiệu BIDV */
             color: white;
             border: none;
             border-radius: 8px;
@@ -66,10 +66,11 @@
             white-space: nowrap;
         }
         .new-thread-button:hover {
-            background-color: #16a34a;
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000; /* Chữ đen để dễ đọc trên nền vàng */
             transform: translateY(-1px);
         }
-        .search-input {
+        .search-input, .agent-select { /* Added agent-select */
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #d0d0d0;
@@ -78,9 +79,10 @@
             font-size: 0.9rem;
             outline: none;
             transition: border-color 0.2s;
+            background-color: #fff; /* Ensure white background for dropdown */
         }
-        .search-input:focus {
-            border-color: #4A90E2;
+        .search-input:focus, .agent-select:focus { /* Added agent-select */
+            border-color: #006B68; /* Màu thương hiệu BIDV */
         }
         .thread-list {
             flex-grow: 1;
@@ -101,13 +103,13 @@
             align-items: center;
         }
         .thread-item:hover {
-            background-color: #94a3b8;
+            background-color: #005C5A; /* Tông màu hơi đậm hơn của BIDV primary */
             color: #f8fafc;
         }
         .thread-item.active {
-            background-color: #4A90E2;
+            background-color: #006B68; /* Màu thương hiệu BIDV */
             color: white;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 107, 104, 0.3); /* Điều chỉnh màu shadow */
         }
         .thread-item-name {
             flex-grow: 1;
@@ -139,17 +141,16 @@
             width: calc(100% - 280px); /* Adjust width for desktop sidebar */
         }
         .chat-header {
-            background-color: #4A90E2;
+            background-color: #006B68; /* Màu thương hiệu BIDV */
             color: white;
             padding: 16px;
-            text-align: center;
             font-size: 1.25rem;
             font-weight: 700;
             border-top-right-radius: 12px;
-            display: flex; /* For hamburger button on small screens */
+            display: flex;
             align-items: center;
             justify-content: center;
-            position: relative; /* For hamburger button positioning */
+            position: relative;
         }
         .hamburger-button {
             display: none; /* Hidden by default on desktop */
@@ -163,7 +164,11 @@
             left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            z-index: 60; /* Ensure it's above other elements */
+            z-index: 60;
+        }
+        .chat-header-title-text { /* New span for title text */
+            flex-grow: 1; /* Allow title text to take available space */
+            text-align: center;
         }
         .chat-window {
             flex-grow: 1;
@@ -184,13 +189,13 @@
         }
         .user-message {
             align-self: flex-end;
-            background-color: #C8E6C9;
+            background-color: #C8E6C9; /* Giữ màu trung tính cho tin nhắn người dùng */
             color: #333;
             border-bottom-right-radius: 4px;
         }
         .bot-message {
             align-self: flex-start;
-            background-color: #DDEBF7;
+            background-color: #DDEBF7; /* Giữ màu trung tính cho tin nhắn bot */
             color: #333;
             border-bottom-left-radius: 4px;
         }
@@ -235,10 +240,10 @@
             transition: border-color 0.2s;
         }
         .chat-input-area input[type="text"]:focus {
-            border-color: #4A90E2;
+            border-color: #006B68; /* Màu thương hiệu BIDV */
         }
         .chat-input-area button {
-            background-color: #4A90E2;
+            background-color: #006B68; /* Màu thương hiệu BIDV */
             color: white;
             border: none;
             border-radius: 25px;
@@ -250,7 +255,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
         .chat-input-area button:hover {
-            background-color: #357ABD;
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000; /* Chữ đen để dễ đọc trên nền vàng */
             transform: translateY(-1px);
         }
         .chat-input-area button:active {
@@ -337,6 +343,13 @@
                 </button>
             </div>
             <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm luồng chat...">
+            
+            <!-- Agent Selection Dropdown -->
+            <label for="agent-select" class="text-sm font-semibold text-gray-700 mb-2">Chọn Agent:</label>
+            <select id="agent-select" class="agent-select">
+                <!-- Options will be dynamically loaded here -->
+            </select>
+            
             <div class="thread-list" id="thread-list">
                 <!-- Thread items will be rendered here -->
             </div>
@@ -346,9 +359,9 @@
         </div>
 
         <div class="chat-area">
-            <div class="chat-header" id="chat-header-title">
+            <div class="chat-header" id="chat-header">
                 <button id="hamburger-button" class="hamburger-button">☰</button>
-                Chat với GPT Agent
+                <span id="chat-header-title-text">Chat với GPT Agent</span> <!-- Updated ID for title text -->
             </div>
             <div class="chat-window" id="chat-window">
                 <!-- Messages will be displayed here -->
@@ -377,6 +390,13 @@
         let chatThreads = []; // Stores { id, name, lastMessageTimestamp }
         let chatMessages = []; // Stores { text, senderId, timestamp, type, threadId }
         let currentActiveThreadId = null;
+        let currentSelectedAgentId = null; // New variable to store selected agent ID
+
+        // Define available agents
+        const availableAgents = [
+            { name: "SmartCounterHub", id: "asst_cBEmkFZvGPf4Qovx5mQOXOeO" },
+            { name: "ITBOOK", id: "asst_iyjtFwcQQlUhwNBI8DZLPZ5A" }
+        ];
 
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -384,11 +404,13 @@
         const userIdDisplay = document.getElementById('user-id-display');
         const threadList = document.getElementById('thread-list');
         const newThreadButton = document.getElementById('new-thread-button');
-        const chatHeaderTitle = document.getElementById('chat-header-title');
-        const hamburgerButton = document.getElementById('hamburger-button'); // New
-        const sidebarOverlay = document.getElementById('sidebar-overlay'); // New
-        const threadSidebar = document.getElementById('thread-sidebar'); // New
-        const searchInput = document.getElementById('search-input'); // New
+        const chatHeader = document.getElementById('chat-header'); // Changed to chat-header element
+        const chatHeaderTitleText = document.getElementById('chat-header-title-text'); // New span for title text
+        const hamburgerButton = document.getElementById('hamburger-button'); 
+        const sidebarOverlay = document.getElementById('sidebar-overlay'); 
+        const threadSidebar = document.getElementById('thread-sidebar'); 
+        const searchInput = document.getElementById('search-input'); 
+        const agentSelect = document.getElementById('agent-select'); // New Agent Select element
 
         // --- LocalStorage Functions ---
         function loadDataFromLocalStorage() {
@@ -400,11 +422,13 @@
                 chatMessages = storedMessages ? JSON.parse(storedMessages) : [];
 
                 currentActiveThreadId = localStorage.getItem('currentActiveThreadId');
+                currentSelectedAgentId = localStorage.getItem('currentSelectedAgentId') || availableAgents[0].id; // Load selected agent, default to first if not found
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu từ LocalStorage:", error);
                 chatThreads = [];
                 chatMessages = [];
                 currentActiveThreadId = null;
+                currentSelectedAgentId = availableAgents[0].id; // Default to first agent on error
             }
         }
 
@@ -417,6 +441,7 @@
                 } else {
                     localStorage.removeItem('currentActiveThreadId');
                 }
+                localStorage.setItem('currentSelectedAgentId', currentSelectedAgentId); // Save selected agent ID
             } catch (error) {
                 console.error("Lỗi khi lưu dữ liệu vào LocalStorage:", error);
             }
@@ -498,27 +523,26 @@
 
         function updateChatHeaderTitle() {
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
-            // This sets the text content. The hamburger button is a separate element.
-            // The textContent property replaces everything inside the element,
-            // so we need to re-append the hamburger button after updating the text.
-            // A better approach for the header would be to have a separate span for the title.
-            // For now, let's keep the existing structure and just update the text and visibility.
-            const headerText = activeThread ? activeThread.name : 'Chat với GPT Agent';
-            // Store current innerHTML to preserve button, then modify text content
-            const originalInnerHtml = chatHeaderTitle.innerHTML;
-            chatHeaderTitle.textContent = headerText; // This removes the button temporarily
-
-            // Re-append the hamburger button if it was originally there
-            if (window.innerWidth <= 768 && !chatHeaderTitle.querySelector('#hamburger-button')) {
-                // Only re-append if on mobile and the button isn't already there (after textContent wiped it)
-                chatHeaderTitle.prepend(hamburgerButton);
-            }
-             // Ensure hamburger button is visible in header when on mobile
+            chatHeaderTitleText.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
+            
+            // Ensure hamburger button is visible in header when on mobile, hidden on desktop
             if (window.innerWidth <= 768) {
                 hamburgerButton.style.display = 'block';
             } else {
                 hamburgerButton.style.display = 'none';
             }
+        }
+
+        function populateAgentSelect() {
+            agentSelect.innerHTML = ''; // Clear existing options
+            availableAgents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.id;
+                option.textContent = agent.name;
+                agentSelect.appendChild(option);
+            });
+            // Set the selected agent in the dropdown
+            agentSelect.value = currentSelectedAgentId;
         }
 
         // Function to display temporary error/success messages
@@ -623,7 +647,8 @@
         async function getGPTReply(message, conversationId) {
             const functionName = 'chat-with-gpt';
             const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-            const gptAssistantId = 'asst_cBEmkFZvGPf4Qovx5mQOXOeO'; 
+            // Use the currently selected agent ID
+            const gptAssistantId = currentSelectedAgentId; 
 
             const payload = {
                 message: message, 
@@ -722,6 +747,10 @@
         async function sendMessage() {
             if (!isChatReady || !currentActiveThreadId) {
                 showTempMessage("Hệ thống chat chưa sẵn sàng hoặc chưa có luồng chat được chọn. Vui lòng đợi hoặc tạo luồng chat mới.", "error");
+                return;
+            }
+            if (!currentSelectedAgentId) {
+                showTempMessage("Vui lòng chọn một Agent để bắt đầu trò chuyện.", "error");
                 return;
             }
 
@@ -843,6 +872,9 @@
                     saveDataToLocalStorage();
                 }
 
+                // Populate and set selected agent
+                populateAgentSelect();
+
                 // Render UI components
                 renderThreadList();
                 renderChatWindow(); // Display messages for the active thread
@@ -866,15 +898,18 @@
         });
 
         newThreadButton.addEventListener('click', createNewThread);
-        hamburgerButton.addEventListener('click', toggleSidebar); // New
-        sidebarOverlay.addEventListener('click', closeSidebar); // New
-        searchInput.addEventListener('input', filterThreads); // New
+        hamburgerButton.addEventListener('click', toggleSidebar); 
+        sidebarOverlay.addEventListener('click', closeSidebar); 
+        searchInput.addEventListener('input', filterThreads); 
+        agentSelect.addEventListener('change', (e) => { // New event listener for agent selection
+            currentSelectedAgentId = e.target.value;
+            saveDataToLocalStorage();
+            showTempMessage(`Đã chọn Agent: ${e.target.options[e.target.selectedIndex].text}`, "info");
+        });
 
         // Initialize chat app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeChatApp);
         // Handle window resize to adjust hamburger button visibility
-        // Ensure this event listener is correctly attached and triggers the update.
-        // The updateChatHeaderTitle function will handle displaying/hiding the button.
         window.addEventListener('resize', updateChatHeaderTitle);
     </script>
 </body>
