@@ -21,26 +21,115 @@
             padding: 20px;
             box-sizing: border-box;
         }
-        .chat-container {
+        .app-container {
             display: flex;
-            flex-direction: column;
             width: 100%;
-            max-width: 600px;
-            height: 80vh; /* Chiều cao cố định cho khung chat */
+            max-width: 1000px; /* Increased max-width for sidebar */
+            height: 85vh; /* Slightly increased height */
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
+        .thread-sidebar {
+            width: 280px; /* Fixed width for sidebar */
+            background-color: #f8fafc; /* Lighter background for sidebar */
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .thread-sidebar-header {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .new-thread-button {
+            background-color: #22c55e; /* Green for new thread */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+        .new-thread-button:hover {
+            background-color: #16a34a;
+            transform: translateY(-1px);
+        }
+        .thread-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .thread-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background-color: #cbd5e1; /* Light grey for inactive */
+            color: #334155;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .thread-item:hover {
+            background-color: #94a3b8; /* Darker grey on hover */
+            color: #f8fafc;
+        }
+        .thread-item.active {
+            background-color: #4A90E2; /* Blue for active */
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+        .thread-item-name {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px; /* Space for delete button */
+        }
+        .delete-thread-button {
+            background: none;
+            border: none;
+            color: inherit; /* Inherit color from parent thread-item */
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 5px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .delete-thread-button:hover {
+            opacity: 1;
+            color: #ef4444; /* Red on hover */
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 280px); /* Adjust width for sidebar */
+        }
         .chat-header {
-            background-color: #4A90E2; /* Màu xanh dương hiện đại */
+            background-color: #4A90E2; /* Modern blue */
             color: white;
             padding: 16px;
             text-align: center;
             font-size: 1.25rem;
             font-weight: 700;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
+            border-top-right-radius: 12px; /* Only top-right for chat area */
         }
         .chat-window {
             flex-grow: 1;
@@ -49,8 +138,8 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background-color: #EBF2FA; /* Màu nền nhẹ nhàng cho cửa sổ chat */
-            position: relative; /* Cho phép cuộn */
+            background-color: #EBF2FA; /* Light background for chat window */
+            position: relative; /* Allows scrolling */
         }
         .message-bubble {
             padding: 12px 18px;
@@ -61,23 +150,19 @@
         }
         .user-message {
             align-self: flex-end;
-            background-color: #C8E6C9; /* Màu xanh lá nhạt cho người dùng */
+            background-color: #C8E6C9; /* Light green for user */
             color: #333;
-            border-bottom-right-radius: 4px; /* Góc nhọn */
+            border-bottom-right-radius: 4px; /* Pointed corner */
         }
         .bot-message {
             align-self: flex-start;
-            background-color: #DDEBF7; /* Màu xanh nhạt cho bot */
+            background-color: #DDEBF7; /* Light blue for bot */
             color: #333;
-            border-bottom-left-radius: 4px; /* Góc nhọn */
+            border-bottom-left-radius: 4px; /* Pointed corner */
         }
-        /* Định kiểu cho nội dung Markdown đã chuyển đổi */
-        .bot-message p:first-child {
-            margin-top: 0;
-        }
-        .bot-message p:last-child {
-            margin-bottom: 0;
-        }
+        /* Styling for converted Markdown content */
+        .bot-message p:first-child { margin-top: 0; }
+        .bot-message p:last-child { margin-bottom: 0; }
         .bot-message pre {
             background-color: #e0e0e0;
             padding: 10px;
@@ -104,7 +189,7 @@
             padding: 16px;
             border-top: 1px solid #E0E0E0;
             background-color: #FFFFFF;
-            align-items: center; /* Căn giữa các mục theo chiều dọc */
+            align-items: center; /* Vertically center items */
         }
         .chat-input-area input[type="text"] {
             flex-grow: 1;
@@ -152,13 +237,48 @@
         }
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .chat-container {
-                height: 90vh; /* Tăng chiều cao trên thiết bị nhỏ hơn */
+            .app-container {
+                flex-direction: column; /* Stack sidebar and chat area */
+                height: 95vh;
                 margin: 10px;
                 padding: 0;
             }
             body {
                 padding: 10px;
+            }
+            .thread-sidebar {
+                width: 100%; /* Full width for sidebar on small screens */
+                height: auto; /* Auto height */
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0; /* Separator at the bottom */
+                padding: 10px;
+            }
+            .thread-sidebar-header {
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+            .thread-list {
+                display: flex; /* Horizontal scroll for threads */
+                overflow-x: auto;
+                overflow-y: hidden;
+                gap: 8px;
+                padding-bottom: 10px; /* Space for scrollbar */
+                flex-shrink: 0; /* Prevent list from shrinking */
+                width: 100%;
+            }
+            .thread-item {
+                flex-shrink: 0; /* Prevent individual items from shrinking */
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+            .new-thread-button {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+            .chat-area {
+                width: 100%; /* Full width for chat area on small screens */
+                height: auto;
+                flex-grow: 1;
             }
             .chat-input-area {
                 padding: 10px;
@@ -178,19 +298,33 @@
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            Chat với GPT Agent
+    <div class="app-container">
+        <div class="thread-sidebar" id="thread-sidebar">
+            <div class="thread-sidebar-header">
+                <span>Luồng chat</span>
+                <button id="new-thread-button" class="new-thread-button">
+                    + Luồng mới
+                </button>
+            </div>
+            <div class="thread-list" id="thread-list">
+                <!-- Thread items will be rendered here -->
+            </div>
+            <div class="user-id-display mt-4" id="user-id-display">
+                <!-- User ID will be displayed here -->
+            </div>
         </div>
-        <div class="chat-window" id="chat-window">
-            <!-- Messages will be displayed here -->
-        </div>
-        <div class="user-id-display" id="user-id-display">
-            <!-- User ID will be displayed here -->
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
-            <button id="send-button">Gửi</button>
+
+        <div class="chat-area">
+            <div class="chat-header" id="chat-header-title">
+                Chat với GPT Agent
+            </div>
+            <div class="chat-window" id="chat-window">
+                <!-- Messages will be displayed here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
+                <button id="send-button">Gửi</button>
+            </div>
         </div>
     </div>
 
@@ -205,35 +339,54 @@
 
         let supabaseClient; // Supabase Client variable
         let currentUserId = null;
-        let isChatReady = false; // Renamed from isAuthReady to reflect overall chat app readiness
+        let isChatReady = false; 
 
-        // Array to store messages in local memory
-        let chatMessages = [];
+        // Arrays to store threads and messages in local memory
+        let chatThreads = []; // Stores { id, name, lastMessageTimestamp }
+        let chatMessages = []; // Stores { text, senderId, timestamp, type, threadId }
+        let currentActiveThreadId = null;
 
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const userIdDisplay = document.getElementById('user-id-display');
+        const threadList = document.getElementById('thread-list');
+        const newThreadButton = document.getElementById('new-thread-button');
+        const chatHeaderTitle = document.getElementById('chat-header-title');
 
-        // Function to load messages from LocalStorage
-        function loadMessagesFromLocalStorage() {
+        // --- LocalStorage Functions ---
+        function loadDataFromLocalStorage() {
             try {
+                const storedThreads = localStorage.getItem('chatThreads');
+                chatThreads = storedThreads ? JSON.parse(storedThreads) : [];
+                
                 const storedMessages = localStorage.getItem('chatMessages');
-                return storedMessages ? JSON.parse(storedMessages) : [];
+                chatMessages = storedMessages ? JSON.parse(storedMessages) : [];
+
+                currentActiveThreadId = localStorage.getItem('currentActiveThreadId');
             } catch (error) {
-                console.error("Lỗi khi tải tin nhắn từ LocalStorage:", error);
-                return [];
+                console.error("Lỗi khi tải dữ liệu từ LocalStorage:", error);
+                chatThreads = [];
+                chatMessages = [];
+                currentActiveThreadId = null;
             }
         }
 
-        // Function to save messages to LocalStorage
-        function saveMessagesToLocalStorage(messages) {
+        function saveDataToLocalStorage() {
             try {
-                localStorage.setItem('chatMessages', JSON.stringify(messages));
+                localStorage.setItem('chatThreads', JSON.stringify(chatThreads));
+                localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+                if (currentActiveThreadId) {
+                    localStorage.setItem('currentActiveThreadId', currentActiveThreadId);
+                } else {
+                    localStorage.removeItem('currentActiveThreadId');
+                }
             } catch (error) {
-                console.error("Lỗi khi lưu tin nhắn vào LocalStorage:", error);
+                console.error("Lỗi khi lưu dữ liệu vào LocalStorage:", error);
             }
         }
+
+        // --- UI Rendering Functions ---
 
         // Function to display messages in the chat window
         function addMessageToUI(message, sender, timestamp) {
@@ -250,21 +403,66 @@
 
             const time = document.createElement('span');
             time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
-            // Check if timestamp exists and is valid before formatting
             if (timestamp) {
                 const date = new Date(timestamp);
-                if (!isNaN(date)) { // Ensure valid date
+                if (!isNaN(date)) {
                     time.textContent = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 } else {
                     time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 }
             } else {
-                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); // Use current time if timestamp is missing
+                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             }
             messageDiv.appendChild(time);
             
             chatWindow.appendChild(messageDiv);
+        }
+
+        function renderChatWindow() {
+            chatWindow.innerHTML = ''; // Clear current messages
+            const messagesForCurrentThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
+            messagesForCurrentThread.forEach(msg => {
+                addMessageToUI(msg.text, msg.senderId, msg.timestamp);
+            });
             chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
+            updateChatHeaderTitle();
+        }
+
+        function renderThreadList() {
+            threadList.innerHTML = ''; // Clear current thread list
+            chatThreads.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
+
+            chatThreads.forEach(thread => {
+                const threadItem = document.createElement('div');
+                threadItem.id = `thread-${thread.id}`;
+                threadItem.classList.add('thread-item', 'relative');
+                if (thread.id === currentActiveThreadId) {
+                    threadItem.classList.add('active');
+                }
+
+                const threadNameSpan = document.createElement('span');
+                threadNameSpan.classList.add('thread-item-name');
+                threadNameSpan.textContent = thread.name;
+                threadItem.appendChild(threadNameSpan);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-thread-button');
+                deleteButton.innerHTML = '&times;'; // HTML entity for multiplication sign (X)
+                deleteButton.title = 'Xóa luồng chat';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent thread selection when deleting
+                    deleteThread(thread.id);
+                });
+                threadItem.appendChild(deleteButton);
+
+                threadItem.addEventListener('click', () => selectThread(thread.id));
+                threadList.appendChild(threadItem);
+            });
+        }
+
+        function updateChatHeaderTitle() {
+            const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+            chatHeaderTitle.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
         }
 
         // Function to display temporary error/success messages
@@ -280,23 +478,81 @@
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
             setTimeout(() => {
-                chatWindow.removeChild(messageDiv);
+                if (chatWindow.contains(messageDiv)) { // Ensure it's still there before trying to remove
+                    chatWindow.removeChild(messageDiv);
+                }
             }, 3000); // Disappear after 3 seconds
         }
 
-        // Function to call the GPT Agent backend API via Supabase Function
-        async function getGPTReply(message) {
-            // Name of your Supabase Function (e.g., 'chat-with-gpt')
+        // --- Thread Management Functions ---
+        function createNewThread() {
+            const threadName = prompt("Nhập tên cho luồng chat mới:", `Luồng chat mới ${chatThreads.length + 1}`);
+            if (threadName === null || threadName.trim() === '') {
+                showTempMessage("Tạo luồng chat bị hủy.", "info");
+                return;
+            }
+            const newThreadId = crypto.randomUUID();
+            const newThread = {
+                id: newThreadId,
+                name: threadName.trim(),
+                lastMessageTimestamp: new Date().toISOString()
+            };
+            chatThreads.push(newThread);
+            currentActiveThreadId = newThreadId;
+            saveDataToLocalStorage();
+            renderThreadList();
+            renderChatWindow(); // Clear chat window and prepare for new thread
+            showTempMessage(`Đã tạo luồng chat: "${newThread.name}"`, "success");
+        }
+
+        function selectThread(threadId) {
+            if (currentActiveThreadId === threadId) return; // Already active
+
+            currentActiveThreadId = threadId;
+            saveDataToLocalStorage();
+            renderThreadList(); // Update active class
+            renderChatWindow(); // Display messages for the selected thread
+            showTempMessage(`Đã chuyển sang luồng: "${chatThreads.find(t => t.id === threadId)?.name}"`, "info");
+        }
+
+        function deleteThread(threadIdToDelete) {
+            const threadToDelete = chatThreads.find(t => t.id === threadIdToDelete);
+            if (!threadToDelete) return;
+
+            const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa luồng "${threadToDelete.name}" và tất cả tin nhắn trong đó không?`);
+            if (!confirmDelete) return;
+
+            // Remove messages belonging to this thread
+            chatMessages = chatMessages.filter(msg => msg.threadId !== threadIdToDelete);
+            // Remove the thread itself
+            chatThreads = chatThreads.filter(thread => thread.id !== threadIdToDelete);
+
+            if (currentActiveThreadId === threadIdToDelete) {
+                // If the deleted thread was active, select the first available thread
+                // or create a new default one if no threads are left
+                if (chatThreads.length > 0) {
+                    currentActiveThreadId = chatThreads[0].id;
+                } else {
+                    currentActiveThreadId = null; // No active thread, will create default on next load
+                }
+            }
+            saveDataToLocalStorage();
+            renderThreadList();
+            renderChatWindow(); // Update chat window based on new active thread or empty
+            showTempMessage(`Đã xóa luồng chat: "${threadToDelete.name}"`, "success");
+        }
+
+        // --- API Interaction Function ---
+        async function getGPTReply(message, conversationId) {
             const functionName = 'chat-with-gpt';
             const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-
-            // ID of the GPT assistant you want to use
             const gptAssistantId = 'asst_cBEmkFZvGPf4Qovx5mQOXOeO'; 
 
             const payload = {
                 message: message, 
                 userId: currentUserId,
-                assistantId: gptAssistantId
+                assistantId: gptAssistantId,
+                conversationId: conversationId // Pass the thread ID as conversationId
             };
 
             try {
@@ -337,10 +593,10 @@
             }
         }
 
-        // Message sending handler function
+        // --- Message Sending Logic ---
         async function sendMessage() {
-            if (!isChatReady) {
-                showTempMessage("Hệ thống chat chưa sẵn sàng. Vui lòng đợi.", "error");
+            if (!isChatReady || !currentActiveThreadId) {
+                showTempMessage("Hệ thống chat chưa sẵn sàng hoặc chưa có luồng chat được chọn. Vui lòng đợi hoặc tạo luồng chat mới.", "error");
                 return;
             }
 
@@ -358,30 +614,45 @@
                 const userMessage = {
                     text: message,
                     senderId: currentUserId,
-                    timestamp: new Date().toISOString(), // Store ISO string of current time
+                    timestamp: new Date().toISOString(), 
                     type: 'user',
+                    threadId: currentActiveThreadId, // Associate message with active thread
                 };
                 chatMessages.push(userMessage);
-                addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp); // Display immediately
+                addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp); 
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom after user message
 
-                // Save messages to LocalStorage
-                saveMessagesToLocalStorage(chatMessages);
+                // Update last message timestamp for the active thread
+                const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+                if (activeThread) {
+                    activeThread.lastMessageTimestamp = userMessage.timestamp;
+                }
+                renderThreadList(); // Re-render to update sort order if necessary
 
-                // Call GPT Agent and get response
-                const gptReply = await getGPTReply(message);
+                saveDataToLocalStorage();
+
+                // Call GPT Agent and get response, passing current thread ID
+                const gptReply = await getGPTReply(message, currentActiveThreadId);
 
                 // Add GPT response to local array
                 const botMessage = {
                     text: gptReply,
-                    senderId: 'gpt_agent', // Special ID for GPT
-                    timestamp: new Date().toISOString(), // Store ISO string of current time
-                    type: 'bot'
+                    senderId: 'gpt_agent', 
+                    timestamp: new Date().toISOString(), 
+                    type: 'bot',
+                    threadId: currentActiveThreadId, // Associate message with active thread
                 };
                 chatMessages.push(botMessage);
-                addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp); // Display immediately
+                addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp); 
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom after bot message
 
-                // Save messages to LocalStorage after bot response
-                saveMessagesToLocalStorage(chatMessages);
+                // Update last message timestamp for the active thread again after bot reply
+                if (activeThread) {
+                    activeThread.lastMessageTimestamp = botMessage.timestamp;
+                }
+                renderThreadList(); 
+
+                saveDataToLocalStorage();
 
                 showTempMessage("Tin nhắn đã được gửi!", "success");
 
@@ -393,7 +664,7 @@
             }
         }
 
-        // Chat app initialization function (replaces initializeFirebase)
+        // --- Initialization ---
         async function initializeChatApp() {
             try {
                 // Initialize Supabase Client
@@ -408,11 +679,29 @@
                 currentUserId = storedUserId;
                 userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
 
-                // Load messages from LocalStorage and display
-                chatMessages = loadMessagesFromLocalStorage();
-                chatMessages.forEach(msg => {
-                    addMessageToUI(msg.text, msg.senderId, msg.timestamp);
-                });
+                // Load all data
+                loadDataFromLocalStorage();
+
+                // If no threads exist or no active thread, create a default one
+                if (chatThreads.length === 0) {
+                    const defaultThreadId = crypto.randomUUID();
+                    const defaultThread = {
+                        id: defaultThreadId,
+                        name: "Luồng chat mặc định",
+                        lastMessageTimestamp: new Date().toISOString()
+                    };
+                    chatThreads.push(defaultThread);
+                    currentActiveThreadId = defaultThreadId;
+                    saveDataToLocalStorage();
+                } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                    // If active thread ID is missing or invalid, default to the first thread
+                    currentActiveThreadId = chatThreads[0].id;
+                    saveDataToLocalStorage();
+                }
+
+                // Render UI components
+                renderThreadList();
+                renderChatWindow(); // Display messages for the active thread
 
                 isChatReady = true;
                 showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
@@ -423,15 +712,16 @@
             }
         }
 
-        // Attach event to send button
+        // --- Event Listeners ---
         sendButton.addEventListener('click', sendMessage);
 
-        // Attach Enter key event in input field
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
+
+        newThreadButton.addEventListener('click', createNewThread);
 
         // Initialize chat app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeChatApp);
