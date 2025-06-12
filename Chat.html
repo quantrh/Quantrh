@@ -239,7 +239,8 @@
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column; /* Stack sidebar and chat area */
-                height: 95vh;
+                min-height: 95vh; /* Allow it to grow */
+                height: auto; /* Remove fixed height */
                 margin: 10px;
                 padding: 0;
             }
@@ -278,7 +279,7 @@
             }
             .chat-area {
                 width: 100%; /* Full width for chat area on small screens */
-                height: auto; /* Let flex-grow handle the height */
+                height: 0; /* Important for flex-grow in column direction to distribute remaining space */
                 flex-grow: 1;
             }
             .chat-input-area {
