@@ -280,7 +280,7 @@
         #scroll-to-top-button {
             position: absolute; /* Position relative to chat-area or body if fixed */
             bottom: 30px; /* Adjust as needed */
-            right: 30px; /* Adjust as needed */
+            left: 30px; /* Changed from right to left */
             background-color: #006B68; /* Màu thương hiệu BIDV */
             color: white;
             border: none;
@@ -363,7 +363,7 @@
             /* Adjust scroll to top button for mobile */
             #scroll-to-top-button {
                 bottom: 20px;
-                right: 20px;
+                left: 20px; /* Changed from right to left */
                 width: 40px;
                 height: 40px;
                 font-size: 1.3rem;
@@ -884,7 +884,11 @@
 
         // --- Scroll to Top Button Logic ---
         function checkScrollToTopButtonVisibility() {
-            if (chatWindow.scrollTop > 200) { // Show button if scrolled down more than 200px
+            // chatWindow.scrollTop là vị trí hiện tại của thanh cuộn từ trên xuống.
+            // chatWindow.scrollHeight là tổng chiều cao nội dung có thể cuộn.
+            // chatWindow.clientHeight là chiều cao hiển thị của cửa sổ chat.
+            // Nếu nội dung chat cao hơn chiều cao hiển thị và người dùng đã cuộn xuống một khoảng nhất định
+            if (chatWindow.scrollHeight > chatWindow.clientHeight && chatWindow.scrollTop > 200) { 
                 scrollToTopButton.classList.add('visible');
             } else {
                 scrollToTopButton.classList.remove('visible');
