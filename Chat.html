@@ -134,6 +134,48 @@
             color: #ef4444;
         }
 
+        /* User Manual Section Styles */
+        .user-manual-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+        .user-manual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #334155;
+            transition: color 0.2s;
+        }
+        .user-manual-header:hover {
+            color: #006B68; /* Hover color for manual header */
+        }
+        .user-manual-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 8px; /* Add some horizontal padding */
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .user-manual-content.open {
+            max-height: 500px; /* Adjust as needed for content height */
+            transition: max-height 0.5s ease-in;
+        }
+        .user-manual-content ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            padding-left: 0;
+        }
+        .user-manual-content ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+            padding-left: 0;
+        }
+
         .chat-area {
             flex-grow: 1;
             display: flex;
@@ -390,6 +432,28 @@
             <select id="agent-select" class="agent-select">
                 <!-- Options will be dynamically loaded here -->
             </select>
+
+            <!-- User Manual Section -->
+            <div class="user-manual-section">
+                <div class="user-manual-header" id="user-manual-header">
+                    <span>Hướng dẫn sử dụng</span>
+                    <span>&#x25BC;</span> <!-- Down arrow unicode -->
+                </div>
+                <div class="user-manual-content" id="user-manual-content">
+                    <p>Chào mừng bạn đến với ứng dụng chat AI của BIDV!</p>
+                    <p>Để sử dụng ứng dụng hiệu quả, vui lòng tham khảo các bước sau:</p>
+                    <ul>
+                        <li><strong>Tạo luồng chat mới:</strong> Nhấn vào nút "+ Luồng mới" để bắt đầu một cuộc trò chuyện mới.</li>
+                        <li><strong>Chọn Agent:</strong> Sử dụng menu thả xuống "Chọn Agent" để lựa chọn trợ lý AI phù hợp với nhu cầu của bạn (ví dụ: SmartCounterHub cho các câu hỏi về quầy giao dịch thông minh, ITBOOK cho thông tin IT, QuyHoachBoNhiem cho các vấn đề liên quan đến quy hoạch bổ nhiệm).</li>
+                        <li><strong>Tìm kiếm luồng chat:</strong> Gõ từ khóa vào ô "Tìm kiếm luồng chat..." để nhanh chóng tìm lại các cuộc trò chuyện cũ.</li>
+                        <li><strong>Xóa luồng chat:</strong> Nhấn biểu tượng "x" bên cạnh tên luồng chat để xóa luồng đó khỏi danh sách.</li>
+                        <li><strong>Cuộn lên đầu trang:</strong> Sử dụng nút mũi tên lên ở góc dưới bên trái để cuộn nhanh về đầu cuộc trò chuyện.</li>
+                        <li><strong>Sử dụng trên thiết bị di động:</strong> Khi thu nhỏ màn hình, một menu hamburger (☰) sẽ xuất hiện. Nhấn vào đó để mở/đóng thanh bên chứa các luồng chat và tùy chọn Agent.</li>
+                        <li><strong>Gửi tin nhắn:</strong> Gõ tin nhắn vào ô nhập liệu và nhấn Enter hoặc nút "Gửi".</li>
+                    </ul>
+                    <p>Nếu bạn có bất kỳ câu hỏi nào khác, đừng ngần ngại hỏi Agent của bạn!</p>
+                </div>
+            </div>
             
             <div class="thread-list" id="thread-list">
                 <!-- Thread items will be rendered here -->
@@ -456,6 +520,8 @@
         const searchInput = document.getElementById('search-input'); 
         const agentSelect = document.getElementById('agent-select'); // New Agent Select element
         const scrollToTopButton = document.getElementById('scroll-to-top-button'); // New Scroll to Top Button
+        const userManualHeader = document.getElementById('user-manual-header'); // New User Manual Header
+        const userManualContent = document.getElementById('user-manual-content'); // New User Manual Content
 
         // --- LocalStorage Functions ---
         function loadDataFromLocalStorage() {
@@ -903,6 +969,17 @@
             });
         }
 
+        // --- User Manual Logic ---
+        function toggleUserManual() {
+            userManualContent.classList.toggle('open');
+            const arrow = userManualHeader.querySelector('span:last-child');
+            if (userManualContent.classList.contains('open')) {
+                arrow.innerHTML = '&#x25B2;'; // Up arrow
+            } else {
+                arrow.innerHTML = '&#x25BC;'; // Down arrow
+            }
+        }
+
         // --- Initialization ---
         async function initializeChatApp() {
             try {
@@ -975,6 +1052,8 @@
 
         chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
         scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
+        userManualHeader.addEventListener('click', toggleUserManual); // New: Listen for click on user manual header
+
 
         // Initialize chat app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeChatApp);
