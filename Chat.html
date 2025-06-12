@@ -163,6 +163,7 @@
         }
         .user-manual-content.open {
             max-height: 500px; /* Adjust as needed for content height */
+            overflow-y: auto; /* Enable vertical scrolling */
             transition: max-height 0.5s ease-in;
         }
         .user-manual-content ul {
@@ -885,7 +886,7 @@
                     threadId: currentActiveThreadId, // Associate message with active thread
                 };
                 chatMessages.push(userMessage);
-                addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp); 
+                addMessageToUI(userMessage.text, userMessage.senderId, userManualHeader.timestamp); 
                 chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom after user message
 
                 // Update last message timestamp for the active thread
