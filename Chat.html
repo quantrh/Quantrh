@@ -18,27 +18,30 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Remove padding from body for full-screen effect on mobile */
             box-sizing: border-box;
         }
         .app-container {
             display: flex;
             width: 100%;
-            max-width: 1000px; /* Increased max-width for sidebar */
-            height: 85vh; /* Slightly increased height */
+            max-width: 1000px;
+            height: 95vh; /* Use 95vh to give some margin from screen edges */
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            position: relative; /* Needed for hamburger menu overlay positioning */
         }
+        /* Styles for desktop (sidebar always visible) */
         .thread-sidebar {
-            width: 280px; /* Fixed width for sidebar */
-            background-color: #f8fafc; /* Lighter background for sidebar */
+            width: 280px;
+            background-color: #f8fafc;
             border-right: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
             padding: 16px;
             box-sizing: border-box;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
         }
         .thread-sidebar-header {
             font-size: 1.15rem;
@@ -50,7 +53,7 @@
             align-items: center;
         }
         .new-thread-button {
-            background-color: #22c55e; /* Green for new thread */
+            background-color: #22c55e;
             color: white;
             border: none;
             border-radius: 8px;
@@ -60,11 +63,24 @@
             font-weight: 500;
             transition: background-color 0.2s, transform 0.1s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            white-space: nowrap; /* Prevent text wrapping */
+            white-space: nowrap;
         }
         .new-thread-button:hover {
             background-color: #16a34a;
             transform: translateY(-1px);
+        }
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: #4A90E2;
         }
         .thread-list {
             flex-grow: 1;
@@ -76,7 +92,7 @@
             border-radius: 8px;
             margin-bottom: 8px;
             cursor: pointer;
-            background-color: #cbd5e1; /* Light grey for inactive */
+            background-color: #cbd5e1;
             color: #334155;
             font-weight: 500;
             transition: background-color 0.2s, color 0.2s;
@@ -85,11 +101,11 @@
             align-items: center;
         }
         .thread-item:hover {
-            background-color: #94a3b8; /* Darker grey on hover */
+            background-color: #94a3b8;
             color: #f8fafc;
         }
         .thread-item.active {
-            background-color: #4A90E2; /* Blue for active */
+            background-color: #4A90E2;
             color: white;
             box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
         }
@@ -98,12 +114,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-right: 10px; /* Space for delete button */
+            padding-right: 10px;
         }
         .delete-thread-button {
             background: none;
             border: none;
-            color: inherit; /* Inherit color from parent thread-item */
+            color: inherit;
             cursor: pointer;
             font-size: 1rem;
             line-height: 1;
@@ -113,23 +129,41 @@
         }
         .delete-thread-button:hover {
             opacity: 1;
-            color: #ef4444; /* Red on hover */
+            color: #ef4444;
         }
 
         .chat-area {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            width: calc(100% - 280px); /* Adjust width for sidebar */
+            width: calc(100% - 280px); /* Adjust width for desktop sidebar */
         }
         .chat-header {
-            background-color: #4A90E2; /* Modern blue */
+            background-color: #4A90E2;
             color: white;
             padding: 16px;
             text-align: center;
             font-size: 1.25rem;
             font-weight: 700;
-            border-top-right-radius: 12px; /* Only top-right for chat area */
+            border-top-right-radius: 12px;
+            display: flex; /* For hamburger button on small screens */
+            align-items: center;
+            justify-content: center;
+            position: relative; /* For hamburger button positioning */
+        }
+        .hamburger-button {
+            display: none; /* Hidden by default on desktop */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 10px;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 60; /* Ensure it's above other elements */
         }
         .chat-window {
             flex-grow: 1;
@@ -138,8 +172,8 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background-color: #EBF2FA; /* Light background for chat window */
-            position: relative; /* Allows scrolling */
+            background-color: #EBF2FA;
+            position: relative;
         }
         .message-bubble {
             padding: 12px 18px;
@@ -150,17 +184,16 @@
         }
         .user-message {
             align-self: flex-end;
-            background-color: #C8E6C9; /* Light green for user */
+            background-color: #C8E6C9;
             color: #333;
-            border-bottom-right-radius: 4px; /* Pointed corner */
+            border-bottom-right-radius: 4px;
         }
         .bot-message {
             align-self: flex-start;
-            background-color: #DDEBF7; /* Light blue for bot */
+            background-color: #DDEBF7;
             color: #333;
-            border-bottom-left-radius: 4px; /* Pointed corner */
+            border-bottom-left-radius: 4px;
         }
-        /* Styling for converted Markdown content */
         .bot-message p:first-child { margin-top: 0; }
         .bot-message p:last-child { margin-bottom: 0; }
         .bot-message pre {
@@ -189,7 +222,7 @@
             padding: 16px;
             border-top: 1px solid #E0E0E0;
             background-color: #FFFFFF;
-            align-items: center; /* Vertically center items */
+            align-items: center;
         }
         .chat-input-area input[type="text"] {
             flex-grow: 1;
@@ -234,73 +267,68 @@
             color: #666;
             text-align: center;
             padding-bottom: 10px;
+            padding-top: 10px; /* Added padding to separate from thread list */
         }
-        /* Responsive adjustments */
+
+        /* Mobile specific styles (max-width: 768px) */
         @media (max-width: 768px) {
-            .app-container {
-                flex-direction: column; /* Stack sidebar and chat area */
-                min-height: 95vh; /* Allow it to grow */
-                height: auto; /* Remove fixed height */
-                margin: 10px;
-                padding: 0;
-            }
             body {
-                padding: 10px;
+                padding: 0; /* No padding on body for full screen */
+            }
+            .app-container {
+                border-radius: 0; /* Remove border radius on full screen */
+                height: 100vh; /* Use full viewport height */
+                max-width: 100%; /* Use full width */
+                box-shadow: none; /* Remove shadow */
             }
             .thread-sidebar {
-                width: 100%; /* Full width for sidebar on small screens */
-                height: 150px; /* Fixed height for sidebar */
-                overflow-y: auto; /* Enable vertical scrolling within the sidebar */
-                border-right: none;
-                border-bottom: 1px solid #e2e8f0; /* Separator at the bottom */
-                padding: 10px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                transform: translateX(-100%); /* Hidden by default */
+                transition: transform 0.3s ease-in-out;
+                z-index: 50;
+                border-right: none; /* No border when hidden off-screen */
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* Shadow for when it slides in */
+                border-radius: 0; /* No border radius */
             }
-            .thread-sidebar-header {
-                font-size: 1rem;
-                margin-bottom: 10px;
-            }
-            .thread-list {
-                display: flex; /* Horizontal scroll for threads */
-                overflow-x: auto;
-                overflow-y: hidden; /* Hide vertical overflow if horizontal scrolling */
-                gap: 8px;
-                padding-bottom: 10px; /* Space for scrollbar */
-                flex-shrink: 0; /* Prevent list from shrinking */
-                width: 100%;
-            }
-            .thread-item {
-                flex-shrink: 0; /* Prevent individual items from shrinking */
-                padding: 8px 10px;
-                font-size: 0.9rem;
-            }
-            .new-thread-button {
-                font-size: 0.85rem;
-                padding: 6px 10px;
+            .thread-sidebar.open {
+                transform: translateX(0); /* Slide in */
             }
             .chat-area {
-                width: 100%; /* Full width for chat area on small screens */
-                height: 0; /* Important for flex-grow in column direction to distribute remaining space */
-                flex-grow: 1;
+                width: 100%; /* Full width for chat area */
             }
-            .chat-input-area {
-                padding: 10px;
+            .chat-header {
+                border-top-right-radius: 0; /* Remove border radius on full screen */
+                border-top-left-radius: 0; /* For mobile, header spans full width */
             }
-            .chat-input-area input[type="text"] {
-                margin-right: 8px;
-                padding: 10px 14px;
+            .hamburger-button {
+                display: block; /* Show hamburger button on mobile */
             }
-            .chat-input-area button {
-                padding: 10px 20px;
+            /* Overlay when sidebar is open */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 40; /* Behind sidebar, above chat content */
+                display: none; /* Hidden by default */
             }
-            .message-bubble {
-                padding: 10px 14px;
-                max-width: 90%;
+            .sidebar-overlay.visible {
+                display: block;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar Overlay (for mobile) -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
         <div class="thread-sidebar" id="thread-sidebar">
             <div class="thread-sidebar-header">
                 <span>Luồng chat</span>
@@ -308,6 +336,7 @@
                     + Luồng mới
                 </button>
             </div>
+            <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm luồng chat...">
             <div class="thread-list" id="thread-list">
                 <!-- Thread items will be rendered here -->
             </div>
@@ -318,6 +347,7 @@
 
         <div class="chat-area">
             <div class="chat-header" id="chat-header-title">
+                <button id="hamburger-button" class="hamburger-button">☰</button>
                 Chat với GPT Agent
             </div>
             <div class="chat-window" id="chat-window">
@@ -355,6 +385,10 @@
         const threadList = document.getElementById('thread-list');
         const newThreadButton = document.getElementById('new-thread-button');
         const chatHeaderTitle = document.getElementById('chat-header-title');
+        const hamburgerButton = document.getElementById('hamburger-button'); // New
+        const sidebarOverlay = document.getElementById('sidebar-overlay'); // New
+        const threadSidebar = document.getElementById('thread-sidebar'); // New
+        const searchInput = document.getElementById('search-input'); // New
 
         // --- LocalStorage Functions ---
         function loadDataFromLocalStorage() {
@@ -427,14 +461,14 @@
                 addMessageToUI(msg.text, msg.senderId, msg.timestamp);
             });
             chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
-            updateChatHeaderTitle();
+            updateChatHeaderTitle(); // Update header title and hamburger button visibility
         }
 
-        function renderThreadList() {
+        function renderThreadList(threadsToRender = chatThreads) { // Added parameter for filtered threads
             threadList.innerHTML = ''; // Clear current thread list
-            chatThreads.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
+            threadsToRender.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
 
-            chatThreads.forEach(thread => {
+            threadsToRender.forEach(thread => {
                 const threadItem = document.createElement('div');
                 threadItem.id = `thread-${thread.id}`;
                 threadItem.classList.add('thread-item', 'relative');
@@ -464,7 +498,27 @@
 
         function updateChatHeaderTitle() {
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
-            chatHeaderTitle.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
+            // This sets the text content. The hamburger button is a separate element.
+            // The textContent property replaces everything inside the element,
+            // so we need to re-append the hamburger button after updating the text.
+            // A better approach for the header would be to have a separate span for the title.
+            // For now, let's keep the existing structure and just update the text and visibility.
+            const headerText = activeThread ? activeThread.name : 'Chat với GPT Agent';
+            // Store current innerHTML to preserve button, then modify text content
+            const originalInnerHtml = chatHeaderTitle.innerHTML;
+            chatHeaderTitle.textContent = headerText; // This removes the button temporarily
+
+            // Re-append the hamburger button if it was originally there
+            if (window.innerWidth <= 768 && !chatHeaderTitle.querySelector('#hamburger-button')) {
+                // Only re-append if on mobile and the button isn't already there (after textContent wiped it)
+                chatHeaderTitle.prepend(hamburgerButton);
+            }
+             // Ensure hamburger button is visible in header when on mobile
+            if (window.innerWidth <= 768) {
+                hamburgerButton.style.display = 'block';
+            } else {
+                hamburgerButton.style.display = 'none';
+            }
         }
 
         // Function to display temporary error/success messages
@@ -505,6 +559,7 @@
             renderThreadList();
             renderChatWindow(); // Clear chat window and prepare for new thread
             showTempMessage(`Đã tạo luồng chat: "${newThread.name}"`, "success");
+            closeSidebar(); // Close sidebar after creating a new thread
         }
 
         function selectThread(threadId) {
@@ -515,6 +570,7 @@
             renderThreadList(); // Update active class
             renderChatWindow(); // Display messages for the selected thread
             showTempMessage(`Đã chuyển sang luồng: "${chatThreads.find(t => t.id === threadId)?.name}"`, "info");
+            closeSidebar(); // Close sidebar after selecting a thread
         }
 
         async function deleteThread(threadIdToDelete) {
@@ -733,6 +789,25 @@
             }
         }
 
+        // --- Sidebar & Search Logic ---
+        function toggleSidebar() {
+            threadSidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('visible');
+        }
+
+        function closeSidebar() {
+            threadSidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('visible');
+        }
+
+        function filterThreads() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filtered = chatThreads.filter(thread => 
+                thread.name.toLowerCase().includes(searchTerm)
+            );
+            renderThreadList(filtered);
+        }
+
         // --- Initialization ---
         async function initializeChatApp() {
             try {
@@ -791,9 +866,16 @@
         });
 
         newThreadButton.addEventListener('click', createNewThread);
+        hamburgerButton.addEventListener('click', toggleSidebar); // New
+        sidebarOverlay.addEventListener('click', closeSidebar); // New
+        searchInput.addEventListener('input', filterThreads); // New
 
         // Initialize chat app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeChatApp);
+        // Handle window resize to adjust hamburger button visibility
+        // Ensure this event listener is correctly attached and triggers the update.
+        // The updateChatHeaderTitle function will handle displaying/hiding the button.
+        window.addEventListener('resize', updateChatHeaderTitle);
     </script>
 </body>
 </html>
