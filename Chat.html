@@ -516,38 +516,50 @@
             showTempMessage(`Đã chuyển sang luồng: "${chatThreads.find(t => t.id === threadId)?.name}"`, "info");
         }
 
-        function deleteThread(threadIdToDelete) {
+        async function deleteThread(threadIdToDelete) {
             const threadToDelete = chatThreads.find(t => t.id === threadIdToDelete);
             if (!threadToDelete) return;
 
-            // IMPORTANT: Replaced window.confirm with a custom modal logic,
-            // but for this example, I'm just showing the placeholder comment.
-            // In a real app, you'd show a custom dialog here.
-            // As per instructions, avoid alert/confirm. For this context,
-            // if a custom modal is not implemented, the prompt would be a limitation.
-            // For now, I'm retaining the logical flow without the actual modal implementation.
+            // IMPORTANT: As per instructions, avoid alert/confirm. For now,
+            // we'll proceed with deletion assuming user intent, but in a real app,
+            // this 'confirm' should be replaced by a custom modal UI.
             const confirmDelete = true; // Placeholder for actual custom modal confirmation
             if (!confirmDelete) return;
 
+            showTempMessage(`Đang xóa luồng "${threadToDelete.name}"...`, "info");
 
-            // Remove messages belonging to this thread
-            chatMessages = chatMessages.filter(msg => msg.threadId !== threadIdToDelete);
-            // Remove the thread itself
-            chatThreads = chatThreads.filter(thread => thread.id !== threadIdToDelete);
+            try {
+                // Step 1: Delete from Supabase Function (which will delete from OpenAI and Supabase DB)
+                const serverDeleteSuccess = await deleteOpenAIThreadOnServer(threadIdToDelete);
 
-            if (currentActiveThreadId === threadIdToDelete) {
-                // If the deleted thread was active, select the first available thread
-                // or create a new default one if no threads are left
-                if (chatThreads.length > 0) {
-                    currentActiveThreadId = chatThreads[0].id;
-                } else {
-                    currentActiveThreadId = null; // No active thread, will create default on next load
+                if (!serverDeleteSuccess) {
+                    throw new Error("Không thể xóa luồng chat trên máy chủ.");
                 }
+
+                // Step 2: Remove messages belonging to this thread from local storage
+                chatMessages = chatMessages.filter(msg => msg.threadId !== threadIdToDelete);
+                
+                // Step 3: Remove the thread itself from local storage
+                chatThreads = chatThreads.filter(thread => thread.id !== threadIdToDelete);
+
+                if (currentActiveThreadId === threadIdToDelete) {
+                    // If the deleted thread was active, select the first available thread
+                    // or create a new default one if no threads are left
+                    if (chatThreads.length > 0) {
+                        currentActiveThreadId = chatThreads[0].id;
+                    } else {
+                        currentActiveThreadId = null; // No active thread, will create default on next load
+                    }
+                }
+                saveDataToLocalStorage();
+                renderThreadList();
+                renderChatWindow(); // Update chat window based on new active thread or empty
+                showTempMessage(`Đã xóa luồng chat: "${threadToDelete.name}"`, "success");
+
+            } catch (error) {
+                console.error('Lỗi khi xóa luồng chat:', error);
+                showTempMessage(`Lỗi khi xóa luồng: ${error.message}`, "error");
             }
-            saveDataToLocalStorage();
-            renderThreadList();
-            renderChatWindow(); // Update chat window based on new active thread or empty
-            showTempMessage(`Đã xóa luồng chat: "${threadToDelete.name}"`, "success");
         }
 
         // --- API Interaction Function ---
@@ -560,7 +572,8 @@
                 message: message, 
                 userId: currentUserId,
                 assistantId: gptAssistantId,
-                conversationId: conversationId // Pass the thread ID as conversationId
+                conversationId: conversationId, // Pass the thread ID as conversationId
+                action: 'send_message' // Explicitly define action
             };
 
             try {
@@ -598,6 +611,53 @@
                     console.error('Lỗi khi gọi Supabase Function:', error);
                     throw new Error(`Không thể nhận phản hồi từ GPT Agent thông qua Supabase: ${error.message}.`);
                 }
+            }
+        }
+
+        // New function to delete OpenAI thread on server
+        async function deleteOpenAIThreadOnServer(conversationId) {
+            const functionName = 'chat-with-gpt'; // Or a dedicated delete function
+            const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+
+            const payload = {
+                userId: currentUserId,
+                conversationId: conversationId,
+                action: 'delete_thread' // Action to tell the Supabase function what to do
+            };
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                    } catch (parseError) {
+                        errorDetails += ` - ${response.statusText}`;
+                    }
+                    console.error('Lỗi khi gọi Supabase Function để xóa luồng:', errorDetails);
+                    return false; // Indicate failure
+                }
+
+                const data = await response.json();
+                if (data && data.success) {
+                    return true; // Indicate success
+                } else {
+                    console.error('Phản hồi không thành công từ Supabase Function khi xóa luồng:', data);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Lỗi khi gọi Supabase Function để xóa luồng:', error);
+                return false;
             }
         }
 
