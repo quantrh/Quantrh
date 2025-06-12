@@ -276,6 +276,39 @@
             padding-top: 10px; /* Added padding to separate from thread list */
         }
 
+        /* Scroll to Top Button */
+        #scroll-to-top-button {
+            position: absolute; /* Position relative to chat-area or body if fixed */
+            bottom: 30px; /* Adjust as needed */
+            right: 30px; /* Adjust as needed */
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            border: none;
+            border-radius: 50%; /* Make it circular */
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(10px); /* Slightly below initially */
+            z-index: 10; /* Ensure it's above chat messages */
+        }
+
+        #scroll-to-top-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #scroll-to-top-button:hover {
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000;
+        }
+
         /* Mobile specific styles (max-width: 768px) */
         @media (max-width: 768px) {
             body {
@@ -327,6 +360,14 @@
             .sidebar-overlay.visible {
                 display: block;
             }
+            /* Adjust scroll to top button for mobile */
+            #scroll-to-top-button {
+                bottom: 20px;
+                right: 20px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
@@ -370,6 +411,8 @@
                 <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
                 <button id="send-button">Gửi</button>
             </div>
+            <!-- Scroll to Top Button -->
+            <button id="scroll-to-top-button" title="Cuộn lên đầu trang">&#x2191;</button> <!-- Up arrow Unicode -->
         </div>
     </div>
 
@@ -411,6 +454,7 @@
         const threadSidebar = document.getElementById('thread-sidebar'); 
         const searchInput = document.getElementById('search-input'); 
         const agentSelect = document.getElementById('agent-select'); // New Agent Select element
+        const scrollToTopButton = document.getElementById('scroll-to-top-button'); // New Scroll to Top Button
 
         // --- LocalStorage Functions ---
         function loadDataFromLocalStorage() {
@@ -487,6 +531,7 @@
             });
             chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
             updateChatHeaderTitle(); // Update header title and hamburger button visibility
+            checkScrollToTopButtonVisibility(); // Check button visibility after rendering
         }
 
         function renderThreadList(threadsToRender = chatThreads) { // Added parameter for filtered threads
@@ -837,6 +882,22 @@
             renderThreadList(filtered);
         }
 
+        // --- Scroll to Top Button Logic ---
+        function checkScrollToTopButtonVisibility() {
+            if (chatWindow.scrollTop > 200) { // Show button if scrolled down more than 200px
+                scrollToTopButton.classList.add('visible');
+            } else {
+                scrollToTopButton.classList.remove('visible');
+            }
+        }
+
+        function scrollToTop() {
+            chatWindow.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Smooth scroll
+            });
+        }
+
         // --- Initialization ---
         async function initializeChatApp() {
             try {
@@ -906,6 +967,9 @@
             saveDataToLocalStorage();
             showTempMessage(`Đã chọn Agent: ${e.target.options[e.target.selectedIndex].text}`, "info");
         });
+
+        chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
+        scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
 
         // Initialize chat app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeChatApp);
