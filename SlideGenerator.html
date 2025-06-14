@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+<!DOCTYPE Html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ứng Dụng Tạo Slide AI</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- CDN Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- html2canvas for converting HTML to canvas -->
+    <!-- html2canvas để chuyển đổi HTML sang canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- jsPDF for creating PDF from canvas -->
+    <!-- jsPDF để tạo PDF từ canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- marked.js for Markdown to HTML conversion -->
+    <!-- marked.js để chuyển đổi Markdown sang HTML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.0/marked.min.js"></script>
 
     <style>
@@ -208,7 +208,7 @@
             cursor: pointer;
             padding: 10px;
             background-color: #e2e8f0;
-            border-radius: 8px;
+            border-radius: 8櫃px;
             margin-top: 15px;
             margin-bottom: 5px;
             font-weight: 600;
@@ -298,7 +298,7 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                     <option value="compact">Ít chi tiết</option>
                     <option value="normal">Vừa phải</option>
-                    <option value="detailed" selected>Nhiều chi tiết</option> <!-- Default changed to Detailed -->
+                    <option value="detailed" selected>Nhiều chi tiết</option> <!-- Mặc định là Detailed -->
                 </select>
             </div>
             <div>
@@ -317,11 +317,11 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                 <option value="template-modern">Hiện đại</option>
                 <option value="template-classic">Cổ điển</option>
-                <option value="template-creative" selected>Sáng tạo</option> <!-- Default changed to Creative -->
+                <option value="template-creative" selected>Sáng tạo</option> <!-- Mặc định là Creative -->
             </select>
         </div>
 
-        <!-- Removed file upload section -->
+        <!-- Phần tải file đã được xóa khỏi mã để đơn giản hóa -->
         <!--
         <div class="mb-8">
             <label for="fileUpload" class="block text-gray-700 text-sm font-semibold mb-2">Tải file văn bản (.txt) (Tùy chọn):</label>
@@ -336,18 +336,23 @@
                     class="w-full sm:w-1/3 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                 Tạo Slide
             </button>
-            <button id="exportPresentationButton"
+            <button id="exportPdfButton"
                     class="w-full sm:w-1/3 bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                     disabled>
-                Xuất File Trình Bày
+                Xuất PDF
             </button>
-             <button id="instructionsButton"
-                    class="w-full sm:w-1/3 bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-                Hướng dẫn
+            <button id="exportPptxButton"
+                    class="w-full sm:w-1/3 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                    disabled>
+                Xuất PPTX
             </button>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4 mb-4">
+             <button id="instructionsButton"
+                    class="w-full sm:w-1/3 bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                Hướng dẫn
+            </button>
             <button id="generateNotesButton"
                     class="w-full sm:w-1/2 bg-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                     disabled>
@@ -363,43 +368,49 @@
 
         <div id="loadingSpinner" class="spinner hidden"></div>
         <div id="pdfLoadingSpinner" class="spinner hidden"></div>
-        <div id="notesLoadingSpinner" class="spinner hidden"></div>
-        <div id="qaLoadingSpinner" class="spinner hidden"></div>
+        <div id="pptxLoadingSpinner" class="spinner hidden"></div> <!-- Spinner mới cho PPTX -->
+        <div id="notesLoadingSpinner" class="spinner hidden"></div> 
+        <div id="qaLoadingSpinner" class="spinner hidden"></div>       
         <div id="errorMessage" class="text-red-500 text-center mt-4 hidden"></div>
 
         <div id="slidesOutput" class="slide-preview-container">
-            <!-- Slides will be generated here -->
+            <!-- Slide sẽ được tạo ở đây -->
         </div>
 
-        <!-- Speaker Notes Output Section -->
+        <!-- Phần Hiển thị Ghi chú Diễn giả -->
         <div id="speakerNotesOutput" class="mt-8">
             <div class="collapsible-header expanded" onclick="toggleCollapsible('speakerNotesContent')">
                 Ghi Chú Diễn Giả
             </div>
             <div id="speakerNotesContent" class="collapsible-content expanded">
-                <!-- Notes will be loaded here -->
+                <!-- Ghi chú sẽ được tải ở đây -->
             </div>
         </div>
 
-        <!-- Q&A Output Section -->
+        <!-- Phần Hiển thị Hỏi & Đáp -->
         <div id="qaOutput" class="mt-8">
             <div class="collapsible-header expanded" onclick="toggleCollapsible('qaContent')">
                 Câu Hỏi & Đáp
             </div>
             <div id="qaContent" class="collapsible-content expanded">
-                <!-- Q&A will be loaded here -->
+                <!-- Hỏi & Đáp sẽ được tải ở đây -->
             </div>
         </div>
     </div>
 
-    <!-- Message Box HTML -->
+    <!-- HTML Hộp Thông báo Tùy chỉnh -->
     <div id="messageBox" class="message-box">
         <p id="messageText" class="message-content"></p>
         <button onclick="window.hideMessageBox()">OK</button>
     </div>
 
-    <script type="module">
-        // Function to show custom message box instead of alert()
+    <!-- Thư viện JSZip phải được tải TRƯỚC pptxgenjs vì nó là một phụ thuộc. -->
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <!-- Thư viện PptxGenJS phải được tải TRƯỚC script tùy chỉnh của bạn. -->
+    <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.min.js"></script>
+
+    <script>
+        // Hàm hiển thị hộp thông báo tùy chỉnh thay vì alert()
         function showMessageBox(message, isInstructions = false) {
             const messageBox = document.getElementById('messageBox');
             const messageText = document.getElementById('messageText');
@@ -407,6 +418,7 @@
             messageText.innerHTML = message;
             
             if (isInstructions) {
+                // Thêm lớp 'scrollable' nếu là hướng dẫn để hộp thông báo có thể cuộn
                 messageBox.classList.add('scrollable');
             } else {
                 messageBox.classList.remove('scrollable');
@@ -414,29 +426,30 @@
             messageBox.style.display = 'block';
         }
 
-        // Function to hide the message box - Made globally accessible
+        // Hàm ẩn hộp thông báo - Được đặt thành globally accessible
         window.hideMessageBox = function() {
             const messageBox = document.getElementById('messageBox');
             messageBox.style.display = 'none';
-            messageBox.classList.remove('scrollable'); // Clean up class when hidden
+            messageBox.classList.remove('scrollable'); // Xóa lớp khi ẩn
         };
 
-        // --- DOM Elements ---
+        // --- Các phần tử DOM ---
         const topicInput = document.getElementById('topicInput');
         const additionalNotesInput = document.getElementById('additionalNotesInput'); 
         const numSlidesInput = document.getElementById('numSlidesInput');
         const templateSelect = document.getElementById('templateSelect');
         const detailLevelSelect = document.getElementById('detailLevelSelect'); 
         const languageSelect = document.getElementById('languageSelect');     
-        // Removed fileUploadInput as it's no longer needed
         const generateButton = document.getElementById('generateButton');
-        const exportPresentationButton = document.getElementById('exportPresentationButton'); 
+        const exportPdfButton = document.getElementById('exportPdfButton'); 
+        const exportPptxButton = document.getElementById('exportPptxButton'); // Đã đổi tên từ exportWordButton
         const generateNotesButton = document.getElementById('generateNotesButton'); 
         const generateQaButton = document.getElementById('generateQaButton');       
         const instructionsButton = document.getElementById('instructionsButton'); 
         const slidesOutput = document.getElementById('slidesOutput');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const pdfLoadingSpinner = document.getElementById('pdfLoadingSpinner'); 
+        const pptxLoadingSpinner = document.getElementById('pptxLoadingSpinner'); // Đã khôi phục spinner này
         const notesLoadingSpinner = document.getElementById('notesLoadingSpinner'); 
         const qaLoadingSpinner = document.getElementById('qaLoadingSpinner');       
         const errorMessageDiv = document.getElementById('errorMessage');
@@ -445,14 +458,15 @@
         const qaOutput = document.getElementById('qaOutput');                       
         const qaContent = document.getElementById('qaContent');                     
 
-        // --- Event Listeners ---
+        // --- Trình nghe sự kiện ---
         generateButton.addEventListener('click', generateSlides);
-        exportPresentationButton.addEventListener('click', exportPresentationFile); 
+        exportPdfButton.addEventListener('click', exportPdfFile); 
+        exportPptxButton.addEventListener('click', exportPptxFile); // Đã đổi trình nghe sự kiện
         generateNotesButton.addEventListener('click', generateSpeakerNotes); 
         generateQaButton.addEventListener('click', generateQa);    
         instructionsButton.addEventListener('click', showInstructions); 
 
-        // --- Collapsible Function ---
+        // --- Hàm Thu gọn/Mở rộng ---
         window.toggleCollapsible = function(contentId) {
             const content = document.getElementById(contentId);
             const header = content.previousElementSibling; 
@@ -465,8 +479,12 @@
             }
         };
 
-        // --- Functions ---
+        // --- Các hàm chính ---
 
+        /**
+         * Tạo slide dựa trên chủ đề và các tùy chọn người dùng.
+         * Gọi API Gemini để lấy nội dung slide và sau đó hiển thị chúng.
+         */
         async function generateSlides() {
             const topic = topicInput.value.trim();
             const additionalNotes = additionalNotesInput.value.trim(); 
@@ -474,9 +492,9 @@
             const template = templateSelect.value;
             const detailLevel = detailLevelSelect.value; 
             const language = languageSelect.value;       
-            // const uploadedFile = fileUploadInput.files[0]; // Removed
 
-            if (!topic) { // Changed condition, no longer checking uploadedFile
+            // Kiểm tra các trường đầu vào bắt buộc
+            if (!topic) { 
                 showMessageBox("Vui lòng nhập chủ đề trình bày.");
                 return;
             }
@@ -485,30 +503,26 @@
                 return;
             }
 
+            // Đặt lại trạng thái UI
             slidesOutput.innerHTML = ''; 
             speakerNotesContent.innerHTML = ''; 
             qaContent.innerHTML = '';           
-            loadingSpinner.classList.remove('hidden'); 
+            loadingSpinner.classList.remove('hidden'); // Hiển thị spinner tải
             pdfLoadingSpinner.classList.add('hidden'); 
+            pptxLoadingSpinner.classList.add('hidden'); // Đã khôi phục spinner
             notesLoadingSpinner.classList.add('hidden'); 
             qaLoadingSpinner.classList.add('hidden');     
             errorMessageDiv.classList.add('hidden'); 
             generateButton.disabled = true; 
-            exportPresentationButton.disabled = true; 
+            exportPdfButton.disabled = true; 
+            exportPptxButton.disabled = true; // Đã đổi tên
             generateNotesButton.disabled = true; 
             generateQaButton.disabled = true;     
 
             let promptInstruction = `Generate content for a presentation on the topic '${topic}' with ${numSlides} slides.`;
 
-            // Removed file upload logic
-            // if (uploadedFile) {
-            //     // ... (removed file reading logic)
-            // } else {
-            //     promptInstruction = `Generate content for a presentation on the topic '${topic}' with ${numSlides} slides.`;
-            // }
-
             try {
-                // Step 1: Generate slide content from Gemini
+                // Bước 1: Tạo nội dung slide từ Gemini
                 let detailInstruction = '';
                 if (detailLevel === 'compact') {
                     detailInstruction = 'Keep bullet points very concise and high-level.';
@@ -518,7 +532,7 @@
                     detailInstruction = 'Provide detailed and comprehensive bullet points with at least 4-6 bullet points per slide, each bullet point having 2-3 sentences.';
                 }
 
-                // Append additional notes to the prompt if provided
+                // Nối các ghi chú bổ sung vào prompt nếu có
                 const additionalNotesPrompt = additionalNotes ? `\nAdditional requirements: ${additionalNotes}` : '';
 
                 const geminiPrompt = `${promptInstruction} Use a '${template.replace('template-', '')}' template style. Ensure titles are concise and succinct. ${detailInstruction} Each slide needs: a brief and concise title, bullet points presenting main ideas, and a very concise, simple, and clear 'imagePrompt' (1-3 English words, e.g., 'abstract AI', 'team collaboration') describing a relevant image for the slide. The response should be a JSON array of slide objects. Ensure the language for title and bulletPoints is ${language}, and English for imagePrompt.${additionalNotesPrompt}`;
@@ -526,6 +540,7 @@
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: geminiPrompt }] });
 
+                // Cấu hình payload cho API Gemini để nhận phản hồi JSON
                 const geminiPayload = {
                     contents: chatHistory,
                     generationConfig: {
@@ -548,16 +563,18 @@
                     }
                 };
 
-                // Updated API Key
+                // Key API Gemini (thay thế bằng key thực tế nếu cần, hoặc để trống để Canvas tự động cung cấp)
                 const geminiApiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
 
+                // Gửi yêu cầu đến API Gemini
                 const geminiResponse = await fetch(geminiApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(geminiPayload)
                 });
 
+                // Xử lý lỗi từ API Gemini
                 if (!geminiResponse.ok) {
                     const errorData = await geminiResponse.json();
                     throw new Error(`Lỗi API Gemini: ${geminiResponse.status} - ${errorData.error.message || geminiResponse.statusText}`);
@@ -565,6 +582,7 @@
 
                 const geminiResult = await geminiResponse.json();
                 let slides = [];
+                // Phân tích cú pháp phản hồi JSON từ Gemini
                 if (geminiResult.candidates && geminiResult.candidates.length > 0 &&
                     geminiResult.candidates[0].content && geminiResult.candidates[0].content.parts &&
                     geminiResult.candidates[0].content.parts.length > 0) {
@@ -574,16 +592,13 @@
                     throw new Error("Không thể tạo nội dung slide từ AI. Vui lòng thử lại.");
                 }
 
-                // Step 2: Assign image URLs from Picsum Photos
+                // Bước 2: Gán URL ảnh từ Picsum Photos (ảnh ngẫu nhiên dựa trên seed)
                 const slidesWithImages = slides.map((slideData, index) => {
-                    // Using a Picsum 'seed' to provide more consistent and reliable image loading.
-                    // The 'seed' combined with index ensures unique images for each slide in a session.
-                    // Reduced dimensions to 600x150 pixels to ensure smaller file sizes,
-                    // which are typically well under 2MB even with default compression from Picsum.
-                    slideData.imageUrl = `https://picsum.photos/seed/${index + 1}/600/150`; 
+                    slideData.imageUrl = `https://picsum.photos/seed/${index + 1}/600/150`; // 600x150 cho tỷ lệ rộng, ngắn hơn
                     return slideData;
                 });
 
+                // Hiển thị các slide đã tạo
                 displaySlides(slidesWithImages, template);
 
             } catch (error) {
@@ -592,64 +607,94 @@
                 errorMessageDiv.classList.remove('hidden');
                 loadingSpinner.classList.add('hidden');
                 generateButton.disabled = false;
-                exportPresentationButton.disabled = true;
+                exportPdfButton.disabled = true; 
+                exportPptxButton.disabled = true; // Đã đổi tên
                 generateNotesButton.disabled = true; 
                 generateQaButton.disabled = true;     
             }
         }
 
+        /**
+         * Hiển thị các slide đã tạo trên giao diện người dùng.
+         * Bao gồm logic tải ảnh với các lần thử lại và ảnh dự phòng.
+         * @param {Array<Object>} slides - Mảng các đối tượng slide chứa tiêu đề, các điểm chính và URL ảnh.
+         * @param {string} templateClass - Lớp CSS của mẫu slide để áp dụng kiểu dáng.
+         */
         function displaySlides(slides, templateClass) {
             if (!Array.isArray(slides) || slides.length === 0) {
                 showMessageBox("Không có slide nào được tạo. Có thể có lỗi trong phản hồi AI.");
                 loadingSpinner.classList.add('hidden');
                 generateButton.disabled = false;
-                exportPresentationButton.disabled = true;
+                exportPdfButton.disabled = true; 
+                exportPptxButton.disabled = true; // Đã đổi tên
                 generateNotesButton.disabled = true; 
                 generateQaButton.disabled = true;     
                 return;
             }
 
             let loadedImagesCount = 0;
+            // Đếm tổng số ảnh cần tải
             const totalImagesToLoad = slides.filter(slide => slide.imageUrl).length; 
 
+            // Hàm kiểm tra xem tất cả ảnh đã được tải chưa và cập nhật trạng thái UI
             const checkIfAllImagesLoaded = () => {
                 if (loadedImagesCount === totalImagesToLoad) {
                     loadingSpinner.classList.add('hidden');
                     generateButton.disabled = false;
-                    exportPresentationButton.disabled = false;
-                    generateNotesButton.disabled = false; 
-                    generateQaButton.disabled = false;     
+                    exportPdfButton.disabled = false; // Bật nút xuất PDF
+                    exportPptxButton.disabled = false; // Bật nút xuất PPTX
+                    generateNotesButton.disabled = false; // Bật nút tạo ghi chú
+                    generateQaButton.disabled = false;     // Bật nút tạo Q&A
                 }
             };
 
+            // Hàm tải ảnh với logic thử lại
+            const loadImageWithRetry = (imageElement, originalSrc, altText, retryCount = 0, maxRetries = 3) => {
+                imageElement.src = originalSrc;
+                imageElement.alt = altText;
+                imageElement.crossOrigin = "anonymous"; // Quan trọng để tránh lỗi CORS khi tải ảnh vào canvas
+
+                imageElement.onload = () => {
+                    loadedImagesCount++;
+                    console.log(`Ảnh slide đã tải. Đã tải: ${loadedImagesCount}/${totalImagesToLoad}`);
+                    checkIfAllImagesLoaded();
+                };
+
+                imageElement.onerror = (e) => {
+                    console.error(`Lỗi tải ảnh (HTML Image Element) cho slide (Src: ${originalSrc}, Alt: ${altText}): Tải ảnh thất bại.`, e);
+                    if (retryCount < maxRetries) {
+                        console.log(`Thử lại tải ảnh... (Lần ${retryCount + 1}/${maxRetries})`);
+                        imageElement.src = ''; // Xóa src để kích hoạt lại sự kiện tải
+                        setTimeout(() => {
+                            loadImageWithRetry(imageElement, originalSrc, altText, retryCount + 1, maxRetries);
+                        }, 500 * (retryCount + 1)); // Tăng thời gian chờ với mỗi lần thử lại
+                    } else {
+                        console.error(`Tải ảnh thất bại sau ${maxRetries} lần thử lại. Sử dụng ảnh dự phòng.`);
+                        // Sử dụng ảnh dự phòng nếu tất cả các lần thử đều thất bại
+                        imageElement.src = `https://placehold.co/600x150/8B0000/FFFFFF?text=${encodeURIComponent('Tải ảnh thất bại')}`;
+                        loadedImagesCount++; // Vẫn tăng số lượng đã tải để không chặn logic kiểm tra hoàn thành
+                        checkIfAllImagesLoaded();
+                    }
+                };
+            };
+
+            // Nếu không có ảnh nào để tải, vẫn kiểm tra trạng thái hoàn thành
             if (totalImagesToLoad === 0) {
-                checkIfAllImagesLoaded();
+                checkIfAllImagesLoaded(); 
             }
 
+            // Duyệt qua từng slide và tạo phần tử HTML tương ứng
             slides.forEach((slideData, index) => {
                 const slideDiv = document.createElement('div');
                 slideDiv.className = `slide ${templateClass} mb-6 p-6 rounded-xl shadow-md`;
+                // Lưu dữ liệu slide vào dataset để dễ dàng truy cập sau này (cho xuất Word, ghi chú)
                 slideDiv.dataset.slideTitle = slideData.title; 
                 slideDiv.dataset.slideBulletPoints = JSON.stringify(slideData.bulletPoints); 
+                slideDiv.dataset.slideImageUrl = slideData.imageUrl; 
 
                 if (slideData.imageUrl) {
                     const imageElement = document.createElement('img');
-                    imageElement.src = slideData.imageUrl;
-                    imageElement.alt = slideData.imagePrompt || `Slide ${index + 1} illustration`;
-                    imageElement.crossOrigin = "anonymous"; 
-
-                    imageElement.onload = () => {
-                        loadedImagesCount++;
-                        console.log(`Ảnh slide ${index + 1} đã tải. Đã tải: ${loadedImagesCount}/${totalImagesToLoad}`);
-                        checkIfAllImagesLoaded();
-                    };
-                    imageElement.onerror = (e) => {
-                        console.error(`Lỗi tải ảnh (HTML Image Element) cho slide ${index + 1} (${slideData.imagePrompt || 'không có mô tả'}): Tải ảnh thất bại.`, e);
-                        imageElement.src = `https://placehold.co/600x150/8B0000/FFFFFF?text=${encodeURIComponent('Tải ảnh thất bại')}`; 
-                        loadedImagesCount++;
-                        checkIfAllImagesLoaded();
-                    };
-
+                    loadImageWithRetry(imageElement, slideData.imageUrl, slideData.imagePrompt || `Slide ${index + 1} illustration`);
                     slideDiv.appendChild(imageElement);
                 }
 
@@ -676,6 +721,7 @@
                 slidesOutput.appendChild(slideDiv);
             });
 
+            // Gọi kiểm tra cuối cùng nếu có ảnh hoặc nếu không có ảnh nhưng có slide
             if (totalImagesToLoad > 0 && loadedImagesCount === totalImagesToLoad) {
                 checkIfAllImagesLoaded();
             } else if (totalImagesToLoad === 0 && slides.length > 0) { 
@@ -683,65 +729,77 @@
             }
         }
 
-        async function exportPresentationFile() { 
-            const { jsPDF } = window.jspdf;
+        /**
+         * Xuất các slide hiện có thành một file PDF.
+         * Sử dụng html2canvas để chụp ảnh các slide HTML và jsPDF để tạo PDF.
+         */
+        async function exportPdfFile() { 
+            const { jsPDF } = window.jspdf; // Lấy đối tượng jsPDF từ window
             const slides = document.querySelectorAll('#slidesOutput .slide');
             const speakerNotesSection = document.getElementById('speakerNotesOutput');
             const qaSection = document.getElementById('qaOutput');
 
+            // Kiểm tra xem có nội dung nào để xuất không
             if (slides.length === 0 && speakerNotesContent.innerHTML.trim() === '' && qaContent.innerHTML.trim() === '') {
                 showMessageBox("Không có nội dung nào để xuất file trình bày.");
                 return;
             }
 
+            // Hiển thị spinner và vô hiệu hóa các nút
             pdfLoadingSpinner.classList.remove('hidden');
-            exportPresentationButton.disabled = true;
+            exportPdfButton.disabled = true;
+            exportPptxButton.disabled = true; 
             generateButton.disabled = true;
             generateNotesButton.disabled = true; 
             generateQaButton.disabled = true;     
 
             try {
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdf = new jsPDF('p', 'mm', 'a4'); // Khởi tạo PDF ở chế độ dọc, đơn vị mm, kích thước A4
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
-                const margin = 10;
+                const margin = 10; // Lề cho PDF
                 let firstPageAdded = false;
 
-                // Capture slides
+                // Chụp và thêm từng slide vào PDF
                 for (let i = 0; i < slides.length; i++) {
                     const slide = slides[i];
                     
+                    // Sử dụng html2canvas để chụp slide HTML thành canvas
+                    // Đã tăng scale từ 1 lên 2 để cải thiện chất lượng hình ảnh PDF
                     const canvas = await html2canvas(slide, { scale: 2, useCORS: true }); 
-                    const imgData = canvas.toDataURL('image/png');
+                    const imgData = canvas.toDataURL('image/png'); // Chuyển canvas thành Data URL PNG
 
+                    // Tính toán kích thước ảnh để vừa với trang PDF
                     const imgWidth = pdfWidth - 2 * margin;
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+                    // Thêm trang mới nếu không phải là trang đầu tiên
                     if (firstPageAdded) {
                         pdf.addPage();
                     } else {
                         firstPageAdded = true;
                     }
                     
+                    // Tính toán vị trí để căn giữa ảnh trên trang
                     const x = margin;
                     const y = (pdfHeight - imgHeight) / 2;
 
-                    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+                    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight); // Thêm ảnh vào PDF
                 }
 
-                // Capture speaker notes if present
+                // Chụp ghi chú diễn giả nếu có nội dung
                 if (speakerNotesContent.innerHTML.trim() !== '') {
-                    // Temporarily expand for capture
+                    // Đảm bảo phần ghi chú được mở rộng hoàn toàn trước khi chụp
                     speakerNotesContent.classList.add('expanded');
                     speakerNotesContent.previousElementSibling.classList.add('expanded');
                     
-                    const canvas = await html2canvas(speakerNotesSection, { scale: 2, useCORS: true });
+                    const canvas = await html2canvas(speakerNotesSection, { scale: 2, useCORS: true }); 
                     const imgData = canvas.toDataURL('image/png');
 
                     const imgWidth = pdfWidth - 2 * margin;
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    if (firstPageAdded) { 
+                    if (firstPageAdded) { // Nếu đã có slide hoặc phần khác, thêm trang mới
                         pdf.addPage();
                     } else {
                         firstPageAdded = true;
@@ -751,24 +809,24 @@
                     const y = (pdfHeight - imgHeight) / 2;
                     pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
 
-                    // Restore original state
+                    // Đóng lại phần ghi chú sau khi chụp
                     speakerNotesContent.classList.remove('expanded');
                     speakerNotesContent.previousElementSibling.classList.remove('expanded');
                 }
 
-                // Capture Q&A if present
+                // Chụp phần Hỏi & Đáp nếu có nội dung
                 if (qaContent.innerHTML.trim() !== '') {
-                    // Temporarily expand for capture
+                    // Đảm bảo phần Hỏi & Đáp được mở rộng hoàn toàn trước khi chụp
                     qaContent.classList.add('expanded');
                     qaContent.previousElementSibling.classList.add('expanded');
 
-                    const canvas = await html2canvas(qaSection, { scale: 2, useCORS: true });
+                    const canvas = await html2canvas(qaSection, { scale: 2, useCORS: true }); 
                     const imgData = canvas.toDataURL('image/png');
 
                     const imgWidth = pdfWidth - 2 * margin;
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    if (firstPageAdded) { 
+                    if (firstPageAdded) { // Nếu đã có slide hoặc phần khác, thêm trang mới
                         pdf.addPage();
                     } else {
                         firstPageAdded = true;
@@ -778,21 +836,24 @@
                     const y = (pdfHeight - imgHeight) / 2;
                     pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
 
-                    // Restore original state
+                    // Đóng lại phần Hỏi & Đáp sau khi chụp
                     qaContent.classList.remove('expanded');
                     qaContent.previousElementSibling.classList.remove('expanded');
                 }
 
 
-                pdf.save('presentation_by_AI.pdf'); 
-                showMessageBox("Slide đã được xuất ra file trình bày (PDF) thành công!");
+                pdf.save('presentation_by_AI.pdf'); // Tải file PDF
+                showMessageBox("Slide đã được xuất ra file PDF thành công!");
 
             } catch (error) {
-                console.error("Lỗi khi xuất file trình bày:", error);
-                showMessageBox(`Đã xảy ra lỗi khi xuất file trình bày: ${error.message}. Vui lòng thử lại.`);
+                console.error("Lỗi khi xuất file PDF:", error);
+                showMessageBox(`Đã xảy ra lỗi khi xuất file PDF: ${error.message}. Vui lòng thử lại.`);
             } finally {
+                // Ẩn spinner và kích hoạt lại các nút
                 pdfLoadingSpinner.classList.add('hidden');
-                exportPresentationButton.disabled = false;
+                exportPdfButton.disabled = false;
+                exportPptxButton.disabled = false; // Đã đổi tên
+                // Chỉ bật nút tạo nếu có slide được hiển thị
                 if (slidesOutput.children.length > 0) {
                    generateButton.disabled = false;
                    generateNotesButton.disabled = false; 
@@ -801,8 +862,103 @@
             }
         }
 
-        // --- New LLM Features ---
+        /**
+         * Xuất các slide hiện có thành một file PPTX.
+         * Sử dụng pptxgenjs để tạo file PowerPoint.
+         */
+        async function exportPptxFile() {
+            const slides = document.querySelectorAll('#slidesOutput .slide');
+            if (slides.length === 0) {
+                showMessageBox("Không có slide nào được tạo để xuất file PPTX.");
+                return;
+            }
 
+            // Hiển thị spinner và vô hiệu hóa các nút
+            pptxLoadingSpinner.classList.remove('hidden');
+            exportPptxButton.disabled = true;
+            exportPdfButton.disabled = true; 
+            generateButton.disabled = true;
+            generateNotesButton.disabled = true;
+            generateQaButton.disabled = true;
+
+            try {
+                // Truy cập PptxGenJS trực tiếp vì nó có sẵn trong phạm vi window
+                console.log("window.PptxGenJS trước khi khởi tạo:", window.PptxGenJS); // Thêm log gỡ lỗi
+                let pptx = new window.PptxGenJS(); 
+                pptx.layout = 'LAYOUT_WIDE'; // Đặt bố cục trình bày thành màn hình rộng
+
+                slides.forEach((slideHtml, index) => {
+                    // Lấy dữ liệu slide từ dataset HTML
+                    const slideTitle = slideHtml.dataset.slideTitle;
+                    const slideBulletPoints = JSON.parse(slideHtml.dataset.slideBulletPoints);
+                    const slideImageUrl = slideHtml.dataset.slideImageUrl;
+
+                    let slide = pptx.addSlide(); // Thêm một slide mới
+
+                    // Thêm tiêu đề
+                    if (slideTitle) {
+                        slide.addText(slideTitle, { x: 0.5, y: 0.5, w: 9, h: 1, fontSize: 36, bold: true, color: '363636' });
+                    }
+
+                    // Thêm ảnh nếu có
+                    if (slideImageUrl) {
+                        slide.addImage({
+                            path: slideImageUrl,
+                            x: 0.5,
+                            y: 1.5,
+                            w: 9,
+                            h: 2.25, // Chiều cao phù hợp với ảnh ngang
+                            sizing: { type: 'contain', w: 9, h: 2.25 } // Đảm bảo ảnh vừa vặn
+                        });
+                    }
+
+                    // Thêm các điểm chính (bullet points)
+                    if (slideBulletPoints && slideBulletPoints.length > 0) {
+                        // Điều chỉnh vị trí Y của bullet points tùy thuộc vào việc có ảnh hay không
+                        const bulletPointsY = slideImageUrl ? 4.0 : 1.8; 
+                        slide.addText(slideBulletPoints.map(point => ({ text: point })), {
+                            x: 0.5,
+                            y: bulletPointsY,
+                            w: 9,
+                            h: 6.5, // Đã tăng chiều cao để hỗ trợ xuống dòng tốt hơn
+                            fontSize: 18,
+                            bullet: true,
+                            color: '505050',
+                            valign: 'top' // Đảm bảo văn bản căn chỉnh từ trên cùng
+                        });
+                    }
+
+                    // Thêm số slide
+                    slide.addText(`Slide ${index + 1}`, { x: 9.0, y: 6.8, w: 1, h: 0.3, fontSize: 10, align: 'right', color: '808080' });
+                });
+
+                await pptx.writeFile({ fileName: 'presentation_by_AI.pptx' }); // Ghi file PPTX
+                showMessageBox("Slide đã được xuất ra file PPTX thành công!");
+
+            } catch (error) {
+                console.error("Lỗi khi xuất file PPTX:", error);
+                showMessageBox(`Đã xảy ra lỗi khi xuất file PPTX: ${error.message}. Vui lòng thử lại.`);
+            } finally {
+                // Ẩn spinner và kích hoạt lại các nút
+                pptxLoadingSpinner.classList.add('hidden');
+                exportPptxButton.disabled = false;
+                exportPdfButton.disabled = false; 
+                // Chỉ bật nút tạo nếu có slide được hiển thị
+                if (slidesOutput.children.length > 0) {
+                    generateButton.disabled = false;
+                    generateNotesButton.disabled = false;
+                    generateQaButton.disabled = false;
+                }
+            }
+        }
+
+
+        // --- Các tính năng LLM mới ---
+
+        /**
+         * Tạo ghi chú diễn giả cho các slide đã tạo.
+         * Gọi API Gemini để lấy nội dung ghi chú và hiển thị chúng.
+         */
         async function generateSpeakerNotes() {
             const slides = document.querySelectorAll('#slidesOutput .slide');
             const language = languageSelect.value;
@@ -811,15 +967,18 @@
                 return;
             }
 
+            // Đặt lại nội dung và hiển thị spinner
             speakerNotesContent.innerHTML = ''; 
             notesLoadingSpinner.classList.remove('hidden');
             generateNotesButton.disabled = true;
             generateButton.disabled = true;
-            exportPresentationButton.disabled = true;
+            exportPdfButton.disabled = true; 
+            exportPptxButton.disabled = true; // Đã đổi tên
             generateQaButton.disabled = true;
 
             try {
                 let fullPresentationContent = '';
+                // Tổng hợp nội dung từ tất cả các slide đã tạo
                 slides.forEach((slide, index) => {
                     const slideTitle = slide.dataset.slideTitle;
                     const slideBulletPoints = JSON.parse(slide.dataset.slideBulletPoints);
@@ -827,12 +986,14 @@
                     fullPresentationContent += `Bullet Points:\n${slideBulletPoints.map(bp => `- ${bp}`).join('\n')}\n\n`;
                 });
 
+                // Prompt cho Gemini để tạo ghi chú diễn giả
                 const notesMasterPrompt = `Generate detailed speaker notes for the following presentation, covering all slides. For each slide, elaborate on the bullet points, provide additional context, and suggest transitions. Format the output as a JSON array where each object represents a slide's notes, including 'slideIndex' (1-based integer) and 'noteContent' (string with detailed notes for that slide). Ensure the language for notes is ${language}.
                 \nPresentation Content:\n${fullPresentationContent}`;
 
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: notesMasterPrompt }] });
 
+                // Cấu hình payload cho API Gemini để nhận phản hồi JSON
                 const payload = {
                     contents: chatHistory,
                     generationConfig: {
@@ -850,7 +1011,6 @@
                         }
                     }
                 };
-                // Updated API Key
                 const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -860,24 +1020,26 @@
                     body: JSON.stringify(payload)
                 });
 
+                // Xử lý lỗi API
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(`Lỗi API Gemini (Ghi chú): ${response.status} - ${errorData.error.message || response.statusText}`);
                 }
                 const result = await response.json();
+                // Phân tích cú pháp phản hồi và lấy mảng ghi chú
                 const notesArray = result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0
                     ? JSON.parse(result.candidates[0].content.parts[0].text)
                     : [];
                 
                 let allNotesHtml = '';
                 if (notesArray.length > 0) {
-                    // Sort notes by slideIndex to ensure correct order
-                    notesArray.sort((a, b) => a.slideIndex - b.slideIndex);
+                    notesArray.sort((a, b) => a.slideIndex - b.slideIndex); // Sắp xếp theo thứ tự slide
 
                     notesArray.forEach(noteItem => {
                         if (noteItem.slideIndex && noteItem.noteContent) {
+                            // Lấy tiêu đề slide tương ứng (nếu có)
                             const slideTitle = slides[noteItem.slideIndex - 1] ? slides[noteItem.slideIndex - 1].dataset.slideTitle : `Slide ${noteItem.slideIndex}`;
-                            // Convert Markdown to HTML for display
+                            // Chuyển đổi nội dung ghi chú từ Markdown sang HTML
                             const formattedNote = window.marked.parse(noteItem.noteContent);
                             allNotesHtml += `<h3 class="text-xl font-semibold mt-4 mb-2">Slide ${noteItem.slideIndex}: ${slideTitle}</h3><div class="text-gray-700">${formattedNote}</div>`;
                         }
@@ -887,6 +1049,7 @@
                 }
                 
                 speakerNotesContent.innerHTML = allNotesHtml;
+                // Mở rộng phần ghi chú để hiển thị nội dung
                 speakerNotesContent.classList.add('expanded'); 
                 speakerNotesContent.previousElementSibling.classList.add('expanded'); 
 
@@ -894,14 +1057,20 @@
                 console.error("Lỗi khi tạo ghi chú diễn giả:", error);
                 showMessageBox(`Đã xảy ra lỗi khi tạo ghi chú diễn giả: ${error.message}. Vui lòng thử lại.`);
             } finally {
+                // Ẩn spinner và kích hoạt lại các nút
                 notesLoadingSpinner.classList.add('hidden');
                 generateNotesButton.disabled = false;
                 generateButton.disabled = false;
-                exportPresentationButton.disabled = false;
+                exportPdfButton.disabled = false; 
+                exportPptxButton.disabled = false; // Đã đổi tên
                 generateQaButton.disabled = false;
             }
         }
 
+        /**
+         * Tạo các cặp câu hỏi và trả lời dựa trên nội dung slide.
+         * Gọi API Gemini để lấy nội dung Q&A và hiển thị chúng.
+         */
         async function generateQa() {
             const slides = document.querySelectorAll('#slidesOutput .slide');
             const language = languageSelect.value;
@@ -910,20 +1079,24 @@
                 return;
             }
 
+            // Đặt lại nội dung và hiển thị spinner
             qaContent.innerHTML = ''; 
             qaLoadingSpinner.classList.remove('hidden');
             generateQaButton.disabled = true;
             generateButton.disabled = true;
-            exportPresentationButton.disabled = true;
+            exportPdfButton.disabled = true; 
+            exportPptxButton.disabled = true; // Đã đổi tên
             generateNotesButton.disabled = true;
 
             try {
                 let allSlideText = '';
+                // Tổng hợp tất cả văn bản từ các slide
                 slides.forEach(slide => {
                     allSlideText += `Tiêu đề: ${slide.dataset.slideTitle}\n`;
                     allSlideText += `Nội dung: ${JSON.parse(slide.dataset.slideBulletPoints).join(' ')}\n\n`;
                 });
 
+                // Prompt cho Gemini để tạo câu hỏi và trả lời
                 const qaPrompt = `Based on the following presentation content, generate 3-5 potential questions and their answers. 
                 Content:
                 ${allSlideText}
@@ -933,6 +1106,7 @@
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: qaPrompt }] });
 
+                // Cấu hình payload cho API Gemini để nhận phản hồi JSON
                 const payload = {
                     contents: chatHistory,
                     generationConfig: {
@@ -951,7 +1125,6 @@
                     }
                 };
 
-                // Updated API Key
                 const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -961,11 +1134,13 @@
                     body: JSON.stringify(payload)
                 });
 
+                // Xử lý lỗi API
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(`Lỗi API Gemini (Hỏi Đáp): ${response.status} - ${errorData.error.message || response.statusText}`);
                 }
                 const result = await response.json();
+                // Phân tích cú pháp phản hồi và lấy mảng Q&A
                 const qaPairs = result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0
                     ? JSON.parse(result.candidates[0].content.parts[0].text)
                     : [];
@@ -973,9 +1148,9 @@
                 if (qaPairs.length > 0) {
                     let qaHtml = '<div class="space-y-4">';
                     qaPairs.forEach((qa, index) => {
-                        // Convert Markdown to HTML for display
+                        // Chuyển đổi câu hỏi và trả lời từ Markdown sang HTML
                         const formattedQuestion = window.marked.parseInline(qa.question || ''); 
-                        const formattedAnswer = window.marked.parse(qa.answer || '');
+                        const formattedAnswer = window.marked.parse(qa.answer || ''); // Đã sửa lỗi
                         qaHtml += `
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">Câu hỏi ${index + 1}: ${formattedQuestion}</h3>
@@ -985,6 +1160,7 @@
                     });
                     qaHtml += '</div>';
                     qaContent.innerHTML = qaHtml;
+                    // Mở rộng phần Q&A để hiển thị nội dung
                     qaContent.classList.add('expanded'); 
                     qaContent.previousElementSibling.classList.add('expanded'); 
                 } else {
@@ -995,15 +1171,17 @@
                 console.error("Lỗi khi tạo câu hỏi & đáp:", error);
                 showMessageBox(`Đã xảy ra lỗi khi tạo câu hỏi & đáp: ${error.message}. Vui lòng thử lại.`);
             } finally {
+                // Ẩn spinner và kích hoạt lại các nút
                 qaLoadingSpinner.classList.add('hidden');
                 generateQaButton.disabled = false;
                 generateButton.disabled = false;
-                exportPresentationButton.disabled = false;
+                exportPdfButton.disabled = false; 
+                exportPptxButton.disabled = false; // Đã đổi tên
                 generateNotesButton.disabled = false;
             }
         }
 
-        // --- Instructions Content ---
+        // --- Nội dung Hướng dẫn ---
         function showInstructions() {
             const instructionsContent = `
                 <h2>Hướng dẫn sử dụng Ứng dụng Tạo Slide AI</h2>
@@ -1028,18 +1206,18 @@
                 <h3>Chức năng các nút:</h3>
                 <ul>
                     <li><b>Tạo Slide:</b> Nhấn nút này để AI bắt đầu tạo nội dung và hình ảnh cho các slide của bạn.</li>
-                    <li><b>Xuất File Trình Bày:</b> Sau khi slide được tạo, nhấn nút này để xuất toàn bộ slide, ghi chú diễn giả và Q&A (nếu có) thành một file PDF.</li>
+                    <li><b>Xuất PDF:</b> Sau khi slide được tạo, nhấn nút này để xuất toàn bộ slide, ghi chú diễn giả và Q&A (nếu có) thành một file PDF.</li>
+                    <li><b>Xuất PPTX:</b> Sau khi slide được tạo, nhấn nút này để xuất toàn bộ slide, ghi chú diễn giả và Q&A (nếu có) thành một file PowerPoint.</li>
                     <li><b>Tạo Ghi Chú Diễn Giả:</b> Sau khi slide đã được tạo, nhấn nút này để AI tạo các ghi chú chi tiết cho từng slide, giúp bạn trong quá trình thuyết trình. Ghi chú sẽ xuất hiện ở phần "Ghi Chú Diễn Giả" bên dưới.</li>
                     <li><b>Tạo Câu Hỏi & Đáp:</b> Sau khi slide đã được tạo, nhấn nút này để AI gợi ý các câu hỏi và câu trả lời tiềm năng dựa trên nội dung bài trình bày. Phần này sẽ xuất hiện ở mục "Câu Hỏi & Đáp" bên dưới.</li>
                 </ul>
 
                 <p>Chúc bạn có một bài thuyết trình thành công!</p>
             `;
-            showMessageBox(instructionsContent, true); 
+            showMessageBox(instructionsContent, true); // True để bật chế độ cuộn cho hộp thông báo
         }
 
 
-        // No Firebase initialization needed anymore
         window.onload = function() {
             console.log("Ứng dụng Slide AI đã tải. Không còn phụ thuộc Firebase.");
         };
