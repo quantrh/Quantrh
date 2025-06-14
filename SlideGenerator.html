@@ -273,7 +273,7 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center p-4">
     <div class="container mx-auto p-8 bg-white rounded-xl shadow-lg max-w-4xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Tạo Slide sáng tạo</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Tạo Slide Trình Bày Với AI</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="col-span-1 md:col-span-2">
@@ -577,9 +577,10 @@
                 // Step 2: Assign image URLs from Picsum Photos
                 const slidesWithImages = slides.map((slideData, index) => {
                     // Using a Picsum 'seed' to provide more consistent and reliable image loading.
-                    // The 'seed' combined with index ensures unique images for each slide in a session,
-                    // but is more stable than Math.random() for concurrent requests.
-                    slideData.imageUrl = `https://picsum.photos/seed/${index + 1}/800/200`; // Fixed size 800x200
+                    // The 'seed' combined with index ensures unique images for each slide in a session.
+                    // Reduced dimensions to 600x150 pixels to ensure smaller file sizes,
+                    // which are typically well under 2MB even with default compression from Picsum.
+                    slideData.imageUrl = `https://picsum.photos/seed/${index + 1}/600/150`; 
                     return slideData;
                 });
 
@@ -644,7 +645,7 @@
                     };
                     imageElement.onerror = (e) => {
                         console.error(`Lỗi tải ảnh (HTML Image Element) cho slide ${index + 1} (${slideData.imagePrompt || 'không có mô tả'}): Tải ảnh thất bại.`, e);
-                        imageElement.src = `https://placehold.co/800x200/8B0000/FFFFFF?text=${encodeURIComponent('Tải ảnh thất bại')}`; 
+                        imageElement.src = `https://placehold.co/600x150/8B0000/FFFFFF?text=${encodeURIComponent('Tải ảnh thất bại')}`; 
                         loadedImagesCount++;
                         checkIfAllImagesLoaded();
                     };
