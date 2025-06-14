@@ -321,12 +321,15 @@
             </select>
         </div>
 
+        <!-- Removed file upload section -->
+        <!--
         <div class="mb-8">
             <label for="fileUpload" class="block text-gray-700 text-sm font-semibold mb-2">Tải file văn bản (.txt) (Tùy chọn):</label>
             <input type="file" id="fileUpload" accept=".txt"
                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
             <p class="text-sm text-gray-500 mt-1">Nếu có file, AI sẽ tạo slide dựa trên nội dung file này. Ngược lại, AI sẽ sử dụng kiến thức chung.</p>
         </div>
+        -->
 
         <div class="flex flex-col sm:flex-row gap-4 mb-4">
             <button id="generateButton"
@@ -425,12 +428,12 @@
         const templateSelect = document.getElementById('templateSelect');
         const detailLevelSelect = document.getElementById('detailLevelSelect'); 
         const languageSelect = document.getElementById('languageSelect');     
-        const fileUploadInput = document.getElementById('fileUpload');         
+        // Removed fileUploadInput as it's no longer needed
         const generateButton = document.getElementById('generateButton');
         const exportPresentationButton = document.getElementById('exportPresentationButton'); 
         const generateNotesButton = document.getElementById('generateNotesButton'); 
         const generateQaButton = document.getElementById('generateQaButton');       
-        const instructionsButton = document.getElementById('instructionsButton'); // New
+        const instructionsButton = document.getElementById('instructionsButton'); 
         const slidesOutput = document.getElementById('slidesOutput');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const pdfLoadingSpinner = document.getElementById('pdfLoadingSpinner'); 
@@ -447,7 +450,7 @@
         exportPresentationButton.addEventListener('click', exportPresentationFile); 
         generateNotesButton.addEventListener('click', generateSpeakerNotes); 
         generateQaButton.addEventListener('click', generateQa);    
-        instructionsButton.addEventListener('click', showInstructions); // New instruction button event
+        instructionsButton.addEventListener('click', showInstructions); 
 
         // --- Collapsible Function ---
         window.toggleCollapsible = function(contentId) {
@@ -471,10 +474,10 @@
             const template = templateSelect.value;
             const detailLevel = detailLevelSelect.value; 
             const language = languageSelect.value;       
-            const uploadedFile = fileUploadInput.files[0]; 
+            // const uploadedFile = fileUploadInput.files[0]; // Removed
 
-            if (!topic && !uploadedFile) {
-                showMessageBox("Vui lòng nhập chủ đề trình bày hoặc tải lên một file văn bản.");
+            if (!topic) { // Changed condition, no longer checking uploadedFile
+                showMessageBox("Vui lòng nhập chủ đề trình bày.");
                 return;
             }
             if (isNaN(numSlides) || numSlides < 1 || numSlides > 10) { 
@@ -495,33 +498,14 @@
             generateNotesButton.disabled = true; 
             generateQaButton.disabled = true;     
 
-            let baseContent = '';
-            let promptInstruction = '';
+            let promptInstruction = `Generate content for a presentation on the topic '${topic}' with ${numSlides} slides.`;
 
-            if (uploadedFile) {
-                if (uploadedFile.type !== 'text/plain') {
-                    showMessageBox("Vui lòng chỉ tải lên các file văn bản (.txt).");
-                    loadingSpinner.classList.add('hidden');
-                    generateButton.disabled = false;
-                    return;
-                }
-                try {
-                    baseContent = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.onerror = (e) => reject(e);
-                        reader.readAsText(uploadedFile);
-                    });
-                    promptInstruction = `Based on the following text: "${baseContent}", generate content for a presentation with ${numSlides} slides.`;
-                } catch (fileReadError) {
-                    showMessageBox(`Lỗi khi đọc file: ${fileReadError.message}. Vui lòng thử lại.`);
-                    loadingSpinner.classList.add('hidden');
-                    generateButton.disabled = false;
-                    return;
-                }
-            } else {
-                promptInstruction = `Generate content for a presentation on the topic '${topic}' with ${numSlides} slides.`;
-            }
+            // Removed file upload logic
+            // if (uploadedFile) {
+            //     // ... (removed file reading logic)
+            // } else {
+            //     promptInstruction = `Generate content for a presentation on the topic '${topic}' with ${numSlides} slides.`;
+            // }
 
             try {
                 // Step 1: Generate slide content from Gemini
@@ -564,7 +548,8 @@
                     }
                 };
 
-                const geminiApiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
+                // Updated API Key
+                const geminiApiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
 
                 const geminiResponse = await fetch(geminiApiUrl, {
@@ -589,11 +574,12 @@
                     throw new Error("Không thể tạo nội dung slide từ AI. Vui lòng thử lại.");
                 }
 
-                // Step 2: Assign image URLs from Picsum Photos (no Imagen API call)
+                // Step 2: Assign image URLs from Picsum Photos
                 const slidesWithImages = slides.map((slideData, index) => {
-                    // Using a general random image URL from Picsum to avoid specific ID issues
-                    // Added a slightly different dimension variation and a new random query parameter
-                    slideData.imageUrl = `https://picsum.photos/${800 + index}/${200 + index}?random=${Math.random()}`; 
+                    // Using a Picsum 'seed' to provide more consistent and reliable image loading.
+                    // The 'seed' combined with index ensures unique images for each slide in a session,
+                    // but is more stable than Math.random() for concurrent requests.
+                    slideData.imageUrl = `https://picsum.photos/seed/${index + 1}/800/200`; // Fixed size 800x200
                     return slideData;
                 });
 
@@ -863,7 +849,8 @@
                         }
                     }
                 };
-                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
+                // Updated API Key
+                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -962,7 +949,8 @@
                     }
                 };
 
-                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
+                // Updated API Key
+                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -1032,7 +1020,6 @@
                     </li>
                     <li><b>Ngôn ngữ:</b> Chọn ngôn ngữ bạn muốn nội dung slide được tạo (Tiếng Việt hoặc English).</li>
                     <li><b>Chọn mẫu slide:</b> Chọn một trong các mẫu thiết kế có sẵn cho slide của bạn (Hiện đại, Cổ điển, Sáng tạo).</li>
-                    <li><b>Tải file văn bản (.txt) (Tùy chọn):</b> Nếu bạn có sẵn nội dung văn bản (ví dụ: một bài báo, bản nháp), bạn có thể tải lên file .txt và AI sẽ dùng nội dung đó làm cơ sở để tạo slide. Nếu không tải file, AI sẽ dùng kiến thức chung của nó dựa trên chủ đề bạn nhập.</li>
                 </ol>
 
                 <h3>Chức năng các nút:</h3>
@@ -1049,10 +1036,9 @@
         }
 
 
-        // Initialize script logic (no Firebase init needed now)
+        // No Firebase initialization needed anymore
         window.onload = function() {
-            // Any initial setup that doesn't involve Firebase can go here
-            console.log("Ứng dụng Slide AI đã tải. Không cần cấu hình Firebase.");
+            console.log("Ứng dụng Slide AI đã tải. Không còn phụ thuộc Firebase.");
         };
     </script>
 </body>
