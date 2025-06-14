@@ -273,7 +273,7 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center p-4">
     <div class="container mx-auto p-8 bg-white rounded-xl shadow-lg max-w-4xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Tạo Slide Trình Bày Với AI</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Slide sáng tạo</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="col-span-1 md:col-span-2">
@@ -877,6 +877,7 @@
                     notesArray.forEach(noteItem => {
                         if (noteItem.slideIndex && noteItem.noteContent) {
                             const slideTitle = slides[noteItem.slideIndex - 1] ? slides[noteItem.slideIndex - 1].dataset.slideTitle : `Slide ${noteItem.slideIndex}`;
+                            // Convert Markdown to HTML for display
                             const formattedNote = window.marked.parse(noteItem.noteContent);
                             allNotesHtml += `<h3 class="text-xl font-semibold mt-4 mb-2">Slide ${noteItem.slideIndex}: ${slideTitle}</h3><div class="text-gray-700">${formattedNote}</div>`;
                         }
@@ -972,6 +973,7 @@
                 if (qaPairs.length > 0) {
                     let qaHtml = '<div class="space-y-4">';
                     qaPairs.forEach((qa, index) => {
+                        // Convert Markdown to HTML for display
                         const formattedQuestion = window.marked.parseInline(qa.question || ''); 
                         const formattedAnswer = window.marked.parse(qa.answer || '');
                         qaHtml += `
