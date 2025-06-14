@@ -396,16 +396,6 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // Global variables for Firebase configuration (provided by Canvas environment)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth; // Firebase instances
-
         // Function to show custom message box instead of alert()
         function showMessageBox(message, isInstructions = false) {
             const messageBox = document.getElementById('messageBox');
@@ -427,25 +417,6 @@
             messageBox.style.display = 'none';
             messageBox.classList.remove('scrollable'); // Clean up class when hidden
         };
-
-        // Initialize Firebase and authenticate
-        async function initializeFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log("Đăng nhập với custom token thành công.");
-                } else {
-                    await signInAnonymously(auth);
-                    console.log("Đăng nhập ẩn danh thành công.");
-                }
-            } catch (error) {
-                console.error("Lỗi khởi tạo Firebase hoặc xác thực:", error);
-                showMessageBox(`Lỗi khởi tạo Firebase: ${error.message}`);
-            }
-        }
 
         // --- DOM Elements ---
         const topicInput = document.getElementById('topicInput');
@@ -593,7 +564,7 @@
                     }
                 };
 
-                const geminiApiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Don't delete
+                const geminiApiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
                 const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
 
                 const geminiResponse = await fetch(geminiApiUrl, {
@@ -892,7 +863,7 @@
                         }
                     }
                 };
-                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Don't delete
+                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -991,7 +962,7 @@
                     }
                 };
 
-                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Don't delete
+                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Canvas will provide this at runtime if empty
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -1078,8 +1049,11 @@
         }
 
 
-        // Initialize Firebase when the window loads
-        window.onload = initializeFirebase;
+        // Initialize script logic (no Firebase init needed now)
+        window.onload = function() {
+            // Any initial setup that doesn't involve Firebase can go here
+            console.log("Ứng dụng Slide AI đã tải. Không cần cấu hình Firebase.");
+        };
     </script>
 </body>
 </html>
