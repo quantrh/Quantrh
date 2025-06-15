@@ -208,7 +208,7 @@
             cursor: pointer;
             padding: 10px;
             background-color: #e2e8f0;
-            border-radius: 8櫃px;
+            border-radius: 8px;
             margin-top: 15px;
             margin-bottom: 5px;
             font-weight: 600;
@@ -268,6 +268,37 @@
         }
         .message-box.scrollable p {
             margin-bottom: 10px;
+        }
+
+        /* Styles for the Scroll Up button */
+        #scrollUpButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0; /* Hidden by default */
+            transform: translateY(100px); /* Move out of view */
+            z-index: 999;
+        }
+        #scrollUpButton.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #scrollUpButton:hover {
+            background-color: #0056b3;
+            transform: translateY(-5px);
         }
     </style>
 </head>
@@ -404,6 +435,9 @@
         <button onclick="window.hideMessageBox()">OK</button>
     </div>
 
+    <!-- Nút Scroll Up -->
+    <button id="scrollUpButton" aria-label="Cuộn lên đầu trang">↑</button>
+
     <!-- Thư viện JSZip phải được tải TRƯỚC pptxgenjs vì nó là một phụ thuộc. -->
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <!-- Thư viện PptxGenJS phải được tải TRƯỚC script tùy chỉnh của bạn. -->
@@ -433,6 +467,13 @@
             messageBox.classList.remove('scrollable'); // Xóa lớp khi ẩn
         };
 
+        // Hàm cuộn đến một phần tử
+        function scrollToElement(element) {
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         // --- Các phần tử DOM ---
         const topicInput = document.getElementById('topicInput');
         const additionalNotesInput = document.getElementById('additionalNotesInput'); 
@@ -442,14 +483,14 @@
         const languageSelect = document.getElementById('languageSelect');     
         const generateButton = document.getElementById('generateButton');
         const exportPdfButton = document.getElementById('exportPdfButton'); 
-        const exportPptxButton = document.getElementById('exportPptxButton'); // Đã đổi tên từ exportWordButton
+        const exportPptxButton = document.getElementById('exportPptxButton'); 
         const generateNotesButton = document.getElementById('generateNotesButton'); 
         const generateQaButton = document.getElementById('generateQaButton');       
         const instructionsButton = document.getElementById('instructionsButton'); 
         const slidesOutput = document.getElementById('slidesOutput');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const pdfLoadingSpinner = document.getElementById('pdfLoadingSpinner'); 
-        const pptxLoadingSpinner = document.getElementById('pptxLoadingSpinner'); // Đã khôi phục spinner này
+        const pptxLoadingSpinner = document.getElementById('pptxLoadingSpinner'); 
         const notesLoadingSpinner = document.getElementById('notesLoadingSpinner'); 
         const qaLoadingSpinner = document.getElementById('qaLoadingSpinner');       
         const errorMessageDiv = document.getElementById('errorMessage');
@@ -457,14 +498,18 @@
         const speakerNotesContent = document.getElementById('speakerNotesContent'); 
         const qaOutput = document.getElementById('qaOutput');                       
         const qaContent = document.getElementById('qaContent');                     
+        const scrollUpButton = document.getElementById('scrollUpButton'); // Nút cuộn lên
 
         // --- Trình nghe sự kiện ---
         generateButton.addEventListener('click', generateSlides);
         exportPdfButton.addEventListener('click', exportPdfFile); 
-        exportPptxButton.addEventListener('click', exportPptxFile); // Đã đổi trình nghe sự kiện
+        exportPptxButton.addEventListener('click', exportPptxFile); 
         generateNotesButton.addEventListener('click', generateSpeakerNotes); 
         generateQaButton.addEventListener('click', generateQa);    
         instructionsButton.addEventListener('click', showInstructions); 
+        scrollUpButton.addEventListener('click', () => { // Thêm trình nghe sự kiện cho nút cuộn lên
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
 
         // --- Hàm Thu gọn/Mở rộng ---
         window.toggleCollapsible = function(contentId) {
@@ -508,14 +553,15 @@
             speakerNotesContent.innerHTML = ''; 
             qaContent.innerHTML = '';           
             loadingSpinner.classList.remove('hidden'); // Hiển thị spinner tải
+            scrollToElement(loadingSpinner); // Cuộn đến spinner
             pdfLoadingSpinner.classList.add('hidden'); 
-            pptxLoadingSpinner.classList.add('hidden'); // Đã khôi phục spinner
+            pptxLoadingSpinner.classList.add('hidden'); 
             notesLoadingSpinner.classList.add('hidden'); 
             qaLoadingSpinner.classList.add('hidden');     
             errorMessageDiv.classList.add('hidden'); 
             generateButton.disabled = true; 
             exportPdfButton.disabled = true; 
-            exportPptxButton.disabled = true; // Đã đổi tên
+            exportPptxButton.disabled = true; 
             generateNotesButton.disabled = true; 
             generateQaButton.disabled = true;     
 
@@ -608,7 +654,7 @@
                 loadingSpinner.classList.add('hidden');
                 generateButton.disabled = false;
                 exportPdfButton.disabled = true; 
-                exportPptxButton.disabled = true; // Đã đổi tên
+                exportPptxButton.disabled = true; 
                 generateNotesButton.disabled = true; 
                 generateQaButton.disabled = true;     
             }
@@ -626,7 +672,7 @@
                 loadingSpinner.classList.add('hidden');
                 generateButton.disabled = false;
                 exportPdfButton.disabled = true; 
-                exportPptxButton.disabled = true; // Đã đổi tên
+                exportPptxButton.disabled = true; 
                 generateNotesButton.disabled = true; 
                 generateQaButton.disabled = true;     
                 return;
@@ -747,6 +793,7 @@
 
             // Hiển thị spinner và vô hiệu hóa các nút
             pdfLoadingSpinner.classList.remove('hidden');
+            scrollToElement(pdfLoadingSpinner); // Cuộn đến spinner
             exportPdfButton.disabled = true;
             exportPptxButton.disabled = true; 
             generateButton.disabled = true;
@@ -852,7 +899,7 @@
                 // Ẩn spinner và kích hoạt lại các nút
                 pdfLoadingSpinner.classList.add('hidden');
                 exportPdfButton.disabled = false;
-                exportPptxButton.disabled = false; // Đã đổi tên
+                exportPptxButton.disabled = false; 
                 // Chỉ bật nút tạo nếu có slide được hiển thị
                 if (slidesOutput.children.length > 0) {
                    generateButton.disabled = false;
@@ -875,6 +922,7 @@
 
             // Hiển thị spinner và vô hiệu hóa các nút
             pptxLoadingSpinner.classList.remove('hidden');
+            scrollToElement(pptxLoadingSpinner); // Cuộn đến spinner
             exportPptxButton.disabled = true;
             exportPdfButton.disabled = true; 
             generateButton.disabled = true;
@@ -970,10 +1018,11 @@
             // Đặt lại nội dung và hiển thị spinner
             speakerNotesContent.innerHTML = ''; 
             notesLoadingSpinner.classList.remove('hidden');
+            scrollToElement(notesLoadingSpinner); // Cuộn đến spinner
             generateNotesButton.disabled = true;
             generateButton.disabled = true;
             exportPdfButton.disabled = true; 
-            exportPptxButton.disabled = true; // Đã đổi tên
+            exportPptxButton.disabled = true; 
             generateQaButton.disabled = true;
 
             try {
@@ -1062,7 +1111,7 @@
                 generateNotesButton.disabled = false;
                 generateButton.disabled = false;
                 exportPdfButton.disabled = false; 
-                exportPptxButton.disabled = false; // Đã đổi tên
+                exportPptxButton.disabled = false; 
                 generateQaButton.disabled = false;
             }
         }
@@ -1082,10 +1131,11 @@
             // Đặt lại nội dung và hiển thị spinner
             qaContent.innerHTML = ''; 
             qaLoadingSpinner.classList.remove('hidden');
+            scrollToElement(qaLoadingSpinner); // Cuộn đến spinner
             generateQaButton.disabled = true;
             generateButton.disabled = true;
             exportPdfButton.disabled = true; 
-            exportPptxButton.disabled = true; // Đã đổi tên
+            exportPptxButton.disabled = true; 
             generateNotesButton.disabled = true;
 
             try {
@@ -1125,7 +1175,7 @@
                     }
                 };
 
-                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+                const apiKey = ""; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -1150,7 +1200,7 @@
                     qaPairs.forEach((qa, index) => {
                         // Chuyển đổi câu hỏi và trả lời từ Markdown sang HTML
                         const formattedQuestion = window.marked.parseInline(qa.question || ''); 
-                        const formattedAnswer = window.marked.parse(qa.answer || ''); // Đã sửa lỗi
+                        const formattedAnswer = window.marked.parse(qa.answer || ''); 
                         qaHtml += `
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">Câu hỏi ${index + 1}: ${formattedQuestion}</h3>
@@ -1176,7 +1226,7 @@
                 generateQaButton.disabled = false;
                 generateButton.disabled = false;
                 exportPdfButton.disabled = false; 
-                exportPptxButton.disabled = false; // Đã đổi tên
+                exportPptxButton.disabled = false; 
                 generateNotesButton.disabled = false;
             }
         }
@@ -1220,6 +1270,15 @@
 
         window.onload = function() {
             console.log("Ứng dụng Slide AI đã tải. Không còn phụ thuộc Firebase.");
+
+            // Logic hiển thị/ẩn nút cuộn lên khi cuộn trang
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 200) { // Hiển thị nút sau khi cuộn xuống 200px
+                    scrollUpButton.classList.add('show');
+                } else {
+                    scrollUpButton.classList.remove('show');
+                }
+            });
         };
     </script>
 </body>
