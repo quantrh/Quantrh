@@ -6,7 +6,7 @@
     <title>Chat với GPT Agent</title>
     <!-- Tailwind CSS CDN để dễ dàng định kiểu -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">\
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Marked.js CDN để chuyển đổi Markdown sang HTML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <style>
@@ -240,7 +240,7 @@
             align-self: flex-start;
             background-color: #DDEBF7; /* Giữ màu trung tính cho tin nhắn bot */
             color: #333;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 44px;
         }
         .bot-message p:first-child { margin-top: 0; }
         .bot-message p:last-child { margin-bottom: 0; }
@@ -514,6 +514,10 @@
         .logout-button:hover {
             background-color: #DC2626; /* Darker red on hover */
         }
+        /* Crucial for ensuring elements hide properly */
+        .hidden {
+            display: none !important;
+        }
 
     </style>
 </head>
@@ -604,6 +608,8 @@
 
         // Global variables provided by the Canvas environment (for Supabase)
         const supabaseUrl = 'https://fietpawfxftojbmzuwei.supabase.co'; 
+        // VUI LÒNG THAY THẾ CHUỖI NÀY BẰNG KHÓA "Anon Public" CỦA DỰ ÁN SUPABASE CỦA BẠN.
+        // KHÔNG PHẢI LÀ ACCESS TOKEN.
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik'; 
 
         let supabaseClient; // Supabase Client variable
@@ -1247,8 +1253,10 @@
 
         // --- Initialization ---
         async function initializeChatAppUI(user) {
+            console.log("initializeChatAppUI called for user:", user.id);
             // Only initialize UI once per successful login
             if (isChatReady && currentUserId === user.id) {
+                console.log("Chat already ready for this user, skipping re-initialization.");
                 return;
             }
             currentUserId = user.id;
@@ -1256,7 +1264,9 @@
 
             // Hide auth and show app
             authContainer.classList.add('hidden');
+            console.log("authContainer has 'hidden' class:", authContainer.classList.contains('hidden'));
             appContainer.classList.remove('hidden');
+            console.log("appContainer does NOT have 'hidden' class:", !appContainer.classList.contains('hidden'));
 
             // Load all data for the new user
             loadDataFromLocalStorage();
@@ -1272,53 +1282,66 @@
                 chatThreads.push(defaultThread);
                 currentActiveThreadId = defaultThreadId;
                 saveDataToLocalStorage();
+                console.log("Created default thread:", defaultThread);
             } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
-                // If active thread ID is missing or invalid, default to the first thread
                 currentActiveThreadId = chatThreads[0].id;
                 saveDataToLocalStorage();
+                console.log("Set active thread to first existing thread:", currentActiveThreadId);
             }
 
             // Populate and set selected agent
             populateAgentSelect();
+            console.log("Agent select populated and set.");
 
             // Render UI components
             renderThreadList();
             renderChatWindow(); // Display messages for the active thread
+            console.log("Threads and chat window rendered.");
 
             isChatReady = true;
             showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
+            console.log("Chat system is now ready.");
         }
 
-        // Initial setup for Supabase and Auth Listener
-        document.addEventListener('DOMContentLoaded', () => { 
+        // Call the main initialization function when the window finishes loading
+        window.addEventListener('load', () => {
+            // Parse URL hash for errors on initial load (e.g., from email verification redirect)
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const errorParam = hashParams.get('error');
+            const errorDescriptionParam = hashParams.get('error_description');
+
+            if (errorParam || errorDescriptionParam) {
+                const message = `Lỗi từ Supabase: ${errorParam || 'Không rõ lỗi'}. Mô tả: ${decodeURIComponent(errorDescriptionParam || 'Không có mô tả.')}`;
+                showTempMessage(message, 'error', authMessageDiv);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            // Initial UI state. This ensures the auth screen is visible while the auth state is being determined.
+            authContainer.classList.remove('hidden');
+            appContainer.classList.add('hidden');
+            console.log("Initial UI state set: authContainer visible, appContainer hidden.");
+            updateAuthUI(); // Set initial button state for auth form
+
+            // --- IMPORTANT CHECK FOR SUPABASE ANON KEY ---
+            if (supabaseAnonKey === 'CHOOSE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE') {
+                console.error("LỖI CẤU HÌNH SUPABASE: Vui lòng thay thế 'CHOOSE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE' bằng khóa 'anon public' thực sự của dự án Supabase của bạn. Bạn có thể tìm thấy nó trong bảng điều khiển Supabase -> Project Settings -> API.");
+                showTempMessage("LỖI CẤU HÌNH: Vui lòng cập nhật khóa Supabase Anon Public trong mã nguồn!", "error", authMessageDiv);
+                return; // Stop initialization if key is not set
+            }
+
             try {
                 supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-                
                 console.log("Supabase client initialized:", supabaseClient);
-
-                // Function to wait until supabaseClient.auth is fully available
-                const waitForSupabaseAuth = () => {
-                    return new Promise((resolve) => {
-                        const checkAuth = () => {
-                            if (supabaseClient && supabaseClient.auth && typeof supabaseClient.auth.onAuthStateChanged === 'function') {
-                                console.log("Supabase auth object is ready.");
-                                resolve();
-                            } else {
-                                console.log("Waiting for Supabase auth object to be ready...");
-                                requestAnimationFrame(checkAuth); // Keep checking on the next animation frame
-                            }
-                        };
-                        requestAnimationFrame(checkAuth); // Start checking
-                    });
-                };
-
-                // Wait for auth to be ready, then attach the listener
-                waitForSupabaseAuth().then(() => {
+                
+                // Immediately attach auth state changed listener
+                if (supabaseClient && supabaseClient.auth && typeof supabaseClient.auth.onAuthStateChanged === 'function') {
+                    console.log("onAuthStateChanged is available. Attaching listener.");
                     supabaseClient.auth.onAuthStateChanged((event, session) => {
-                        console.log("Auth state changed:", event, session);
+                        console.log("onAuthStateChanged triggered. Event:", event, "Session:", session);
                         if (session && session.user) {
+                            console.log("User is signed in. Calling initializeChatAppUI.");
                             initializeChatAppUI(session.user);
                         } else {
+                            console.log("User is logged out or no session. Hiding app, showing auth.");
                             isChatReady = false;
                             currentUserId = null;
                             chatWindow.innerHTML = '';
@@ -1328,24 +1351,22 @@
                             chatMessages = [];
                             currentActiveThreadId = null;
 
-                            appContainer.classList.add('hidden');
-                            authContainer.classList.remove('hidden');
+                            appContainer.classList.add('hidden'); // Ensure app is hidden
+                            authContainer.classList.remove('hidden'); // Ensure auth is visible
+                            console.log("authContainer visibility (should be visible):", !authContainer.classList.contains('hidden'));
+                            console.log("appContainer visibility (should be hidden):", appContainer.classList.contains('hidden'));
                             showTempMessage("Vui lòng đăng nhập để tiếp tục.", "info", authMessageDiv);
                             updateAuthUI();
                         }
                     });
-                }).catch(e => {
-                    console.error("Lỗi trong quá trình chờ Supabase auth sẵn sàng:", e);
-                    showTempMessage(`Lỗi khởi tạo xác thực: ${e.message}. Vui lòng kiểm tra console để biết thêm chi tiết.`, "error", authMessageDiv);
+                } else {
+                    // This error means createClient likely failed to initialize the auth module,
+                    // most commonly due to an incorrect supabaseAnonKey or severe CDN issue.
+                    console.error("Lỗi nghiêm trọng: supabaseClient.auth.onAuthStateChanged không được định nghĩa sau khi khởi tạo client. Vui lòng kiểm tra kỹ supabaseAnonKey (phải là khóa anon public) và URL Supabase của bạn. Có thể CDN hoặc thư viện không tải đúng.");
+                    showTempMessage("Lỗi khởi tạo Supabase: Dịch vụ xác thực không khả dụng. Vui lòng kiểm tra khóa Anon Public và URL Supabase.", "error", authMessageDiv);
                     authContainer.classList.remove('hidden');
                     appContainer.classList.add('hidden');
-                });
-                
-                // Initially show auth container and hide app container
-                authContainer.classList.remove('hidden');
-                appContainer.classList.add('hidden');
-                updateAuthUI(); // Set initial button state for auth form
-
+                }
             } catch (e) {
                 console.error("Lỗi khi khởi tạo Supabase client:", e);
                 showTempMessage(`Lỗi khởi tạo Supabase: ${e.message}. Vui lòng kiểm tra URL và Anon Key.`, "error", authMessageDiv);
@@ -1353,39 +1374,6 @@
                 appContainer.classList.add('hidden');
             }
         });
-
-        // --- Event Listeners ---
-        sendButton.addEventListener('click', sendMessage);
-
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        newThreadButton.addEventListener('click', createNewThread);
-        hamburgerButton.addEventListener('click', toggleSidebar); 
-        sidebarOverlay.addEventListener('click', closeSidebar); 
-        searchInput.addEventListener('input', filterThreads); 
-        agentSelect.addEventListener('change', (e) => { // New event listener for agent selection
-            currentSelectedAgentId = e.target.value;
-            saveDataToLocalStorage();
-            showTempMessage(`Đã chọn Agent: ${e.target.options[e.target.selectedIndex].text}`, "info");
-        });
-
-        chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
-        scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
-        userManualHeader.addEventListener('click', toggleUserManual); // New: Listen for click on user manual header
-        
-        // New Auth Event Listeners
-        authMainButton.addEventListener('click', handleAuth);
-        toggleAuthModeButton.addEventListener('click', toggleAuthMode);
-        authEmailInput.addEventListener('input', updateAuthUI);
-        authPasswordInput.addEventListener('input', updateAuthUI);
-        logoutButton.addEventListener('click', handleLogout); // Logout button event listener
-
-        // Handle window resize to adjust hamburger button visibility
-        window.addEventListener('resize', updateChatHeaderTitle);
     </script>
 </body>
 </html>
