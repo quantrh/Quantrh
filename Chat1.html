@@ -610,7 +610,7 @@
         const supabaseUrl = 'https://fietpawfxftojbmzuwei.supabase.co'; 
         // VUI LÒNG THAY THẾ CHUỖI NÀY BẰNG KHÓA "Anon Public" CỦA DỰ ÁN SUPABASE CỦA BẠN.
         // KHÔNG PHẢI LÀ ACCESS TOKEN.
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik'; 
+        const supabaseAnonKey = 'YOUR_CORRECT_SUPABASE_ANON_PUBLIC_KEY_HERE'; 
 
         let supabaseClient; // Supabase Client variable
         let currentUserId = null;
@@ -1322,15 +1322,21 @@
             updateAuthUI(); // Set initial button state for auth form
 
             // --- IMPORTANT CHECK FOR SUPABASE ANON KEY ---
-            if (supabaseAnonKey === 'CHOOSE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE') {
-                console.error("LỖI CẤU HÌNH SUPABASE: Vui lòng thay thế 'CHOOSE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE' bằng khóa 'anon public' thực sự của dự án Supabase của bạn. Bạn có thể tìm thấy nó trong bảng điều khiển Supabase -> Project Settings -> API.");
-                showTempMessage("LỖI CẤU HÌNH: Vui lòng cập nhật khóa Supabase Anon Public trong mã nguồn!", "error", authMessageDiv);
+            if (supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik') {
+                const errorMessage = "LỖI CẤU HÌNH SUPABASE: Vui lòng thay thế 'YOUR_CORRECT_SUPABASE_ANON_PUBLIC_KEY_HERE' bằng khóa 'anon public' thực sự của dự án Supabase của bạn. Bạn có thể tìm thấy nó trong bảng điều khiển Supabase -> Project Settings -> API.";
+                console.error(errorMessage);
+                showTempMessage(errorMessage, "error", authMessageDiv);
+                authContainer.classList.remove('hidden'); // Ensure auth container is visible to show message
+                appContainer.classList.add('hidden');
                 return; // Stop initialization if key is not set
             }
 
             try {
+                console.log("Supabase URL:", supabaseUrl); // Log Supabase URL
                 supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
                 console.log("Supabase client initialized:", supabaseClient);
+                // Log the auth object to inspect its properties
+                console.log("supabaseClient.auth object:", supabaseClient.auth);
                 
                 // Immediately attach auth state changed listener
                 if (supabaseClient && supabaseClient.auth && typeof supabaseClient.auth.onAuthStateChanged === 'function') {
@@ -1362,8 +1368,9 @@
                 } else {
                     // This error means createClient likely failed to initialize the auth module,
                     // most commonly due to an incorrect supabaseAnonKey or severe CDN issue.
-                    console.error("Lỗi nghiêm trọng: supabaseClient.auth.onAuthStateChanged không được định nghĩa sau khi khởi tạo client. Vui lòng kiểm tra kỹ supabaseAnonKey (phải là khóa anon public) và URL Supabase của bạn. Có thể CDN hoặc thư viện không tải đúng.");
-                    showTempMessage("Lỗi khởi tạo Supabase: Dịch vụ xác thực không khả dụng. Vui lòng kiểm tra khóa Anon Public và URL Supabase.", "error", authMessageDiv);
+                    const errorMessage = "Lỗi nghiêm trọng: supabaseClient.auth.onAuthStateChanged không được định nghĩa sau khi khởi tạo client. Vui lòng kiểm tra kỹ supabaseAnonKey (phải là khóa anon public) và URL Supabase của bạn. Có thể CDN hoặc thư viện không tải đúng.";
+                    console.error(errorMessage);
+                    showTempMessage(errorMessage, "error", authMessageDiv);
                     authContainer.classList.remove('hidden');
                     appContainer.classList.add('hidden');
                 }
