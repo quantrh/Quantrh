@@ -913,13 +913,33 @@
 
         function renderAgentSelect() {
             agentSelect.innerHTML = ''; // Clear current options
-            availableAgents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent.id;
-                option.textContent = agent.name;
-                agentSelect.appendChild(option);
-            });
-            agentSelect.value = currentSelectedAgentId; // Set the currently selected agent
+            console.log('--- Bắt đầu render danh sách Agent ---');
+            console.log('Available Agents:', availableAgents); // Debug: Check content of availableAgents
+
+            if (!agentSelect) {
+                console.error("Lỗi: Không tìm thấy phần tử 'agent-select'.");
+                return;
+            }
+
+            if (availableAgents.length === 0) {
+                console.warn("Cảnh báo: Mảng 'availableAgents' rỗng. Không có Agent nào để hiển thị.");
+                // Optionally add a placeholder option or message here
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Không có Agent khả dụng';
+                defaultOption.disabled = true;
+                agentSelect.appendChild(defaultOption);
+            } else {
+                availableAgents.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.id;
+                    option.textContent = agent.name;
+                    agentSelect.appendChild(option);
+                });
+                agentSelect.value = currentSelectedAgentId; // Set the currently selected agent
+                console.log('Đã chọn Agent mặc định (hoặc từ localStorage):', agentSelect.value);
+            }
+            console.log('--- Kết thúc render danh sách Agent. Số lượng options:', agentSelect.options.length, '---');
         }
 
 
@@ -1284,23 +1304,34 @@
         }
 
         async function initializeChatApp() {
-            if (!currentUserId) return; // Ensure user is logged in
+            if (!currentUserId) {
+                console.log("initializeChatApp: currentUserId is null, skipping initialization.");
+                return; // Ensure user is logged in
+            }
             
+            console.log("initializeChatApp: Bắt đầu khởi tạo ứng dụng chat...");
             userIdDisplay.textContent = `ID người dùng: ${currentUserId}`; // Display full user ID
+            
             await loadDataFromSupabase(); // Load data from Supabase
 
             renderAgentSelect(); // Render agent options
             agentSelect.value = currentSelectedAgentId; // Ensure dropdown reflects saved choice
 
-            if (chatThreads.length === 0) {
-                // If no threads exist, create a default one
-                await createThread();
-            } else if (currentActiveThreadId) {
-                // Select the previously active thread
-                selectThread(currentActiveThreadId);
+            // Ensure a thread is selected or created
+            if (chatThreads.length > 0) {
+                console.log("initializeChatApp: Đã tìm thấy luồng chat.");
+                if (currentActiveThreadId && chatThreads.some(t => t.id === currentActiveThreadId)) {
+                    console.log("initializeChatApp: Chọn lại luồng đã hoạt động trước đó.");
+                    selectThread(currentActiveThreadId);
+                } else {
+                    console.log("initializeChatApp: Không có luồng hoạt động hợp lệ, chọn luồng gần đây nhất.");
+                    // Select the most recent thread if no valid active thread
+                    selectThread(chatThreads[0].id);
+                }
             } else {
-                // If no specific thread was active, select the most recent one
-                selectThread(chatThreads[0].id);
+                console.log("initializeChatApp: Không có luồng chat nào, tạo luồng mới mặc định.");
+                // If no threads exist after loading, create a new default one
+                await createThread();
             }
             isChatReady = true;
             userInput.focus();
@@ -1308,6 +1339,7 @@
             renderChatWindow();
             // Initial check for scroll button visibility
             checkScrollToTopButtonVisibility();
+            console.log("initializeChatApp: Hoàn tất khởi tạo ứng dụng chat.");
         }
 
 
