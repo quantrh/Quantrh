@@ -6,7 +6,7 @@
     <title>Chat với GPT Agent</title>
     <!-- Tailwind CSS CDN để dễ dàng định kiểu -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">\
     <!-- Marked.js CDN để chuyển đổi Markdown sang HTML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <style>
@@ -412,10 +412,124 @@
                 font-size: 1.3rem;
             }
         }
+
+        /* Auth Container Styles */
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+
+        .auth-container h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #006B68;
+            margin-bottom: 24px;
+        }
+
+        .auth-container input[type="email"],
+        .auth-container input[type="password"] {
+            width: 100%;
+            padding: 12px 18px;
+            border: 1px solid #D0D0D0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .auth-container input[type="email"]:focus,
+        .auth-container input[type="password"]:focus {
+            border-color: #006B68;
+        }
+
+        .auth-container button {
+            width: 100%;
+            background-color: #006B68;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s, opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            margin-bottom: 12px;
+        }
+
+        .auth-container button:hover:not(:disabled) {
+            background-color: #FFC62F;
+            color: #000;
+        }
+
+        .auth-container button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-container .toggle-auth-mode {
+            background: none;
+            border: none;
+            color: #006B68;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+        .auth-container .auth-message {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #ef4444; /* Error color */
+            text-align: center;
+        }
+        .auth-container .auth-message.success {
+            color: #10B981; /* Success color */
+        }
+        .logout-button {
+            background-color: #EF4444; /* Red color for logout */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .logout-button:hover {
+            background-color: #DC2626; /* Darker red on hover */
+        }
+
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <!-- Authentication Container -->
+    <div id="auth-container" class="auth-container">
+        <h2 id="auth-title">Đăng nhập</h2>
+        <input type="email" id="auth-email" placeholder="Email BIDV của bạn (vd: abc@bidv.com.vn)">
+        <input type="password" id="auth-password" placeholder="Mật khẩu">
+        <button id="auth-main-button">Đăng nhập</button>
+        <button id="toggle-auth-mode" class="toggle-auth-mode">Chưa có tài khoản? Đăng ký tại đây</button>
+        <div id="auth-message" class="auth-message"></div>
+    </div>
+
+    <!-- Main Chat Application Container -->
+    <div class="app-container hidden" id="app-container">
         <!-- Sidebar Overlay (for mobile) -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
@@ -448,7 +562,8 @@
                         <li><strong>Chọn Agent:</strong> Sử dụng menu thả xuống "Chọn Agent" để lựa chọn trợ lý AI phù hợp với nhu cầu của bạn (ví dụ: SmartCounterHub cho các câu hỏi về quầy giao dịch thông minh, ITBOOK cho thông tin IT, QuyHoachBoNhiem cho các vấn đề liên quan đến quy hoạch bổ nhiệm).</li>
                         <li><strong>Tìm kiếm luồng chat:</strong> Gõ từ khóa vào ô "Tìm kiếm luồng chat..." để nhanh chóng tìm lại các cuộc trò chuyện cũ.</li>
                         <li><strong>Xóa luồng chat:</strong> Nhấn biểu tượng "x" bên cạnh tên luồng chat để xóa luồng đó khỏi danh sách.</li>
-                        <li><strong>Cuộn lên đầu trang:</strong> Sử dụng nút mũi tên lên ở góc dưới bên trái để cuộn nhanh về đầu cuộc trò chuyện.</li>
+                        <li><strong>Cuộn lên đầu trang:
+</strong> Sử dụng nút mũi tên lên ở góc dưới bên trái để cuộn nhanh về đầu cuộc trò chuyện.</li>
                         <li><strong>Sử dụng trên thiết bị di động:</strong> Khi thu nhỏ màn hình, một menu hamburger (☰) sẽ xuất hiện. Nhấn vào đó để mở/đóng thanh bên chứa các luồng chat và tùy chọn Agent.</li>
                         <li><strong>Gửi tin nhắn:</strong> Gõ tin nhắn vào ô nhập liệu và nhấn Enter hoặc nút "Gửi".</li>
                     </ul>
@@ -461,6 +576,7 @@
             </div>
             <div class="user-id-display mt-4" id="user-id-display">
                 <!-- User ID will be displayed here -->
+                <button id="logout-button" class="logout-button">Đăng xuất</button>
             </div>
         </div>
 
@@ -493,6 +609,7 @@
         let supabaseClient; // Supabase Client variable
         let currentUserId = null;
         let isChatReady = false; 
+        let authMode = 'login'; // 'login' or 'register'
 
         // Arrays to store threads and messages in local memory
         let chatThreads = []; // Stores { id, name, lastMessageTimestamp }
@@ -507,34 +624,50 @@
             { name: "QuyHoachBoNhiem", id: "asst_5ALG676dm3BRVKp5Ou6txCxa" }
         ];
 
+        // Chat UI Elements
+        const appContainer = document.getElementById('app-container');
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const userIdDisplay = document.getElementById('user-id-display');
         const threadList = document.getElementById('thread-list');
         const newThreadButton = document.getElementById('new-thread-button');
-        const chatHeader = document.getElementById('chat-header'); // Changed to chat-header element
-        const chatHeaderTitleText = document.getElementById('chat-header-title-text'); // New span for title text
+        const chatHeader = document.getElementById('chat-header'); 
+        const chatHeaderTitleText = document.getElementById('chat-header-title-text'); 
         const hamburgerButton = document.getElementById('hamburger-button'); 
         const sidebarOverlay = document.getElementById('sidebar-overlay'); 
         const threadSidebar = document.getElementById('thread-sidebar'); 
         const searchInput = document.getElementById('search-input'); 
-        const agentSelect = document.getElementById('agent-select'); // New Agent Select element
-        const scrollToTopButton = document.getElementById('scroll-to-top-button'); // New Scroll to Top Button
-        const userManualHeader = document.getElementById('user-manual-header'); // New User Manual Header
-        const userManualContent = document.getElementById('user-manual-content'); // New User Manual Content
+        const agentSelect = document.getElementById('agent-select'); 
+        const scrollToTopButton = document.getElementById('scroll-to-top-button'); 
+        const userManualHeader = document.getElementById('user-manual-header'); 
+        const userManualContent = document.getElementById('user-manual-content');
+        const logoutButton = document.getElementById('logout-button');
+
+        // Auth UI Elements
+        const authContainer = document.getElementById('auth-container');
+        const authTitle = document.getElementById('auth-title');
+        const authEmailInput = document.getElementById('auth-email');
+        const authPasswordInput = document.getElementById('auth-password');
+        const authMainButton = document.getElementById('auth-main-button');
+        const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
+        const authMessageDiv = document.getElementById('auth-message');
+
 
         // --- LocalStorage Functions ---
+        // Lưu ý: Sau khi có xác thực Supabase, dữ liệu này có thể được chuyển sang DB
+        // để hỗ trợ đa thiết bị và liên tục. Hiện tại vẫn dùng localStorage cho tiện.
         function loadDataFromLocalStorage() {
             try {
-                const storedThreads = localStorage.getItem('chatThreads');
+                // Load data specific to the current authenticated user
+                const storedThreads = localStorage.getItem(`chatThreads_${currentUserId}`);
                 chatThreads = storedThreads ? JSON.parse(storedThreads) : [];
                 
-                const storedMessages = localStorage.getItem('chatMessages');
+                const storedMessages = localStorage.getItem(`chatMessages_${currentUserId}`);
                 chatMessages = storedMessages ? JSON.parse(storedMessages) : [];
 
-                currentActiveThreadId = localStorage.getItem('currentActiveThreadId');
-                currentSelectedAgentId = localStorage.getItem('currentSelectedAgentId') || availableAgents[0].id; // Load selected agent, default to first if not found
+                currentActiveThreadId = localStorage.getItem(`currentActiveThreadId_${currentUserId}`);
+                currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`) || availableAgents[0].id; // Load selected agent, default to first if not found
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu từ LocalStorage:", error);
                 chatThreads = [];
@@ -546,17 +679,26 @@
 
         function saveDataToLocalStorage() {
             try {
-                localStorage.setItem('chatThreads', JSON.stringify(chatThreads));
-                localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+                if (!currentUserId) return; // Only save if a user is logged in
+                localStorage.setItem(`chatThreads_${currentUserId}`, JSON.stringify(chatThreads));
+                localStorage.setItem(`chatMessages_${currentUserId}`, JSON.stringify(chatMessages));
                 if (currentActiveThreadId) {
-                    localStorage.setItem('currentActiveThreadId', currentActiveThreadId);
+                    localStorage.setItem(`currentActiveThreadId_${currentUserId}`, currentActiveThreadId);
                 } else {
-                    localStorage.removeItem('currentActiveThreadId');
+                    localStorage.removeItem(`currentActiveThreadId_${currentUserId}`);
                 }
-                localStorage.setItem('currentSelectedAgentId', currentSelectedAgentId); // Save selected agent ID
+                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save selected agent ID
             } catch (error) {
                 console.error("Lỗi khi lưu dữ liệu vào LocalStorage:", error);
             }
+        }
+
+        function clearLocalStorageForUser() {
+            if (!currentUserId) return;
+            localStorage.removeItem(`chatThreads_${currentUserId}`);
+            localStorage.removeItem(`chatMessages_${currentUserId}`);
+            localStorage.removeItem(`currentActiveThreadId_${currentUserId}`);
+            localStorage.removeItem(`currentSelectedAgentId_${currentUserId}`);
         }
 
         // --- UI Rendering Functions ---
@@ -659,7 +801,7 @@
         }
 
         // Function to display temporary error/success messages
-        function showTempMessage(message, type = 'info') {
+        function showTempMessage(message, type = 'info', targetElement = chatWindow) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('loading-indicator');
             messageDiv.textContent = message;
@@ -667,14 +809,16 @@
                 messageDiv.style.color = 'red';
             } else if (type === 'success') {
                 messageDiv.style.color = 'green';
+            } else if (type === 'info') {
+                messageDiv.style.color = '#888';
             }
-            chatWindow.appendChild(messageDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            targetElement.appendChild(messageDiv);
+            targetElement.scrollTop = targetElement.scrollHeight; // Scroll to the bottom if it's chatWindow
             setTimeout(() => {
-                if (chatWindow.contains(messageDiv)) { // Ensure it's still there before trying to remove
-                    chatWindow.removeChild(messageDiv);
+                if (targetElement.contains(messageDiv)) { // Ensure it's still there before trying to remove
+                    targetElement.removeChild(messageDiv);
                 }
-            }, 3000); // Disappear after 3 seconds
+            }, 5000); // Disappear after 5 seconds
         }
 
         // --- Thread Management Functions ---
@@ -714,11 +858,9 @@
             const threadToDelete = chatThreads.find(t => t.id === threadIdToDelete);
             if (!threadToDelete) return;
 
-            // IMPORTANT: As per instructions, avoid alert/confirm. For now,
-            // we'll proceed with deletion assuming user intent, but in a real app,
-            // this 'confirm' should be replaced by a custom modal UI.
-            const confirmDelete = true; // Placeholder for actual custom modal confirmation
-            if (!confirmDelete) return;
+            // In a real app, this should be replaced by a custom modal UI.
+            const userConfirmed = confirm(`Bạn có chắc chắn muốn xóa luồng "${threadToDelete.name}" không?`);
+            if (!userConfirmed) return;
 
             showTempMessage(`Đang xóa luồng "${threadToDelete.name}"...`, "info");
 
@@ -981,56 +1123,236 @@
             }
         }
 
-        // --- Initialization ---
-        async function initializeChatApp() {
-            try {
-                // Initialize Supabase Client
-                supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+        // --- Authentication Functions ---
+        function isValidBIDVEmail(email) {
+            return email.endsWith('@bidv.com.vn');
+        }
 
-                // Get or create local UserId
-                let storedUserId = localStorage.getItem('currentUserId');
-                if (!storedUserId) {
-                    storedUserId = crypto.randomUUID(); // Generate random UUID
-                    localStorage.setItem('currentUserId', storedUserId);
+        function updateAuthUI() {
+            authMessageDiv.textContent = ''; // Clear previous messages
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value.trim();
+
+            if (authMode === 'register') {
+                if (!isValidBIDVEmail(email)) {
+                    authMainButton.disabled = true;
+                    authMainButton.textContent = 'Đăng ký (email không hợp lệ)';
+                    showTempMessage("Email phải có đuôi '@bidv.com.vn'", "error", authMessageDiv);
+                } else if (password.length < 6) { // Supabase default min password length is 6
+                    authMainButton.disabled = true;
+                    authMainButton.textContent = 'Đăng ký (mật khẩu quá ngắn)';
+                    showTempMessage("Mật khẩu phải có ít nhất 6 ký tự.", "error", authMessageDiv);
                 }
-                currentUserId = storedUserId;
-                userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
-
-                // Load all data
-                loadDataFromLocalStorage();
-
-                // If no threads exist or no active thread, create a default one
-                if (chatThreads.length === 0) {
-                    const defaultThreadId = crypto.randomUUID();
-                    const defaultThread = {
-                        id: defaultThreadId,
-                        name: "Luồng chat mặc định",
-                        lastMessageTimestamp: new Date().toISOString()
-                    };
-                    chatThreads.push(defaultThread);
-                    currentActiveThreadId = defaultThreadId;
-                    saveDataToLocalStorage();
-                } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
-                    // If active thread ID is missing or invalid, default to the first thread
-                    currentActiveThreadId = chatThreads[0].id;
-                    saveDataToLocalStorage();
+                else {
+                    authMainButton.disabled = false;
+                    authMainButton.textContent = 'Đăng ký';
                 }
-
-                // Populate and set selected agent
-                populateAgentSelect();
-
-                // Render UI components
-                renderThreadList();
-                renderChatWindow(); // Display messages for the active thread
-
-                isChatReady = true;
-                showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
-
-            } catch (error) {
-                console.error("Lỗi khởi tạo ứng dụng chat:", error);
-                showTempMessage("Không thể khởi tạo ứng dụng chat. Vui lòng kiểm tra cấu hình.", "error");
+            } else { // login mode
+                if (email === '' || password === '') {
+                    authMainButton.disabled = true;
+                    authMainButton.textContent = 'Đăng nhập';
+                } else {
+                    authMainButton.disabled = false;
+                    authMainButton.textContent = 'Đăng nhập';
+                }
             }
         }
+
+        async function handleAuth() {
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value.trim();
+            authMainButton.disabled = true;
+            authMessageDiv.textContent = '';
+
+            if (authMode === 'register') {
+                if (!isValidBIDVEmail(email)) {
+                    showTempMessage("Email phải có đuôi '@bidv.com.vn'", "error", authMessageDiv);
+                    authMainButton.disabled = false;
+                    return;
+                }
+                if (password.length < 6) {
+                    showTempMessage("Mật khẩu phải có ít nhất 6 ký tự.", "error", authMessageDiv);
+                    authMainButton.disabled = false;
+                    return;
+                }
+                try {
+                    showTempMessage("Đang đăng ký...", "info", authMessageDiv);
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            emailRedirectTo: window.location.origin // Redirect back to your app after email verification
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    if (data.user) {
+                        showTempMessage("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản.", "success", authMessageDiv);
+                    } else if (data.session === null && data.user === null) {
+                        // This case often means email sent, but no direct login (e.g., if "confirm_email" is true in Supabase settings)
+                        showTempMessage("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản và đăng nhập.", "success", authMessageDiv);
+                    }
+                } catch (error) {
+                    showTempMessage(`Lỗi đăng ký: ${error.message}`, "error", authMessageDiv);
+                } finally {
+                    authMainButton.disabled = false;
+                }
+            } else { // login mode
+                try {
+                    showTempMessage("Đang đăng nhập...", "info", authMessageDiv);
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password,
+                    });
+
+                    if (error) throw error;
+                    
+                    // onAuthStateChanged will handle UI update if login is successful
+                } catch (error) {
+                    showTempMessage(`Lỗi đăng nhập: ${error.message}`, "error", authMessageDiv);
+                } finally {
+                    authMainButton.disabled = false;
+                }
+            }
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            if (authMode === 'register') {
+                authTitle.textContent = 'Đăng ký';
+                authMainButton.textContent = 'Đăng ký';
+                toggleAuthModeButton.textContent = 'Đã có tài khoản? Đăng nhập tại đây';
+            } else {
+                authTitle.textContent = 'Đăng nhập';
+                authMainButton.textContent = 'Đăng nhập';
+                toggleAuthModeButton.textContent = 'Chưa có tài khoản? Đăng ký tại đây';
+            }
+            authMessageDiv.textContent = ''; // Clear message when toggling mode
+            updateAuthUI(); // Update button state based on new mode
+        }
+
+        async function handleLogout() {
+            showTempMessage("Đang đăng xuất...", "info");
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) throw error;
+                showTempMessage("Đăng xuất thành công!", "success");
+                // onAuthStateChanged will handle UI update
+            } catch (error) {
+                console.error("Lỗi đăng xuất:", error);
+                showTempMessage(`Lỗi đăng xuất: ${error.message}`, "error");
+            }
+        }
+
+        // --- Initialization ---
+        async function initializeChatAppUI(user) {
+            // Only initialize UI once per successful login
+            if (isChatReady && currentUserId === user.id) {
+                return;
+            }
+            currentUserId = user.id;
+            userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
+
+            // Hide auth and show app
+            authContainer.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+
+            // Load all data for the new user
+            loadDataFromLocalStorage();
+
+            // If no threads exist or no active thread, create a default one
+            if (chatThreads.length === 0) {
+                const defaultThreadId = crypto.randomUUID();
+                const defaultThread = {
+                    id: defaultThreadId,
+                    name: "Luồng chat mặc định",
+                    lastMessageTimestamp: new Date().toISOString()
+                };
+                chatThreads.push(defaultThread);
+                currentActiveThreadId = defaultThreadId;
+                saveDataToLocalStorage();
+            } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                // If active thread ID is missing or invalid, default to the first thread
+                currentActiveThreadId = chatThreads[0].id;
+                saveDataToLocalStorage();
+            }
+
+            // Populate and set selected agent
+            populateAgentSelect();
+
+            // Render UI components
+            renderThreadList();
+            renderChatWindow(); // Display messages for the active thread
+
+            isChatReady = true;
+            showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
+        }
+
+        // Initial setup for Supabase and Auth Listener
+        document.addEventListener('DOMContentLoaded', () => { 
+            try {
+                supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+                
+                console.log("Supabase client initialized:", supabaseClient);
+
+                // Function to wait until supabaseClient.auth is fully available
+                const waitForSupabaseAuth = () => {
+                    return new Promise((resolve) => {
+                        const checkAuth = () => {
+                            if (supabaseClient && supabaseClient.auth && typeof supabaseClient.auth.onAuthStateChanged === 'function') {
+                                console.log("Supabase auth object is ready.");
+                                resolve();
+                            } else {
+                                console.log("Waiting for Supabase auth object to be ready...");
+                                requestAnimationFrame(checkAuth); // Keep checking on the next animation frame
+                            }
+                        };
+                        requestAnimationFrame(checkAuth); // Start checking
+                    });
+                };
+
+                // Wait for auth to be ready, then attach the listener
+                waitForSupabaseAuth().then(() => {
+                    supabaseClient.auth.onAuthStateChanged((event, session) => {
+                        console.log("Auth state changed:", event, session);
+                        if (session && session.user) {
+                            initializeChatAppUI(session.user);
+                        } else {
+                            isChatReady = false;
+                            currentUserId = null;
+                            chatWindow.innerHTML = '';
+                            threadList.innerHTML = '';
+                            userIdDisplay.textContent = '';
+                            chatThreads = [];
+                            chatMessages = [];
+                            currentActiveThreadId = null;
+
+                            appContainer.classList.add('hidden');
+                            authContainer.classList.remove('hidden');
+                            showTempMessage("Vui lòng đăng nhập để tiếp tục.", "info", authMessageDiv);
+                            updateAuthUI();
+                        }
+                    });
+                }).catch(e => {
+                    console.error("Lỗi trong quá trình chờ Supabase auth sẵn sàng:", e);
+                    showTempMessage(`Lỗi khởi tạo xác thực: ${e.message}. Vui lòng kiểm tra console để biết thêm chi tiết.`, "error", authMessageDiv);
+                    authContainer.classList.remove('hidden');
+                    appContainer.classList.add('hidden');
+                });
+                
+                // Initially show auth container and hide app container
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+                updateAuthUI(); // Set initial button state for auth form
+
+            } catch (e) {
+                console.error("Lỗi khi khởi tạo Supabase client:", e);
+                showTempMessage(`Lỗi khởi tạo Supabase: ${e.message}. Vui lòng kiểm tra URL và Anon Key.`, "error", authMessageDiv);
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        });
 
         // --- Event Listeners ---
         sendButton.addEventListener('click', sendMessage);
@@ -1054,10 +1376,14 @@
         chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
         scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
         userManualHeader.addEventListener('click', toggleUserManual); // New: Listen for click on user manual header
+        
+        // New Auth Event Listeners
+        authMainButton.addEventListener('click', handleAuth);
+        toggleAuthModeButton.addEventListener('click', toggleAuthMode);
+        authEmailInput.addEventListener('input', updateAuthUI);
+        authPasswordInput.addEventListener('input', updateAuthUI);
+        logoutButton.addEventListener('click', handleLogout); // Logout button event listener
 
-
-        // Initialize chat app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initializeChatApp);
         // Handle window resize to adjust hamburger button visibility
         window.addEventListener('resize', updateChatHeaderTitle);
     </script>
