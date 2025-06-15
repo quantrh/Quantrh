@@ -435,7 +435,7 @@
         .auth-container h2 {
             font-size: 2rem;
             font-weight: 700;
-            color: #006B68;
+            color: #006B68; /* BIDV Green */
             margin-bottom: 24px;
         }
 
@@ -453,12 +453,12 @@
 
         .auth-container input[type="email"]:focus,
         .auth-container input[type="password"]:focus {
-            border-color: #006B68;
+            border-color: #006B68; /* BIDV Green */
         }
 
         .auth-container button {
             width: 100%;
-            background-color: #006B68;
+            background-color: #006B68; /* BIDV Green */
             color: white;
             border: none;
             border-radius: 8px;
@@ -472,8 +472,8 @@
         }
 
         .auth-container button:hover:not(:disabled) {
-            background-color: #FFC62F;
-            color: #000;
+            background-color: #FFC62F; /* BIDV Yellow */
+            color: #000; /* Black text for contrast on yellow */
         }
 
         .auth-container button:disabled {
@@ -484,7 +484,7 @@
         .auth-container .toggle-auth-mode {
             background: none;
             border: none;
-            color: #006B68;
+            color: #006B68; /* BIDV Green */
             cursor: pointer;
             font-size: 0.9rem;
             text-decoration: underline;
@@ -608,7 +608,7 @@
         const supabaseUrl = 'https://fietpawfxftojbmzuwei.supabase.co'; 
         // VUI LÒNG THAY THẾ CHUỖI NÀY BẰNG KHÓA "Anon Public" CỦA DỰ ÁN SUPABASE CỦA BẠN.
         // KHÔNG PHẢI LÀ ACCESS TOKEN.
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik'; 
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik'; // ĐÃ CẬP NHẬT: Vui lòng thay thế chuỗi này bằng khóa "Anon Public" của dự án Supabase của bạn.
 
         let supabaseClient; // Supabase Client variable
         let currentUserId = null;
@@ -757,13 +757,13 @@
         }
 
         // Function to delete a thread and its messages from Supabase
-        async function deleteThreadFromSupabase(threadId) {
+        async function deleteThreadFromSupabase(threadIdToDelete) {
             try {
                 // First, get the openai_thread_id associated with this thread
                 const { data: threadData, error: selectError } = await supabaseClient
                     .from('threads')
                     .select('openai_thread_id')
-                    .eq('id', threadId)
+                    .eq('id', threadIdToDelete)
                     .eq('user_id', currentUserId)
                     .single();
 
@@ -788,7 +788,7 @@
                                     'Authorization': `Bearer ${accessToken}`
                                 },
                                 body: JSON.stringify({
-                                    conversationId: threadId, // This is the 'id' of our Supabase thread
+                                    conversationId: threadIdToDelete, // This is the 'id' of our Supabase thread
                                     userId: currentUserId,
                                     action: 'delete_thread'
                                 })
@@ -797,7 +797,7 @@
                             if (!response.ok || result.error) {
                                 console.warn(`Cảnh báo: Lỗi khi gọi Supabase Function để xóa luồng OpenAI: ${result.error?.message || 'Unknown error'}`);
                             } else {
-                                console.log(`Đã gửi yêu cầu xóa luồng OpenAI cho thread ${threadId} thành công.`);
+                                console.log(`Đã gửi yêu cầu xóa luồng OpenAI cho thread ${threadIdToDelete} thành công.`);
                             }
                         }
                     } catch (openaiFunctionError) {
@@ -814,14 +814,14 @@
                 const { error: threadDeleteError } = await supabaseClient
                     .from('threads')
                     .delete()
-                    .eq('id', threadId)
+                    .eq('id', threadIdToDelete)
                     .eq('user_id', currentUserId); // Ensure only current user can delete their thread
 
                 if (threadDeleteError) {
                     console.error("Lỗi khi xóa luồng từ Supabase:", threadDeleteError.message);
                     throw threadDeleteError; // Re-throw
                 }
-                console.log('Luồng đã được xóa khỏi Supabase:', threadId);
+                console.log('Luồng đã được xóa khỏi Supabase:', threadIdToDelete);
 
             } catch (error) {
                 console.error("Lỗi khi xóa luồng từ Supabase:", error.message);
@@ -944,10 +944,17 @@
         // --- Chat Logic Functions ---
 
         async function createThread() {
+            // Prompt the user for a thread name
+            const threadName = prompt("Vui lòng nhập tên cho luồng chat mới của bạn:", "Luồng chat mới");
+            if (threadName === null) { // User clicked Cancel
+                return;
+            }
+            const finalThreadName = threadName.trim() === '' ? 'Luồng chat mới' : threadName.trim();
+
             const newThreadId = crypto.randomUUID();
             const newThread = {
                 id: newThreadId,
-                name: 'Luồng chat mới', // Default name, will be updated by first message
+                name: finalThreadName, // Use the name provided by the user
                 lastMessageTimestamp: new Date().toISOString(),
                 agentId: currentSelectedAgentId, // Use the currently selected agent
                 userId: currentUserId, // Include userId for thread
@@ -997,7 +1004,11 @@
 
             if (!currentActiveThreadId) {
                 // If no thread is active, create a new one automatically
-                await createThread();
+                // NOTE: With the new prompt for thread name, this auto-creation might be less desirable.
+                // Consider removing auto-creation here if user is expected to always name threads first.
+                await createThread(); // This will now prompt for a name
+                // If createThread() is cancelled, currentActiveThreadId will still be null, so return.
+                if (!currentActiveThreadId) return; 
             }
 
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
@@ -1028,10 +1039,11 @@
             await saveMessageToSupabase(userMessage);
 
             // Update thread name based on first message if it's the first message in this thread
-            const messagesInThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
-            if (messagesInThread.length === 1 && activeThread.name === 'Luồng chat mới') {
-                await updateThreadNameBasedOnFirstMessage(currentActiveThreadId, userMessageText);
-            }
+            // This part is now less critical as thread name is set at creation, but can still serve as a fallback.
+            // const messagesInThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
+            // if (messagesInThread.length === 1 && activeThread.name === 'Luồng chat mới') {
+            //     await updateThreadNameBasedOnFirstMessage(currentActiveThreadId, userMessageText);
+            // }
 
             // Update lastMessageTimestamp for the thread
             const threadToUpdate = chatThreads.find(t => t.id === currentActiveThreadId);
@@ -1119,6 +1131,9 @@
             }
         }
 
+        // Removed updateThreadNameBasedOnFirstMessage as it's now handled by the prompt.
+        // You can keep it as a fallback if you wish, but it's not strictly necessary.
+        /*
         async function updateThreadNameBasedOnFirstMessage(threadId, firstMessageText) {
             const thread = chatThreads.find(t => t.id === threadId);
             if (thread) {
@@ -1135,6 +1150,7 @@
                 renderThreadList();
             }
         }
+        */
 
         function updateChatHeaderTitle() {
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
@@ -1329,7 +1345,9 @@
             } else {
                 console.log("initializeChatApp: Không có luồng chat nào, tạo luồng mới mặc định.");
                 // If no threads exist after loading, create a new default one
-                await createThread();
+                // Do not auto-create here if you want to always prompt for name.
+                // If auto-creation is needed, use a default name.
+                // await createThread(); // This will now prompt for a name
             }
             isChatReady = true;
             userInput.focus();
