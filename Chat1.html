@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat với GPT Agent</title>
+    <!-- Tailwind CSS CDN để dễ dàng định kiểu -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Marked.js CDN để chuyển đổi Markdown sang HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Font Inter hỗ trợ tiếng Việt tốt */
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0; /* Remove padding from body for full-screen effect on mobile */
+            box-sizing: border-box;
+        }
+        .app-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            height: 95vh; /* Use 95vh to give some margin from screen edges */
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative; /* Needed for hamburger menu overlay positioning */
+        }
+        /* Styles for desktop (sidebar always visible) */
+        .thread-sidebar {
+            width: 280px;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-sizing: border-box;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+        }
+        .thread-sidebar-header {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .new-thread-button {
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+        .new-thread-button:hover {
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000; /* Chữ đen để dễ đọc trên nền vàng */
+            transform: translateY(-1px);
+        }
+        .search-input, .agent-select { /* Added agent-select */
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: #fff; /* Ensure white background for dropdown */
+        }
+        .search-input:focus, .agent-select:focus { /* Added agent-select */
+            border-color: #006B68; /* Màu thương hiệu BIDV */
+        }
+        .thread-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .thread-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background-color: #cbd5e1;
+            color: #334155;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .thread-item:hover {
+            background-color: #005C5A; /* Tông màu hơi đậm hơn của BIDV primary */
+            color: #f8fafc;
+        }
+        .thread-item.active {
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 107, 104, 0.3); /* Điều chỉnh màu shadow */
+        }
+        .thread-item-name {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+        .delete-thread-button {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 5px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .delete-thread-button:hover {
+            opacity: 1;
+            color: #ef4444;
+        }
+
+        /* User Manual Section Styles */
+        .user-manual-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+        .user-manual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #334155;
+            transition: color 0.2s;
+        }
+        .user-manual-header:hover {
+            color: #006B68; /* Hover color for manual header */
+        }
+        .user-manual-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 8px; /* Add some horizontal padding */
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .user-manual-content.open {
+            max-height: 500px; /* Adjust as needed for content height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            transition: max-height 0.5s ease-in;
+        }
+        .user-manual-content ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            padding-left: 0;
+        }
+        .user-manual-content ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+            padding-left: 0;
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 280px); /* Adjust width for desktop sidebar */
+        }
+        .chat-header {
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            padding: 16px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-top-right-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .hamburger-button {
+            display: none; /* Hidden by default on desktop */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 10px;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 60;
+        }
+        .chat-header-title-text { /* New span for title text */
+            flex-grow: 1; /* Allow title text to take available space */
+            text-align: center;
+        }
+        .chat-window {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #EBF2FA;
+            position: relative;
+        }
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #C8E6C9; /* Giữ màu trung tính cho tin nhắn người dùng */
+            color: #333;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #DDEBF7; /* Giữ màu trung tính cho tin nhắn bot */
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        .bot-message p:first-child { margin-top: 0; }
+        .bot-message p:last-child { margin-bottom: 0; }
+        .bot-message pre {
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .bot-message code {
+            font-family: monospace;
+            background-color: #d0d0d0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .bot-message ul, .bot-message ol {
+            margin-left: 20px;
+            margin-bottom: 5px;
+        }
+        .bot-message li {
+            margin-bottom: 5px;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 16px;
+            border-top: 1px solid #E0E0E0;
+            background-color: #FFFFFF;
+            align-items: center;
+        }
+        .chat-input-area input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border: 1px solid #D0D0D0;
+            border-radius: 25px;
+            margin-right: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input-area input[type="text"]:focus {
+            border-color: #006B68; /* Màu thương hiệu BIDV */
+        }
+        .chat-input-area button {
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .chat-input-area button:hover {
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000; /* Chữ đen để dễ đọc trên nền vàng */
+            transform: translateY(-1px);
+        }
+        .chat-input-area button:active {
+            transform: translateY(0);
+        }
+        .loading-indicator {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+            margin-top: 10px;
+        }
+        .user-id-display {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            padding-bottom: 10px;
+            padding-top: 10px; /* Added padding to separate from thread list */
+        }
+
+        /* Scroll to Top Button */
+        #scroll-to-top-button {
+            position: absolute; /* Position relative to chat-area or body if fixed */
+            bottom: 30px; /* Adjust as needed */
+            left: 30px; /* Changed from right to left */
+            background-color: #006B68; /* Màu thương hiệu BIDV */
+            color: white;
+            border: none;
+            border-radius: 50%; /* Make it circular */
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(10px); /* Slightly below initially */
+            z-index: 10; /* Ensure it's above chat messages */
+        }
+
+        #scroll-to-top-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #scroll-to-top-button:hover {
+            background-color: #FFC62F; /* Màu thương hiệu BIDV cho hover */
+            color: #000;
+        }
+
+        /* Mobile specific styles (max-width: 768px) */
+        @media (max-width: 768px) {
+            body {
+                padding: 0; /* No padding on body for full screen */
+            }
+            .app-container {
+                border-radius: 0; /* Remove border radius on full screen */
+                height: 100vh; /* Use full viewport height */
+                max-width: 100%; /* Use full width */
+                box-shadow: none; /* Remove shadow */
+            }
+            .thread-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                transform: translateX(-100%); /* Hidden by default */
+                transition: transform 0.3s ease-in-out;
+                z-index: 50;
+                border-right: none; /* No border when hidden off-screen */
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* Shadow for when it slides in */
+                border-radius: 0; /* No border radius */
+            }
+            .thread-sidebar.open {
+                transform: translateX(0); /* Slide in */
+            }
+            .chat-area {
+                width: 100%; /* Full width for chat area */
+            }
+            .chat-header {
+                border-top-right-radius: 0; /* Remove border radius on full screen */
+                border-top-left-radius: 0; /* For mobile, header spans full width */
+            }
+            .hamburger-button {
+                display: block; /* Show hamburger button on mobile */
+            }
+            /* Overlay when sidebar is open */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 40; /* Behind sidebar, above chat content */
+                display: none; /* Hidden by default */
+            }
+            .sidebar-overlay.visible {
+                display: block;
+            }
+            /* Adjust scroll to top button for mobile */
+            #scroll-to-top-button {
+                bottom: 20px;
+                left: 20px; /* Changed from right to left */
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Overlay (for mobile) -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+        <div class="thread-sidebar" id="thread-sidebar">
+            <div class="thread-sidebar-header">
+                <span>Luồng chat</span>
+                <button id="new-thread-button" class="new-thread-button">
+                    + Luồng mới
+                </button>
+            </div>
+            <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm luồng chat...">
+            
+            <!-- Agent Selection Dropdown -->
+            <label for="agent-select" class="text-sm font-semibold text-gray-700 mb-2">Chọn Agent:</label>
+            <select id="agent-select" class="agent-select">
+                <!-- Options will be dynamically loaded here -->
+            </select>
+
+            <!-- User Manual Section -->
+            <div class="user-manual-section">
+                <div class="user-manual-header" id="user-manual-header">
+                    <span>Hướng dẫn sử dụng</span>
+                    <span>&#x25BC;</span> <!-- Down arrow unicode -->
+                </div>
+                <div class="user-manual-content" id="user-manual-content">
+                    <p>Chào mừng bạn đến với ứng dụng chat AI của BIDV!</p>
+                    <p>Để sử dụng ứng dụng hiệu quả, vui lòng tham khảo các bước sau:</p>
+                    <ul>
+                        <li><strong>Tạo luồng chat mới:</strong> Nhấn vào nút "+ Luồng mới" để bắt đầu một cuộc trò chuyện mới.</li>
+                        <li><strong>Chọn Agent:</strong> Sử dụng menu thả xuống "Chọn Agent" để lựa chọn trợ lý AI phù hợp với nhu cầu của bạn (ví dụ: SmartCounterHub cho các câu hỏi về quầy giao dịch thông minh, ITBOOK cho thông tin IT, QuyHoachBoNhiem cho các vấn đề liên quan đến quy hoạch bổ nhiệm).</li>
+                        <li><strong>Tìm kiếm luồng chat:</strong> Gõ từ khóa vào ô "Tìm kiếm luồng chat..." để nhanh chóng tìm lại các cuộc trò chuyện cũ.</li>
+                        <li><strong>Xóa luồng chat:</strong> Nhấn biểu tượng "x" bên cạnh tên luồng chat để xóa luồng đó khỏi danh sách.</li>
+                        <li><strong>Cuộn lên đầu trang:</strong> Sử dụng nút mũi tên lên ở góc dưới bên trái để cuộn nhanh về đầu cuộc trò chuyện.</li>
+                        <li><strong>Sử dụng trên thiết bị di động:</strong> Khi thu nhỏ màn hình, một menu hamburger (☰) sẽ xuất hiện. Nhấn vào đó để mở/đóng thanh bên chứa các luồng chat và tùy chọn Agent.</li>
+                        <li><strong>Gửi tin nhắn:</strong> Gõ tin nhắn vào ô nhập liệu và nhấn Enter hoặc nút "Gửi".</li>
+                    </ul>
+                    <p>Nếu bạn có bất kỳ câu hỏi nào khác, đừng ngần ngại hỏi Agent của bạn!</p>
+                </div>
+            </div>
+            
+            <div class="thread-list" id="thread-list">
+                <!-- Thread items will be rendered here -->
+            </div>
+            <div class="user-id-display mt-4" id="user-id-display">
+                <!-- User ID will be displayed here -->
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header" id="chat-header">
+                <button id="hamburger-button" class="hamburger-button">☰</button>
+                <span id="chat-header-title-text">Chat với GPT Agent</span> <!-- Updated ID for title text -->
+            </div>
+            <div class="chat-window" id="chat-window">
+                <!-- Messages will be displayed here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
+                <button id="send-button">Gửi</button>
+            </div>
+            <!-- Scroll to Top Button -->
+            <button id="scroll-to-top-button" title="Cuộn lên đầu trang">&#x2191;</button> <!-- Up arrow Unicode -->
+        </div>
+    </div>
+
+    <!-- MAIN SCRIPT BLOCK -->
+    <script type="module">
+        // Supabase Client SDK
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Global variables provided by the Canvas environment (for Supabase)
+        const supabaseUrl = 'https://fietpawfxftojbmzuwei.supabase.co'; 
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZXRwYXdmeGZ0b2pibXp1d2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NDU2MDAsImV4cCI6MjA2MjQyMTYwMH0.ANi4fxJ9pyO_5d-DCTFpHrPaZEHwSYjGnpXtf6u-Rik'; 
+
+        let supabaseClient; // Supabase Client variable
+        let currentUserId = null;
+        let isChatReady = false; 
+
+        // Arrays to store threads and messages in local memory
+        let chatThreads = []; // Stores { id, name, lastMessageTimestamp }
+        let chatMessages = []; // Stores { text, senderId, timestamp, type, threadId }
+        let currentActiveThreadId = null;
+        let currentSelectedAgentId = null; // New variable to store selected agent ID
+
+        // Define available agents
+        const availableAgents = [
+            { name: "SmartCounterHub", id: "asst_o8G2LqrbzqP73ZaQQKBGYSqj" },
+            { name: "ITBOOK", id: "asst_iyjtFwcQQlUhwNBI8DZLPZ5A" },
+            { name: "QuyHoachBoNhiem", id: "asst_5ALG676dm3BRVKp5Ou6txCxa" }
+        ];
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const threadList = document.getElementById('thread-list');
+        const newThreadButton = document.getElementById('new-thread-button');
+        const chatHeader = document.getElementById('chat-header'); // Changed to chat-header element
+        const chatHeaderTitleText = document.getElementById('chat-header-title-text'); // New span for title text
+        const hamburgerButton = document.getElementById('hamburger-button'); 
+        const sidebarOverlay = document.getElementById('sidebar-overlay'); 
+        const threadSidebar = document.getElementById('thread-sidebar'); 
+        const searchInput = document.getElementById('search-input'); 
+        const agentSelect = document.getElementById('agent-select'); // New Agent Select element
+        const scrollToTopButton = document.getElementById('scroll-to-top-button'); // New Scroll to Top Button
+        const userManualHeader = document.getElementById('user-manual-header'); // New User Manual Header
+        const userManualContent = document.getElementById('user-manual-content'); // New User Manual Content
+
+        // --- LocalStorage Functions ---
+        function loadDataFromLocalStorage() {
+            try {
+                const storedThreads = localStorage.getItem('chatThreads');
+                chatThreads = storedThreads ? JSON.parse(storedThreads) : [];
+                
+                const storedMessages = localStorage.getItem('chatMessages');
+                chatMessages = storedMessages ? JSON.parse(storedMessages) : [];
+
+                currentActiveThreadId = localStorage.getItem('currentActiveThreadId');
+                currentSelectedAgentId = localStorage.getItem('currentSelectedAgentId') || availableAgents[0].id; // Load selected agent, default to first if not found
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu từ LocalStorage:", error);
+                chatThreads = [];
+                chatMessages = [];
+                currentActiveThreadId = null;
+                currentSelectedAgentId = availableAgents[0].id; // Default to first agent on error
+            }
+        }
+
+        function saveDataToLocalStorage() {
+            try {
+                localStorage.setItem('chatThreads', JSON.stringify(chatThreads));
+                localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+                if (currentActiveThreadId) {
+                    localStorage.setItem('currentActiveThreadId', currentActiveThreadId);
+                } else {
+                    localStorage.removeItem('currentActiveThreadId');
+                }
+                localStorage.setItem('currentSelectedAgentId', currentSelectedAgentId); // Save selected agent ID
+            } catch (error) {
+                console.error("Lỗi khi lưu dữ liệu vào LocalStorage:", error);
+            }
+        }
+
+        // --- UI Rendering Functions ---
+
+        // Function to display messages in the chat window
+        function addMessageToUI(message, sender, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-bubble');
+
+            if (sender === currentUserId) {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = message; // User messages do not need Markdown conversion
+            } else {
+                messageDiv.classList.add('bot-message');
+                messageDiv.innerHTML = marked.parse(message); // Convert Markdown to HTML for bot messages
+            }
+
+            const time = document.createElement('span');
+            time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
+            if (timestamp) {
+                const date = new Date(timestamp);
+                if (!isNaN(date)) {
+                    time.textContent = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                }
+            } else {
+                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            }
+            messageDiv.appendChild(time);
+            
+            chatWindow.appendChild(messageDiv);
+        }
+
+        function renderChatWindow() {
+            chatWindow.innerHTML = ''; // Clear current messages
+            const messagesForCurrentThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
+            messagesForCurrentThread.forEach(msg => {
+                addMessageToUI(msg.text, msg.senderId, msg.timestamp);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
+            updateChatHeaderTitle(); // Update header title and hamburger button visibility
+            checkScrollToTopButtonVisibility(); // Check button visibility after rendering
+        }
+
+        function renderThreadList(threadsToRender = chatThreads) { // Added parameter for filtered threads
+            threadList.innerHTML = ''; // Clear current thread list
+            threadsToRender.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
+
+            threadsToRender.forEach(thread => {
+                const threadItem = document.createElement('div');
+                threadItem.id = `thread-${thread.id}`;
+                threadItem.classList.add('thread-item', 'relative');
+                if (thread.id === currentActiveThreadId) {
+                    threadItem.classList.add('active');
+                }
+
+                const threadNameSpan = document.createElement('span');
+                threadNameSpan.classList.add('thread-item-name');
+                threadNameSpan.textContent = thread.name;
+                threadItem.appendChild(threadNameSpan);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-thread-button');
+                deleteButton.innerHTML = '&times;'; // HTML entity for multiplication sign (X)
+                deleteButton.title = 'Xóa luồng chat';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent thread selection when deleting
+                    deleteThread(thread.id);
+                });
+                threadItem.appendChild(deleteButton);
+
+                threadItem.addEventListener('click', () => selectThread(thread.id));
+                threadList.appendChild(threadItem);
+            });
+        }
+
+        function updateChatHeaderTitle() {
+            const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+            chatHeaderTitleText.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
+            
+            // Ensure hamburger button is visible in header when on mobile, hidden on desktop
+            if (window.innerWidth <= 768) {
+                hamburgerButton.style.display = 'block';
+            } else {
+                hamburgerButton.style.display = 'none';
+            }
+        }
+
+        function populateAgentSelect() {
+            agentSelect.innerHTML = ''; // Clear existing options
+            availableAgents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.id;
+                option.textContent = agent.name;
+                agentSelect.appendChild(option);
+            });
+            // Set the selected agent in the dropdown
+            agentSelect.value = currentSelectedAgentId;
+        }
+
+        // Function to display temporary error/success messages
+        function showTempMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('loading-indicator');
+            messageDiv.textContent = message;
+            if (type === 'error') {
+                messageDiv.style.color = 'red';
+            } else if (type === 'success') {
+                messageDiv.style.color = 'green';
+            }
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            setTimeout(() => {
+                if (chatWindow.contains(messageDiv)) { // Ensure it's still there before trying to remove
+                    chatWindow.removeChild(messageDiv);
+                }
+            }, 3000); // Disappear after 3 seconds
+        }
+
+        // --- Thread Management Functions ---
+        function createNewThread() {
+            const threadName = prompt("Nhập tên cho luồng chat mới:", `Luồng chat mới ${chatThreads.length + 1}`);
+            if (threadName === null || threadName.trim() === '') {
+                showTempMessage("Tạo luồng chat bị hủy.", "info");
+                return;
+            }
+            const newThreadId = crypto.randomUUID();
+            const newThread = {
+                id: newThreadId,
+                name: threadName.trim(),
+                lastMessageTimestamp: new Date().toISOString()
+            };
+            chatThreads.push(newThread);
+            currentActiveThreadId = newThreadId;
+            saveDataToLocalStorage();
+            renderThreadList();
+            renderChatWindow(); // Clear chat window and prepare for new thread
+            showTempMessage(`Đã tạo luồng chat: "${newThread.name}"`, "success");
+            closeSidebar(); // Close sidebar after creating a new thread
+        }
+
+        function selectThread(threadId) {
+            if (currentActiveThreadId === threadId) return; // Already active
+
+            currentActiveThreadId = threadId;
+            saveDataToLocalStorage();
+            renderThreadList(); // Update active class
+            renderChatWindow(); // Display messages for the selected thread
+            showTempMessage(`Đã chuyển sang luồng: "${chatThreads.find(t => t.id === threadId)?.name}"`, "info");
+            closeSidebar(); // Close sidebar after selecting a thread
+        }
+
+        async function deleteThread(threadIdToDelete) {
+            const threadToDelete = chatThreads.find(t => t.id === threadIdToDelete);
+            if (!threadToDelete) return;
+
+            // IMPORTANT: As per instructions, avoid alert/confirm. For now,
+            // we'll proceed with deletion assuming user intent, but in a real app,
+            // this 'confirm' should be replaced by a custom modal UI.
+            const confirmDelete = true; // Placeholder for actual custom modal confirmation
+            if (!confirmDelete) return;
+
+            showTempMessage(`Đang xóa luồng "${threadToDelete.name}"...`, "info");
+
+            try {
+                // Step 1: Delete from Supabase Function (which will delete from OpenAI and Supabase DB)
+                const serverDeleteSuccess = await deleteOpenAIThreadOnServer(threadIdToDelete);
+
+                if (!serverDeleteSuccess) {
+                    throw new Error("Không thể xóa luồng chat trên máy chủ.");
+                }
+
+                // Step 2: Remove messages belonging to this thread from local storage
+                chatMessages = chatMessages.filter(msg => msg.threadId !== threadIdToDelete);
+                
+                // Step 3: Remove the thread itself from local storage
+                chatThreads = chatThreads.filter(thread => thread.id !== threadIdToDelete);
+
+                if (currentActiveThreadId === threadIdToDelete) {
+                    // If the deleted thread was active, select the first available thread
+                    // or create a new default one if no threads are left
+                    if (chatThreads.length > 0) {
+                        currentActiveThreadId = chatThreads[0].id;
+                    } else {
+                        currentActiveThreadId = null; // No active thread, will create default on next load
+                    }
+                }
+                saveDataToLocalStorage();
+                renderThreadList();
+                renderChatWindow(); // Update chat window based on new active thread or empty
+                showTempMessage(`Đã xóa luồng chat: "${threadToDelete.name}"`, "success");
+
+            } catch (error) {
+                console.error('Lỗi khi xóa luồng chat:', error);
+                showTempMessage(`Lỗi khi xóa luồng: ${error.message}`, "error");
+            }
+        }
+
+        // --- API Interaction Function ---
+        async function getGPTReply(message, conversationId) {
+            const functionName = 'chat-with-gpt';
+            const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+            // Use the currently selected agent ID
+            const gptAssistantId = currentSelectedAgentId; 
+
+            const payload = {
+                message: message, 
+                userId: currentUserId,
+                assistantId: gptAssistantId,
+                conversationId: conversationId, // Pass the thread ID as conversationId
+                action: 'send_message' // Explicitly define action
+            };
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey, 
+                        'Authorization': `Bearer ${supabaseAnonKey}` 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                    } catch (parseError) {
+                        errorDetails += ` - ${response.statusText}`;
+                    }
+                    throw new Error(`Lỗi từ Supabase Function: ${errorDetails}`);
+                }
+
+                const data = await response.json();
+                if (data && typeof data.reply === 'string') {
+                    return data.reply;
+                } else {
+                    throw new Error('Phản hồi không hợp lệ từ Supabase Function (thiếu trường "reply").');
+                }
+            } catch (error) {
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                    throw new Error('Không thể kết nối đến Supabase Function. Vui lòng kiểm tra URL, Anon Key, và cấu hình CORS trên Supabase.');
+                } else {
+                    console.error('Lỗi khi gọi Supabase Function:', error);
+                    throw new Error(`Không thể nhận phản hồi từ GPT Agent thông qua Supabase: ${error.message}.`);
+                }
+            }
+        }
+
+        // New function to delete OpenAI thread on server
+        async function deleteOpenAIThreadOnServer(conversationId) {
+            const functionName = 'chat-with-gpt'; // Or a dedicated delete function
+            const backendUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+
+            const payload = {
+                userId: currentUserId,
+                conversationId: conversationId,
+                action: 'delete_thread' // Action to tell the Supabase function what to do
+            };
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                    } catch (parseError) {
+                        errorDetails += ` - ${response.statusText}`;
+                    }
+                    console.error('Lỗi khi gọi Supabase Function để xóa luồng:', errorDetails);
+                    return false; // Indicate failure
+                }
+
+                const data = await response.json();
+                if (data && data.success) {
+                    return true; // Indicate success
+                } else {
+                    console.error('Phản hồi không thành công từ Supabase Function khi xóa luồng:', data);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Lỗi khi gọi Supabase Function để xóa luồng:', error);
+                return false;
+            }
+        }
+
+        // --- Message Sending Logic ---
+        async function sendMessage() {
+            if (!isChatReady || !currentActiveThreadId) {
+                showTempMessage("Hệ thống chat chưa sẵn sàng hoặc chưa có luồng chat được chọn. Vui lòng đợi hoặc tạo luồng chat mới.", "error");
+                return;
+            }
+            if (!currentSelectedAgentId) {
+                showTempMessage("Vui lòng chọn một Agent để bắt đầu trò chuyện.", "error");
+                return;
+            }
+
+            const message = userInput.value.trim();
+            if (message === '') {
+                return;
+            }
+
+            userInput.value = ''; // Clear input field
+            sendButton.disabled = true; // Disable send button
+            showTempMessage("Đang gửi tin nhắn...", "info");
+
+            try {
+                // Add user message to local array
+                const userMessage = {
+                    text: message,
+                    senderId: currentUserId,
+                    timestamp: new Date().toISOString(), 
+                    type: 'user',
+                    threadId: currentActiveThreadId, // Associate message with active thread
+                };
+                chatMessages.push(userMessage);
+                addMessageToUI(userMessage.text, userMessage.senderId, userManualHeader.timestamp); 
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom after user message
+
+                // Update last message timestamp for the active thread
+                const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+                if (activeThread) {
+                    activeThread.lastMessageTimestamp = userMessage.timestamp;
+                }
+                renderThreadList(); // Re-render to update sort order if necessary
+
+                saveDataToLocalStorage();
+
+                // Call GPT Agent and get response, passing current thread ID
+                const gptReply = await getGPTReply(message, currentActiveThreadId);
+
+                // Add GPT response to local array
+                const botMessage = {
+                    text: gptReply,
+                    senderId: 'gpt_agent', 
+                    timestamp: new Date().toISOString(), 
+                    type: 'bot',
+                    threadId: currentActiveThreadId, // Associate message with active thread
+                };
+                chatMessages.push(botMessage);
+                addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp); 
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom after bot message
+
+                // Update last message timestamp for the active thread again after bot reply
+                if (activeThread) {
+                    activeThread.lastMessageTimestamp = botMessage.timestamp;
+                }
+                renderThreadList(); 
+
+                saveDataToLocalStorage();
+
+                showTempMessage("Tin nhắn đã được gửi!", "success");
+
+            } catch (error) {
+                console.error('Lỗi khi gửi/nhận tin nhắn:', error);
+                showTempMessage(`Lỗi: ${error.message}`, "error");
+            } finally {
+                sendButton.disabled = false; // Re-enable send button
+            }
+        }
+
+        // --- Sidebar & Search Logic ---
+        function toggleSidebar() {
+            threadSidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('visible');
+        }
+
+        function closeSidebar() {
+            threadSidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('visible');
+        }
+
+        function filterThreads() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filtered = chatThreads.filter(thread => 
+                thread.name.toLowerCase().includes(searchTerm)
+            );
+            renderThreadList(filtered);
+        }
+
+        // --- Scroll to Top Button Logic ---
+        function checkScrollToTopButtonVisibility() {
+            // chatWindow.scrollTop là vị trí hiện tại của thanh cuộn từ trên xuống.
+            // chatWindow.scrollHeight là tổng chiều cao nội dung có thể cuộn.
+            // chatWindow.clientHeight là chiều cao hiển thị của cửa sổ chat.
+            // Nếu nội dung chat cao hơn chiều cao hiển thị và người dùng đã cuộn xuống một khoảng nhất định
+            if (chatWindow.scrollHeight > chatWindow.clientHeight && chatWindow.scrollTop > 200) { 
+                scrollToTopButton.classList.add('visible');
+            } else {
+                scrollToTopButton.classList.remove('visible');
+            }
+        }
+
+        function scrollToTop() {
+            chatWindow.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Smooth scroll
+            });
+        }
+
+        // --- User Manual Logic ---
+        function toggleUserManual() {
+            userManualContent.classList.toggle('open');
+            const arrow = userManualHeader.querySelector('span:last-child');
+            if (userManualContent.classList.contains('open')) {
+                arrow.innerHTML = '&#x25B2;'; // Up arrow
+            } else {
+                arrow.innerHTML = '&#x25BC;'; // Down arrow
+            }
+        }
+
+        // --- Initialization ---
+        async function initializeChatApp() {
+            try {
+                // Initialize Supabase Client
+                supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+                // Get or create local UserId
+                let storedUserId = localStorage.getItem('currentUserId');
+                if (!storedUserId) {
+                    storedUserId = crypto.randomUUID(); // Generate random UUID
+                    localStorage.setItem('currentUserId', storedUserId);
+                }
+                currentUserId = storedUserId;
+                userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
+
+                // Load all data
+                loadDataFromLocalStorage();
+
+                // If no threads exist or no active thread, create a default one
+                if (chatThreads.length === 0) {
+                    const defaultThreadId = crypto.randomUUID();
+                    const defaultThread = {
+                        id: defaultThreadId,
+                        name: "Luồng chat mặc định",
+                        lastMessageTimestamp: new Date().toISOString()
+                    };
+                    chatThreads.push(defaultThread);
+                    currentActiveThreadId = defaultThreadId;
+                    saveDataToLocalStorage();
+                } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                    // If active thread ID is missing or invalid, default to the first thread
+                    currentActiveThreadId = chatThreads[0].id;
+                    saveDataToLocalStorage();
+                }
+
+                // Populate and set selected agent
+                populateAgentSelect();
+
+                // Render UI components
+                renderThreadList();
+                renderChatWindow(); // Display messages for the active thread
+
+                isChatReady = true;
+                showTempMessage("Hệ thống chat đã sẵn sàng!", "success");
+
+            } catch (error) {
+                console.error("Lỗi khởi tạo ứng dụng chat:", error);
+                showTempMessage("Không thể khởi tạo ứng dụng chat. Vui lòng kiểm tra cấu hình.", "error");
+            }
+        }
+
+        // --- Event Listeners ---
+        sendButton.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        newThreadButton.addEventListener('click', createNewThread);
+        hamburgerButton.addEventListener('click', toggleSidebar); 
+        sidebarOverlay.addEventListener('click', closeSidebar); 
+        searchInput.addEventListener('input', filterThreads); 
+        agentSelect.addEventListener('change', (e) => { // New event listener for agent selection
+            currentSelectedAgentId = e.target.value;
+            saveDataToLocalStorage();
+            showTempMessage(`Đã chọn Agent: ${e.target.options[e.target.selectedIndex].text}`, "info");
+        });
+
+        chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
+        scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
+        userManualHeader.addEventListener('click', toggleUserManual); // New: Listen for click on user manual header
+
+
+        // Initialize chat app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeChatApp);
+        // Handle window resize to adjust hamburger button visibility
+        window.addEventListener('resize', updateChatHeaderTitle);
+    </script>
+</body>
+</html>
