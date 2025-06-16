@@ -197,6 +197,20 @@
             padding-left: 50px; /* Space for hamburger button */
             padding-right: 16px; /* Consistent padding on the right */
         }
+        .hamburger-button {
+            display: none; /* Hidden by default on desktop */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 10px;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 60;
+        }
         .chat-header-content {
             display: flex;
             align-items: center;
@@ -274,7 +288,7 @@
         .chat-input-area {
             display: flex;
             padding: 16px;
-            border-top: 1px solid #E0E0D0;
+            border-top: 1px solid #E0E0E0;
             background-color: #FFFFFF;
             align-items: center;
         }
@@ -1384,9 +1398,7 @@
                         currentUserId = session.user.id;
                         // Check if email is confirmed
                         if (session.user.email_confirmed_at) {
-                            // Load data for the authenticated user and then render UI
-                            await fetchAndSetRunnerCredentials(); // Fetch runner credentials
-                            loadDataFromLocalStorage(); // Load chat threads and messages
+                            loadDataFromLocalStorage(); // Load data for the authenticated user
 
                             // Ensure a default thread exists or select an existing one
                             if (chatThreads.length === 0) {
@@ -1407,8 +1419,6 @@
                             
                             populateAgentSelect();
                             renderThreadList();
-                            // Call renderCredentialsUI AFTER allRunnerCredentials is set and currentAppUserId is confirmed
-                            await renderCredentialsUI(); 
                             renderChatWindow();
                             showToast("Đăng nhập thành công!", "success"); // Show success toast on confirmed login
                             isChatReady = true; // Only set to true if email is confirmed
@@ -1428,9 +1438,6 @@
                         isChatReady = false;
                         renderThreadList(); // Render empty lists
                         renderChatWindow(); // Clear chat window
-                        // Clear allRunnerCredentials and renderCredentialsUI when logged out
-                        allRunnerCredentials = [];
-                        await renderCredentialsUI(); // Re-render with empty list
                         // showToast is handled by signOutUser or initial check, no need here.
                     }
                     updateUIForAuthState(); // This will show/hide the auth modal based on isChatReady and currentUserId
@@ -1441,8 +1448,7 @@
                 if (user) {
                     currentUserId = user.id;
                     if (user.email_confirmed_at) {
-                        await fetchAndSetRunnerCredentials(); // Fetch runner credentials on initial load
-                        loadDataFromLocalStorage(); // Load chat threads and messages
+                        loadDataFromLocalStorage();
 
                         // Ensure a default thread exists or select an existing one for initial load
                         if (chatThreads.length === 0) {
@@ -1462,6 +1468,116 @@
 
                         populateAgentSelect();
                         renderThreadList();
-                        await renderCredentialsUI(); // Render credentials UI on initial load
                         renderChatWindow();
-                        isChatReady = true; // Mark chat as ready for initial authenticated u
+                        isChatReady = true; // Mark chat as ready for initial authenticated user
+                    } else {
+                        currentUserId = null;
+                        isChatReady = false; // Chat is not ready if email not confirmed
+                        authMessageDiv.textContent = 'Vui lòng kiểm tra email của bạn để xác thực tài khoản.';
+                    }
+                } else {
+                    currentUserId = null;
+                    isChatReady = false; // Chat is not ready if not authenticated
+                }
+                updateUIForAuthState(); // Update UI based on initial auth state
+            } catch (error) {
+                console.error("Lỗi khởi tạo ứng dụng chat:", error);
+                showToast("Không thể khởi tạo ứng dụng chat. Vui lòng kiểm tra cấu hình.", "error");
+                isChatReady = false; // Ensure chat is not ready on error
+                toggleChatControls(false); // Keep controls disabled
+                updateUIForAuthState(); // Ensure auth modal is shown
+            }
+        }
+
+        // --- Event Listeners ---
+        sendButton.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendButton.disabled) { // Check if send button is not disabled
+                sendMessage();
+            }
+        });
+
+        newThreadButton.addEventListener('click', createNewThread);
+        hamburgerButton.addEventListener('click', toggleSidebar); 
+        sidebarOverlay.addEventListener('click', closeSidebar); 
+        searchInput.addEventListener('input', filterThreads); 
+        agentSelect.addEventListener('change', (e) => { // New event listener for agent selection
+            currentSelectedAgentId = e.target.value;
+            saveDataToLocalStorage();
+            showToast(`Đã chọn Agent: ${e.target.options[e.target.selectedIndex].text}`, "info");
+        });
+
+        chatWindow.addEventListener('scroll', checkScrollToTopButtonVisibility); // New: Listen for scroll on chat window
+        scrollToTopButton.addEventListener('click', scrollToTop); // New: Listen for click on scroll to top button
+        userManualHeader.addEventListener('click', toggleUserManual); // New: Listen for click on user manual header
+        logoutButton.addEventListener('click', signOutUser); // Logout button listener
+
+        // Auth Modal Event Listeners
+        authSubmitButton.addEventListener('click', () => {
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value.trim();
+            if (!email || !password) {
+                authMessageDiv.textContent = 'Vui lòng nhập email và mật khẩu.';
+                return;
+            }
+            if (isRegisterMode) {
+                signUpUser(email, password);
+            } else {
+                signInUser(email, password);
+            }
+        });
+
+        toggleAuthModeButton.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            authMessageDiv.textContent = '';
+            authEmailInput.value = ''; // Clear email input on mode toggle for fresh validation
+            authPasswordInput.value = ''; // Clear password as well
+
+            if (isRegisterMode) {
+                authModeTitle.textContent = 'Đăng ký';
+                authSubmitButton.textContent = 'Đăng ký';
+                toggleAuthModeButton.textContent = 'Đã có tài khoản? Đăng nhập';
+                authSubmitButton.disabled = true; // Disable until valid BIDV email is entered
+            } else {
+                authModeTitle.textContent = 'Đăng nhập';
+                authSubmitButton.textContent = 'Đăng nhập';
+                toggleAuthModeButton.textContent = 'Chưa có tài khoản? Đăng ký';
+                authSubmitButton.disabled = false; // Enable for login by default, validation happens on submit
+            }
+        });
+
+        // Add input event listener for email to control registration button state
+        authEmailInput.addEventListener('input', () => {
+            if (isRegisterMode) {
+                if (authEmailInput.value.endsWith('@bidv.com.vn')) {
+                    authSubmitButton.disabled = false;
+                    authMessageDiv.textContent = '';
+                } else {
+                    authSubmitButton.disabled = true;
+                    authMessageDiv.textContent = 'Email phải có đuôi @bidv.com.vn để đăng ký.';
+                }
+            } else {
+                // For login mode, enable the button as domain restriction is only for registration
+                authSubmitButton.disabled = false; 
+                authMessageDiv.textContent = ''; // Clear message for login mode if user types
+            }
+        });
+
+        // New Thread Modal Event Listeners
+        confirmNewThreadButton.addEventListener('click', createThreadConfirmed);
+        cancelNewThreadButton.addEventListener('click', cancelThreadCreation);
+        newThreadNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                createThreadConfirmed();
+            }
+        });
+
+
+        // Initialize chat app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeChatApp);
+        // Handle window resize to adjust hamburger button visibility
+        window.addEventListener('resize', updateChatHeaderTitle);
+    </script>
+</body>
+</html>
