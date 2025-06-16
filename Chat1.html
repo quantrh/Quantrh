@@ -662,7 +662,10 @@
 
         // Function to load threads and messages from Supabase for the current user
         async function loadDataFromSupabase() {
-            if (!currentUserId) return;
+            if (!currentUserId) {
+                console.warn("loadDataFromSupabase: currentUserId is null. Cannot load data.");
+                return;
+            }
 
             try {
                 // Fetch threads
@@ -685,18 +688,26 @@
                     userId: thread.user_id,
                     openaiThreadId: thread.openai_thread_id
                 }));
+                console.log('loadDataFromSupabase: Đã tải luồng chat:', chatThreads);
 
                 // Fetch messages
-                const { data: messages, error: messagesError } = await supabaseClient
-                    .from('messages')
-                    .select('*')
-                    .in('thread_id', chatThreads.map(t => t.id));
+                // Only fetch messages if there are threads to query for
+                if (chatThreads.length > 0) {
+                    const { data: messages, error: messagesError } = await supabaseClient
+                        .from('messages')
+                        .select('*')
+                        .in('thread_id', chatThreads.map(t => t.id));
 
-                if (messagesError) {
-                    console.error("Lỗi khi tải tin nhắn từ Supabase:", messagesError.message);
-                    throw messagesError;
+                    if (messagesError) {
+                        console.error("Lỗi khi tải tin nhắn từ Supabase:", messagesError.message);
+                        throw messagesError;
+                    }
+                    chatMessages = messages || [];
+                    console.log('loadDataFromSupabase: Đã tải tin nhắn:', chatMessages);
+                } else {
+                    chatMessages = [];
+                    console.log('loadDataFromSupabase: Không có luồng chat, bỏ qua tải tin nhắn.');
                 }
-                chatMessages = messages || [];
                 
                 // Load active thread and selected agent from local storage (or default)
                 currentActiveThreadId = localStorage.getItem(`currentActiveThreadId_${currentUserId}`);
@@ -707,9 +718,9 @@
                     currentActiveThreadId = null;
                 }
 
-                console.log('Dữ liệu đã được tải từ Supabase.');
+                console.log('Dữ liệu đã được tải từ Supabase hoàn tất.');
             } catch (error) {
-                console.error("Lỗi khi tải dữ liệu từ Supabase:", error.message);
+                console.error("Lỗi TỔNG QUAN khi tải dữ liệu từ Supabase:", error.message);
                 chatThreads = [];
                 chatMessages = [];
                 currentActiveThreadId = null;
@@ -720,6 +731,7 @@
 
         // Function to save or update a thread in Supabase
         async function saveThreadToSupabase(thread) {
+            console.log("saveThreadToSupabase: Đang cố gắng lưu/cập nhật luồng:", thread);
             try {
                 const { data, error } = await supabaseClient
                     .from('threads')
@@ -733,17 +745,20 @@
                     }, { onConflict: 'id' });
 
                 if (error) {
-                    console.error("Lỗi khi lưu luồng vào Supabase:", error.message);
-                    throw error; // Re-throw
+                    console.error("saveThreadToSupabase: LỖI KHI LƯU LUỒNG VÀO SUPABASE:", error.message);
+                    throw error; // Re-throw để được bắt bởi hàm gọi
                 }
-                console.log('Luồng đã được lưu vào Supabase:', thread.id);
+                console.log('saveThreadToSupabase: Luồng đã được lưu vào Supabase thành công:', data);
+                return data;
             } catch (error) {
-                console.error("Lỗi khi lưu luồng vào Supabase:", error.message);
+                console.error("saveThreadToSupabase: Lỗi trong catch block khi lưu luồng vào Supabase:", error.message);
+                throw error; // Re-throw để hàm gọi có thể xử lý
             }
         }
 
         // Function to save a message to Supabase
         async function saveMessageToSupabase(message) {
+            console.log("saveMessageToSupabase: Đang cố gắng lưu tin nhắn:", message);
             try {
                 const { data, error } = await supabaseClient
                     .from('messages')
@@ -756,17 +771,20 @@
                     });
 
                 if (error) {
-                    console.error("Lỗi khi lưu tin nhắn vào Supabase:", error.message);
-                    throw error; // Re-throw
+                    console.error("saveMessageToSupabase: LỖI KHI LƯU TIN NHẮN VÀO SUPABASE:", error.message);
+                    throw error; // Re-throw để được bắt bởi hàm gọi
                 }
-                console.log('Tin nhắn đã được lưu vào Supabase:', message.id);
+                console.log('saveMessageToSupabase: Tin nhắn đã được lưu vào Supabase thành công:', data);
+                return data;
             } catch (error) {
-                console.error("Lỗi khi lưu tin nhắn vào Supabase:", error.message);
+                console.error("saveMessageToSupabase: Lỗi trong catch block khi lưu tin nhắn vào Supabase:", error.message);
+                throw error; // Re-throw để hàm gọi có thể xử lý
             }
         }
 
         // Function to delete a thread and its messages from Supabase
         async function deleteThreadFromSupabase(threadIdToDelete) {
+            console.log(`deleteThreadFromSupabase: Đang xóa luồng chat: ${threadIdToDelete}`);
             try {
                 // First, get the openai_thread_id associated with this thread
                 const { data: threadData, error: selectError } = await supabaseClient
@@ -777,8 +795,7 @@
                     .single();
 
                 if (selectError && selectError.code !== 'PGRST116') { // PGRST116 means no rows found
-                    console.error("Lỗi Supabase khi tìm luồng để xóa:", selectError);
-                    // Do not throw, continue to delete local/DB record to keep consistent
+                    console.warn("deleteThreadFromSupabase: Lỗi Supabase khi tìm luồng để xóa (có thể không tồn tại):", selectError);
                 }
 
                 if (threadData && threadData.openai_thread_id) {
@@ -786,8 +803,7 @@
                         const supabaseFunctionUrl = `${supabaseUrl}/functions/v1/chat-with-gpt`;
                         const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
                         if (sessionError || !sessionData.session) {
-                            console.warn("Không thể lấy phiên người dùng để gọi hàm xóa thread OpenAI.");
-                            // Continue with local/DB deletion even if OpenAI thread cannot be deleted
+                            console.warn("deleteThreadFromSupabase: Không thể lấy phiên người dùng để gọi hàm xóa thread OpenAI.");
                         } else {
                             const accessToken = sessionData.session.access_token;
                             const response = await fetch(supabaseFunctionUrl, {
@@ -804,20 +820,15 @@
                             });
                             const result = await response.json();
                             if (!response.ok || result.error) {
-                                console.warn(`Cảnh báo: Lỗi khi gọi Supabase Function để xóa luồng OpenAI: ${result.error?.message || 'Unknown error'}`);
+                                console.warn(`deleteThreadFromSupabase: Cảnh báo: Lỗi khi gọi Supabase Function để xóa luồng OpenAI: ${result.error?.message || 'Unknown error'}`);
                             } else {
-                                console.log(`Đã gửi yêu cầu xóa luồng OpenAI cho thread ${threadIdToDelete} thành công.`);
+                                console.log(`deleteThreadFromSupabase: Đã gửi yêu cầu xóa luồng OpenAI cho thread ${threadIdToDelete} thành công.`);
                             }
                         }
                     } catch (openaiFunctionError) {
-                        console.warn(`Cảnh báo: Không thể gọi Supabase Function để xóa luồng OpenAI: ${openaiFunctionError.message}`);
+                        console.warn(`deleteThreadFromSupabase: Cảnh báo: Không thể gọi Supabase Function để xóa luồng OpenAI: ${openaiFunctionError.message}`);
                     }
                 }
-                
-                // Delete messages first (due to foreign key constraints) - handled by ON DELETE CASCADE if set up,
-                // but good practice to explicitly delete or verify cascade behavior.
-                // For this setup, FOREIGN KEY (thread_id) REFERENCES public.threads (id) ON DELETE CASCADE
-                // means deleting from threads will automatically delete messages.
                 
                 // Then delete the thread record from our 'threads' table
                 const { error: threadDeleteError } = await supabaseClient
@@ -827,13 +838,13 @@
                     .eq('user_id', currentUserId); // Ensure only current user can delete their thread
 
                 if (threadDeleteError) {
-                    console.error("Lỗi khi xóa luồng từ Supabase:", threadDeleteError.message);
-                    throw threadDeleteError; // Re-throw
+                    console.error("deleteThreadFromSupabase: LỖI KHI XÓA LUỒNG TỪ SUPABASE:", threadDeleteError.message);
+                    throw threadDeleteError;
                 }
-                console.log('Luồng đã được xóa khỏi Supabase:', threadIdToDelete);
+                console.log('deleteThreadFromSupabase: Luồng đã được xóa khỏi Supabase:', threadIdToDelete);
 
             } catch (error) {
-                console.error("Lỗi khi xóa luồng từ Supabase:", error.message);
+                console.error("deleteThreadFromSupabase: Lỗi trong catch block khi xóa luồng từ Supabase:", error.message);
             }
         }
 
@@ -924,18 +935,18 @@
             console.log('Available Agents:', availableAgents); // Debug: Check content of availableAgents
 
             if (!agentSelect) {
-                console.error("Lỗi: Không tìm thấy phần tử 'agent-select'.");
+                console.error("renderAgentSelect: Lỗi: Không tìm thấy phần tử 'agent-select'.");
                 return;
             }
 
             if (availableAgents.length === 0) {
-                console.warn("Cảnh báo: Mảng 'availableAgents' rỗng. Không có Agent nào để hiển thị.");
-                // Optionally add a placeholder option or message here
+                console.warn("renderAgentSelect: Cảnh báo: Mảng 'availableAgents' rỗng. Không có Agent nào để hiển thị.");
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = 'Không có Agent khả dụng';
                 defaultOption.disabled = true;
                 agentSelect.appendChild(defaultOption);
+                currentSelectedAgentId = null; // Ensure agent is null if none available
             } else {
                 availableAgents.forEach(agent => {
                     const option = document.createElement('option');
@@ -952,7 +963,7 @@
                     currentSelectedAgentId = availableAgents[0].id; // Update the global variable
                     localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
                 }
-                console.log('Đã chọn Agent mặc định (hoặc từ localStorage):', agentSelect.value);
+                console.log('renderAgentSelect: Đã chọn Agent mặc định (hoặc từ localStorage):', agentSelect.value);
             }
             console.log('--- Kết thúc render danh sách Agent. Số lượng options:', agentSelect.options.length, '---');
         }
@@ -972,6 +983,12 @@
                 console.error("createThread: Không thể tạo luồng chat vì currentSelectedAgentId rỗng.");
                 return;
             }
+            if (!currentUserId) {
+                 addMessageToUI("Lỗi: Người dùng chưa đăng nhập. Vui lòng đăng nhập trước khi tạo luồng chat mới.", "bot", new Date().toISOString());
+                console.error("createThread: Không thể tạo luồng chat vì currentUserId rỗng.");
+                return;
+            }
+
 
             const threadName = prompt("Vui lòng nhập tên cho luồng chat mới của bạn:", "Luồng chat mới");
             if (threadName === null) { // User clicked Cancel
@@ -998,7 +1015,7 @@
                 renderThreadList();
                 userInput.focus();
             } catch (error) {
-                console.error("Lỗi khi tạo luồng chat mới:", error.message);
+                console.error("createThread: Lỗi khi tạo luồng chat mới (saveThreadToSupabase failed):", error.message);
                 addMessageToUI("Lỗi: Không thể tạo luồng chat mới. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
                 // Remove the newly added thread from local array if saving failed
                 chatThreads = chatThreads.filter(thread => thread.id !== newThreadId);
@@ -1007,7 +1024,7 @@
         }
 
         async function deleteThread(threadIdToDelete) {
-            console.log(`Đang xóa luồng chat: ${threadIdToDelete}`);
+            console.log(`deleteThread: Đang xóa luồng chat: ${threadIdToDelete}`);
 
             // Call Supabase function to handle OpenAI thread deletion and then delete from our DB
             await deleteThreadFromSupabase(threadIdToDelete);
@@ -1031,6 +1048,7 @@
 
         function selectThread(threadId) {
             currentActiveThreadId = threadId;
+            localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Ensure selected agent is saved
             localStorage.setItem(`currentActiveThreadId_${currentUserId}`, currentActiveThreadId); // Save active thread to local storage
             renderThreadList(); // Re-render to highlight active thread
             renderChatWindow(); // Load messages for the selected thread
@@ -1044,7 +1062,7 @@
             // Ensure a thread is active before sending.
             if (!currentActiveThreadId) {
                 addMessageToUI("Lỗi: Không có luồng chat nào đang hoạt động. Vui lòng thử đăng nhập lại hoặc tạo một luồng chat mới.", "bot", new Date().toISOString());
-                console.error("Không có luồng chat nào đang hoạt động khi cố gắng gửi tin nhắn.");
+                console.error("sendMessage: Không có luồng chat nào đang hoạt động khi cố gắng gửi tin nhắn.");
                 return;
             }
 
@@ -1052,7 +1070,7 @@
             // This defensive check is good to keep.
             if (!activeThread) {
                 addMessageToUI("Lỗi: Luồng chat đang hoạt động không tìm thấy. Vui lòng tạo một luồng chat mới.", "bot", new Date().toISOString());
-                console.error("Luồng chat đang hoạt động không tồn tại trong bộ nhớ local.");
+                console.error("sendMessage: Luồng chat đang hoạt động không tồn tại trong bộ nhớ local.");
                 currentActiveThreadId = null; // Reset to avoid future errors with a non-existent ID
                 renderThreadList();
                 renderChatWindow();
@@ -1064,7 +1082,7 @@
             // This is the specific error the user is getting.
             if (!agentToUse) {
                 addMessageToUI("Lỗi: Agent cho luồng chat này không được chọn. Vui lòng chọn một Agent từ danh sách hoặc tạo luồng chat mới.", "bot", new Date().toISOString());
-                console.error("AgentToUse is null/undefined for the active thread:", activeThread);
+                console.error("sendMessage: AgentToUse is null/undefined for the active thread:", activeThread);
                 return;
             }
 
@@ -1084,11 +1102,25 @@
             chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
 
             // Save user message to Supabase
-            await saveMessageToSupabase(userMessage);
+            try {
+                await saveMessageToSupabase(userMessage);
+            } catch (error) {
+                console.error("sendMessage: Lỗi khi lưu tin nhắn người dùng vào Supabase:", error.message);
+                addMessageToUI("Lỗi: Không thể lưu tin nhắn của bạn. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+                return; // Stop execution if user message cannot be saved
+            }
 
             // Update lastMessageTimestamp for the thread
             activeThread.lastMessageTimestamp = userMessage.timestamp; // Use activeThread directly
-            await saveThreadToSupabase(activeThread);
+            try {
+                await saveThreadToSupabase(activeThread);
+            } catch (error) {
+                console.error("sendMessage: Lỗi khi cập nhật timestamp luồng:", error.message);
+                // Continue, as message was already sent and saving timestamp is less critical than message itself
+            }
             renderThreadList(); // Re-render to update order
 
             const loadingIndicator = document.createElement('div');
@@ -1157,36 +1189,15 @@
                 renderThreadList();
 
             } catch (error) {
-                console.error('Lỗi khi gửi tin nhắn hoặc nhận phản hồi từ Agent:', error);
+                console.error('sendMessage: Lỗi khi gửi tin nhắn hoặc nhận phản hồi từ Agent:', error);
                 chatWindow.removeChild(loadingIndicator);
-                addMessageToUI("Xin lỗi, có lỗi xảy ra khi liên hệ với Agent. Vui lòng thử lại.", "bot", new Date().toISOString());
+                addMessageToUI("Xin lỗi, có lỗi xảy ra khi liên hệ với Agent. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
             } finally {
                 userInput.disabled = false; // Re-enable input
                 sendButton.disabled = false; // Re-enable send button
                 userInput.focus(); // Focus input field
             }
         }
-
-        // Removed updateThreadNameBasedOnFirstMessage as it's now handled by the prompt.
-        // You can keep it as a fallback if you wish, but it's not strictly necessary.
-        /*
-        async function updateThreadNameBasedOnFirstMessage(threadId, firstMessageText) {
-            const thread = chatThreads.find(t => t.id === threadId);
-            if (thread) {
-                // Take the first 30 characters or until the first newline
-                let newName = firstMessageText.substring(0, 30);
-                const newlineIndex = newName.indexOf('\n');
-                if (newlineIndex !== -1) {
-                    newName = newName.substring(0, newlineIndex);
-                }
-                newName = newName.trim() + (firstMessageText.length > 30 || newlineIndex !== -1 ? '...' : '');
-
-                thread.name = newName || 'Luồng chat mới'; // Ensure it's not empty
-                await saveThreadToSupabase(thread);
-                renderThreadList();
-            }
-        }
-        */
 
         function updateChatHeaderTitle() {
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
