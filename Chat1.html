@@ -644,7 +644,7 @@
             
             <!-- Agent Selection Dropdown -->
             <label for="agent-select" class="text-sm font-semibold text-gray-700 mb-2">Chọn Agent:</label>
-          <select id="agent-select" class="agent-select"><option value="asst_o8G2LqrbzqP73ZaQQKBGYSqj">SmartCounterHub</option><option value="asst_iyjtFwcQQlUhwNBI8DZLPZ5A">ITBOOK</option><option value="asst_5ALG676dm3BRVKp5Ou6txCxa">QuyHoachBoNhiem</option></select>
+            <select id="agent-select" class="agent-select"></select>
 
             <!-- User Manual Section -->
             <div class="user-manual-section">
@@ -1102,9 +1102,13 @@
                     agentSelect.value = currentSelectedAgentId;
                 } else {
                     // If currentSelectedAgentId is not valid/found, default to the first available agent
-                    agentSelect.value = availableAgents[0].id;
-                    currentSelectedAgentId = availableAgents[0].id; // Update the global variable
-                    localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
+                    if (availableAgents.length > 0) { // Safety check for empty array
+                        agentSelect.value = availableAgents[0].id;
+                        currentSelectedAgentId = availableAgents[0].id; // Update the global variable
+                        localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
+                    } else {
+                        currentSelectedAgentId = null; // Still no agents, set to null
+                    }
                 }
                 console.log('renderAgentSelect: Đã chọn Agent mặc định (hoặc từ localStorage):', agentSelect.value);
             }
@@ -1271,145 +1275,143 @@
         }
 
         async function sendMessage() {
-            const userMessageText = userInput.value.trim();
-            if (!userMessageText) return;
-
-            // Ensure a thread is active before sending.
-            if (!currentActiveThreadId) {
-                addMessageToUI("Lỗi: Không có luồng chat nào đang hoạt động. Vui lòng thử đăng nhập lại hoặc tạo một luồng chat mới.", "bot", new Date().toISOString());
-                console.error("sendMessage: Không có luồng chat nào đang hoạt động khi cố gắng gửi tin nhắn.");
-                return;
-            }
-
-            const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
-            // This defensive check is good to keep.
-            if (!activeThread) {
-                addMessageToUI("Lỗi: Luồng chat đang hoạt động không tìm thấy. Vui lòng tạo một luồng chat mới.", "bot", new Date().toISOString());
-                console.error("sendMessage: Luồng chat đang hoạt động không tồn tại trong bộ nhớ local.");
-                currentActiveThreadId = null; // Reset to avoid future errors with a non-existent ID
-                renderThreadList();
-                renderChatWindow();
-                return;
-            }
-
-            const agentToUse = activeThread.agentId; // Use agentId from the active thread
-
-            // This is the specific error the user is getting.
-            if (!agentToUse) {
-                console.error("sendMessage failed: activeThread.agentId is null or empty. Active Thread:", activeThread, "Available agents:", availableAgents);
-                addMessageToUI("Lỗi: Agent cho luồng chat này không được chọn. Vui lòng chọn một Agent từ danh sách hoặc tạo luồng chat mới.", "bot", new Date().toISOString());
-                return;
-            }
-
-            userInput.value = ''; // Clear input field immediately
-            userInput.disabled = true; // Disable input while sending
-            sendButton.disabled = true; // Disable send button
-
-            const userMessage = {
-                id: crypto.randomUUID(),
-                threadId: currentActiveThreadId,
-                senderId: currentUserId,
-                text: userMessageText,
-                timestamp: new Date().toISOString()
-            };
-            chatMessages.push(userMessage);
-            addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp);
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
-
-            // Save user message to Supabase
-            try {
-                await saveMessageToSupabase(userMessage);
-            } catch (error) {
-                console.error("sendMessage: Lỗi khi lưu tin nhắn người dùng vào Supabase:", error.message);
-                addMessageToUI("Lỗi: Không thể lưu tin nhắn của bạn. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
-                userInput.disabled = false;
-                sendButton.disabled = false;
-                userInput.focus();
-                return; // Stop execution if user message cannot be saved
-            }
-
-            // Update lastMessageTimestamp for the thread
-            activeThread.lastMessageTimestamp = userMessage.timestamp; // Use activeThread directly
-            try {
-                await saveThreadToSupabase(activeThread);
-            } catch (error) {
-                console.error("sendMessage: Lỗi khi cập nhật timestamp luồng:", error.message);
-                // Continue, as message was already sent and saving timestamp is less critical than message itself
-            }
-            renderThreadList(); // Re-render to update order
-
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.classList.add('loading-indicator');
-            loadingIndicator.textContent = 'Agent đang phản hồi...';
-            chatWindow.appendChild(loadingIndicator);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            // Disable inputs at the very beginning
+            userInput.disabled = true;
+            sendButton.disabled = true;
 
             try {
-                // Construct Supabase Function URL
-                const supabaseFunctionUrl = `${supabaseUrl}/functions/v1/chat-with-gpt`;
-
-                // Get the access token for the Authorization header
-                const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
-                if (sessionError || !sessionData.session) {
-                    throw new Error("Không thể lấy phiên người dùng để gọi hàm Supabase.");
-                }
-                const accessToken = sessionData.session.access_token;
-
-                // Send minimal data to Supabase function.
-                // The function will fetch full history from DB internally.
-                const response = await fetch(supabaseFunctionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        message: userMessageText,
-                        userId: currentUserId,
-                        assistantId: agentToUse, // This is agentId from our client side
-                        conversationId: currentActiveThreadId, // This is threadId from our client side
-                        action: 'send_message'
-                    })
-                });
-
-                const result = await response.json();
-                let botResponseText = "Xin lỗi, đã có lỗi xảy ra khi nhận phản hồi từ Agent.";
-
-                if (response.ok && result && result.reply) { // Adjusted to 'reply' as per function's return
-                    botResponseText = result.reply; 
-                } else if (result.error) {
-                    botResponseText = `Lỗi từ Supabase Function: ${result.error.message || 'Không rõ.'}`;
-                    console.error("Lỗi Supabase Function:", result.error);
-                } else {
-                    console.warn("Cấu trúc phản hồi Supabase Function không mong muốn:", result);
+                const userMessageText = userInput.value.trim();
+                if (!userMessageText) {
+                    return; // Exit if message is empty
                 }
 
-                const botMessage = {
+                userInput.value = ''; // Clear input field immediately
+
+                // Ensure a thread is active before sending.
+                if (!currentActiveThreadId) {
+                    addMessageToUI("Lỗi: Không có luồng chat nào đang hoạt động. Vui lòng thử đăng nhập lại hoặc tạo một luồng chat mới.", "bot", new Date().toISOString());
+                    console.error("sendMessage: Không có luồng chat nào đang hoạt động khi cố gắng gửi tin nhắn.");
+                    return;
+                }
+
+                const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+                if (!activeThread) {
+                    addMessageToUI("Lỗi: Luồng chat đang hoạt động không tìm thấy. Vui lòng tạo một luồng chat mới.", "bot", new Date().toISOString());
+                    console.error("sendMessage: Luồng chat đang hoạt động không tồn tại trong bộ nhớ local.");
+                    currentActiveThreadId = null; 
+                    renderThreadList();
+                    renderChatWindow();
+                    return; 
+                }
+
+                const agentToUse = activeThread.agentId;
+                if (!agentToUse) {
+                    console.error("sendMessage failed: activeThread.agentId is null or empty. Active Thread:", activeThread, "Available agents:", availableAgents);
+                    addMessageToUI("Lỗi: Agent cho luồng chat này không được chọn. Vui lòng chọn một Agent từ danh sách hoặc tạo luồng chat mới.", "bot", new Date().toISOString());
+                    return; 
+                }
+
+                const userMessage = {
                     id: crypto.randomUUID(),
                     threadId: currentActiveThreadId,
-                    senderId: 'bot', // Mark as bot message
-                    text: botResponseText,
+                    senderId: currentUserId,
+                    text: userMessageText,
                     timestamp: new Date().toISOString()
                 };
-                chatMessages.push(botMessage);
-                await saveMessageToSupabase(botMessage);
-                
-                chatWindow.removeChild(loadingIndicator);
-                addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp);
+                chatMessages.push(userMessage);
+                addMessageToUI(userMessage.text, userMessage.senderId, userMessage.timestamp);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
 
-                 // Update lastMessageTimestamp for the thread again after bot response
-                activeThread.lastMessageTimestamp = botMessage.timestamp;
-                await saveThreadToSupabase(activeThread);
+                // Save user message to Supabase
+                try {
+                    await saveMessageToSupabase(userMessage);
+                } catch (error) {
+                    console.error("sendMessage: Lỗi khi lưu tin nhắn người dùng vào Supabase:", error.message);
+                    addMessageToUI("Lỗi: Không thể lưu tin nhắn của bạn. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                    return; 
+                }
+
+                activeThread.lastMessageTimestamp = userMessage.timestamp;
+                try {
+                    await saveThreadToSupabase(activeThread);
+                } catch (error) {
+                    console.error("sendMessage: Lỗi khi cập nhật timestamp luồng:", error.message);
+                    // Continue, as message was already sent and saving timestamp is less critical than message itself
+                }
                 renderThreadList();
 
-            } catch (error) {
-                console.error('sendMessage: Lỗi khi gửi tin nhắn hoặc nhận phản hồi từ Agent:', error);
-                chatWindow.removeChild(loadingIndicator);
-                addMessageToUI("Xin lỗi, có lỗi xảy ra khi liên hệ với Agent. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.classList.add('loading-indicator');
+                loadingIndicator.textContent = 'Agent đang phản hồi...';
+                chatWindow.appendChild(loadingIndicator);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                // Existing fetch logic for bot response
+                try {
+                    const supabaseFunctionUrl = `${supabaseUrl}/functions/v1/chat-with-gpt`;
+                    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+                    if (sessionError || !sessionData.session) {
+                        throw new Error("Không thể lấy phiên người dùng để gọi hàm Supabase.");
+                    }
+                    const accessToken = sessionData.session.access_token;
+
+                    const response = await fetch(supabaseFunctionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({
+                            message: userMessageText,
+                            userId: currentUserId,
+                            assistantId: agentToUse,
+                            conversationId: currentActiveThreadId,
+                            action: 'send_message'
+                        })
+                    });
+
+                    const result = await response.json();
+                    let botResponseText = "Xin lỗi, đã có lỗi xảy ra khi nhận phản hồi từ Agent.";
+
+                    if (response.ok && result && result.reply) {
+                        botResponseText = result.reply; 
+                    } else if (result.error) {
+                        botResponseText = `Lỗi từ Supabase Function: ${result.error.message || 'Không rõ.'}`;
+                        console.error("Lỗi Supabase Function:", result.error);
+                    } else {
+                        console.warn("Cấu trúc phản hồi Supabase Function không mong muốn:", result);
+                    }
+
+                    const botMessage = {
+                        id: crypto.randomUUID(),
+                        threadId: currentActiveThreadId,
+                        senderId: 'bot',
+                        text: botResponseText,
+                        timestamp: new Date().toISOString()
+                    };
+                    chatMessages.push(botMessage);
+                    await saveMessageToSupabase(botMessage);
+                    
+                    if (loadingIndicator.parentNode === chatWindow) { // Check if still in DOM
+                        chatWindow.removeChild(loadingIndicator);
+                    }
+                    addMessageToUI(botMessage.text, botMessage.senderId, botMessage.timestamp);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                    activeThread.lastMessageTimestamp = botMessage.timestamp;
+                    await saveThreadToSupabase(activeThread);
+                    renderThreadList();
+
+                } catch (error) {
+                    console.error('sendMessage: Lỗi khi gửi tin nhắn hoặc nhận phản hồi từ Agent:', error);
+                    if (loadingIndicator.parentNode === chatWindow) { // Check if still in DOM
+                        chatWindow.removeChild(loadingIndicator);
+                    }
+                    addMessageToUI("Xin lỗi, có lỗi xảy ra khi liên hệ với Agent. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                }
             } finally {
-                userInput.disabled = false; // Re-enable input
-                sendButton.disabled = false; // Re-enable send button
+                userInput.disabled = false; // Always re-enable input
+                sendButton.disabled = false; // Always re-enable send button
                 userInput.focus(); // Focus input field
             }
         }
