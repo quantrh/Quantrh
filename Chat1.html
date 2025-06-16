@@ -647,7 +647,7 @@
             <h2 id="auth-mode-title">Đăng nhập</h2>
             <input type="email" id="auth-email" placeholder="Email của bạn" autocomplete="email">
             <input type="password" id="auth-password" placeholder="Mật khẩu của bạn" autocomplete="current-password">
-            <button id="auth-submit-button">Đăng nhập</button>
+            <button id="auth-submit-button" disabled>Đăng nhập</button> <!-- Initially disabled for registration mode -->
             <button id="toggle-auth-mode" class="toggle-auth-mode">Chưa có tài khoản? Đăng ký</button>
             <div id="auth-message" class="text-sm mt-3 text-red-500"></div>
             <div id="auth-loading-spinner" class="spinner hidden mx-auto mt-2"></div>
@@ -751,6 +751,14 @@
             try {
                 authLoadingSpinner.classList.remove('hidden');
                 authMessageDiv.textContent = '';
+
+                // Domain Restriction Check
+                if (!email.endsWith('@bidv.com.vn')) {
+                    authMessageDiv.textContent = 'Email phải có đuôi @bidv.com.vn để đăng ký.';
+                    authLoadingSpinner.classList.add('hidden');
+                    return;
+                }
+
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
@@ -763,7 +771,7 @@
                     throw error;
                 }
                 showToast("Vui lòng kiểm tra email của bạn để xác minh tài khoản.", "success");
-                authMessageDiv.textContent = 'Đăng ký thành công! Vui lòng kiểm tra email để xác minh.';
+                authMessageDiv.textContent = 'Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản của bạn.';
                 // Optionally, switch to login mode after successful signup message
                 toggleAuthModeButton.click(); 
 
@@ -788,8 +796,8 @@
                 if (error) {
                     throw error;
                 }
-                showToast("Đăng nhập thành công!", "success");
-                // The auth state change listener will handle the rest
+                // The auth state change listener will handle the rest, including email confirmation check
+                // No need for a success toast here as onAuthStateChange will handle it.
             } catch (error) {
                 console.error("Lỗi đăng nhập:", error.message);
                 authMessageDiv.textContent = `Lỗi đăng nhập: ${error.message}`;
@@ -821,8 +829,7 @@
                 renderThreadList();
                 renderChatWindow();
                 userIdDisplay.textContent = '';
-                authModal.classList.remove('hidden'); // Show auth modal
-                authModal.classList.add('visible'); // Add visible class for animation
+                // No need to explicitly show auth modal here; updateUIForAuthState handles it via onAuthStateChange
                 authEmailInput.value = '';
                 authPasswordInput.value = '';
                 updateUIForAuthState(); // Update UI to reflect logged out state
@@ -843,7 +850,7 @@
         }
 
         function updateUIForAuthState() {
-            if (currentUserId && isChatReady) { // Only show chat if authenticated AND chat is fully ready
+            if (currentUserId && isChatReady) { // Only show chat if authenticated AND chat is fully ready (email confirmed)
                 authModal.classList.remove('visible'); // Hide auth modal with animation
                 authModal.classList.add('hidden'); // Fully hide it after animation
                 document.querySelector('.app-container').classList.remove('hidden'); // Show main app container
@@ -1061,6 +1068,7 @@
                 // Step 1: Delete from Supabase Function (which will delete from OpenAI and Supabase DB)
                 const serverDeleteSuccess = await deleteOpenAIThreadOnServer(threadIdToDelete);
 
+                // Even if server reports "not found" or "already deleted", we proceed with local cleanup
                 if (!serverDeleteSuccess) {
                     throw new Error("Không thể xóa luồng chat trên máy chủ.");
                 }
@@ -1166,22 +1174,17 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) {
-                    let errorDetails = `HTTP error! status: ${response.status}`;
-                    try {
-                        const errorData = await response.json();
-                        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
-                    } catch (parseError) {
-                        errorDetails += ` - ${response.statusText}`;
-                    }
-                    console.error('Lỗi khi gọi Supabase Function để xóa luồng:', errorDetails);
-                    return false; // Indicate failure
-                }
-
                 const data = await response.json();
+
+                // Check for explicit success or a message indicating it's already gone
                 if (data && data.success) {
-                    return true; // Indicate success
-                } else {
+                    return true; // Server explicitly says it succeeded
+                } else if (data && data.message && (data.message.includes("Thread not found") || data.message.includes("already deleted"))) {
+                    console.warn('Supabase Function báo cáo luồng không tìm thấy hoặc đã xóa, coi là thành công cho việc xóa cục bộ.');
+                    return true; // Treat "not found" or "already deleted" as success for client-side removal
+                }
+                else {
+                    // Log the actual server error message if it's neither success nor "already deleted"
                     console.error('Phản hồi không thành công từ Supabase Function khi xóa luồng:', data);
                     return false;
                 }
@@ -1333,70 +1336,85 @@
                 supabaseClient.auth.onAuthStateChange(async (event, session) => { // Added async here
                     if (session) {
                         currentUserId = session.user.id;
-                        loadDataFromLocalStorage(); // Load data for the authenticated user
+                        // Check if email is confirmed
+                        if (session.user.email_confirmed_at) {
+                            loadDataFromLocalStorage(); // Load data for the authenticated user
 
-                        // Ensure a default thread exists or select an existing one
-                        if (chatThreads.length === 0) {
-                            const defaultThreadId = crypto.randomUUID();
-                            const defaultThread = {
-                                id: defaultThreadId,
-                                name: "Luồng chat mặc định", 
-                                lastMessageTimestamp: new Date().toISOString()
-                            };
-                            chatThreads.push(defaultThread);
-                            currentActiveThreadId = defaultThreadId;
-                            saveDataToLocalStorage();
-                        } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
-                            // If active thread ID is missing or invalid, default to the first thread
-                            currentActiveThreadId = chatThreads[0].id;
-                            saveDataToLocalStorage();
+                            // Ensure a default thread exists or select an existing one
+                            if (chatThreads.length === 0) {
+                                const defaultThreadId = crypto.randomUUID();
+                                const defaultThread = {
+                                    id: defaultThreadId,
+                                    name: "Luồng chat mặc định", 
+                                    lastMessageTimestamp: new Date().toISOString()
+                                };
+                                chatThreads.push(defaultThread);
+                                currentActiveThreadId = defaultThreadId;
+                                saveDataToLocalStorage();
+                            } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                                // If active thread ID is missing or invalid, default to the first thread
+                                currentActiveThreadId = chatThreads[0].id;
+                                saveDataToLocalStorage();
+                            }
+                            
+                            populateAgentSelect();
+                            renderThreadList();
+                            renderChatWindow();
+                            showToast("Đăng nhập thành công!", "success"); // Show success toast on confirmed login
+                            isChatReady = true; // Only set to true if email is confirmed
+                        } else {
+                            // Email not confirmed
+                            currentUserId = null; // Don't consider user as fully logged in for app purposes
+                            isChatReady = false;
+                            showToast("Vui lòng xác thực email của bạn để đăng nhập.", "error");
+                            authMessageDiv.textContent = 'Vui lòng kiểm tra email của bạn để xác thực tài khoản.';
                         }
-                        
-                        populateAgentSelect();
-                        renderThreadList();
-                        renderChatWindow();
-                        showToast("Chào mừng bạn trở lại!", "success");
-                        isChatReady = true; // Mark chat as ready after all data/UI is set up
                     } else {
+                        // User is logged out or session expired
                         currentUserId = null;
-                        // Clear chat data upon logout - already handled by signOutUser, but ensure state consistency
                         chatThreads = [];
                         chatMessages = [];
                         currentActiveThreadId = null;
                         isChatReady = false;
                         renderThreadList(); // Render empty lists
                         renderChatWindow(); // Clear chat window
-                        showToast("Bạn đã đăng xuất.", "info");
+                        // showToast is handled by signOutUser or initial check, no need here.
                     }
-                    updateUIForAuthState(); // Update UI based on new auth state
+                    updateUIForAuthState(); // This will show/hide the auth modal based on isChatReady and currentUserId
                 });
 
                 // Check initial auth state (on page load)
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (user) {
                     currentUserId = user.id;
-                    loadDataFromLocalStorage();
+                    if (user.email_confirmed_at) {
+                        loadDataFromLocalStorage();
 
-                    // Ensure a default thread exists or select an existing one for initial load
-                    if (chatThreads.length === 0) {
-                        const defaultThreadId = crypto.randomUUID();
-                        const defaultThread = {
-                            id: defaultThreadId,
-                            name: "Luồng chat mặc định",
-                            lastMessageTimestamp: new Date().toISOString()
-                        };
-                        chatThreads.push(defaultThread);
-                        currentActiveThreadId = defaultThreadId;
-                        saveDataToLocalStorage();
-                    } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
-                        currentActiveThreadId = chatThreads[0].id;
-                        saveDataToLocalStorage();
+                        // Ensure a default thread exists or select an existing one for initial load
+                        if (chatThreads.length === 0) {
+                            const defaultThreadId = crypto.randomUUID();
+                            const defaultThread = {
+                                id: defaultThreadId,
+                                name: "Luồng chat mặc định",
+                                lastMessageTimestamp: new Date().toISOString()
+                            };
+                            chatThreads.push(defaultThread);
+                            currentActiveThreadId = defaultThreadId;
+                            saveDataToLocalStorage();
+                        } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                            currentActiveThreadId = chatThreads[0].id;
+                            saveDataToLocalStorage();
+                        }
+
+                        populateAgentSelect();
+                        renderThreadList();
+                        renderChatWindow();
+                        isChatReady = true; // Mark chat as ready for initial authenticated user
+                    } else {
+                        currentUserId = null;
+                        isChatReady = false; // Chat is not ready if email not confirmed
+                        authMessageDiv.textContent = 'Vui lòng kiểm tra email của bạn để xác thực tài khoản.';
                     }
-
-                    populateAgentSelect();
-                    renderThreadList();
-                    renderChatWindow();
-                    isChatReady = true; // Mark chat as ready for initial authenticated user
                 } else {
                     currentUserId = null;
                     isChatReady = false; // Chat is not ready if not authenticated
@@ -1453,14 +1471,36 @@
         toggleAuthModeButton.addEventListener('click', () => {
             isRegisterMode = !isRegisterMode;
             authMessageDiv.textContent = '';
+            authEmailInput.value = ''; // Clear email input on mode toggle for fresh validation
+            authPasswordInput.value = ''; // Clear password as well
+
             if (isRegisterMode) {
                 authModeTitle.textContent = 'Đăng ký';
                 authSubmitButton.textContent = 'Đăng ký';
                 toggleAuthModeButton.textContent = 'Đã có tài khoản? Đăng nhập';
+                authSubmitButton.disabled = true; // Disable until valid BIDV email is entered
             } else {
                 authModeTitle.textContent = 'Đăng nhập';
                 authSubmitButton.textContent = 'Đăng nhập';
                 toggleAuthModeButton.textContent = 'Chưa có tài khoản? Đăng ký';
+                authSubmitButton.disabled = false; // Enable for login by default, validation happens on submit
+            }
+        });
+
+        // Add input event listener for email to control registration button state
+        authEmailInput.addEventListener('input', () => {
+            if (isRegisterMode) {
+                if (authEmailInput.value.endsWith('@bidv.com.vn')) {
+                    authSubmitButton.disabled = false;
+                    authMessageDiv.textContent = '';
+                } else {
+                    authSubmitButton.disabled = true;
+                    authMessageDiv.textContent = 'Email phải có đuôi @bidv.com.vn để đăng ký.';
+                }
+            } else {
+                // For login mode, enable the button as domain restriction is only for registration
+                authSubmitButton.disabled = false; 
+                authMessageDiv.textContent = ''; // Clear message for login mode if user types
             }
         });
 
