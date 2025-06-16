@@ -613,8 +613,8 @@
                 <!-- Messages will be displayed here -->
             </div>
             <div class="chat-input-area">
-                <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn...">
-                <button id="send-button">Gửi</button>
+                <input type="text" id="user-input" placeholder="Gõ tin nhắn của bạn..." disabled> <!-- Added disabled -->
+                <button id="send-button" disabled>Gửi</button> <!-- Added disabled -->
             </div>
             <!-- Scroll to Top Button -->
             <button id="scroll-to-top-button" title="Cuộn lên đầu trang">&#x2191;</button> <!-- Up arrow Unicode -->
@@ -794,18 +794,26 @@
             }
         }
 
-        // --- UI State Management for Auth ---
+        // --- UI State Management for Auth and Chat Controls ---
+        function toggleChatControls(enable) {
+            userInput.disabled = !enable;
+            sendButton.disabled = !enable;
+            if (enable) {
+                userInput.focus(); // Focus on input when enabled
+            }
+        }
+
         function updateUIForAuthState() {
-            if (currentUserId) {
+            if (currentUserId && isChatReady) { // Only show chat if authenticated AND chat is fully ready
                 authModal.classList.add('hidden');
                 document.querySelector('.app-container').classList.remove('hidden'); // Show main app container
                 userIdDisplay.textContent = `ID của bạn: ${currentUserId}`;
-                isChatReady = true;
+                toggleChatControls(true); // Enable chat controls
             } else {
                 authModal.classList.remove('hidden');
                 document.querySelector('.app-container').classList.add('hidden'); // Hide main app container
                 userIdDisplay.textContent = '';
-                isChatReady = false;
+                toggleChatControls(false); // Disable chat controls
             }
         }
 
@@ -1195,6 +1203,10 @@
                 showToast(`Lỗi: ${error.message}`, "error");
             } finally {
                 sendButton.disabled = false; // Re-enable send button
+                // Ensure input is enabled if chat is ready
+                if (isChatReady && currentActiveThreadId) {
+                    toggleChatControls(true);
+                }
             }
         }
 
@@ -1254,53 +1266,58 @@
                 // Initialize Supabase Client
                 supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
+                // Set initial state for chat controls
+                toggleChatControls(false); // Disable controls until chat is ready
+
                 // Listen for auth state changes
-                supabaseClient.auth.onAuthStateChange((event, session) => {
+                supabaseClient.auth.onAuthStateChange(async (event, session) => { // Added async here
                     if (session) {
                         currentUserId = session.user.id;
-                        // Load data for the authenticated user
-                        loadDataFromLocalStorage();
-                        // Initialize chat app components for authenticated user
-                        populateAgentSelect();
+                        loadDataFromLocalStorage(); // Load data for the authenticated user
+
+                        // Ensure a default thread exists or select an existing one
                         if (chatThreads.length === 0) {
                             const defaultThreadId = crypto.randomUUID();
                             const defaultThread = {
                                 id: defaultThreadId,
-                                name: "Luồng chat mặc định",
+                                name: "Luồng chat mặc định", 
                                 lastMessageTimestamp: new Date().toISOString()
                             };
                             chatThreads.push(defaultThread);
                             currentActiveThreadId = defaultThreadId;
                             saveDataToLocalStorage();
                         } else if (!currentActiveThreadId || !chatThreads.some(t => t.id === currentActiveThreadId)) {
+                            // If active thread ID is missing or invalid, default to the first thread
                             currentActiveThreadId = chatThreads[0].id;
                             saveDataToLocalStorage();
                         }
+                        
+                        populateAgentSelect();
                         renderThreadList();
                         renderChatWindow();
                         showToast("Chào mừng bạn trở lại!", "success");
-                        isChatReady = true;
+                        isChatReady = true; // Mark chat as ready after all data/UI is set up
                     } else {
                         currentUserId = null;
-                        // Clear chat data when logged out (handled by signOutUser)
+                        // Clear chat data upon logout - already handled by signOutUser, but ensure state consistency
                         chatThreads = [];
                         chatMessages = [];
                         currentActiveThreadId = null;
                         isChatReady = false;
-                        renderThreadList();
-                        renderChatWindow();
+                        renderThreadList(); // Render empty lists
+                        renderChatWindow(); // Clear chat window
                         showToast("Bạn đã đăng xuất.", "info");
                     }
-                    updateUIForAuthState();
+                    updateUIForAuthState(); // Update UI based on new auth state
                 });
 
-                // Check initial auth state
+                // Check initial auth state (on page load)
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (user) {
                     currentUserId = user.id;
-                    // Initial load for authenticated user
                     loadDataFromLocalStorage();
-                    populateAgentSelect();
+
+                    // Ensure a default thread exists or select an existing one for initial load
                     if (chatThreads.length === 0) {
                         const defaultThreadId = crypto.randomUUID();
                         const defaultThread = {
@@ -1315,19 +1332,22 @@
                         currentActiveThreadId = chatThreads[0].id;
                         saveDataToLocalStorage();
                     }
+
+                    populateAgentSelect();
                     renderThreadList();
                     renderChatWindow();
-                    isChatReady = true;
-                    updateUIForAuthState();
+                    isChatReady = true; // Mark chat as ready for initial authenticated user
                 } else {
                     currentUserId = null;
-                    isChatReady = false;
-                    updateUIForAuthState(); // Show login/register modal
+                    isChatReady = false; // Chat is not ready if not authenticated
                 }
-
+                updateUIForAuthState(); // Update UI based on initial auth state
             } catch (error) {
                 console.error("Lỗi khởi tạo ứng dụng chat:", error);
                 showToast("Không thể khởi tạo ứng dụng chat. Vui lòng kiểm tra cấu hình.", "error");
+                isChatReady = false; // Ensure chat is not ready on error
+                toggleChatControls(false); // Keep controls disabled
+                updateUIForAuthState(); // Ensure auth modal is shown
             }
         }
 
@@ -1335,7 +1355,7 @@
         sendButton.addEventListener('click', sendMessage);
 
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !sendButton.disabled) { // Check if send button is not disabled
                 sendMessage();
             }
         });
