@@ -229,18 +229,22 @@
             max-width: 80%;
             word-wrap: break-word;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            display: flex; /* Use flexbox for icon and text alignment */
+            align-items: flex-start; /* Align icon and text to the top */
         }
         .user-message {
             align-self: flex-end;
             background-color: #C8E6C9; /* Giữ màu trung tính cho tin nhắn người dùng */
             color: #333;
             border-bottom-right-radius: 4px;
+            flex-direction: row-reverse; /* Put icon on the right for user messages */
         }
         .bot-message {
             align-self: flex-start;
             background-color: #DDEBF7; /* Giữ màu trung tính cho tin nhắn bot */
             color: #333;
             border-bottom-left-radius: 4px;
+            flex-direction: row; /* Put icon on the left for bot messages */
         }
         .bot-message p:first-child { margin-top: 0; }
         .bot-message p:last-child { margin-bottom: 0; }
@@ -464,6 +468,21 @@
             color: white;
         }
 
+        /* Icon styling */
+        .message-bubble .icon {
+            width: 28px; /* Adjusted icon size */
+            height: 28px; /* Adjusted icon size */
+            border-radius: 50%; /* Make icons round */
+            object-fit: cover;
+            margin-right: 8px; /* Space between icon and message content for bot */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+
+        .user-message .icon {
+            margin-left: 8px; /* Space between icon and message content for user */
+            margin-right: 0; /* Override default for user messages */
+        }
+
 
         /* Loading Spinner */
         .spinner {
@@ -579,6 +598,9 @@
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="thread-sidebar" id="thread-sidebar">
+            <!-- Logo placeholder -->
+            <img src="logo.webp" alt="BIDV Logo" class="w-24 h-auto mx-auto mb-4 mt-2 rounded-lg object-contain" onerror="this.onerror=null;this.src='https://placehold.co/96x96/aabbcc/ffffff?text=LOGO';">
+            
             <div class="thread-sidebar-header">
                 <span>Luồng chat</span>
                 <button id="new-thread-button" class="new-thread-button">
@@ -746,6 +768,157 @@
             }, duration);
         }
 
+        // --- UI Rendering Functions ---
+
+        // Function to display messages in the chat window
+        function addMessageToUI(message, sender, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-bubble');
+
+            const messageContentDiv = document.createElement('div');
+            messageContentDiv.classList.add('flex-grow'); // Allow content to take available space
+
+            const iconImg = document.createElement('img');
+            iconImg.classList.add('icon');
+            // Fallback for image loading errors
+            iconImg.onerror = function() {
+                this.onerror = null; // Prevent infinite loop
+                this.src = `https://placehold.co/28x28/cccccc/666666?text=X`; // Placeholder for broken image
+                this.alt = "Icon Load Error";
+            };
+
+
+            if (sender === currentUserId) {
+                messageDiv.classList.add('user-message');
+                iconImg.src = "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"; // User icon: changed to a more common avatar icon
+                iconImg.alt = "User Icon";
+                messageContentDiv.textContent = message; // User messages do not need Markdown conversion
+                messageDiv.appendChild(messageContentDiv); // Append content first
+                messageDiv.appendChild(iconImg); // Then icon (due to flex-direction: row-reverse)
+            } else {
+                messageDiv.classList.add('bot-message');
+                iconImg.src = "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"; // Robot icon
+                iconImg.alt = "Robot Icon";
+                messageContentDiv.innerHTML = marked.parse(message); // Convert Markdown to HTML for bot messages
+                messageDiv.appendChild(iconImg); // Append icon first
+                messageDiv.appendChild(messageContentDiv); // Then content
+            }
+
+            const time = document.createElement('span');
+            time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
+            if (timestamp) {
+                const date = new Date(timestamp);
+                if (!isNaN(date)) {
+                    time.textContent = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                }
+            } else {
+                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            }
+            messageContentDiv.appendChild(time); // Append time to the message content div
+            
+            chatWindow.appendChild(messageDiv);
+        }
+
+        function renderChatWindow() {
+            chatWindow.innerHTML = ''; // Clear current messages
+            const messagesForCurrentThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
+            messagesForCurrentThread.forEach(msg => {
+                addMessageToUI(msg.text, msg.senderId, msg.timestamp);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
+            updateChatHeaderTitle(); // Update header title and hamburger button visibility
+            checkScrollToTopButtonVisibility(); // Check button visibility after rendering
+        }
+
+        function renderThreadList(threadsToRender = chatThreads) { // Added parameter for filtered threads
+            threadList.innerHTML = ''; // Clear current thread list
+            threadsToRender.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
+
+            threadsToRender.forEach(thread => {
+                const threadItem = document.createElement('div');
+                threadItem.id = `thread-${thread.id}`;
+                threadItem.classList.add('thread-item', 'relative');
+                if (thread.id === currentActiveThreadId) {
+                    threadItem.classList.add('active');
+                }
+
+                const threadNameSpan = document.createElement('span');
+                threadNameSpan.classList.add('thread-item-name');
+                threadNameSpan.textContent = thread.name;
+                threadItem.appendChild(threadNameSpan);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-thread-button');
+                deleteButton.innerHTML = '&times;'; // HTML entity for multiplication sign (X)
+                deleteButton.title = 'Xóa luồng chat';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent thread selection when deleting
+                    deleteThread(thread.id);
+                });
+                threadItem.appendChild(deleteButton);
+
+                threadItem.addEventListener('click', () => selectThread(thread.id));
+                threadList.appendChild(threadItem);
+            });
+        }
+
+        function updateChatHeaderTitle() {
+            const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
+            chatHeaderTitleText.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
+            
+            // Ensure hamburger button is visible in header when on mobile, hidden on desktop
+            if (window.innerWidth <= 768) {
+                hamburgerButton.style.display = 'block';
+            } else {
+                hamburgerButton.style.display = 'none';
+            }
+        }
+
+        function populateAgentSelect() {
+            agentSelect.innerHTML = ''; // Clear existing options
+            availableAgents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.id;
+                option.textContent = agent.name;
+                agentSelect.appendChild(option);
+            });
+            // Set the selected agent in the dropdown
+            agentSelect.value = currentSelectedAgentId;
+        }
+
+        // --- Scroll to Top Button Logic ---
+        function checkScrollToTopButtonVisibility() {
+            // chatWindow.scrollTop là vị trí hiện tại của thanh cuộn từ trên xuống.
+            // chatWindow.scrollHeight là tổng chiều cao nội dung có thể cuộn.
+            // chatWindow.clientHeight là chiều cao hiển thị của cửa sổ chat.
+            // Nếu nội dung chat cao hơn chiều cao hiển thị và người dùng đã cuộn xuống một khoảng nhất định
+            if (chatWindow.scrollHeight > chatWindow.clientHeight && chatWindow.scrollTop > 200) { 
+                scrollToTopButton.classList.add('visible');
+            } else {
+                scrollToTopButton.classList.remove('visible');
+            }
+        }
+
+        function scrollToTop() {
+            chatWindow.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Smooth scroll
+            });
+        }
+
+        // --- User Manual Logic ---
+        function toggleUserManual() {
+            userManualContent.classList.toggle('open');
+            const arrow = userManualHeader.querySelector('span:last-child');
+            if (userManualContent.classList.contains('open')) {
+                arrow.innerHTML = '&#x25B2;'; // Up arrow
+            } else {
+                arrow.innerHTML = '&#x25BC;'; // Down arrow
+            }
+        }
+
         // --- Supabase Authentication Functions ---
         async function signUpUser(email, password) {
             try {
@@ -901,105 +1074,6 @@
             } catch (error) {
                 console.error("Lỗi khi lưu dữ liệu vào LocalStorage:", error);
             }
-        }
-
-        // --- UI Rendering Functions ---
-
-        // Function to display messages in the chat window
-        function addMessageToUI(message, sender, timestamp) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message-bubble');
-
-            if (sender === currentUserId) {
-                messageDiv.classList.add('user-message');
-                messageDiv.textContent = message; // User messages do not need Markdown conversion
-            } else {
-                messageDiv.classList.add('bot-message');
-                messageDiv.innerHTML = marked.parse(message); // Convert Markdown to HTML for bot messages
-            }
-
-            const time = document.createElement('span');
-            time.classList.add('text-xs', 'text-gray-500', 'mt-1', 'block', sender === currentUserId ? 'text-right' : 'text-left');
-            if (timestamp) {
-                const date = new Date(timestamp);
-                if (!isNaN(date)) {
-                    time.textContent = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                }
-            } else {
-                time.textContent = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            }
-            messageDiv.appendChild(time);
-            
-            chatWindow.appendChild(messageDiv);
-        }
-
-        function renderChatWindow() {
-            chatWindow.innerHTML = ''; // Clear current messages
-            const messagesForCurrentThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
-            messagesForCurrentThread.forEach(msg => {
-                addMessageToUI(msg.text, msg.senderId, msg.timestamp);
-            });
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
-            updateChatHeaderTitle(); // Update header title and hamburger button visibility
-            checkScrollToTopButtonVisibility(); // Check button visibility after rendering
-        }
-
-        function renderThreadList(threadsToRender = chatThreads) { // Added parameter for filtered threads
-            threadList.innerHTML = ''; // Clear current thread list
-            threadsToRender.sort((a, b) => new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)); // Sort by last message time
-
-            threadsToRender.forEach(thread => {
-                const threadItem = document.createElement('div');
-                threadItem.id = `thread-${thread.id}`;
-                threadItem.classList.add('thread-item', 'relative');
-                if (thread.id === currentActiveThreadId) {
-                    threadItem.classList.add('active');
-                }
-
-                const threadNameSpan = document.createElement('span');
-                threadNameSpan.classList.add('thread-item-name');
-                threadNameSpan.textContent = thread.name;
-                threadItem.appendChild(threadNameSpan);
-
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('delete-thread-button');
-                deleteButton.innerHTML = '&times;'; // HTML entity for multiplication sign (X)
-                deleteButton.title = 'Xóa luồng chat';
-                deleteButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent thread selection when deleting
-                    deleteThread(thread.id);
-                });
-                threadItem.appendChild(deleteButton);
-
-                threadItem.addEventListener('click', () => selectThread(thread.id));
-                threadList.appendChild(threadItem);
-            });
-        }
-
-        function updateChatHeaderTitle() {
-            const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
-            chatHeaderTitleText.textContent = activeThread ? activeThread.name : 'Chat với GPT Agent';
-            
-            // Ensure hamburger button is visible in header when on mobile, hidden on desktop
-            if (window.innerWidth <= 768) {
-                hamburgerButton.style.display = 'block';
-            } else {
-                hamburgerButton.style.display = 'none';
-            }
-        }
-
-        function populateAgentSelect() {
-            agentSelect.innerHTML = ''; // Clear existing options
-            availableAgents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent.id;
-                option.textContent = agent.name;
-                agentSelect.appendChild(option);
-            });
-            // Set the selected agent in the dropdown
-            agentSelect.value = currentSelectedAgentId;
         }
 
         // --- Thread Management Functions ---
@@ -1290,37 +1364,6 @@
                 thread.name.toLowerCase().includes(searchTerm)
             );
             renderThreadList(filtered);
-        }
-
-        // --- Scroll to Top Button Logic ---
-        function checkScrollToTopButtonVisibility() {
-            // chatWindow.scrollTop là vị trí hiện tại của thanh cuộn từ trên xuống.
-            // chatWindow.scrollHeight là tổng chiều cao nội dung có thể cuộn.
-            // chatWindow.clientHeight là chiều cao hiển thị của cửa sổ chat.
-            // Nếu nội dung chat cao hơn chiều cao hiển thị và người dùng đã cuộn xuống một khoảng nhất định
-            if (chatWindow.scrollHeight > chatWindow.clientHeight && chatWindow.scrollTop > 200) { 
-                scrollToTopButton.classList.add('visible');
-            } else {
-                scrollToTopButton.classList.remove('visible');
-            }
-        }
-
-        function scrollToTop() {
-            chatWindow.scrollTo({
-                top: 0,
-                behavior: 'smooth' // Smooth scroll
-            });
-        }
-
-        // --- User Manual Logic ---
-        function toggleUserManual() {
-            userManualContent.classList.toggle('open');
-            const arrow = userManualHeader.querySelector('span:last-child');
-            if (userManualContent.classList.contains('open')) {
-                arrow.innerHTML = '&#x25B2;'; // Up arrow
-            } else {
-                arrow.innerHTML = '&#x25BC;'; // Down arrow
-            }
         }
 
         // --- Initialization ---
