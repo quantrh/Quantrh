@@ -519,6 +519,102 @@
             display: none !important;
         }
 
+        /* Styles for custom New Thread Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's above everything else */
+            backdrop-filter: blur(5px); /* Add a blur effect to the background */
+            -webkit-backdrop-filter: blur(5px); /* Safari support */
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            animation: fadeInScale 0.3s ease-out; /* Simple animation */
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #006B68;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input[type="text"] {
+            width: calc(100% - 24px); /* Account for padding */
+            padding: 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-content input[type="text"]:focus {
+            border-color: #006B68;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .modal-buttons .create-button {
+            background-color: #006B68;
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .modal-buttons .create-button:hover {
+            background-color: #005C5A;
+            transform: translateY(-1px);
+        }
+
+        .modal-buttons .cancel-button {
+            background-color: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+        .modal-buttons .cancel-button:hover {
+            background-color: #d0d0d0;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -599,6 +695,18 @@
         </div>
     </div>
 
+    <!-- Custom Modal for New Thread Name Input -->
+    <div id="new-thread-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Tạo luồng chat mới</h3>
+            <input type="text" id="new-thread-name-input" placeholder="Nhập tên luồng chat (vd: Hỗ trợ IT)">
+            <div class="modal-buttons">
+                <button id="modal-create-button" class="create-button">Tạo</button>
+                <button id="modal-cancel-button" class="cancel-button">Hủy</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN SCRIPT BLOCK -->
     <script type="module">
         // Supabase Client SDK
@@ -657,6 +765,16 @@
         const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
         const authMessageDiv = document.getElementById('auth-message');
 
+        // Custom New Thread Modal Elements
+        const newThreadModal = document.getElementById('new-thread-modal');
+        const newThreadNameInput = document.getElementById('new-thread-name-input');
+        const modalCreateButton = document.getElementById('modal-create-button');
+        const modalCancelButton = document.getElementById('modal-cancel-button');
+
+        // Variables for modal promise resolution
+        let resolveNewThreadModal = null;
+        let rejectNewThreadModal = null;
+
 
         // --- Supabase Functions for Data Persistence ---
 
@@ -679,15 +797,32 @@
                     throw threadsError;
                 }
                 // Ensure agentId is always set for loaded threads
-                chatThreads = (threads || []).map(thread => ({
-                    id: thread.id,
-                    name: thread.name,
-                    lastMessageTimestamp: thread.last_message_timestamp,
-                    // Default to the first available agent if agent_id from DB is null or undefined
-                    agentId: thread.agent_id || (availableAgents.length > 0 ? availableAgents[0].id : null), 
-                    userId: thread.user_id,
-                    openaiThreadId: thread.openai_thread_id
-                }));
+                chatThreads = (threads || []).map(thread => {
+                    let agentIdToUse = thread.agent_id;
+                    if (!agentIdToUse && availableAgents.length > 0) {
+                        agentIdToUse = availableAgents[0].id;
+                        // Mark this thread for saving back to Supabase if its agentId was originally null
+                        // This ensures old threads get updated in the DB
+                        setTimeout(() => {
+                            saveThreadToSupabase({ 
+                                id: thread.id,
+                                user_id: thread.user_id,
+                                name: thread.name,
+                                last_message_timestamp: thread.last_message_timestamp,
+                                agentId: agentIdToUse,
+                                openaiThreadId: thread.openai_thread_id
+                            });
+                        }, 0); // Use setTimeout to not block main thread
+                    }
+                    return {
+                        id: thread.id,
+                        name: thread.name,
+                        lastMessageTimestamp: thread.last_message_timestamp,
+                        agentId: agentIdToUse, 
+                        userId: thread.user_id,
+                        openaiThreadId: thread.openai_thread_id
+                    };
+                });
                 console.log('loadDataFromSupabase: Đã tải luồng chat:', chatThreads);
 
                 // Fetch messages
@@ -979,16 +1114,54 @@
 
         // --- Chat Logic Functions ---
 
+        /**
+         * Shows a custom modal for inputting the new thread name.
+         * Returns a Promise that resolves with the thread name or rejects if cancelled.
+         */
+        function showNewThreadModal() {
+            return new Promise((resolve, reject) => {
+                newThreadModal.classList.remove('hidden');
+                newThreadNameInput.value = ''; // Clear previous input
+                newThreadNameInput.focus();
+
+                resolveNewThreadModal = (threadName) => {
+                    newThreadModal.classList.add('hidden');
+                    resolve(threadName);
+                };
+                rejectNewThreadModal = () => {
+                    newThreadModal.classList.add('hidden');
+                    reject(new Error("Người dùng đã hủy tạo luồng chat mới."));
+                };
+            });
+        }
+
+        // Event listeners for the custom modal buttons
+        modalCreateButton.addEventListener('click', () => {
+            const threadName = newThreadNameInput.value.trim();
+            resolveNewThreadModal(threadName === '' ? 'Luồng chat mới' : threadName);
+        });
+
+        modalCancelButton.addEventListener('click', () => {
+            rejectNewThreadModal();
+        });
+
+        newThreadNameInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission if any
+                const threadName = newThreadNameInput.value.trim();
+                resolveNewThreadModal(threadName === '' ? 'Luồng chat mới' : threadName);
+            }
+        });
+
+
         async function createThread() {
             console.log("createThread: Bắt đầu tạo luồng mới.");
             console.log("createThread: currentUserId =", currentUserId);
             console.log("createThread: currentSelectedAgentId (trước prompt) =", currentSelectedAgentId);
 
-            // Ensure an agent is selected before prompting for thread name
-            // This is crucial. If no agent is selected, user shouldn't be able to proceed.
             if (!currentSelectedAgentId) {
-                addMessageToUI("Lỗi: Vui lòng chọn một Agent từ danh sách thả xuống trước khi tạo luồng chat mới.", "bot", new Date().toISOString());
-                console.error("createThread: Không thể tạo luồng chat vì currentSelectedAgentId rỗng.");
+                console.error("createThread failed: currentSelectedAgentId is null or empty. Value:", currentSelectedAgentId, "Available agents:", availableAgents);
+                addMessageToUI("Lỗi: Vui lòng chọn một Agent từ danh sách thả xuống trước khi tạo luồng chat mới. Hoặc không có Agent nào khả dụng.", "bot", new Date().toISOString());
                 return;
             }
             if (!currentUserId) {
@@ -997,13 +1170,13 @@
                 return;
             }
 
-
-            const threadName = prompt("Vui lòng nhập tên cho luồng chat mới của bạn:", "Luồng chat mới");
-            if (threadName === null) { // User clicked Cancel
-                console.log("createThread: Người dùng đã hủy tạo luồng chat mới.");
+            let finalThreadName;
+            try {
+                finalThreadName = await showNewThreadModal();
+            } catch (error) {
+                console.log(error.message); // "Người dùng đã hủy tạo luồng chat mới."
                 return;
             }
-            const finalThreadName = threadName.trim() === '' ? 'Luồng chat mới' : threadName.trim();
 
             const newThreadId = crypto.randomUUID();
             const newThread = {
@@ -1056,17 +1229,25 @@
 
         function selectThread(threadId) {
             currentActiveThreadId = threadId;
-            // Update currentSelectedAgentId based on the selected thread's agentId
             const selectedThread = chatThreads.find(t => t.id === threadId);
-            if (selectedThread && selectedThread.agentId) {
-                currentSelectedAgentId = selectedThread.agentId;
-                // Update the dropdown to reflect the change
-                if (agentSelect) {
-                    agentSelect.value = currentSelectedAgentId;
+            if (selectedThread) { // Ensure selectedThread exists
+                let agentIdForThread = selectedThread.agentId;
+                // If the selected thread doesn't have an agentId (e.g., old data), default it and save
+                if (!agentIdForThread && availableAgents.length > 0) {
+                    agentIdForThread = availableAgents[0].id;
+                    selectedThread.agentId = agentIdForThread; // Update in-memory object
+                    // Proactively save this updated agentId back to Supabase for old threads
+                    setTimeout(() => {
+                        saveThreadToSupabase(selectedThread);
+                    }, 0);
                 }
-                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save selected agent
+                currentSelectedAgentId = agentIdForThread;
+                if (agentSelect) {
+                    agentSelect.value = currentSelectedAgentId || ''; // Handle case where currentSelectedAgentId might still be null (no agents)
+                }
+                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId || ''); // Save selected agent, handling null case
             } else {
-                 // If the selected thread doesn't have an agentId (e.g., old data), or no thread selected,
+                 // If the selected thread doesn't exist, or no thread selected,
                  // default to the first available agent and update the dropdown.
                 if (availableAgents.length > 0) {
                     currentSelectedAgentId = availableAgents[0].id;
@@ -1115,8 +1296,8 @@
 
             // This is the specific error the user is getting.
             if (!agentToUse) {
+                console.error("sendMessage failed: activeThread.agentId is null or empty. Active Thread:", activeThread, "Available agents:", availableAgents);
                 addMessageToUI("Lỗi: Agent cho luồng chat này không được chọn. Vui lòng chọn một Agent từ danh sách hoặc tạo luồng chat mới.", "bot", new Date().toISOString());
-                console.error("sendMessage: AgentToUse is null/undefined for the active thread:", activeThread);
                 return;
             }
 
@@ -1279,6 +1460,8 @@
             const email = authEmailInput.value.trim();
             const password = authPasswordInput.value.trim();
 
+            authMessageDiv.textContent = ''; // Clear previous messages at the very beginning of the function
+
             if (!email || !password) {
                 authMessageDiv.textContent = 'Vui lòng nhập email và mật khẩu.';
                 authMessageDiv.classList.remove('success');
@@ -1287,8 +1470,7 @@
 
             authMainButton.disabled = true;
             toggleAuthModeButton.disabled = true;
-            authMessageDiv.textContent = ''; // Clear previous messages
-
+            
             try {
                 if (authMode === 'register') {
                     const { data, error } = await supabaseClient.auth.signUp({
@@ -1328,8 +1510,10 @@
                 // Error message already set in the try block
                 console.error("Auth Error:", error);
                 // Also update authMessageDiv for initialization errors, which might be silent otherwise
-                authMessageDiv.textContent = `Lỗi xác thực: ${error.message}. Vui lòng thử lại.`;
-                authMessageDiv.classList.remove('success');
+                if (!authMessageDiv.textContent) { // Only set if not already set by specific error handling above
+                    authMessageDiv.textContent = `Lỗi xác thực: ${error.message}. Vui lòng thử lại.`;
+                    authMessageDiv.classList.remove('success');
+                }
             } finally {
                 authMainButton.disabled = false;
                 toggleAuthModeButton.disabled = false;
@@ -1445,7 +1629,7 @@
                 
                 // If the previously active thread is not found or is null, or if it doesn't have an agentId,
                 // try to find the most recent thread that has a valid agentId.
-                if (activeThreadIndex === -1 || !chatThreads[activeThreadIndex].agentId) {
+                if (activeThreadIndex === -1 || (chatThreads[activeThreadIndex] && !chatThreads[activeThreadIndex].agentId)) {
                     activeThreadIndex = chatThreads.findIndex(t => t.agentId !== null); // Find the first thread with an agent
                     if (activeThreadIndex === -1) { // If no thread has an agent, fall back to the very first thread
                          activeThreadIndex = 0;
