@@ -15,7 +15,7 @@
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
-            align-items: center;-s
+            align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 0; /* Remove padding from body for full-screen effect on mobile */
@@ -548,7 +548,7 @@
             
             <!-- Agent Selection Dropdown -->
             <label for="agent-select" class="text-sm font-semibold text-gray-700 mb-2">Chọn Agent:</label>
-            <select id="agent-select" class="agent-select"><option value="asst_o8G2LqrbzqP73ZaQQKBGYSqj">SmartCounterHub</option><option value="asst_iyjtFwcQQlUhwNBI8DZLPZ5A">ITBOOK</option><option value="asst_5ALG676dm3BRVKp5Ou6txCxa">QuyHoachBoNhiem</option></select>
+            <select id="agent-select" class="agent-select"></select>
 
             <!-- User Manual Section -->
             <div class="user-manual-section">
@@ -711,7 +711,15 @@
                 
                 // Load active thread and selected agent from local storage (or default)
                 currentActiveThreadId = localStorage.getItem(`currentActiveThreadId_${currentUserId}`);
-                currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`);
+                
+                // If currentSelectedAgentId is not set, try to get it from local storage, or default to the first agent
+                if (!currentSelectedAgentId) {
+                    currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`);
+                    if (!currentSelectedAgentId && availableAgents.length > 0) {
+                        currentSelectedAgentId = availableAgents[0].id;
+                        localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
+                    }
+                }
 
                 // If active thread doesn't exist or is not for this user, reset it
                 if (!chatThreads.some(t => t.id === currentActiveThreadId)) {
@@ -1048,7 +1056,33 @@
 
         function selectThread(threadId) {
             currentActiveThreadId = threadId;
-            localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Ensure selected agent is saved
+            // Update currentSelectedAgentId based on the selected thread's agentId
+            const selectedThread = chatThreads.find(t => t.id === threadId);
+            if (selectedThread && selectedThread.agentId) {
+                currentSelectedAgentId = selectedThread.agentId;
+                // Update the dropdown to reflect the change
+                if (agentSelect) {
+                    agentSelect.value = currentSelectedAgentId;
+                }
+                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save selected agent
+            } else {
+                 // If the selected thread doesn't have an agentId (e.g., old data), or no thread selected,
+                 // default to the first available agent and update the dropdown.
+                if (availableAgents.length > 0) {
+                    currentSelectedAgentId = availableAgents[0].id;
+                    if (agentSelect) {
+                        agentSelect.value = currentSelectedAgentId;
+                    }
+                    localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
+                } else {
+                    currentSelectedAgentId = null; // No agents available
+                    if (agentSelect) {
+                        agentSelect.value = '';
+                    }
+                    localStorage.removeItem(`currentSelectedAgentId_${currentUserId}`);
+                }
+            }
+            
             localStorage.setItem(`currentActiveThreadId_${currentUserId}`, currentActiveThreadId); // Save active thread to local storage
             renderThreadList(); // Re-render to highlight active thread
             renderChatWindow(); // Load messages for the selected thread
@@ -1379,12 +1413,14 @@
             // Set currentSelectedAgentId very early, before loading or creating threads
             // Default to the first agent if not found in localStorage or if availableAgents is empty
             currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`);
-            if (!currentSelectedAgentId && availableAgents.length > 0) {
-                currentSelectedAgentId = availableAgents[0].id;
-                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save default to local storage
-            } else if (availableAgents.length === 0) {
-                currentSelectedAgentId = null; // No agents configured
-                console.warn("initializeChatApp: Không có Agent nào được cấu hình trong availableAgents. Vui lòng thêm Agent.");
+            if (!currentSelectedAgentId || !availableAgents.some(agent => agent.id === currentSelectedAgentId)) { // Added check if stored agentId is valid
+                if (availableAgents.length > 0) {
+                    currentSelectedAgentId = availableAgents[0].id;
+                    localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save default to local storage
+                } else {
+                    currentSelectedAgentId = null; // No agents configured
+                    console.warn("initializeChatApp: Không có Agent nào được cấu hình trong availableAgents. Vui lòng thêm Agent.");
+                }
             }
             console.log("initializeChatApp: currentSelectedAgentId sau khởi tạo =", currentSelectedAgentId);
 
@@ -1404,13 +1440,26 @@
             // Ensure a thread is selected or created
             if (chatThreads.length > 0) {
                 console.log("initializeChatApp: Đã tìm thấy luồng chat.");
-                if (currentActiveThreadId && chatThreads.some(t => t.id === currentActiveThreadId)) {
-                    console.log("initializeChatApp: Chọn lại luồng đã hoạt động trước đó.");
-                    selectThread(currentActiveThreadId);
-                } else {
-                    console.log("initializeChatApp: Không có luồng hoạt động hợp lệ, chọn luồng gần đây nhất.");
-                    selectThread(chatThreads[0].id);
+                // Find the index of the previously active thread
+                let activeThreadIndex = chatThreads.findIndex(t => t.id === currentActiveThreadId);
+                
+                // If the previously active thread is not found or is null, or if it doesn't have an agentId,
+                // try to find the most recent thread that has a valid agentId.
+                if (activeThreadIndex === -1 || !chatThreads[activeThreadIndex].agentId) {
+                    activeThreadIndex = chatThreads.findIndex(t => t.agentId !== null); // Find the first thread with an agent
+                    if (activeThreadIndex === -1) { // If no thread has an agent, fall back to the very first thread
+                         activeThreadIndex = 0;
+                    }
                 }
+
+                if (chatThreads[activeThreadIndex]) {
+                    selectThread(chatThreads[activeThreadIndex].id);
+                } else {
+                    console.log("initializeChatApp: Không có luồng hoạt động hợp lệ hoặc không có luồng nào với agentId, đặt lại.");
+                    currentActiveThreadId = null;
+                    renderChatWindow();
+                }
+
             } else {
                 console.log("initializeChatApp: Không có luồng chat nào, tạo luồng mới mặc định.");
                 // Create a new default thread only if there are available agents AND currentUserId is valid
@@ -1480,8 +1529,7 @@
         agentSelect.addEventListener('change', (e) => {
             currentSelectedAgentId = e.target.value;
             localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save selected agent
-            // Optionally, prompt user to create a new thread if changing agent, or simply update current thread's agent.
-            // For now, it just updates the active agent for *new* threads.
+            
             // To update existing active thread's agent:
             if (currentActiveThreadId) {
                 const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
