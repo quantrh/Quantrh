@@ -190,10 +190,12 @@
             font-size: 1.25rem;
             font-weight: 700;
             border-top-right-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+            display: flex; /* Make it a flex container */
+            align-items: center; /* Vertically center items */
+            justify-content: space-between; /* Distribute items with space between them */
+            position: relative; /* For absolute hamburger */
+            padding-left: 50px; /* Space for hamburger button */
+            padding-right: 16px; /* Consistent padding on the right */
         }
         .hamburger-button {
             display: none; /* Hidden by default on desktop */
@@ -209,9 +211,23 @@
             transform: translateY(-50%);
             z-index: 60;
         }
+        .chat-header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center logo and title within their allocated space */
+            flex-grow: 1; /* Take up remaining space */
+        }
         .chat-header-title-text { /* New span for title text */
-            flex-grow: 1; /* Allow title text to take available space */
-            text-align: center;
+            /* No flex-grow or auto-margins needed here, as parent div handles centering */
+            text-align: center; /* Keep text centered within its own span */
+        }
+        .header-logo {
+            width: 40px; /* Smaller size for header */
+            height: 40px;
+            border-radius: 8px; /* Slightly less rounded than message icons */
+            object-fit: contain;
+            flex-shrink: 0;
+            margin-right: 8px; /* Space between logo and title */
         }
         .chat-window {
             flex-grow: 1;
@@ -598,8 +614,6 @@
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="thread-sidebar" id="thread-sidebar">
-            <!-- Logo placeholder -->
-            <img src="logo.webp" alt="BIDV Logo" class="w-24 h-auto mx-auto mb-4 mt-2 rounded-lg object-contain" onerror="this.onerror=null;this.src='https://placehold.co/96x96/aabbcc/ffffff?text=LOGO';">
             
             <div class="thread-sidebar-header">
                 <span>Luồng chat</span>
@@ -649,7 +663,10 @@
         <div class="chat-area">
             <div class="chat-header" id="chat-header">
                 <button id="hamburger-button" class="hamburger-button">☰</button>
-                <span id="chat-header-title-text">Chat với GPT Agent</span> <!-- Updated ID for title text -->
+                <div class="chat-header-content">
+                    <img src="logo.webp" alt="BIDV Logo" class="header-logo" onerror="this.onerror=null;this.src='https://placehold.co/40x40/aabbcc/ffffff?text=LOGO';">
+                    <span id="chat-header-title-text">Chat với GPT Agent</span> <!-- Updated ID for title text -->
+                </div>
             </div>
             <div class="chat-window" id="chat-window">
                 <!-- Messages will be displayed here -->
