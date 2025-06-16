@@ -673,25 +673,34 @@
 
                 if (threadsError) {
                     console.error("Lỗi khi tải luồng từ Supabase:", threadsError.message);
-                    throw threadsError; // Re-throw to be caught by outer try-catch
+                    throw threadsError;
                 }
-                chatThreads = threads || [];
+                // Ensure agentId is always set for loaded threads
+                chatThreads = (threads || []).map(thread => ({
+                    id: thread.id,
+                    name: thread.name,
+                    lastMessageTimestamp: thread.last_message_timestamp,
+                    // Default to the first available agent if agent_id from DB is null or undefined
+                    agentId: thread.agent_id || (availableAgents.length > 0 ? availableAgents[0].id : null), 
+                    userId: thread.user_id,
+                    openaiThreadId: thread.openai_thread_id
+                }));
 
                 // Fetch messages
                 const { data: messages, error: messagesError } = await supabaseClient
                     .from('messages')
                     .select('*')
-                    .in('thread_id', chatThreads.map(t => t.id)); // Fetch messages only for current user's threads
+                    .in('thread_id', chatThreads.map(t => t.id));
 
                 if (messagesError) {
                     console.error("Lỗi khi tải tin nhắn từ Supabase:", messagesError.message);
-                    throw messagesError; // Re-throw
+                    throw messagesError;
                 }
                 chatMessages = messages || [];
                 
                 // Load active thread and selected agent from local storage (or default)
                 currentActiveThreadId = localStorage.getItem(`currentActiveThreadId_${currentUserId}`);
-                currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`) || availableAgents[0].id;
+                currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`);
 
                 // If active thread doesn't exist or is not for this user, reset it
                 if (!chatThreads.some(t => t.id === currentActiveThreadId)) {
@@ -701,11 +710,11 @@
                 console.log('Dữ liệu đã được tải từ Supabase.');
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu từ Supabase:", error.message);
-                // Fallback to empty data on error
                 chatThreads = [];
                 chatMessages = [];
                 currentActiveThreadId = null;
-                currentSelectedAgentId = availableAgents[0].id;
+                // Ensure currentSelectedAgentId is always initialized, even on load error
+                currentSelectedAgentId = availableAgents.length > 0 ? availableAgents[0].id : null;
             }
         }
 
@@ -741,7 +750,7 @@
                     .insert({
                         id: message.id,
                         thread_id: message.threadId,
-                        sender_id: message.senderId, // This is now correctly handled by TEXT type in DB
+                        sender_id: message.senderId, 
                         text: message.text,
                         timestamp: message.timestamp
                     });
@@ -934,7 +943,15 @@
                     option.textContent = agent.name;
                     agentSelect.appendChild(option);
                 });
-                agentSelect.value = currentSelectedAgentId; // Set the currently selected agent
+                // Set the currently selected agent. Ensure it's valid.
+                if (currentSelectedAgentId && availableAgents.some(agent => agent.id === currentSelectedAgentId)) {
+                    agentSelect.value = currentSelectedAgentId;
+                } else {
+                    // If currentSelectedAgentId is not valid/found, default to the first available agent
+                    agentSelect.value = availableAgents[0].id;
+                    currentSelectedAgentId = availableAgents[0].id; // Update the global variable
+                    localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId);
+                }
                 console.log('Đã chọn Agent mặc định (hoặc từ localStorage):', agentSelect.value);
             }
             console.log('--- Kết thúc render danh sách Agent. Số lượng options:', agentSelect.options.length, '---');
@@ -944,9 +961,21 @@
         // --- Chat Logic Functions ---
 
         async function createThread() {
-            // Prompt the user for a thread name
+            console.log("createThread: Bắt đầu tạo luồng mới.");
+            console.log("createThread: currentUserId =", currentUserId);
+            console.log("createThread: currentSelectedAgentId (trước prompt) =", currentSelectedAgentId);
+
+            // Ensure an agent is selected before prompting for thread name
+            // This is crucial. If no agent is selected, user shouldn't be able to proceed.
+            if (!currentSelectedAgentId) {
+                addMessageToUI("Lỗi: Vui lòng chọn một Agent từ danh sách thả xuống trước khi tạo luồng chat mới.", "bot", new Date().toISOString());
+                console.error("createThread: Không thể tạo luồng chat vì currentSelectedAgentId rỗng.");
+                return;
+            }
+
             const threadName = prompt("Vui lòng nhập tên cho luồng chat mới của bạn:", "Luồng chat mới");
             if (threadName === null) { // User clicked Cancel
+                console.log("createThread: Người dùng đã hủy tạo luồng chat mới.");
                 return;
             }
             const finalThreadName = threadName.trim() === '' ? 'Luồng chat mới' : threadName.trim();
@@ -954,17 +983,27 @@
             const newThreadId = crypto.randomUUID();
             const newThread = {
                 id: newThreadId,
-                name: finalThreadName, // Use the name provided by the user
+                name: finalThreadName,
                 lastMessageTimestamp: new Date().toISOString(),
-                agentId: currentSelectedAgentId, // Use the currently selected agent
-                userId: currentUserId, // Include userId for thread
-                openaiThreadId: null // Initialize openaiThreadId as null
+                agentId: currentSelectedAgentId, // Use the already validated and selected agent
+                userId: currentUserId,
+                openaiThreadId: null
             };
             chatThreads.unshift(newThread); // Add to the beginning
-            await saveThreadToSupabase(newThread);
-            selectThread(newThreadId);
-            renderThreadList();
-            userInput.focus();
+            try {
+                console.log("createThread: Đang lưu luồng mới vào Supabase:", newThread);
+                await saveThreadToSupabase(newThread);
+                console.log("createThread: Luồng mới đã được lưu thành công.");
+                selectThread(newThreadId);
+                renderThreadList();
+                userInput.focus();
+            } catch (error) {
+                console.error("Lỗi khi tạo luồng chat mới:", error.message);
+                addMessageToUI("Lỗi: Không thể tạo luồng chat mới. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                // Remove the newly added thread from local array if saving failed
+                chatThreads = chatThreads.filter(thread => thread.id !== newThreadId);
+                renderThreadList(); // Re-render to reflect removal
+            }
         }
 
         async function deleteThread(threadIdToDelete) {
@@ -1002,21 +1041,30 @@
             const userMessageText = userInput.value.trim();
             if (!userMessageText) return;
 
+            // Ensure a thread is active before sending.
             if (!currentActiveThreadId) {
-                // If no thread is active, create a new one automatically
-                // NOTE: With the new prompt for thread name, this auto-creation might be less desirable.
-                // Consider removing auto-creation here if user is expected to always name threads first.
-                await createThread(); // This will now prompt for a name
-                // If createThread() is cancelled, currentActiveThreadId will still be null, so return.
-                if (!currentActiveThreadId) return; 
+                addMessageToUI("Lỗi: Không có luồng chat nào đang hoạt động. Vui lòng thử đăng nhập lại hoặc tạo một luồng chat mới.", "bot", new Date().toISOString());
+                console.error("Không có luồng chat nào đang hoạt động khi cố gắng gửi tin nhắn.");
+                return;
             }
 
             const activeThread = chatThreads.find(t => t.id === currentActiveThreadId);
-            const agentToUse = activeThread ? activeThread.agentId : currentSelectedAgentId;
+            // This defensive check is good to keep.
+            if (!activeThread) {
+                addMessageToUI("Lỗi: Luồng chat đang hoạt động không tìm thấy. Vui lòng tạo một luồng chat mới.", "bot", new Date().toISOString());
+                console.error("Luồng chat đang hoạt động không tồn tại trong bộ nhớ local.");
+                currentActiveThreadId = null; // Reset to avoid future errors with a non-existent ID
+                renderThreadList();
+                renderChatWindow();
+                return;
+            }
 
+            const agentToUse = activeThread.agentId; // Use agentId from the active thread
+
+            // This is the specific error the user is getting.
             if (!agentToUse) {
-                console.error("Không có Agent nào được chọn. Vui lòng chọn một Agent.");
-                addMessageToUI("Lỗi: Không có Agent nào được chọn. Vui lòng chọn một Agent.", "bot", new Date().toISOString());
+                addMessageToUI("Lỗi: Agent cho luồng chat này không được chọn. Vui lòng chọn một Agent từ danh sách hoặc tạo luồng chat mới.", "bot", new Date().toISOString());
+                console.error("AgentToUse is null/undefined for the active thread:", activeThread);
                 return;
             }
 
@@ -1038,20 +1086,10 @@
             // Save user message to Supabase
             await saveMessageToSupabase(userMessage);
 
-            // Update thread name based on first message if it's the first message in this thread
-            // This part is now less critical as thread name is set at creation, but can still serve as a fallback.
-            // const messagesInThread = chatMessages.filter(msg => msg.threadId === currentActiveThreadId);
-            // if (messagesInThread.length === 1 && activeThread.name === 'Luồng chat mới') {
-            //     await updateThreadNameBasedOnFirstMessage(currentActiveThreadId, userMessageText);
-            // }
-
             // Update lastMessageTimestamp for the thread
-            const threadToUpdate = chatThreads.find(t => t.id === currentActiveThreadId);
-            if (threadToUpdate) {
-                threadToUpdate.lastMessageTimestamp = userMessage.timestamp;
-                await saveThreadToSupabase(threadToUpdate);
-                renderThreadList(); // Re-render to update order
-            }
+            activeThread.lastMessageTimestamp = userMessage.timestamp; // Use activeThread directly
+            await saveThreadToSupabase(activeThread);
+            renderThreadList(); // Re-render to update order
 
             const loadingIndicator = document.createElement('div');
             loadingIndicator.classList.add('loading-indicator');
@@ -1114,11 +1152,9 @@
                 chatWindow.scrollTop = chatWindow.scrollHeight;
 
                  // Update lastMessageTimestamp for the thread again after bot response
-                 if (threadToUpdate) {
-                    threadToUpdate.lastMessageTimestamp = botMessage.timestamp;
-                    await saveThreadToSupabase(threadToUpdate);
-                    renderThreadList();
-                }
+                activeThread.lastMessageTimestamp = botMessage.timestamp;
+                await saveThreadToSupabase(activeThread);
+                renderThreadList();
 
             } catch (error) {
                 console.error('Lỗi khi gửi tin nhắn hoặc nhận phản hồi từ Agent:', error);
@@ -1246,6 +1282,9 @@
             } catch (error) {
                 // Error message already set in the try block
                 console.error("Auth Error:", error);
+                // Also update authMessageDiv for initialization errors, which might be silent otherwise
+                authMessageDiv.textContent = `Lỗi xác thực: ${error.message}. Vui lòng thử lại.`;
+                authMessageDiv.classList.remove('success');
             } finally {
                 authMainButton.disabled = false;
                 toggleAuthModeButton.disabled = false;
@@ -1326,10 +1365,30 @@
             console.log("initializeChatApp: Bắt đầu khởi tạo ứng dụng chat...");
             userIdDisplay.textContent = `ID người dùng: ${currentUserId}`; // Display full user ID
             
+            // Set currentSelectedAgentId very early, before loading or creating threads
+            // Default to the first agent if not found in localStorage or if availableAgents is empty
+            currentSelectedAgentId = localStorage.getItem(`currentSelectedAgentId_${currentUserId}`);
+            if (!currentSelectedAgentId && availableAgents.length > 0) {
+                currentSelectedAgentId = availableAgents[0].id;
+                localStorage.setItem(`currentSelectedAgentId_${currentUserId}`, currentSelectedAgentId); // Save default to local storage
+            } else if (availableAgents.length === 0) {
+                currentSelectedAgentId = null; // No agents configured
+                console.warn("initializeChatApp: Không có Agent nào được cấu hình trong availableAgents. Vui lòng thêm Agent.");
+            }
+            console.log("initializeChatApp: currentSelectedAgentId sau khởi tạo =", currentSelectedAgentId);
+
+
             await loadDataFromSupabase(); // Load data from Supabase
+            // Note: loadDataFromSupabase also tries to set agentId for loaded threads
 
             renderAgentSelect(); // Render agent options
-            agentSelect.value = currentSelectedAgentId; // Ensure dropdown reflects saved choice
+            // Ensure the dropdown shows the actual selected agent, even if it's null (e.g., no agents)
+            if (currentSelectedAgentId) {
+                agentSelect.value = currentSelectedAgentId;
+            } else {
+                agentSelect.value = ''; // Or set to an empty option if no agents are available
+            }
+
 
             // Ensure a thread is selected or created
             if (chatThreads.length > 0) {
@@ -1339,15 +1398,40 @@
                     selectThread(currentActiveThreadId);
                 } else {
                     console.log("initializeChatApp: Không có luồng hoạt động hợp lệ, chọn luồng gần đây nhất.");
-                    // Select the most recent thread if no valid active thread
                     selectThread(chatThreads[0].id);
                 }
             } else {
                 console.log("initializeChatApp: Không có luồng chat nào, tạo luồng mới mặc định.");
-                // If no threads exist after loading, create a new default one
-                // Do not auto-create here if you want to always prompt for name.
-                // If auto-creation is needed, use a default name.
-                // await createThread(); // This will now prompt for a name
+                // Create a new default thread only if there are available agents AND currentUserId is valid
+                if (currentSelectedAgentId && currentUserId) {
+                    const newThreadId = crypto.randomUUID();
+                    const newThread = {
+                        id: newThreadId,
+                        name: 'Luồng chat đầu tiên của bạn', // Default name for auto-created thread
+                        lastMessageTimestamp: new Date().toISOString(),
+                        agentId: currentSelectedAgentId, 
+                        userId: currentUserId,
+                        openaiThreadId: null 
+                    };
+                    chatThreads.unshift(newThread); // Add to the beginning
+                    try {
+                        console.log("initializeChatApp: Đang lưu luồng chat mặc định vào Supabase:", newThread);
+                        await saveThreadToSupabase(newThread);
+                        console.log("initializeChatApp: Luồng chat mặc định đã được lưu thành công.");
+                        selectThread(newThreadId); // Select the newly created thread
+                    } catch (error) {
+                        console.error("initializeChatApp: Lỗi khi tạo luồng chat mặc định:", error.message);
+                        addMessageToUI("Lỗi: Không thể tạo luồng chat mặc định. Vui lòng thử lại. (Chi tiết: " + error.message + ")", "bot", new Date().toISOString());
+                        // If auto-creation fails, ensure we don't try to select a non-existent thread
+                        chatThreads = [];
+                        currentActiveThreadId = null;
+                        renderThreadList();
+                        renderChatWindow();
+                    }
+                } else {
+                    addMessageToUI("Không có Agent nào khả dụng hoặc người dùng chưa đăng nhập để bắt đầu luồng chat. Vui lòng liên hệ quản trị viên.", "bot", new Date().toISOString());
+                    console.error("initializeChatApp: Không thể tạo luồng chat mặc định vì không có Agent nào khả dụng hoặc currentUserId không hợp lệ.");
+                }
             }
             isChatReady = true;
             userInput.focus();
