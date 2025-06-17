@@ -477,38 +477,47 @@
         function formatChatResponseToHtml(responseText) {
             let htmlContent = '';
             let sourcesHtml = '';
-
-            // 1. Extract <source> block and parse it
-            const sourceRegex = /<source>([\s\S]*?)<\/source>/;
-            const sourceMatch = responseText.match(sourceRegex);
             let mainText = responseText;
 
-            if (sourceMatch && sourceMatch[1]) {
-                try {
-                    let sourceJsonString = sourceMatch[1];
-                    // Sanitize by removing ALL newlines to ensure valid JSON string for parsing
-                    sourceJsonString = sourceJsonString.replace(/\n/g, '').trim(); 
-                    const sourceData = JSON.parse(sourceJsonString);
-                    mainText = responseText.replace(sourceRegex, '').trim(); // Remove source block from main text
+            // Try to extract a trailing JSON block for referDocuments
+            // This regex looks for an optional newline, then an opening curly brace, then anything, then a closing curly brace, at the end of the string.
+            const trailingJsonRegex = /\n*\s*(\{[\s\S]*?\})\s*$/;
+            const jsonMatch = responseText.match(trailingJsonRegex);
 
-                    if (sourceData.referDocuments) {
-                        sourcesHtml += '<div class="mt-4 p-3 bg-gray-100 rounded-lg text-sm">';
-                        sourcesHtml += '<p class="font-semibold mb-1">Nguồn tham chiếu:</p>';
-                        sourcesHtml += '<ul class="list-disc list-inside pl-4">';
-                        for (const docName in sourceData.referDocuments) {
-                            const pages = sourceData.referDocuments[docName].join(', ');
-                            sourcesHtml += `<li>${docName} (Trang: ${pages})</li>`;
-                        }
-                        sourcesHtml += '</ul>';
-                        sourcesHtml += '</div>';
+            let referDocumentsData = null;
+
+            if (jsonMatch && jsonMatch[1]) {
+                try {
+                    let jsonString = jsonMatch[1];
+                    // Sanitize by removing ALL newlines to ensure valid JSON string for parsing
+                    jsonString = jsonString.replace(/\n/g, '').trim(); 
+                    const parsedJson = JSON.parse(jsonString);
+
+                    if (parsedJson.referDocuments) {
+                        referDocumentsData = parsedJson.referDocuments;
+                        // Remove the matched JSON block from the main text
+                        mainText = responseText.replace(jsonMatch[0], '').trim(); 
                     }
                 } catch (e) {
-                    console.error("Error parsing source JSON:", e);
-                    sourcesHtml = '<div class="mt-4 text-red-500 text-sm">Lỗi phân tích nguồn tham chiếu.</div>';
+                    console.error("Error parsing trailing JSON for sources:", e);
+                    // If parsing fails, treat the original text as is and don't add source info
                 }
             }
 
-            // 2. Process main content for paragraphs and lists
+            // Now, if we successfully extracted referDocumentsData, build sourcesHtml
+            if (referDocumentsData) {
+                sourcesHtml += '<div class="mt-4 p-3 bg-gray-100 rounded-lg text-sm">';
+                sourcesHtml += '<p class="font-semibold mb-1">Nguồn tham chiếu:</p>';
+                sourcesHtml += '<ul class="list-disc list-inside pl-4">';
+                for (const docName in referDocumentsData) {
+                    const pages = referDocumentsData[docName].join(', ');
+                    sourcesHtml += `<li>${docName} (Trang: ${pages})</li>`;
+                }
+                sourcesHtml += '</ul>';
+                sourcesHtml += '</div>';
+            }
+
+            // Process main content for paragraphs and lists
             const blocks = mainText.split('\n\n'); // Split by double newline to get distinct blocks
 
             let inNumberedList = false;
@@ -744,7 +753,7 @@
                     showErrorMessage("Đăng nhập thất bại. Phản hồi không chứa token hoặc định dạng không mong muốn.");
                     console.error("Login failed. Unexpected response:", result);
                 }
-            } catch (error) {
+            } catch (error) { // Added this catch block to correctly wrap the try.
                 console.error("Error during login:", error);
                 showErrorMessage(`Lỗi khi đăng nhập: ${error.message}. Vui lòng kiểm tra tab Network trong công cụ phát triển của trình duyệt để biết thêm chi tiết về lỗi CORS nếu có.`);
             } finally {
