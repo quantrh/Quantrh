@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIDV AI Platform Chat Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Colors for BIDV Branding */
+        :root {
+            --bidv-green: #006B68;
+            --bidv-yellow: #FFC62F;
+            --bidv-light-gray: #f0f2f5;
+            --bidv-dark-gray: #334155;
+            --bidv-text-dark: #1a202c;
+            --bidv-chat-bg-ai: #e2e8f0;
+            --bidv-chat-bg-user: #6366f1; /* Keeping a similar shade for user messages for contrast */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bidv-light-gray);
+            display: flex; /* Use flexbox for overall layout */
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px; /* Increased max-width for two columns */
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Responsive Category List Panel */
+        .category-list-panel {
+            width: 300px; /* Fixed width for category list on larger screens */
+            padding: 16px;
+            border-right: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex-shrink: 0; /* Prevent shrinking when right panel content is wide */
+        }
+        @media (max-width: 768px) { /* On small screens (e.g., mobile), hide the category panel */
+            .category-list-panel {
+                display: none;
+            }
+        }
+
+        .category-list-panel h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--bidv-dark-gray);
+            margin-bottom: 10px;
+        }
+        .category-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .category-table th, .category-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            text-align: left;
+        }
+        .category-table th {
+            background-color: #cbd5e1;
+            font-weight: 600;
+            color: var(--bidv-dark-gray);
+        }
+        .category-table tbody tr {
+            cursor: pointer;
+        }
+        .category-table tr:nth-child(even) {
+            background-color: var(--bidv-light-gray);
+        }
+        .category-table tr:hover {
+            background-color: #e2e8f0;
+        }
+        .category-id-column {
+            display: none; /* Hide the ID column */
+        }
+
+        .chat-main-content {
+            flex-grow: 1; /* Chat content takes remaining space */
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: var(--bidv-green); /* BIDV Green */
+            color: white;
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-top-left-radius: 0;
+            border-top-right-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-header img.logo {
+            height: 40px; /* Adjust logo size */
+            width: auto;
+            border-radius: 50%; /* Make logo round if desired */
+            object-fit: cover;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .message-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--bidv-chat-bg-user);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .user-message-wrapper {
+            justify-content: flex-end;
+        }
+        .ai-message {
+            align-self: flex-start;
+            background-color: var(--bidv-chat-bg-ai);
+            color: var(--bidv-text-dark);
+            border-bottom-left-radius: 2px;
+        }
+        .ai-message-wrapper {
+            justify-content: flex-start;
+        }
+        .settings-toggle-area {
+            padding: 16px 24px 0; /* Adjusted padding to separate button from panel */
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .settings-panel {
+            padding: 0 24px 16px; /* Adjusted padding, moved top padding to settings-toggle-area */
+            background-color: #f8fafc;
+            border-bottom: none; /* Removed redundant border */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            /* Initially hidden, will be toggled by JS */
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition */
+            overflow: hidden; /* Hide overflow content during transition */
+            max-height: 0;
+            opacity: 0;
+        }
+        .settings-panel.active {
+            max-height: 500px; /* Max height to allow transition */
+            opacity: 1;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setting-label {
+            font-weight: 500;
+            color: var(--bidv-dark-gray);
+            min-width: 120px;
+        }
+        .token-input, .api-url-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .loading-indicator {
+            text-align: center;
+            padding: 10px;
+            color: #64748b;
+            font-style: italic;
+        }
+        .error-message {
+            background-color: #fef2f2;
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 24px 0;
+            font-size: 0.9rem;
+            border: 1px solid #fecaca;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .control-buttons button {
+            flex-grow: 1;
+            background-color: var(--bidv-green); /* BIDV Green */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+        }
+        .control-buttons button:hover {
+            background-color: #005a57; /* Darker green for hover */
+        }
+        .control-buttons button:active {
+            transform: translateY(1px);
+        }
+
+        /* Toggle Button Specific Style */
+        .toggle-button {
+            width: 100%;
+            background-color: #f0f2f5; /* Light gray for the toggle button */
+            color: var(--bidv-dark-gray);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 10px; /* Space between button and panel */
+        }
+        .toggle-button:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Chat Input Area */
+        .chat-input-area {
+            display: flex;
+            padding: 16px 24px;
+            gap: 10px;
+            border-top: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .chat-input-area textarea {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 40px;
+            max-height: 120px; /* Limit max height */
+            outline: none;
+        }
+        .chat-input-area button {
+            background-color: var(--bidv-yellow); /* BIDV Yellow */
+            color: var(--bidv-dark-gray); /* Dark gray text for contrast */
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+        }
+        .chat-input-area button:hover {
+            background-color: #e5b42b; /* Darker yellow for hover */
+        }
+        .chat-input-area button:active {
+            transform: translateY(1px);
+        }
+
+        /* Notification Message */
+        .notification-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green background */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .notification-message.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Panel: Category List -->
+        <div class="category-list-panel">
+            <h3>Danh sách Categories</h3>
+            <table class="category-table" id="categoryTable">
+                <thead>
+                    <tr>
+                        <th>Tên Category</th>
+                        <th class="category-id-column">ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Categories will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Right Panel: Chat Tester Content -->
+        <div class="chat-main-content">
+            <div class="chat-header">
+                <img src="logo.webp" alt="BIDV Logo" class="logo" onerror="this.onerror=null; this.src='https://placehold.co/40x40/006B68/FFFFFF?text=BIDV'">
+                <span>AI Chat Tester</span>
+            </div>
+
+            <!-- Settings Toggle Area -->
+            <div class="settings-toggle-area">
+                <button id="toggleSettingsButton" class="toggle-button">Ẩn/Hiện Cài đặt API</button>
+                <div id="settingsPanelContent" class="settings-panel">
+                    <div class="setting-item">
+                        <label for="loginUrl" class="setting-label">Login API URL:</label>
+                        <input type="text" id="loginUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/identity/api/auth/login-sys-bone" placeholder="Nhập URL API Đăng nhập">
+                    </div>
+                    <div class="setting-item">
+                        <label for="usernameInput" class="setting-label">Username:</label>
+                        <input type="text" id="usernameInput" class="token-input" value="35289" placeholder="Nhập Username">
+                    </div>
+                    <div class="setting-item">
+                        <label for="passwordInput" class="setting-label">Password:</label>
+                        <input type="password" id="passwordInput" class="token-input" value="Test@147258" placeholder="Nhập Password">
+                    </div>
+                    <div class="control-buttons">
+                        <button id="loginButton">Đăng nhập</button>
+                    </div>
+
+                    <hr class="my-4 border-gray-300"> <!-- Separator -->
+
+                    <div class="setting-item">
+                        <label for="authToken" class="setting-label">Authorization Token:</label>
+                        <input type="text" id="authToken" class="token-input" value="" placeholder="Authorization Token sẽ hiển thị ở đây">
+                    </div>
+                    <div class="setting-item">
+                        <label for="getMessageChatBotUrl" class="setting-label">Get Message API URL:</label>
+                        <input type="text" id="getMessageChatBotUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/get-message-chat-bot" placeholder="Nhập URL API Get Message Chatbot">
+                    </div>
+                    <div class="setting-item">
+                        <label for="getListCategoryChatUrl" class="setting-label">Get List Categories API URL:</label>
+                        <input type="text" id="getListCategoryChatUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/category-chat/get-list-category-chat" placeholder="Nhập URL API Get List Categories">
+                    </div>
+                    <div class="setting-item">
+                        <label for="chatWithDocApiUrl" class="setting-label">Chatbot API URL:</label>
+                        <input type="text" id="chatWithDocApiUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/chat-with-doc/stream" placeholder="Nhập URL API Chatbot">
+                    </div>
+                    <div class="setting-item">
+                        <label for="saveMessageChatBotUrl" class="setting-label">Save Message API URL:</label>
+                        <input type="text" id="saveMessageChatBotUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/save-message-chat-bot" placeholder="Nhập URL API Lưu tin nhắn">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="specificChatbotId" class="setting-label">Specific Chatbot ID:</label>
+                        <input type="text" id="specificChatbotId" class="token-input" value="f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd" placeholder="Nhập Chatbot ID cụ thể">
+                    </div>
+                    <div class="setting-item">
+                        <label for="specificCategoryId" class="setting-label">Specific Category ID:</label>
+                        <input type="text" id="specificCategoryId" class="token-input" value="e1c09959-4f04-4ce2-942b-79c9fda4f729" placeholder="Nhập Category ID cụ thể">
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Chat messages will be appended here -->
+                <div class="ai-message-wrapper message-wrapper">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png" alt="AI Icon" class="message-icon">
+                    <div class="ai-message message-bubble">
+                        Nhập thông tin đăng nhập hoặc tải nội dung phiên chat/danh sách categories.
+                    </div>
+                </div>
+            </div>
+
+            <div id="loadingIndicator" class="loading-indicator hidden">Đang tải...</div>
+            <div id="errorMessage" class="error-message hidden"></div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
+                <textarea id="chatInput" placeholder="Nhập tin nhắn của bạn..." rows="1"></textarea>
+                <button id="sendMessageButton">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Message -->
+    <div id="notificationMessage" class="notification-message hidden"></div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const authTokenInput = document.getElementById('authToken');
+        const getMessageChatBotUrlInput = document.getElementById('getMessageChatBotUrl');
+        const getListCategoryChatUrlInput = document.getElementById('getListCategoryChatUrl');
+        const chatWithDocApiUrlInput = document.getElementById('chatWithDocApiUrl');
+        const saveMessageChatBotUrlInput = document.getElementById('saveMessageChatBotUrl'); // New save URL input
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const specificChatbotIdInput = document.getElementById('specificChatbotId');
+        const specificCategoryIdInput = document.getElementById('specificCategoryId');
+        const categoryTableBody = document.querySelector('#categoryTable tbody');
+        const notificationMessageDiv = document.getElementById('notificationMessage'); // Notification div
+
+        // Login elements
+        const loginUrlInput = document.getElementById('loginUrl');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginButton = document.getElementById('loginButton');
+
+        // Chat Input elements
+        const chatInput = document.getElementById('chatInput');
+        const sendMessageButton = document.getElementById('sendMessageButton');
+
+        // Settings Panel Toggle elements
+        const toggleSettingsButton = document.getElementById('toggleSettingsButton');
+        const settingsPanelContent = document.getElementById('settingsPanelContent');
+
+        // Icon URLs
+        const AI_ICON_URL = "https://cdn-icons-png.flaticon.com/512/4712/4712027.png";
+        const USER_ICON_URL = "https://cdn-icons-png.flaticon.com/512/1946/1946429.png";
+
+
+        // --- Helper Functions ---
+
+        /**
+         * Displays a temporary notification message to the user.
+         * @param {string} message The message to display.
+         * @param {string} type 'success' (green) or 'error' (red).
+         */
+        function showNotification(message, type = 'success') {
+            notificationMessageDiv.textContent = message;
+            notificationMessageDiv.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+            notificationMessageDiv.classList.add('show');
+
+            setTimeout(() => {
+                notificationMessageDiv.classList.remove('show');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        /**
+         * Formats a raw chat response text into HTML, including parsing for lists,
+         * special headers, and a <source> JSON block.
+         * @param {string} responseText The raw text response from the API.
+         * @returns {string} HTML formatted content.
+         */
+        function formatChatResponseToHtml(responseText) {
+            let htmlContent = '';
+            let sourcesHtml = '';
+
+            // 1. Extract <source> block and parse it
+            const sourceRegex = /<source>([\s\S]*?)<\/source>/;
+            const sourceMatch = responseText.match(sourceRegex);
+            let mainText = responseText;
+
+            if (sourceMatch && sourceMatch[1]) {
+                try {
+                    let sourceJsonString = sourceMatch[1];
+                    // Sanitize by removing ALL newlines to ensure valid JSON string for parsing
+                    sourceJsonString = sourceJsonString.replace(/\n/g, '').trim(); 
+                    const sourceData = JSON.parse(sourceJsonString);
+                    mainText = responseText.replace(sourceRegex, '').trim(); // Remove source block from main text
+
+                    if (sourceData.referDocuments) {
+                        sourcesHtml += '<div class="mt-4 p-3 bg-gray-100 rounded-lg text-sm">';
+                        sourcesHtml += '<p class="font-semibold mb-1">Nguồn tham chiếu:</p>';
+                        sourcesHtml += '<ul class="list-disc list-inside pl-4">';
+                        for (const docName in sourceData.referDocuments) {
+                            const pages = sourceData.referDocuments[docName].join(', ');
+                            sourcesHtml += `<li>${docName} (Trang: ${pages})</li>`;
+                        }
+                        sourcesHtml += '</ul>';
+                        sourcesHtml += '</div>';
+                    }
+                } catch (e) {
+                    console.error("Error parsing source JSON:", e);
+                    sourcesHtml = '<div class="mt-4 text-red-500 text-sm">Lỗi phân tích nguồn tham chiếu.</div>';
+                }
+            }
+
+            // 2. Process main content for paragraphs and lists
+            const blocks = mainText.split('\n\n'); // Split by double newline to get distinct blocks
+
+            let inNumberedList = false;
+
+            blocks.forEach(block => {
+                const trimmedBlock = block.trim();
+
+                if (trimmedBlock === '') return; // Skip empty blocks
+
+                // Check if the block starts with a numbered list pattern (e.g., "1. ", "2. ")
+                if (trimmedBlock.match(/^\d+\.\s/)) {
+                    if (!inNumberedList) {
+                        // Start a new ordered list
+                        htmlContent += '<ol class="list-decimal list-inside pl-4 mt-2">';
+                        inNumberedList = true;
+                    }
+                    // Remove the "N. " prefix and add as a list item, preserving internal newlines as <br>
+                    const listItemContent = trimmedBlock.substring(trimmedBlock.indexOf('.') + 1).trim().replace(/\n/g, '<br>');
+                    htmlContent += `<li>${listItemContent}</li>`;
+                } else {
+                    // If we were in a numbered list, close it now
+                    if (inNumberedList) {
+                        htmlContent += '</ol>';
+                        inNumberedList = false;
+                    }
+
+                    // Handle other types of blocks
+                    if (trimmedBlock.startsWith('Thông tin bổ sung:')) {
+                        htmlContent += `<p class="font-semibold mt-2">${trimmedBlock.replace('Thông tin bổ sung:', '<strong>Thông tin bổ sung:</strong>')}</p>`;
+                    } else if (trimmedBlock.startsWith('Độ tin cậy:')) {
+                        htmlContent += `<p class="font-semibold mt-2">${trimmedBlock.replace('Độ tin cậy:', '<strong>Độ tin cậy:</strong>')}</p>`;
+                    } else if (trimmedBlock.startsWith('- ')) { // Handle bullet lists
+                        const bulletLines = trimmedBlock.split('\n').filter(line => line.trim() !== '');
+                        htmlContent += '<ul class="list-disc list-inside pl-4 mt-2">';
+                        bulletLines.forEach(line => {
+                            htmlContent += `<li>${line.substring(line.indexOf('-') + 1).trim()}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                    else {
+                        // Default: treat as a regular paragraph, replace single newlines with <br>
+                        htmlContent += `<p>${trimmedBlock.replace(/\n/g, '<br>')}</p>`;
+                    }
+                }
+            });
+
+            // Close any open numbered list at the very end
+            if (inNumberedList) {
+                htmlContent += '</ol>';
+            }
+
+            return htmlContent + sourcesHtml;
+        }
+
+        /**
+         * Displays a message in the chat interface.
+         * @param {string} message The message content (can be plain text or HTML).
+         * @param {string} sender The sender of the message ('user' or 'ai').
+         * @returns {HTMLElement} The created message bubble element.
+         */
+        function displayMessage(message, sender, isStreaming = false) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('message-wrapper');
+
+            const iconElement = document.createElement('img');
+            iconElement.classList.add('message-icon');
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+            messageBubble.innerHTML = message; // Use innerHTML for formatted content
+
+            if (sender === 'user') {
+                messageWrapper.classList.add('user-message-wrapper');
+                messageBubble.classList.add('user-message');
+                iconElement.src = USER_ICON_URL;
+                iconElement.alt = "User Icon";
+                messageWrapper.appendChild(messageBubble);
+                messageWrapper.appendChild(iconElement);
+            } else { // sender === 'ai'
+                messageWrapper.classList.add('ai-message-wrapper');
+                messageBubble.classList.add('ai-message');
+                iconElement.src = AI_ICON_URL;
+                iconElement.alt = "AI Icon";
+                messageWrapper.appendChild(iconElement);
+                messageWrapper.appendChild(messageBubble);
+
+                if (isStreaming) {
+                    messageBubble.setAttribute('data-streaming', 'true'); // Mark as streaming bubble
+                }
+            }
+            chatMessages.appendChild(messageWrapper);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageBubble; // Return the bubble element for updates
+        }
+
+        function updateStreamingMessage(bubbleElement, newContent) {
+            bubbleElement.innerHTML = newContent;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showLoading(show) {
+            loadingIndicator.classList.toggle('hidden', !show);
+        }
+
+        function showErrorMessage(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        function hideErrorMessage() {
+            errorMessageDiv.classList.add('hidden');
+            errorMessageDiv.textContent = '';
+        }
+
+        function clearChatMessages() {
+            chatMessages.innerHTML = `
+                <div class="ai-message-wrapper message-wrapper">
+                    <img src="${AI_ICON_URL}" alt="AI Icon" class="message-icon">
+                    <div class="ai-message message-bubble">
+                        Nhập thông tin đăng nhập hoặc tải nội dung phiên chat/danh sách categories.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCategories(categories) {
+            categoryTableBody.innerHTML = ''; // Clear existing rows
+            if (categories && categories.length > 0) {
+                categories.forEach(category => {
+                    const row = categoryTableBody.insertRow();
+                    row.dataset.categoryId = category.id; // Store ID in data attribute
+                    const nameCell = row.insertCell();
+                    const idCell = row.insertCell(); // This cell will be hidden by CSS
+                    nameCell.textContent = category.categoryName || 'N/A';
+                    idCell.textContent = category.id || 'N/A';
+                    idCell.classList.add('category-id-column'); // Add class to hide ID column
+                });
+            } else {
+                const row = categoryTableBody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 2; // Span across two columns (Name and (hidden) ID)
+                cell.textContent = 'Không có categories nào được tìm thấy.';
+                cell.style.textAlign = 'center';
+                cell.style.fontStyle = 'italic';
+                cell.style.color = '#64748b';
+            }
+        }
+
+
+        function getCommonHeaders(token, contentType = 'application/json') {
+            const headers = {
+                'Content-Type': contentType,
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'en-US,en;q=0.9,en-GB;q=0.8,vi;q=0.7',
+                'cache-control': 'no-cache',
+                'pragma': 'no-cache',
+                'Origin': 'http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com',
+                'X-Remote-Address': '10.53.118.122:80' // Custom header as per your request
+            };
+            if (token) {
+                headers['Authorization'] = token;
+            }
+            return headers;
+        }
+
+        // --- API Call for Login ---
+        async function performLogin() {
+            showLoading(true);
+            hideErrorMessage();
+            const loginApiUrl = loginUrlInput.value;
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value; // Password should not be trimmed or logged directly
+
+            if (!loginApiUrl || !username || !password) {
+                showErrorMessage("Vui lòng nhập đầy đủ URL, Username và Password.");
+                showLoading(false);
+                return;
+            }
+
+            console.log("--- Bắt đầu yêu cầu Đăng nhập ---");
+            console.log("URL:", loginApiUrl);
+            console.log("Headers (for login):", {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            });
+            console.log("Body:", JSON.stringify({ username: username, password: password }));
+            console.log("--- End of request details ---");
+
+            let rawResponseText = "";
+            try {
+                const response = await fetch(loginApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    rawResponseText = await response.text();
+                    console.error("HTTP Response Body (Error - Login):", rawResponseText);
+                    if (response.status === 403) {
+                         throw new Error(`Đăng nhập thất bại! Lỗi 403 Forbidden. Vui lòng kiểm tra quyền truy cập hoặc tài khoản/mật khẩu. Chi tiết: ${rawResponseText.substring(0, 500)}`);
+                    } else {
+                         throw new Error(`Đăng nhập thất bại! Status: ${response.status} ${response.statusText}. Phản hồi: ${rawResponseText.substring(0, 500)}. Đây có thể là lỗi CORS hoặc URL API không chính xác. Vui lòng kiểm tra lại cấu hình CORS trên máy chủ của bạn.`);
+                    }
+                }
+
+                rawResponseText = await response.text();
+                let result;
+                try {
+                    if (!rawResponseText) {
+                        throw new Error("Phản hồi API trống rỗng hoặc không hợp lệ.");
+                    }
+                    result = JSON.parse(rawResponseText);
+                } catch (jsonError) {
+                    console.error("JSON parsing error (Login):", jsonError);
+                    console.error("Raw response text (Login):", rawResponseText);
+                    throw new Error(`Lỗi phân tích JSON: ${jsonError.message}. Phản hồi thô: ${rawResponseText.substring(0, 500)}. Vui lòng kiểm tra định dạng phản hồi từ API đăng nhập.`);
+                }
+
+                if (result.status === 1 && result.data && result.data.token) {
+                    authTokenInput.value = result.data.token; // Set the obtained token
+                    displayMessage("Đăng nhập thành công! Token đã được cập nhật.", 'ai');
+                    console.log("Login successful. Token:", result.data.token);
+                    await fetchCategoryList(); // Auto-load categories after successful login
+                } else {
+                    showErrorMessage("Đăng nhập thất bại. Phản hồi không chứa token hoặc định dạng không mong muốn.");
+                    console.error("Login failed. Unexpected response:", result);
+                }
+            } catch (error) {
+                console.error("Error during login:", error);
+                showErrorMessage(`Lỗi khi đăng nhập: ${error.message}. Vui lòng kiểm tra tab Network trong công cụ phát triển của trình duyệt để biết thêm chi tiết về lỗi CORS nếu có.`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+
+        // --- API Call for loading specific chat session ---
+
+        window.loadSpecificSession = async function() { // Made explicitly global
+            showLoading(true);
+            hideErrorMessage();
+            const token = authTokenInput.value;
+            const getMessageChatBotApiUrl = getMessageChatBotUrlInput.value;
+            const sessionId = specificCategoryIdInput.value.trim(); // This will now be updated by clicking category
+            const chatbotId = specificChatbotIdInput.value.trim();
+            const creatorId = "35289"; // Fixed creator ID as per provided payload
+
+            if (!token) {
+                showErrorMessage("Vui lòng nhập Authorization Token.");
+                showLoading(false);
+                return;
+            }
+            if (!sessionId) {
+                showErrorMessage("Vui lòng nhập Specific Category ID để tải.");
+                showLoading(false);
+                return;
+            }
+            if (!chatbotId) {
+                showErrorMessage("Vui lòng nhập Specific Chatbot ID để tải.");
+                showLoading(false);
+                return;
+            }
+
+            clearChatMessages(); // Clear existing messages before loading new ones
+
+            console.log(`Loading chat session content for ID: ${sessionId}, Chatbot ID: ${chatbotId}, Creator: ${creatorId}`);
+            let rawResponseText = "";
+            try {
+                const response = await fetch(getMessageChatBotApiUrl, {
+                    method: 'POST',
+                    headers: getCommonHeaders(token),
+                    mode: 'cors',
+                    referrer: "http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd", // Added referrer
+                    referrerPolicy: "strict-origin-when-cross-origin", // Added referrerPolicy
+                    body: JSON.stringify({
+                        "id": sessionId, // Corresponds to categoryId
+                        "chatbotId": chatbotId,
+                        "creator": creatorId
+                    })
+                });
+
+                if (!response.ok) {
+                    rawResponseText = await response.text();
+                    console.error("HTTP Response Body (Error):", rawResponseText);
+                    throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}. Phản hồi: ${rawResponseText.substring(0, 500)}. Đây có thể là lỗi CORS hoặc URL API không chính xác. Vui lòng kiểm tra lại cấu hình CORS trên máy chủ của bạn.`);
+                }
+
+                rawResponseText = await response.text();
+                let result;
+                try {
+                    if (!rawResponseText) {
+                        throw new Error("Phản hồi API trống rỗng hoặc không hợp lệ.");
+                    }
+                    result = JSON.parse(rawResponseText);
+                } catch (jsonError) {
+                    console.error("JSON parsing error:", jsonError);
+                    console.error("Raw response text:", rawResponseText);
+                    throw new Error(`Lỗi phân tích JSON: ${jsonError.message}. Phản hồi thô: ${rawResponseText.substring(0, 500)}. Vui lòng kiểm tra định dạng phản hồi từ API.`);
+                }
+
+                // Corrected logic to access the messages from the first item in 'data' array
+                if (result.status === 1 && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                    const chatEntry = result.data[0]; // Assuming the first object in data array contains contentRequest and contentResponse
+                    if (chatEntry.contentRequest) {
+                        displayMessage(formatChatResponseToHtml(chatEntry.contentRequest), 'user');
+                    } else {
+                        displayMessage("Không tìm thấy yêu cầu tin nhắn trong phiên chat này.", 'ai');
+                    }
+                    if (chatEntry.contentResponse) {
+                        displayMessage(formatChatResponseToHtml(chatEntry.contentResponse), 'ai');
+                    } else {
+                        displayMessage("Không tìm thấy phản hồi tin nhắn trong phiên chat này.", 'ai');
+                    }
+                    console.log("Chat session content loaded:", result.data);
+                } else {
+                    displayMessage("Không có tin nhắn nào trong phiên chat này hoặc định dạng phản hồi không mong muốn.", 'ai');
+                    console.log("No messages found in session or unexpected format:", result);
+                }
+            } catch (error) {
+                console.error("Error loading chat session content:", error);
+                showErrorMessage(`Lỗi khi tải nội dung phiên chat: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- API Call for fetching category list ---
+        async function fetchCategoryList() {
+            showLoading(true);
+            hideErrorMessage();
+            const token = authTokenInput.value;
+            const getListCategoryChatApiUrl = getListCategoryChatUrlInput.value;
+            const chatbotId = specificChatbotIdInput.value.trim(); // Use specificChatbotId as the 'id' in the body
+
+            if (!token) {
+                showErrorMessage("Vui lòng nhập Authorization Token.");
+                showLoading(false);
+                return;
+            }
+            if (!chatbotId) {
+                showErrorMessage("Vui lòng nhập Specific Chatbot ID để tải danh sách categories.");
+                showLoading(false);
+                return;
+            }
+
+            console.log(`Fetching category list for chatbot ID: ${chatbotId} from: ${getListCategoryChatApiUrl}`);
+            let rawResponseText = "";
+            try {
+                const response = await fetch(getListCategoryChatApiUrl, {
+                    method: 'POST',
+                    headers: getCommonHeaders(token),
+                    mode: 'cors',
+                    referrer: "http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd",
+                    referrerPolicy: "strict-origin-when-cross-origin",
+                    body: JSON.stringify({
+                        "id": chatbotId // Payload as per your example
+                    })
+                });
+
+                if (!response.ok) {
+                    rawResponseText = await response.text();
+                    console.error("HTTP Response Body (Error - Categories):", rawResponseText);
+                    throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}. Phản hồi: ${rawResponseText.substring(0, 500)}. Đây có thể là lỗi CORS hoặc URL API không chính xác. Vui lòng kiểm tra lại cấu hình CORS trên máy chủ của bạn.`);
+                }
+
+                rawResponseText = await response.text();
+                let result;
+                try {
+                    if (!rawResponseText) {
+                        throw new Error("Phản hồi API trống rỗng hoặc không hợp lệ.");
+                    }
+                    result = JSON.parse(rawResponseText);
+                } catch (jsonError) {
+                    console.error("JSON parsing error (Categories):", jsonError);
+                    console.error("Raw response text (Categories):", rawResponseText);
+                    throw new Error(`Lỗi phân tích JSON: ${jsonError.message}. Phản hồi thô: ${rawResponseText.substring(0, 500)}. Vui lòng kiểm tra định dạng phản hồi từ API categories.`);
+                }
+
+                // Corrected logic to access the categories array
+                if (result.status === 1 && result.data) {
+                    // Flatten the 'children' arrays from each 'timer' group
+                    const allCategories = result.data.flatMap(item => item.children || []);
+                    renderCategories(allCategories); 
+                    console.log("Category list fetched successfully:", result.data);
+                    displayMessage(`Đã tải ${allCategories.length} categories. Kiểm tra console và bảng bên trái để xem chi tiết.`, 'ai');
+                } else {
+                    console.log("No categories found or unexpected format:", result);
+                    renderCategories([]); // Render empty table
+                    displayMessage("Không tìm thấy categories nào hoặc định dạng phản hồi không mong muốn.", 'ai');
+                }
+            } catch (error) {
+                console.error("Error fetching category list:", error);
+                showErrorMessage(`Lỗi khi tải danh sách categories: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- Save Message Function ---
+        async function saveChatMessage(contentRequest, contentResponse) {
+            const token = authTokenInput.value;
+            const saveApiUrl = saveMessageChatBotUrlInput.value;
+            const chatbotId = specificChatbotIdInput.value.trim();
+            const categoryChatId = specificCategoryIdInput.value.trim(); // The selected category ID
+
+            if (!token || !saveApiUrl || !chatbotId || !contentRequest || !contentResponse) {
+                console.error("Không đủ thông tin để lưu tin nhắn chat.");
+                return;
+            }
+
+            const payload = {
+                "botId": chatbotId,
+                "categoryChatId": categoryChatId,
+                "contentRequest": contentRequest,
+                "contentResponse": contentResponse,
+                "documentGroup": "core_sch,core", // As per provided example
+                "creator": "35289", // Fixed creator ID
+                "createdAt": new Date().toISOString(), // Current timestamp
+                "promptName": "Chatbot hỗ trợ về BIDV Core Banking", // Generic prompt name
+                "contextPrompt": [],
+                "model": "",
+                "cachedMessageId": null,
+                "isCachedMessage": "false"
+            };
+
+            console.log("--- Bắt đầu yêu cầu lưu tin nhắn ---");
+            console.log("URL:", saveApiUrl);
+            console.log("Headers:", getCommonHeaders(token));
+            console.log("Body:", JSON.stringify(payload));
+            console.log("--- End of save request details ---");
+
+            try {
+                const response = await fetch(saveApiUrl, {
+                    method: 'POST',
+                    headers: getCommonHeaders(token),
+                    mode: 'cors',
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("HTTP Response Body (Error - Save Chat):", errorText);
+                    throw new Error(`Lưu tin nhắn lỗi! Status: ${response.status} ${response.statusText}. Phản hồi: ${errorText.substring(0, 500)}.`);
+                }
+
+                const result = await response.json();
+                if (result.status === 1 && result.code === "SUCCESS") {
+                    console.log("Tin nhắn đã được lưu thành công:", result);
+                    showNotification("Tin nhắn đã được lưu thành công!");
+                } else {
+                    console.error("Lưu tin nhắn không thành công hoặc định dạng phản hồi không mong muốn:", result);
+                    showNotification("Lưu tin nhắn không thành công.", 'error');
+                }
+            } catch (error) {
+                console.error("Lỗi khi lưu tin nhắn chat:", error);
+                showNotification(`Lỗi khi lưu tin nhắn: ${error.message}`, 'error');
+            }
+        }
+
+        // --- Send Message Function ---
+        async function sendMessage() {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === "") {
+                showErrorMessage("Vui lòng nhập tin nhắn.");
+                return;
+            }
+
+            const token = authTokenInput.value;
+            const chatApiUrl = chatWithDocApiUrlInput.value;
+            const chatbotId = specificChatbotIdInput.value.trim();
+            const categoryId = specificCategoryIdInput.value.trim(); // This is the selected category ID
+
+            if (!token) {
+                showErrorMessage("Vui lòng đăng nhập để gửi tin nhắn.");
+                return;
+            }
+            if (!chatApiUrl) {
+                showErrorMessage("Vui lòng nhập URL Chatbot API.");
+                return;
+            }
+            if (!chatbotId) {
+                showErrorMessage("Vui lòng nhập Specific Chatbot ID.");
+                return;
+            }
+
+            displayMessage(formatChatResponseToHtml(userMessage), 'user'); // Display user message immediately
+            chatInput.value = ''; // Clear input field
+            showLoading(true);
+
+            // Create an empty AI message bubble to stream into
+            const aiMessageBubble = displayMessage("Đang tạo phản hồi...", 'ai', true);
+            let fullAiResponseText = '';
+
+            console.log("--- Bắt đầu yêu cầu gửi tin nhắn ---");
+            console.log("URL:", chatApiUrl);
+            console.log("Headers:", getCommonHeaders(token));
+            const payload = {
+                "query": userMessage,
+                "chatbotId": chatbotId,
+                "categoryId": categoryId,
+                "hits": []
+            };
+            console.log("Body:", JSON.stringify(payload));
+            console.log("--- End of request details ---");
+
+            try {
+                const response = await fetch(chatApiUrl, {
+                    method: 'POST',
+                    headers: getCommonHeaders(token),
+                    mode: 'cors',
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("HTTP Response Body (Error - Chatbot):", errorText);
+                    // Handle specific 429 error if it's JSON
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.status === 429 || errorJson.code === "TOO_MANY_REQUESTS") {
+                             aiMessageBubble.innerHTML = `<span class="text-red-500">Lỗi: Quá nhiều yêu cầu. Vui lòng thử lại sau.</span>`;
+                             showErrorMessage("Lỗi: " + errorJson.message);
+                             return; // Exit function after handling 429
+                        }
+                    } catch (e) {
+                        // If parsing as JSON fails, it might be plain text or not the expected error format
+                        console.warn("Could not parse error response as JSON, displaying raw text.", e);
+                    }
+                    throw new Error(`Chatbot API lỗi! Status: ${response.status} ${response.statusText}. Phản hồi: ${errorText.substring(0, 500)}. Vui lòng kiểm tra lại cấu hình API.`);
+                }
+
+                // If response is OK, assume it's a streaming response and handle it.
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // Process lines that contain 'data:'
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (line.startsWith('data:')) {
+                            const data = line.substring(5).trim();
+                            if (data) {
+                                fullAiResponseText += data; // Accumulate the streamed text
+                                // Update the message bubble with incrementally formatted content
+                                updateStreamingMessage(aiMessageBubble, formatChatResponseToHtml(fullAiResponseText));
+                            }
+                        }
+                    }
+                }
+                // Process any remaining buffer content after stream ends
+                if (buffer.startsWith('data:')) {
+                    const data = buffer.substring(5).trim();
+                    if (data) {
+                        fullAiResponseText += data;
+                        updateStreamingMessage(aiMessageBubble, formatChatResponseToHtml(fullAiResponseText));
+                    }
+                }
+                
+                // Final update after stream is complete
+                if (fullAiResponseText.length === 0) {
+                    aiMessageBubble.innerHTML = "Chatbot không có phản hồi.";
+                } else {
+                     // Ensure the final formatted text is rendered correctly
+                     updateStreamingMessage(aiMessageBubble, formatChatResponseToHtml(fullAiResponseText));
+                     // --- Call saveChatMessage after AI response is fully received and displayed ---
+                     await saveChatMessage(userMessage, fullAiResponseText);
+                }
+                console.log("Chatbot final response received:", fullAiResponseText);
+
+            } catch (error) {
+                console.error("Error sending message to chatbot:", error);
+                showErrorMessage(`Lỗi khi gửi tin nhắn đến chatbot: ${error.message}`);
+                // If there's an error and the bubble is still showing "Đang tạo phản hồi...", update it
+                if (aiMessageBubble.innerHTML === "Đang tạo phản hồi...") {
+                     aiMessageBubble.innerHTML = `<span class="text-red-500">Lỗi: ${error.message}</span>`;
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+
+
+        // --- Event Listeners ---
+        loginButton.addEventListener('click', performLogin);
+
+        // Toggle Settings Panel
+        toggleSettingsButton.addEventListener('click', () => {
+            settingsPanelContent.classList.toggle('active');
+        });
+
+        // Event delegation for category table rows
+        categoryTableBody.addEventListener('click', (event) => {
+            const clickedRow = event.target.closest('tr');
+            if (clickedRow && clickedRow.dataset.categoryId) {
+                const categoryId = clickedRow.dataset.categoryId;
+                specificCategoryIdInput.value = categoryId; // Update the input field
+                window.loadSpecificSession(); // Call using window.loadSpecificSession
+            }
+        });
+
+        // Event listener for Send Message button
+        sendMessageButton.addEventListener('click', sendMessage);
+
+        // Allow sending message with Enter key
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) { // Shift+Enter for new line
+                event.preventDefault(); // Prevent new line
+                sendMessage();
+            }
+        });
+
+        // Initial clear on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            clearChatMessages();
+            renderCategories([]); // Initialize category table as empty
+            // settingsPanelContent.classList.add('active'); // Keep settings open by default if needed for debugging
+        });
+
+    </script>
+</body>
+</html>
