@@ -346,7 +346,7 @@
                 <div id="settingsPanelContent" class="settings-panel">
                     <div class="setting-item">
                         <label for="loginUrl" class="setting-label">Login API URL:</label>
-                        <input type="text" id="loginUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/identity/api/auth/login-sys-bone" placeholder="Nhập URL API Đăng nhập">
+                        <input type="text" id="loginUrl" class="api-url-input" value="https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/identity/api/auth/login-sys-bone" placeholder="Nhập URL API Đăng nhập">
                     </div>
                     <div class="setting-item">
                         <label for="usernameInput" class="setting-label">Username:</label>
@@ -368,19 +368,19 @@
                     </div>
                     <div class="setting-item">
                         <label for="getMessageChatBotUrl" class="setting-label">Get Message API URL:</label>
-                        <input type="text" id="getMessageChatBotUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/get-message-chat-bot" placeholder="Nhập URL API Get Message Chatbot">
+                        <input type="text" id="getMessageChatBotUrl" class="api-url-input" value="https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/get-message-chat-bot" placeholder="Nhập URL API Get Message Chatbot">
                     </div>
                     <div class="setting-item">
                         <label for="getListCategoryChatUrl" class="setting-label">Get List Categories API URL:</label>
-                        <input type="text" id="getListCategoryChatUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/category-chat/get-list-category-chat" placeholder="Nhập URL API Get List Categories">
+                        <input type="text" id="getListCategoryChatUrl" class="api-url-input" value="https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/category-chat/get-list-category-chat" placeholder="Nhập URL API Get List Categories">
                     </div>
                     <div class="setting-item">
                         <label for="chatWithDocApiUrl" class="setting-label">Chatbot API URL:</label>
-                        <input type="text" id="chatWithDocApiUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/chat-with-doc/stream" placeholder="Nhập URL API Chatbot">
+                        <input type="text" id="chatWithDocApiUrl" class="api-url-input" value="https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/chat-with-doc/stream" placeholder="Nhập URL API Chatbot">
                     </div>
                     <div class="setting-item">
                         <label for="saveMessageChatBotUrl" class="setting-label">Save Message API URL:</label>
-                        <input type="text" id="saveMessageChatBotUrl" class="api-url-input" value="http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/save-message-chat-bot" placeholder="Nhập URL API Lưu tin nhắn">
+                        <input type="text" id="saveMessageChatBotUrl" class="api-url-input" value="https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/chatbot/api/v1/message-chat/save-message-chat-bot" placeholder="Nhập URL API Lưu tin nhắn">
                     </div>
                     
                     <div class="setting-item">
@@ -548,7 +548,7 @@
                     if (trimmedBlock.startsWith('Thông tin bổ sung:')) {
                         htmlContent += `<p class="font-semibold mt-2">${trimmedBlock.replace('Thông tin bổ sung:', '<strong>Thông tin bổ sung:</strong>')}</p>`;
                     } else if (trimmedBlock.startsWith('Độ tin cậy:')) {
-                        htmlContent += `<p class="font-semibold mt-2">${trimmedBlock.replace('Độ tin cậy:', '<strong>Độ tin cậy:</strong>')}</p>`;
+                        htmlContent += `<p class="font-semibold mt-2">${trimmedBlock.replace('Độ tin cậy:', '<strong>Độ tin cậy:</strong>')}</p爐`;
                     } else if (trimmedBlock.startsWith('- ')) { // Handle bullet lists
                         const bulletLines = trimmedBlock.split('\n').filter(line => line.trim() !== '');
                         htmlContent += '<ul class="list-disc list-inside pl-4 mt-2">';
@@ -674,7 +674,7 @@
                 'accept-language': 'en-US,en;q=0.9,en-GB;q=0.8,vi;q=0.7',
                 'cache-control': 'no-cache',
                 'pragma': 'no-cache',
-                'Origin': 'http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com',
+                'Origin': 'https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com', // Updated Origin to HTTPS
                 'X-Remote-Address': '10.53.118.122:80' // Custom header as per your request
             };
             if (token) {
@@ -753,7 +753,7 @@
                     showErrorMessage("Đăng nhập thất bại. Phản hồi không chứa token hoặc định dạng không mong muốn.");
                     console.error("Login failed. Unexpected response:", result);
                 }
-            } catch (error) { // Added this catch block to correctly wrap the try.
+            } catch (error) {
                 console.error("Error during login:", error);
                 showErrorMessage(`Lỗi khi đăng nhập: ${error.message}. Vui lòng kiểm tra tab Network trong công cụ phát triển của trình duyệt để biết thêm chi tiết về lỗi CORS nếu có.`);
             } finally {
@@ -798,7 +798,7 @@
                     method: 'POST',
                     headers: getCommonHeaders(token),
                     mode: 'cors',
-                    referrer: "http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd", // Added referrer
+                    referrer: "https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd", // Updated referrer to HTTPS
                     referrerPolicy: "strict-origin-when-cross-origin", // Added referrerPolicy
                     body: JSON.stringify({
                         "id": sessionId, // Corresponds to categoryId
@@ -878,7 +878,7 @@
                     method: 'POST',
                     headers: getCommonHeaders(token),
                     mode: 'cors',
-                    referrer: "http://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd",
+                    referrer: "https://ai-platform-uat.apps.uat2ttptnhs.ldapudtest.com/dashbroad-chatbot/f5f9d251-a7b0-4fb8-8814-db4bdd72e8bd", // Updated referrer to HTTPS
                     referrerPolicy: "strict-origin-when-cross-origin",
                     body: JSON.stringify({
                         "id": chatbotId // Payload as per your example
