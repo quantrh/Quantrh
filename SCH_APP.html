@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Giao dịch Ngân hàng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .tab-active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Login Section -->
+    <div id="login-section" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-lg">
+            <div class="text-center">
+                <img src="https://placehold.co/100x100/007aff/ffffff?text=BIDV" alt="Bank Logo" class="mx-auto h-16 w-auto rounded-full">
+                <h2 class="mt-6 text-3xl font-bold text-gray-900">Smart Counter Hub</h2>
+                <p class="mt-2 text-sm text-gray-600">Vui lòng đăng nhập để tiếp tục</p>
+            </div>
+            <form id="login-form" class="mt-8 space-y-6">
+                <input id="username" name="username" type="text" required class="relative block w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-md placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm" placeholder="Tên đăng nhập" value="154422">
+                <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-md placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm" placeholder="Mật khẩu" value="********">
+                <button type="submit" class="group relative flex justify-center w-full px-4 py-3 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-lock text-blue-500 group-hover:text-blue-400"></i></span>
+                    Đăng nhập
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Section (hidden by default) -->
+    <div id="app-section" class="hidden">
+        <div class="flex h-screen bg-gray-200">
+            <!-- Sidebar -->
+            <div class="flex flex-col w-64 bg-white shadow-xl">
+                <div id="home-button" class="flex items-center justify-center h-20 shadow-md cursor-pointer">
+                     <img src="https://placehold.co/40x40/007aff/ffffff?text=BIDV" alt="Bank Logo" class="h-10 w-auto rounded-full">
+                    <h1 class="text-xl font-bold text-gray-800 ml-2">SMT</h1>
+                </div>
+                <nav id="main-nav" class="flex-1 px-2 py-4 space-y-2 overflow-y-auto custom-scrollbar"></nav>
+            </div>
+
+            <!-- Main content -->
+            <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+                <header class="flex items-center justify-between h-20 px-6 bg-white border-b border-gray-200 sticky top-0 z-10">
+                    <h2 id="header-title" class="text-2xl font-semibold text-gray-800">Trang chủ</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="p-2 text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none focus:ring"><i class="fas fa-bell"></i></button>
+                        <div id="user-info-header" class="flex items-center"></div>
+                        <button id="logout-button" class="p-2 text-gray-500 bg-gray-100 rounded-full hover:bg-red-200 hover:text-red-600 focus:outline-none focus:ring"><i class="fas fa-sign-out-alt"></i></button>
+                    </div>
+                </header>
+
+                <main class="p-6 sm:p-8">
+                    <!-- Dashboard View -->
+                    <div id="dashboard-view">
+                        <div class="pb-6"><h3 id="favorite-apps-title" class="text-xl font-semibold text-gray-700"></h3></div>
+                        <div id="favorite-apps-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+                    </div>
+
+                    <!-- Customer Inquiry View -->
+                    <div id="customer-inquiry-view" class="hidden">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Vấn tin khách hàng</h3>
+                            <form id="cif-search-form" class="flex items-center gap-4">
+                                <input id="cif-input" type="text" placeholder="Nhập số CIF" class="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" value="3036252">
+                                <button type="submit" class="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-search mr-2"></i>Tìm kiếm
+                                </button>
+                            </form>
+                        </div>
+                        <div id="customer-details-section" class="mt-6 hidden">
+                            <!-- Customer details will be populated here -->
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- MOCK DATA ---
+    const mockData = {
+        // Original login/dashboard data
+        response6_user: {
+            "userInfo": { "userID": "154422", "fullName": "Hoàng Thu Hoài", "deptName": "P. Giao dịch khách hàng", "brnName": "SỞ GIAO DỊCH 1", "email": "hoaiht3@bidv.com.vn" },
+            "functionInfo": { "function": [ { "functionCode": "SMT001", "functionName": "Trang chủ" }, { "functionCode": "SMT00201", "functionName": "Tra cứu khách hàng" }, { "functionCode": "SMT004", "functionName": "Giao dịch tài chính" }, { "functionCode": "SMT005", "functionName": "Quản lý giao dịch" }, { "functionCode": "SMT007", "functionName": "Biểu mẫu" }, { "functionCode": "SMT008", "functionName": "Báo cáo" }, { "functionCode": "SMT011", "functionName": "Thẻ" } ] }
+        },
+        response8_dashboard: { "dashboard": { "favoriteAppTitle": "Ứng dụng yêu thích" } },
+        response9_fav_apps: { "username": "154422", "apps": "[{\"appCode\":\"WEBCSR\",\"appName\":\"WEBCSR\"},{\"appCode\":\"WEBADMIN\",\"appName\":\"WEBADMIN\"},{\"appCode\":\"BONE\",\"appName\":\"QL Nội bộ toàn hàng\"},{\"appCode\":\"BSMSII\",\"appName\":\"Chương trình BSMS mới\"},{\"appCode\":\"CKNB\",\"appName\":\"Quản lý chữ ký nội bộ\"},{\"appCode\":\"CTLNH\",\"appName\":\"Chuyển tiền NHANH 24/7 (IBFT)\"}]" },
+
+        // New CIF inquiry data from "Du lieu CIF.txt"
+        cif_response1_search: { "data": [{ "cif": "3036252", "name": "KIEM THU", "dob": "24/05/1987", "idNumber": "BBB89705456", "oitDesc": "HO CHIEU (PASSPORT)", "pad1": "ha noi test dia chi thuong tru ", "pstateDesc": "HAI DUONG", "pcntryDesc": "VIET NAM", "aph": "0968989398" }] },
+        cif_response2_common_info: { "data": { "cif": "3036252", "name": "KIEM THU", "customerType": "0", "zcstypeDesc": "CA NHAN", "dob": "24/05/1987", "sexDesc": "NAM", "citzshpDesc": "VIET NAM", "idTypeDesc": "HO CHIEU (PASSPORT)", "idNumber": "BBB89705456", "idIssueDate": "21/03/2014", "zisdesc": "CUC CANH SAT XUAT NHAP CANH", "idexpDesc": "CON HAN", "aph": "0968989398", "email": "xayqj.icog@jpiun.fypd", "pad1": "ha noi test dia chi thuong tru", "booDesc": "CN QUANG TRUNG", "statusDesc": "Active", "ccodeDesc": "Khach hang cao cap hang Premier Elite" } },
+        cif_response3_deposit_overview: { "data": { "VND": [{"name": "DDA","balavl": "213143131601.00","accountActiveCount": 72},{"name": "SAV","balavl": "500000.00","accountActiveCount": 1}], "EUR": [{"name":"CD","balavl":"222906.12","accountActiveCount":1}], "USD": [{"name": "DDA", "balavl": "7806530.70", "accountActiveCount": 14}, {"name": "CD", "balavl": "1234575533814.39", "accountActiveCount": 5}] } },
+        cif_response4_products: { "data": { "productCodeMisDTOList": [{"lvlName":"Dịch vụ BSMS","usageStatus":true},{"lvlName":"Dịch vụ Smartbanking","usageStatus":true},{"lvlName":"Thanh toán hóa đơn","usageStatus":false},{"lvlName":"Thẻ ghi Nợ nội địa","usageStatus":true},{"lvlName":"Thẻ ghi nợ quốc tế","usageStatus":true},{"lvlName":"Thẻ tín dụng quốc tế","usageStatus":false}] } },
+        cif_response5_loan_overview: { "data": [{"crcd": "VND", "totalBal": "6955000000.00"}, {"crcd": "EUR", "totalBal": "0"}, {"crcd": "USD", "totalBal": "0"}] }
+    };
+
+    const functionIcons = {"SMT001": "fa-home","SMT00201": "fa-search","SMT004": "fa-money-bill-wave","SMT005": "fa-tasks","SMT007": "fa-file-alt","SMT008": "fa-chart-bar","SMT011": "fa-credit-card","default": "fa-chevron-right"};
+
+    // --- DOM ELEMENTS ---
+    const loginSection = document.getElementById('login-section');
+    const appSection = document.getElementById('app-section');
+    const loginForm = document.getElementById('login-form');
+    const logoutButton = document.getElementById('logout-button');
+    const homeButton = document.getElementById('home-button');
+    const headerTitle = document.getElementById('header-title');
+
+    const dashboardView = document.getElementById('dashboard-view');
+    const customerInquiryView = document.getElementById('customer-inquiry-view');
+    const cifSearchForm = document.getElementById('cif-search-form');
+    const customerDetailsSection = document.getElementById('customer-details-section');
+    
+    // --- VIEW MANAGEMENT ---
+    function showView(viewId) {
+        // Hide all main views
+        dashboardView.classList.add('hidden');
+        customerInquiryView.classList.add('hidden');
+
+        // Show the requested view
+        const viewToShow = document.getElementById(viewId);
+        if (viewToShow) {
+            viewToShow.classList.remove('hidden');
+        }
+
+        // Update header title
+        if (viewId === 'dashboard-view') {
+            headerTitle.textContent = 'Trang chủ';
+        } else if (viewId === 'customer-inquiry-view') {
+            headerTitle.textContent = 'Tra cứu khách hàng';
+        }
+    }
+    
+    // --- UI POPULATION FUNCTIONS ---
+    function populateUserInfo() {
+        const { fullName, email } = mockData.response6_user.userInfo;
+        document.getElementById('user-info-header').innerHTML = `<img class="w-10 h-10 rounded-full object-cover" src="https://placehold.co/40x40/e2e8f0/475569?text=${fullName.charAt(0)}" alt="Avatar"><div class="ml-3 text-left"><p class="text-sm font-semibold text-gray-800">${fullName}</p><p class="text-xs text-gray-500">${email}</p></div>`;
+    }
+
+    function populateNavigation() {
+        const nav = document.getElementById('main-nav');
+        nav.innerHTML = '';
+        mockData.response6_user.functionInfo.function.forEach((func, index) => {
+            const iconClass = functionIcons[func.functionCode] || functionIcons.default;
+            const link = document.createElement('a');
+            link.href = '#';
+            link.className = 'flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-colors duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900';
+            link.dataset.functionCode = func.functionCode;
+            link.innerHTML = `<i class="fas ${iconClass} w-5 h-5 mr-3"></i><span>${func.functionName}</span>`;
+
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('#main-nav a').forEach(a => a.classList.remove('bg-blue-100', 'text-blue-700'));
+                link.classList.add('bg-blue-100', 'text-blue-700');
+                
+                if (func.functionCode === 'SMT00201') {
+                    showView('customer-inquiry-view');
+                } else {
+                    showView('dashboard-view');
+                }
+            });
+
+            if (index === 0) {
+                 link.classList.add('bg-blue-100', 'text-blue-700');
+            }
+            nav.appendChild(link);
+        });
+    }
+
+    function populateFavoriteApps() {
+        const grid = document.getElementById('favorite-apps-grid');
+        const title = document.getElementById('favorite-apps-title');
+        title.textContent = mockData.response8_dashboard.dashboard.favoriteAppTitle;
+        const favoriteApps = JSON.parse(mockData.response9_fav_apps.apps);
+        grid.innerHTML = '';
+        favoriteApps.forEach(app => {
+            const card = document.createElement('a');
+            card.href = '#';
+            card.className = "flex items-center p-4 bg-white rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300";
+            card.innerHTML = `<div class="p-3 mr-4 text-blue-500 bg-blue-100 rounded-full"><i class="fas fa-rocket"></i></div><div><p class="text-sm font-semibold text-gray-800">${app.appName}</p><p class="text-xs text-gray-500">${app.appCode}</p></div>`;
+            grid.appendChild(card);
+        });
+    }
+
+    function populateCustomerDetails() {
+        const info = mockData.cif_response2_common_info.data;
+        const deposit = mockData.cif_response3_deposit_overview.data;
+        const loan = mockData.cif_response5_loan_overview.data;
+        const services = mockData.cif_response4_products.data.productCodeMisDTOList;
+
+        const infoHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                ${Object.entries({
+                    "Số CIF": info.cif, "Tên khách hàng": info.name, "Loại khách hàng": info.zcstypeDesc,
+                    "Ngày sinh": info.dob, "Giới tính": info.sexDesc, "Quốc tịch": info.citzshpDesc,
+                    "Loại GTTT": info.idTypeDesc, "Số GTTT": info.idNumber, "Ngày cấp": info.idIssueDate,
+                    "Nơi cấp": info.zisdesc, "Hiệu lực GTTT": info.idexpDesc, "Hạng khách hàng": info.ccodeDesc,
+                    "Số điện thoại": info.aph, "Email": info.email, "Địa chỉ": info.pad1,
+                    "Trạng thái": `<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">${info.statusDesc}</span>`
+                }).map(([key, value]) => `
+                    <div class="flex flex-col"><span class="font-semibold text-gray-600">${key}</span> <span class="text-gray-800">${value || 'N/A'}</span></div>
+                `).join('')}
+            </div>
+        `;
+        
+        const formatCurrency = (numStr, currency) => {
+            if (!numStr || parseFloat(numStr) === 0) return `0 ${currency}`;
+            return `${parseFloat(numStr).toLocaleString('vi-VN')} ${currency}`;
+        }
+        
+        const depositHtml = `
+            <div class="space-y-4">
+                ${Object.entries(deposit).map(([currency, accounts]) => `
+                <div>
+                    <h4 class="font-bold text-md text-blue-700 mb-2">${currency}</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${accounts.filter(acc => acc.accountActiveCount > 0).map(acc => `
+                            <div class="bg-gray-50 p-3 rounded-lg text-center">
+                                <p class="text-xs text-gray-500 font-medium">${acc.name}</p>
+                                <p class="text-lg font-bold text-gray-800">${formatCurrency(acc.balavl, '')}</p>
+                                <p class="text-xs text-gray-500">${acc.accountActiveCount} tài khoản</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                `).join('')}
+            </div>
+        `;
+        
+        const loanHtml = `
+            <div class="space-y-4">
+            ${loan.filter(l => parseFloat(l.totalBal) > 0).map(l => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-md text-red-700">${l.crcd}</h4>
+                    <p class="text-xl font-bold text-gray-800">${formatCurrency(l.totalBal, l.crcd)}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500">Không có thông tin tiền vay.</p>'}
+            </div>
+        `;
+
+        const servicesHtml = `
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            ${services.map(s => `
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <i class="fas ${s.usageStatus ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} mr-3"></i>
+                    <span class="text-sm">${s.lvlName}</span>
+                </div>
+            `).join('')}
+            </div>
+        `;
+
+        customerDetailsSection.innerHTML = `
+            <div class="bg-white rounded-lg shadow-md mt-6">
+                <div class="border-b border-gray-200">
+                    <nav id="customer-tabs" class="-mb-px flex space-x-6 px-6" aria-label="Tabs">
+                        <button data-tab="info" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 tab-active">Thông tin chung</button>
+                        <button data-tab="deposit" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Tổng quan tiền gửi</button>
+                        <button data-tab="loan" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Tổng quan tiền vay</button>
+                        <button data-tab="services" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Dịch vụ sử dụng</button>
+                    </nav>
+                </div>
+                <div class="p-6">
+                    <div id="tab-content-info" class="tab-content">${infoHtml}</div>
+                    <div id="tab-content-deposit" class="tab-content hidden">${depositHtml}</div>
+                    <div id="tab-content-loan" class="tab-content hidden">${loanHtml}</div>
+                    <div id="tab-content-services" class="tab-content hidden">${servicesHtml}</div>
+                </div>
+            </div>`;
+            
+        customerDetailsSection.classList.remove('hidden');
+        
+        // Add event listeners for the new tabs
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+                // Update button styles
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('tab-active'));
+                button.classList.add('tab-active');
+                // Show correct content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+            });
+        });
+    }
+    
+    // --- EVENT LISTENERS ---
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        loginSection.classList.add('hidden');
+        appSection.classList.remove('hidden');
+        populateUserInfo();
+        populateNavigation();
+        populateFavoriteApps();
+        showView('dashboard-view');
+    });
+
+    logoutButton.addEventListener('click', () => {
+        appSection.classList.add('hidden');
+        loginSection.classList.remove('hidden');
+        document.getElementById('password').value = '';
+    });
+    
+    homeButton.addEventListener('click', () => {
+        showView('dashboard-view');
+        document.querySelectorAll('#main-nav a').forEach(a => a.classList.remove('bg-blue-100', 'text-blue-700'));
+        document.querySelector('#main-nav a[data-function-code="SMT001"]').classList.add('bg-blue-100', 'text-blue-700');
+    });
+    
+    cifSearchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const cifValue = document.getElementById('cif-input').value;
+        if (cifValue === mockData.cif_response1_search.data[0].cif) {
+             populateCustomerDetails();
+        } else {
+             customerDetailsSection.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md text-center text-red-500">Không tìm thấy khách hàng với số CIF ${cifValue}. Vui lòng thử lại.</div>`;
+             customerDetailsSection.classList.remove('hidden');
+        }
+    });
+
+    </script>
+</body>
+</html>
