@@ -184,7 +184,7 @@
     <div class="max-w-7xl mx-auto relative z-10">
         <!-- Header -->
         <header class="text-center mb-12 reveal">
-            <img src="BIDV-logo.png" alt="BIDV Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; this.nextSibling.textContent='BIDV';">
+            <img src="logo.webp" alt="BIDV Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; this.nextSibling.textContent='BIDV';">
             <h1 class="text-3xl md:text-5xl font-extrabold gradient-text">Trung tâm triển khai Core Profile V2.11</h1>
             <p class="tagline mt-3 text-xl">Nâng tầm trải nghiệm - Bứt phá hiệu năng</p>
         </header>
@@ -323,7 +323,26 @@
         
         // --- TASKS ---
         const unitFilter = document.getElementById('unit-filter'); const tasksContainer = document.getElementById('tasks-container'); const units = [...new Set(tasksData.map(t => t.unit))]; units.forEach(unit => { const option = document.createElement('option'); option.value = unit; option.textContent = unit; unitFilter.appendChild(option); });
-        function renderTasks(filter = 'all') { tasksContainer.innerHTML = ''; const filteredTasks = (filter === 'all') ? tasksData : tasksData.filter(t => t.unit === filter); filteredTasks.forEach(task => { let statusClass = 'status-not-started'; let statusText = 'Chưa bắt đầu'; if (task.status === 'in-progress') { statusClass = 'status-in-progress'; statusText = 'Đang thực hiện'; } else if (task.status === 'completed') { statusClass = 'status-completed'; statusText = 'Hoàn thành'; } const taskElement = `<div class="border-t border-teal-800 pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><div class="flex-grow"><p class="font-bold text-sm text-amber-300">${task.unit}</p><p>${task.task}</p></div><div class="flex-shrink-0 bg-teal-800 rounded-full px-3 py-1 text-sm font-medium flex items-center"><span class="status-dot mr-2 ${statusClass}"></span>${statusText}</div></div>`; tasksContainer.innerHTML += taskElement; }); }
+        function renderTasks(filter = 'all') {
+            tasksContainer.innerHTML = '';
+            const filteredTasks = (filter === 'all') ? tasksData : tasksData.filter(t => t.unit === filter);
+            filteredTasks.forEach(task => {
+                let statusClass = 'status-not-started';
+                let statusText = 'Chưa bắt đầu';
+                let statusIcon = '<i class="fas fa-clock ml-2 text-slate-400"></i>';
+                if (task.status === 'in-progress') {
+                    statusClass = 'status-in-progress';
+                    statusText = 'Đang thực hiện';
+                    statusIcon = '<i class="fas fa-spinner fa-spin ml-2 text-cyan-400"></i>';
+                } else if (task.status === 'completed') {
+                    statusClass = 'status-completed';
+                    statusText = 'Hoàn thành';
+                    statusIcon = '<i class="fas fa-check-circle ml-2 text-amber-400"></i>';
+                }
+                const taskElement = `<div class="border-t border-teal-800 pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><div class="flex-grow"><p class="font-bold text-sm text-amber-300">${task.unit}</p><p>${task.task}</p></div><div class="flex-shrink-0 bg-teal-800 rounded-full px-3 py-1 text-sm font-medium flex items-center"><span class="status-dot mr-2 ${statusClass}"></span>${statusText}${statusIcon}</div></div>`;
+                tasksContainer.innerHTML += taskElement;
+            });
+        }
         unitFilter.addEventListener('change', (e) => renderTasks(e.target.value)); renderTasks();
 
         // --- MODAL LOGIC ---
