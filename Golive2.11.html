@@ -184,7 +184,7 @@
     <div class="max-w-7xl mx-auto relative z-10">
         <!-- Header -->
         <header class="text-center mb-12 reveal">
-            <img src="logo.webp" alt="BIDV Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; this.nextSibling.textContent='BIDV';">
+            <img src="BIDV-logo.png" alt="BIDV Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; this.nextSibling.textContent='BIDV';">
             <h1 class="text-3xl md:text-5xl font-extrabold gradient-text">Trung tâm triển khai Core Profile V2.11</h1>
             <p class="tagline mt-3 text-xl">Nâng tầm trải nghiệm - Bứt phá hiệu năng</p>
         </header>
@@ -315,14 +315,72 @@
         };
 
         // --- COUNTDOWN TIMER ---
-        function updateCountdown() { const now = new Date(); const diff = goLiveDate - now; if (diff <= 0) { document.getElementById('countdown').innerHTML = `<div class="text-4xl md:text-5xl font-bold text-green-400">🚀 ĐÃ TRIỂN KHAI THÀNH CÔNG! 🚀</div>`; return; } const d = Math.floor(diff / (1000 * 60 * 60 * 24)); const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((diff % (1000 * 60)) / 1000); document.getElementById('days').innerText = String(d).padStart(2, '0'); document.getElementById('hours').innerText = String(h).padStart(2, '0'); document.getElementById('minutes').innerText = String(m).padStart(2, '0'); document.getElementById('seconds').innerText = String(s).padStart(2, '0'); }
-        setInterval(updateCountdown, 1000); updateCountdown();
+        function updateCountdown() {
+            const now = new Date();
+            const diff = goLiveDate - now;
+
+            if (diff <= 0) {
+                document.getElementById('countdown').innerHTML = `<div class="text-4xl md:text-5xl font-bold text-green-400">🚀 ĐÃ TRIỂN KHAI THÀNH CÔNG! 🚀</div>`;
+                return;
+            }
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = String(d).padStart(2, '0');
+            document.getElementById('hours').innerText = String(h).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(m).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(s).padStart(2, '0');
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
 
         // --- TIMELINE ---
-        const timelineContainer = document.getElementById('timeline-container'); const now = new Date(); timelineData.forEach(item => { const isActive = now >= item.start && now < item.end; const isCompleted = now >= item.end; let dotClass = ''; let iconClass = ''; if (isActive) { dotClass = 'active'; iconClass = 'fa-spin'; } if (isCompleted) { dotClass = 'completed'; iconClass = 'fa-check'; } const timelineItem = `<div class="relative pl-20 pb-8 reveal"><div class="timeline-item-dot ${dotClass}"><i class="fas ${isCompleted || isActive ? iconClass : item.icon}"></i></div><div class="pt-1"><p class="text-sm font-semibold text-muted">${item.start.toLocaleString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - ${item.end.toLocaleDateString('vi-VN')}</p><h4 class="font-bold text-lg text-white">${item.title}</h4><p class="text-muted text-sm">${item.details}</p></div></div>`; timelineContainer.innerHTML += timelineItem; });
+        const timelineContainer = document.getElementById('timeline-container');
+        const now = new Date();
+        timelineData.forEach(item => {
+            const isActive = now >= item.start && now < item.end;
+            const isCompleted = now >= item.end;
+            let dotClass = '';
+            let iconClass = '';
+
+            if (isActive) {
+                dotClass = 'active';
+                iconClass = 'fa-spin';
+            }
+            if (isCompleted) {
+                dotClass = 'completed';
+                iconClass = 'fa-check';
+            }
+
+            const timelineItem = `
+                <div class="relative pl-20 pb-8 reveal">
+                    <div class="timeline-item-dot ${dotClass}">
+                        <i class="fas ${isCompleted || isActive ? iconClass : item.icon}"></i>
+                    </div>
+                    <div class="pt-1">
+                        <p class="text-sm font-semibold text-muted">${item.start.toLocaleString('vi-VN', {hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit', year: 'numeric'})} - ${item.end.toLocaleString('vi-VN', {hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit', year: 'numeric'})}</p>
+                        <h4 class="font-bold text-lg text-white">${item.title}</h4>
+                        <p class="text-muted text-sm">${item.details}</p>
+                    </div>
+                </div>
+            `;
+            timelineContainer.innerHTML += timelineItem;
+        });
         
         // --- TASKS ---
-        const unitFilter = document.getElementById('unit-filter'); const tasksContainer = document.getElementById('tasks-container'); const units = [...new Set(tasksData.map(t => t.unit))]; units.forEach(unit => { const option = document.createElement('option'); option.value = unit; option.textContent = unit; unitFilter.appendChild(option); });
+        const unitFilter = document.getElementById('unit-filter');
+        const tasksContainer = document.getElementById('tasks-container');
+        const units = [...new Set(tasksData.map(t => t.unit))];
+        units.forEach(unit => {
+            const option = document.createElement('option');
+            option.value = unit;
+            option.textContent = unit;
+            unitFilter.appendChild(option);
+        });
+
         function renderTasks(filter = 'all') {
             tasksContainer.innerHTML = '';
             const filteredTasks = (filter === 'all') ? tasksData : tasksData.filter(t => t.unit === filter);
@@ -339,32 +397,99 @@
                     statusText = 'Hoàn thành';
                     statusIcon = '<i class="fas fa-check-circle ml-2 text-amber-400"></i>';
                 }
-                const taskElement = `<div class="border-t border-teal-800 pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><div class="flex-grow"><p class="font-bold text-sm text-amber-300">${task.unit}</p><p>${task.task}</p></div><div class="flex-shrink-0 bg-teal-800 rounded-full px-3 py-1 text-sm font-medium flex items-center"><span class="status-dot mr-2 ${statusClass}"></span>${statusText}${statusIcon}</div></div>`;
+                const taskElement = `
+                    <div class="border-t border-teal-800 pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex-grow">
+                            <p class="font-bold text-sm text-amber-300">${task.unit}</p>
+                            <p>${task.task}</p>
+                        </div>
+                        <div class="flex-shrink-0 bg-teal-800 rounded-full px-3 py-1 text-sm font-medium flex items-center">
+                            <span class="status-dot mr-2 ${statusClass}"></span>${statusText}${statusIcon}
+                        </div>
+                    </div>
+                `;
                 tasksContainer.innerHTML += taskElement;
             });
         }
-        unitFilter.addEventListener('change', (e) => renderTasks(e.target.value)); renderTasks();
+        unitFilter.addEventListener('change', (e) => renderTasks(e.target.value));
+        renderTasks();
 
         // --- MODAL LOGIC ---
-        const detailsModal = document.getElementById('details-modal'); const modalTitle = document.getElementById('modal-title'); const modalBody = document.getElementById('modal-body');
-        function openModal(cardId) { const data = improvementsData[cardId]; if (data) { modalTitle.textContent = data.title; modalBody.innerHTML = data.content; detailsModal.style.display = 'flex'; } }
-        function closeModal() { detailsModal.style.display = 'none'; }
+        const detailsModal = document.getElementById('details-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        function openModal(cardId) {
+            const data = improvementsData[cardId];
+            if (data) {
+                modalTitle.textContent = data.title;
+                modalBody.innerHTML = data.content;
+                detailsModal.style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            detailsModal.style.display = 'none';
+        }
+
         document.querySelectorAll('.interactive, #all-upgrades-card').forEach(card => card.addEventListener('click', (e) => openModal(e.currentTarget.id)));
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModal));
-        window.addEventListener('click', (event) => { if (event.target == detailsModal) { closeModal(); } });
+        window.addEventListener('click', (event) => {
+            if (event.target == detailsModal) {
+                closeModal();
+            }
+        });
 
         // --- ON-SCROLL & COUNTER ANIMATIONS ---
         const revealElements = document.querySelectorAll('.reveal');
-        const revealObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } }); }, { threshold: 0.1 });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
         revealElements.forEach(el => revealObserver.observe(el));
+
         const counters = document.querySelectorAll('.counter');
         const speed = 200;
-        const countUp = (counter) => { const target = +counter.getAttribute('data-count'); const inc = target / speed; let count = 0; const updateCount = () => { count += inc; if (count < target) { counter.innerText = Math.ceil(count); setTimeout(updateCount, 1); } else { counter.innerText = target; } }; updateCount(); };
-        const counterObserver = new IntersectionObserver((entries, observer) => { entries.forEach(entry => { if(entry.isIntersecting) { countUp(entry.target); observer.unobserve(entry.target); } }); }, { threshold: 0.5 });
+
+        const countUp = (counter) => {
+            const target = +counter.getAttribute('data-count');
+            const inc = target / speed;
+            let count = 0;
+            const updateCount = () => {
+                count += inc;
+                if (count < target) {
+                    counter.innerText = Math.ceil(count);
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            updateCount();
+        };
+
+        const counterObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    countUp(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
         counters.forEach(counter => counterObserver.observe(counter));
 
         // --- INTERACTIVE CARD GLOW ---
-        document.querySelectorAll('.card.interactive').forEach(card => { card.addEventListener('mousemove', e => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); }); });
+        document.querySelectorAll('.card.interactive').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
     });
     </script>
 </body>
