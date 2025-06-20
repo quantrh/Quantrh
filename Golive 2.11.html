@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Triển Khai Core Profile V2.11 - BIDV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* BIDV Color Palette */
+        :root {
+            --bidv-green: #006B68;
+            --bidv-yellow: #FFC62F;
+            --bidv-dark-green: #004644;
+            --text-light: #f0fdfa;
+            --text-muted: #a7f3d0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bidv-dark-green);
+            color: var(--text-light);
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--bidv-yellow), #FFFFFF, var(--bidv-yellow));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: text-gradient-animation 5s linear infinite;
+        }
+
+        @keyframes text-gradient-animation {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .tagline {
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 8px rgba(255, 198, 47, 0.4);
+            animation: tagline-glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes tagline-glow {
+            from {
+                text-shadow: 0 0 8px rgba(255, 198, 47, 0.4);
+            }
+            to {
+                text-shadow: 0 0 12px rgba(255, 198, 47, 0.6);
+            }
+        }
+
+        .card {
+            position: relative;
+            background-color: rgba(0, 107, 104, 0.5); /* BIDV Green with transparency */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card.interactive:hover {
+            border-color: var(--bidv-yellow);
+            transform: translateY(-5px);
+            cursor: pointer;
+        }
+
+        .card.interactive::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 198, 47, 0.15), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card.interactive:hover::before {
+            opacity: 1;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 18px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .timeline-item-dot {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bidv-green);
+            color: white;
+            font-size: 1.25rem;
+            border: 4px solid var(--bidv-dark-green);
+            transition: background-color 0.3s ease;
+        }
+
+        .timeline-item-dot.active,
+        .timeline-item-dot.completed {
+            background: var(--bidv-yellow);
+            color: var(--bidv-dark-green);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: rgba(0, 70, 68, 0.9) !important; /* Darker green modal */
+            border: 1px solid rgba(255, 198, 47, 0.5) !important;
+            animation: slideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s, transform 0.8s;
+            transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .status-completed { background-color: var(--bidv-yellow); }
+        .status-in-progress { background-color: #67e8f9; } /* Cyan */
+        .status-not-started { background-color: #64748b; } /* Slate */
+
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <canvas id="particles-js"></canvas>
+    <div class="max-w-7xl mx-auto relative z-10">
+        <!-- Header -->
+        <header class="text-center mb-12 reveal">
+            <img src="BIDV-logo.png" alt="BIDV Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; this.nextSibling.textContent='BIDV';">
+            <h1 class="text-3xl md:text-5xl font-extrabold gradient-text">Trung tâm triển khai Core Profile V2.11</h1>
+            <p class="tagline mt-3 text-xl">Nâng tầm trải nghiệm - Bứt phá hiệu năng</p>
+        </header>
+
+        <!-- Countdown & Main Status -->
+        <section class="mb-12 reveal">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Countdown Timer -->
+                <div class="lg:col-span-2 card p-8 flex flex-col justify-center items-center text-center">
+                    <h2 class="text-2xl font-bold text-amber-300 mb-4">Thời gian đến GO-LIVE</h2>
+                    <div id="countdown" class="flex space-x-4 md:space-x-8">
+                        <div><div id="days" class="text-5xl md:text-7xl font-mono font-bold text-white">00</div><div class="uppercase text-sm text-muted">Ngày</div></div>
+                        <div><div id="hours" class="text-5xl md:text-7xl font-mono font-bold text-white">00</div><div class="uppercase text-sm text-muted">Giờ</div></div>
+                        <div><div id="minutes" class="text-5xl md:text-7xl font-mono font-bold text-white">00</div><div class="uppercase text-sm text-muted">Phút</div></div>
+                        <div><div id="seconds" class="text-5xl md:text-7xl font-mono font-bold text-white">00</div><div class="uppercase text-sm text-muted">Giây</div></div>
+                    </div>
+                     <div class="mt-6 text-amber-200 font-semibold"><i class="fas fa-calendar-check mr-2"></i>Hiệu lực từ 08:00 - Thứ Bảy, 21/06/2025</div>
+                </div>
+                <!-- Quick Stats -->
+                <div class="card p-8 flex flex-col justify-center space-y-6">
+                    <h2 class="text-2xl font-bold text-center text-amber-300 mb-2">Tổng quan V2.11</h2>
+                    <div id="all-upgrades-card" class="flex items-center p-3 rounded-lg hover:bg-teal-900/50 cursor-pointer">
+                        <i class="fas fa-star fa-2x mr-4 text-amber-400"></i>
+                        <div><div data-count="48" class="counter text-3xl font-bold text-white">0</div><div class="text-muted">Yêu cầu Nâng cấp & Phát triển</div></div>
+                    </div>
+                    <div class="flex items-center p-3">
+                        <i class="fas fa-cogs fa-2x mr-4 text-amber-400"></i>
+                        <div><div data-count="107" class="counter text-3xl font-bold text-white">0</div><div class="text-muted">User Story đã hoàn thành</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="mb-12 reveal">
+            <h2 class="text-3xl font-bold text-center mb-10 gradient-text">Lộ trình triển khai</h2>
+            <div id="timeline-container" class="relative timeline max-w-3xl mx-auto"></div>
+        </section>
+        
+        <!-- What's New Section -->
+        <section class="mb-12 reveal">
+            <h2 class="text-3xl font-bold text-center mb-8 gradient-text">Những cải tiến đột phá trong V2.11</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="new-features-card" class="card p-6 interactive">
+                    <div class="flex items-center mb-3"><i class="fas fa-lightbulb fa-2x mr-4 text-amber-400"></i><h3 class="text-xl font-bold text-white">Tính năng mới</h3></div>
+                    <p class="text-muted">Tăng tốc xử lý nghiệp vụ với các chức năng lô hoàn toàn mới, giảm thiểu tác nghiệp thủ công.</p>
+                </div>
+                <div id="ux-improvements-card" class="card p-6 interactive">
+                    <div class="flex items-center mb-3"><i class="fas fa-magic-wand-sparkles fa-2x mr-4 text-amber-400"></i><h3 class="text-xl font-bold text-white">Tối ưu trải nghiệm (UI/UX)</h3></div>
+                    <p class="text-muted">Giao diện tạo CIF, chuyển tiền được làm mới, trực quan và thông minh hơn, tích hợp cảnh báo tự động.</p>
+                </div>
+                <div id="performance-card" class="card p-6 interactive">
+                    <div class="flex items-center mb-3"><i class="fas fa-tachometer-alt fa-2x mr-4 text-amber-400"></i><h3 class="text-xl font-bold text-white">Tối ưu hiệu năng & Tích hợp</h3></div>
+                    <p class="text-muted">Các job xử lý nền được tối ưu, bổ sung cơ chế dọn dẹp dữ liệu và nâng cấp các services tích hợp.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Roles & Responsibilities Section -->
+        <section class="reveal">
+             <h2 class="text-3xl font-bold text-center mb-8 gradient-text">Nhiệm vụ các đơn vị</h2>
+             <div class="card p-8">
+                <div class="mb-4">
+                    <select id="unit-filter" class="bg-teal-900 border border-teal-700 text-white rounded-lg p-2 w-full md:w-1/3">
+                        <option value="all">Tất cả các đơn vị</option>
+                    </select>
+                </div>
+                <div id="tasks-container" class="space-y-4"></div>
+             </div>
+        </section>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="modal">
+        <div class="modal-content card max-w-2xl w-11/12 m-4 relative">
+            <button class="close-modal-btn absolute top-4 right-5 text-gray-400 hover:text-white text-3xl font-bold">&times;</button>
+            <div class="p-8">
+                <h3 id="modal-title" class="text-2xl font-bold mb-6 text-amber-400"></h3>
+                <div id="modal-body" class="space-y-4 text-muted"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- ANIMATED BACKGROUND ---
+        const canvas = document.getElementById('particles-js');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+        const bidvYellow = 'rgba(255, 198, 47, 0.6)';
+        function Particle(x, y, directionX, directionY, size, color) { this.x = x; this.y = y; this.directionX = directionX; this.directionY = directionY; this.size = size; this.color = color; }
+        Particle.prototype.draw = function() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false); ctx.fillStyle = this.color; ctx.fill(); }
+        Particle.prototype.update = function() { if (this.x > canvas.width || this.x < 0) { this.directionX = -this.directionX; } if (this.y > canvas.height || this.y < 0) { this.directionY = -this.directionY; } this.x += this.directionX; this.y += this.directionY; this.draw(); }
+        function initParticles() { particlesArray = []; let numberOfParticles = (canvas.height * canvas.width) / 9000; for (let i = 0; i < numberOfParticles; i++) { let size = (Math.random() * 2) + 0.5; let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2); let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2); let directionX = (Math.random() * .4) - .2; let directionY = (Math.random() * .4) - .2; particlesArray.push(new Particle(x, y, directionX, directionY, size, bidvYellow)); } }
+        function animateParticles() { requestAnimationFrame(animateParticles); ctx.clearRect(0,0,innerWidth, innerHeight); for (let i = 0; i < particlesArray.length; i++) { particlesArray[i].update(); } }
+        initParticles(); animateParticles();
+        window.addEventListener('resize', function() { canvas.width = innerWidth; canvas.height = innerHeight; initParticles(); });
+
+        // --- DATA ---
+        const goLiveDate = new Date('2025-06-21T08:00:00');
+        const timelineData = [
+            { id: 1, icon: 'fa-vials', title: 'Kiểm thử Prod-Mirror', start: new Date('2025-06-02T09:00:00'), end: new Date('2025-06-17T17:00:00'), details: 'Diễn tập và kiểm thử toàn diện V2.11.' },
+            { id: 2, icon: 'fa-download', title: 'Cập nhật TP Teller', start: new Date('2025-06-20T17:30:00'), end: new Date('2025-06-21T03:00:00'), details: 'Chi nhánh/TSC chủ động cập nhật phiên bản mới.' },
+            { id: 3, icon: 'fa-cogs', title: 'Cài đặt gói cập nhật V2.11', start: new Date('2025-06-21T03:00:00'), end: new Date('2025-06-21T05:00:00'), details: 'Cài đặt gói cập nhật lõi lên Production.' },
+            { id: 4, icon: 'fa-plug', title: 'Kiểm tra tích hợp & Smoke test', start: new Date('2025-06-21T05:00:00'), end: new Date('2025-06-21T06:00:00'), details: 'Các đơn vị đầu mối app kiểm tra ứng dụng.' },
+            { id: 5, icon: 'fa-tasks', title: 'Kiểm thử chức năng tổng thể', start: new Date('2025-06-21T06:00:00'), end: new Date('2025-06-21T08:00:00'), details: 'Kiểm thử WebCSR và TP Teller.' },
+            { id: 6, icon: 'fa-rocket', title: 'Hệ thống GO-LIVE', start: goLiveDate, end: goLiveDate, details: 'Hệ thống sẵn sàng cho giao dịch.' }
+        ];
+        const tasksData = [
+            { unit: 'Ban QLPTCB', task: 'Ban hành công văn và tài liệu hướng dẫn V2.11.', status: 'completed' },
+            { unit: 'Ban QLPTCB', task: 'Thông báo kế hoạch cập nhật tới các đơn vị.', status: 'completed' },
+            { unit: 'Ban QLPTCB', task: 'Giám sát, hỗ trợ và giải đáp vướng mắc.', status: 'in-progress' },
+            { unit: 'TTCNTT, TTPTNHS', task: 'Hỗ trợ triển khai các cấu phần tích hợp.', status: 'in-progress' },
+            { unit: 'TTCNTT, TTPTNHS', task: 'Trực theo dõi, giám sát hệ thống.', status: 'in-progress' },
+            { unit: 'Đơn vị nghiệp vụ', task: 'Xây dựng kịch bản, kiểm thử ứng dụng.', status: 'completed' },
+            { unit: 'Đơn vị nghiệp vụ', task: 'Phân công đầu mối kiểm tra sau cập nhật.', status: 'in-progress' },
+            { unit: 'Chi nhánh/TSC', task: 'Cập nhật TP Teller theo hướng dẫn.', status: 'in-progress' },
+            { unit: 'Chi nhánh/TSC', task: 'Phối hợp theo dõi, giám sát.', status: 'in-progress' },
+            { unit: 'Chi nhánh/TSC', task: 'Triển khai chức năng mới.', status: 'not-started' },
+        ];
+        const improvementsData = {
+            'new-features-card': { title: 'Chi tiết Tính năng mới', content: `<div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-cogs fa-fw mr-3 text-amber-400"></i>Xử lý theo lô</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Cập nhật thông tin tài khoản tiền gửi theo lô.</li><li>Điều chỉnh Mã Chi nhánh quản lý TSBĐ theo lô.</li></ul></div>` },
+            'ux-improvements-card': { title: 'Chi tiết Tối ưu trải nghiệm (UI/UX)', content: `<div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-layer-group fa-fw mr-3 text-amber-400"></i>Cải tiến quy trình & Chức năng</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Đơn giản hóa quy trình mở/đóng/quản lý ngày làm việc và SETPM.</li><li>Cho phép vấn tin trạng thái Sinh trắc học trực tiếp trên WebCSR.</li><li>Cải tiến chức năng đóng tài khoản thanh toán và dịch vụ lương Apayroll.</li></ul></div><div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-magic-wand-sparkles fa-fw mr-3 text-amber-400"></i>Nâng cấp giao diện</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Nâng cấp giao diện tạo CIF khách hàng tổ chức.</li><li>Bổ sung tiện ích tìm kiếm tài khoản, mã sản phẩm.</li><li>Tự động hiển thị cảnh báo theo quy định của Luật căn cước và TT17.</li><li>Nâng cấp màn hình chuyển tiền trong nước và liên chi nhánh.</li></ul></div>` },
+            'performance-card': { title: 'Chi tiết Tối ưu hiệu năng & Tích hợp', content: `<div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-tachometer-alt fa-fw mr-3 text-amber-400"></i>Tối ưu Xử lý hệ thống</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Tối ưu luồng xử lý tạo CIF và đăng ký dịch vụ theo lô.</li><li>Bổ sung các job xử lý nền quan trọng (hạch toán nợ, kết chuyển quỹ tiền).</li><li>Tự động điều chỉnh lịch trả nợ, bổ sung tính năng dọn dẹp dữ liệu.</li></ul></div><div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-plug-circle-check fa-fw mr-3 text-amber-400"></i>Hỗ trợ Tích hợp</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Tích hợp WebCSR vấn tin hình ảnh từ Kho Sinh trắc học.</li><li>Phát triển và nâng cấp nhiều services cho các dự án Core thẻ, Smart Counter, Smartbanking, và nhà máy số.</li></ul></div>` },
+            'all-upgrades-card': { title: 'Tóm tắt 48 Yêu cầu Nâng cấp & Phát triển', content: `<div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-lightbulb fa-fw mr-3 text-amber-400"></i>Phát triển tính năng mới</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Cập nhật thông tin tài khoản tiền gửi theo lô.</li><li>Điều chỉnh Mã Chi nhánh quản lý TSBĐ theo lô.</li></ul></div><div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-layer-group fa-fw mr-3 text-amber-400"></i>Cải tiến chức năng & UI/UX</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Đơn giản hóa quy trình mở/đóng/quản lý ngày làm việc.</li><li>Cho phép vấn tin trạng thái Sinh trắc học trên WebCSR.</li><li>Nâng cấp giao diện tạo CIF, màn hình chuyển tiền và các tiện ích tìm kiếm.</li></ul></div><div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-tachometer-alt fa-fw mr-3 text-amber-400"></i>Tối ưu Xử lý hệ thống</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Tối ưu luồng xử lý tạo CIF và đăng ký dịch vụ theo lô.</li><li>Bổ sung các job xử lý nền quan trọng và tính năng dọn dẹp dữ liệu.</li></ul></div><div><h4 class="font-bold text-lg flex items-center text-white"><i class="fas fa-plug-circle-check fa-fw mr-3 text-amber-400"></i>Hỗ trợ Tích hợp</h4><ul class="list-disc list-inside ml-4 mt-1"><li>Nâng cấp và phát triển services cho các dự án chiến lược.</li></ul></div>` }
+        };
+
+        // --- COUNTDOWN TIMER ---
+        function updateCountdown() { const now = new Date(); const diff = goLiveDate - now; if (diff <= 0) { document.getElementById('countdown').innerHTML = `<div class="text-4xl md:text-5xl font-bold text-green-400">🚀 ĐÃ TRIỂN KHAI THÀNH CÔNG! 🚀</div>`; return; } const d = Math.floor(diff / (1000 * 60 * 60 * 24)); const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((diff % (1000 * 60)) / 1000); document.getElementById('days').innerText = String(d).padStart(2, '0'); document.getElementById('hours').innerText = String(h).padStart(2, '0'); document.getElementById('minutes').innerText = String(m).padStart(2, '0'); document.getElementById('seconds').innerText = String(s).padStart(2, '0'); }
+        setInterval(updateCountdown, 1000); updateCountdown();
+
+        // --- TIMELINE ---
+        const timelineContainer = document.getElementById('timeline-container'); const now = new Date(); timelineData.forEach(item => { const isActive = now >= item.start && now < item.end; const isCompleted = now >= item.end; let dotClass = ''; let iconClass = ''; if (isActive) { dotClass = 'active'; iconClass = 'fa-spin'; } if (isCompleted) { dotClass = 'completed'; iconClass = 'fa-check'; } const timelineItem = `<div class="relative pl-20 pb-8 reveal"><div class="timeline-item-dot ${dotClass}"><i class="fas ${isCompleted || isActive ? iconClass : item.icon}"></i></div><div class="pt-1"><p class="text-sm font-semibold text-muted">${item.start.toLocaleString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - ${item.end.toLocaleDateString('vi-VN')}</p><h4 class="font-bold text-lg text-white">${item.title}</h4><p class="text-muted text-sm">${item.details}</p></div></div>`; timelineContainer.innerHTML += timelineItem; });
+        
+        // --- TASKS ---
+        const unitFilter = document.getElementById('unit-filter'); const tasksContainer = document.getElementById('tasks-container'); const units = [...new Set(tasksData.map(t => t.unit))]; units.forEach(unit => { const option = document.createElement('option'); option.value = unit; option.textContent = unit; unitFilter.appendChild(option); });
+        function renderTasks(filter = 'all') { tasksContainer.innerHTML = ''; const filteredTasks = (filter === 'all') ? tasksData : tasksData.filter(t => t.unit === filter); filteredTasks.forEach(task => { let statusClass = 'status-not-started'; let statusText = 'Chưa bắt đầu'; if (task.status === 'in-progress') { statusClass = 'status-in-progress'; statusText = 'Đang thực hiện'; } else if (task.status === 'completed') { statusClass = 'status-completed'; statusText = 'Hoàn thành'; } const taskElement = `<div class="border-t border-teal-800 pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><div class="flex-grow"><p class="font-bold text-sm text-amber-300">${task.unit}</p><p>${task.task}</p></div><div class="flex-shrink-0 bg-teal-800 rounded-full px-3 py-1 text-sm font-medium flex items-center"><span class="status-dot mr-2 ${statusClass}"></span>${statusText}</div></div>`; tasksContainer.innerHTML += taskElement; }); }
+        unitFilter.addEventListener('change', (e) => renderTasks(e.target.value)); renderTasks();
+
+        // --- MODAL LOGIC ---
+        const detailsModal = document.getElementById('details-modal'); const modalTitle = document.getElementById('modal-title'); const modalBody = document.getElementById('modal-body');
+        function openModal(cardId) { const data = improvementsData[cardId]; if (data) { modalTitle.textContent = data.title; modalBody.innerHTML = data.content; detailsModal.style.display = 'flex'; } }
+        function closeModal() { detailsModal.style.display = 'none'; }
+        document.querySelectorAll('.interactive, #all-upgrades-card').forEach(card => card.addEventListener('click', (e) => openModal(e.currentTarget.id)));
+        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModal));
+        window.addEventListener('click', (event) => { if (event.target == detailsModal) { closeModal(); } });
+
+        // --- ON-SCROLL & COUNTER ANIMATIONS ---
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } }); }, { threshold: 0.1 });
+        revealElements.forEach(el => revealObserver.observe(el));
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+        const countUp = (counter) => { const target = +counter.getAttribute('data-count'); const inc = target / speed; let count = 0; const updateCount = () => { count += inc; if (count < target) { counter.innerText = Math.ceil(count); setTimeout(updateCount, 1); } else { counter.innerText = target; } }; updateCount(); };
+        const counterObserver = new IntersectionObserver((entries, observer) => { entries.forEach(entry => { if(entry.isIntersecting) { countUp(entry.target); observer.unobserve(entry.target); } }); }, { threshold: 0.5 });
+        counters.forEach(counter => counterObserver.observe(counter));
+
+        // --- INTERACTIVE CARD GLOW ---
+        document.querySelectorAll('.card.interactive').forEach(card => { card.addEventListener('mousemove', e => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); }); });
+    });
+    </script>
+</body>
+</html>
