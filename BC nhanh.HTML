@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Tổng Giám Đốc</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        .report-section {
+            background-color: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #eaf0f6;
+            font-weight: 600;
+            color: #34495e;
+        }
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .delta-positive {
+            color: #28a745; /* Green for positive change */
+            font-weight: 600;
+        }
+        .delta-negative {
+            color: #dc3545; /* Red for negative change */
+            font-weight: 600;
+        }
+        .delta-neutral {
+            color: #6c757d; /* Gray for no change */
+        }
+        .summary-box {
+            background-color: #e8f5e9; /* Light green */
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #c8e6c9;
+        }
+        .summary-box h3 {
+            color: #1b5e20; /* Dark green */
+            margin-bottom: 1rem;
+        }
+        .icon-card {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+        }
+        .icon-card i {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+            color: #3498db;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position the tooltip above the text */
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl mb-6 text-center">Báo Cáo Tổng Giám Đốc - Ngày <span id="report-date"></span></h1>
+
+        <!-- Data for the report -->
+        <script>
+            const reportData = {
+                'Tổng tài sản': { today: 242000, yesterday: 241000, icon: 'fas fa-chart-line' },
+                'Tổng nguồn vốn huy động': { today: 316233, yesterday: 311176, icon: 'fas fa-wallet' },
+                'Huy động vốn thị trường 1': { today: 276854, yesterday: 276386, icon: 'fas fa-hand-holding-usd' },
+                'Tiền gửi của khách hàng': { today: 246166, yesterday: 246196, icon: 'fas fa-users' },
+                'Phát hành GTCG': { today: 29860, yesterday: 29560, icon: 'fas fa-file-invoice-dollar' },
+                'Tổng dư nợ tín dụng và đầu tư': { today: 330364, yesterday: 330199, icon: 'fas fa-credit-card' },
+                'Dư nợ cho vay Tổ chức và cá nhân': { today: 259701, yesterday: 259695, icon: 'fas fa-building' },
+                'Tổng thu nhập ròng': { today: 4163, yesterday: 4230, icon: 'fas fa-money-bill-wave' },
+                'Thu nhập ròng lãi': { today: 3252, yesterday: 5299, icon: 'fas fa-chart-bar' },
+                'Chi phí quản lý kinh doanh': { today: 1235, yesterday: 1235, icon: 'fas fa-cogs' },
+                'Lợi nhuận trước thuế': { today: 1955, yesterday: 2022, icon: 'fas fa-sack-dollar' },
+                'Tỷ lệ nợ xấu': { today: 0.17, yesterday: 0.18, icon: 'fas fa-exclamation-triangle' },
+                'Tỷ lệ nợ nhóm 2': { today: 0.20, yesterday: 0.20, icon: 'fas fa-minus-circle' },
+                'CAR (tỷ lệ an toàn vốn)': { today: 1.18, yesterday: 1.15, icon: 'fas fa-shield-alt' }
+            };
+
+            function calculateDelta(today, yesterday) {
+                if (yesterday === 0) return 'N/A'; // Avoid division by zero
+                const delta = ((today - yesterday) / yesterday) * 100;
+                return delta.toFixed(2);
+            }
+
+            function getDeltaClass(delta) {
+                if (delta === 'N/A' || parseFloat(delta) === 0) return 'delta-neutral';
+                return parseFloat(delta) > 0 ? 'delta-positive' : 'delta-negative';
+            }
+
+            function getDeltaArrow(delta) {
+                if (delta === 'N/A' || parseFloat(delta) === 0) return '↔';
+                return parseFloat(delta) > 0 ? '▲' : '▼';
+            }
+
+            function formatNumber(num) {
+                return num.toLocaleString('vi-VN');
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Set the current date
+                document.getElementById('report-date').textContent = new Date().toLocaleDateString('vi-VN');
+
+                const overviewSection = document.getElementById('overview-section');
+                const detailTableBody = document.getElementById('detail-table-body');
+                let verbalReportContent = "";
+
+                // Populate overview cards and verbal report
+                for (const key in reportData) {
+                    const data = reportData[key];
+                    const delta = calculateDelta(data.today, data.yesterday);
+                    const deltaValue = parseFloat(delta);
+                    const deltaClass = getDeltaClass(delta);
+                    const deltaArrow = getDeltaArrow(delta);
+
+                    const cardHtml = `
+                        <div class="icon-card">
+                            <i class="${data.icon}"></i>
+                            <div>
+                                <div class="metric-label">${key}</div>
+                                <div class="metric-value">${formatNumber(data.today)}</div>
+                                <div class="${deltaClass} text-sm">
+                                    ${deltaArrow} ${delta}% so với ngày trước
+                                    <span class="tooltip">
+                                        <i class="fas fa-info-circle text-gray-400 ml-1"></i>
+                                        <span class="tooltiptext">Hôm qua: ${formatNumber(data.yesterday)}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    overviewSection.innerHTML += cardHtml;
+
+                    // Add to verbal report logic - Banking Management Perspective
+                    if (key === 'Lợi nhuận trước thuế') {
+                        if (deltaValue > 5) {
+                            verbalReportContent += `<li><strong>Lợi nhuận trước thuế tăng mạnh (${delta}%)</strong>: Đây là dấu hiệu tích cực, thể hiện khả năng sinh lời vững chắc của Ngân hàng. Cần phân tích sâu hơn các mảng kinh doanh đóng góp chính để tiếp tục tối ưu.</li>`;
+                        } else if (deltaValue < -5) {
+                            verbalReportContent += `<li><strong>Lợi nhuận trước thuế giảm đáng kể (${delta}%)</strong>: Tình hình này yêu cầu rà soát ngay các nguyên nhân, có thể do sụt giảm doanh thu hoặc gia tăng chi phí. Cần có biện pháp khắc phục kịp thời để đảm bảo mục tiêu lợi nhuận.</li>`;
+                        } else if (Math.abs(deltaValue) <= 5 && Math.abs(deltaValue) > 0) {
+                            verbalReportContent += `<li><strong>Lợi nhuận trước thuế biến động nhẹ (${delta}%)</strong>: Tương đối ổn định, nhưng cần tiếp tục theo dõi các yếu tố vi mô và vĩ mô có thể ảnh hưởng.</li>`;
+                        }
+                    } else if (key === 'Tỷ lệ nợ xấu') {
+                        if (deltaValue > 0.05) { // Assuming a 0.05% increase is significant for NPL
+                            verbalReportContent += `<li><strong>Tỷ lệ nợ xấu tăng nhẹ (${delta}%)</strong>: Đây là một chỉ số quan trọng về chất lượng tài sản. Cần theo dõi sát sao, đặc biệt các khoản nợ mới phát sinh và tăng cường công tác quản lý rủi ro tín dụng.</li>`;
+                        } else if (deltaValue < -0.05) {
+                             verbalReportContent += `<li><strong>Tỷ lệ nợ xấu giảm (${delta}%)</strong>: Phản ánh nỗ lực thu hồi nợ và kiểm soát rủi ro tín dụng đang phát huy hiệu quả. Đây là một dấu hiệu tích cực về chất lượng danh mục cho vay.</li>`;
+                        } else if (Math.abs(deltaValue) <= 0.05 && Math.abs(deltaValue) > 0) {
+                            verbalReportContent += `<li><strong>Tỷ lệ nợ xấu ổn định (${delta}%)</strong>: Duy trì mức kiểm soát tốt, nhưng không được chủ quan.</li>`;
+                        }
+                    } else if (key === 'Tổng tài sản') {
+                         if (deltaValue > 1) { // Assuming >1% growth is notable
+                            verbalReportContent += `<li><strong>Tổng tài sản tăng (${delta}%)</strong>: Cho thấy sự mở rộng quy mô hoạt động và tiềm năng phát triển của Ngân hàng. Cần đảm bảo tăng trưởng tài sản đi kèm với chất lượng và hiệu quả sử dụng vốn.</li>`;
+                        } else if (deltaValue < -1) {
+                            verbalReportContent += `<li><strong>Tổng tài sản giảm (${delta}%)</strong>: Cần đánh giá nguyên nhân và tác động đến thanh khoản cũng như cơ cấu tài chính tổng thể của Ngân hàng.</li>`;
+                        }
+                    } else if (key === 'Tổng nguồn vốn huy động') {
+                        if (deltaValue > 1) {
+                            verbalReportContent += `<li><strong>Tổng nguồn vốn huy động tăng (${delta}%)</strong>: Phản ánh khả năng thu hút tiền gửi và các nguồn vốn khác của Ngân hàng. Cần tiếp tục đa dạng hóa nguồn vốn và tối ưu chi phí.</li>`;
+                        } else if (deltaValue < -1) {
+                            verbalReportContent += `<li><strong>Tổng nguồn vốn huy động giảm (${delta}%)</strong>: Cần xem xét ngay các yếu tố ảnh hưởng đến niềm tin khách hàng và chính sách huy động vốn.</li>`;
+                        }
+                    } else if (key === 'Tổng dư nợ tín dụng và đầu tư') {
+                        if (deltaValue > 1) {
+                            verbalReportContent += `<li><strong>Tổng dư nợ tín dụng và đầu tư tăng (${delta}%)</strong>: Thể hiện sự tăng trưởng trong hoạt động cho vay và đầu tư. Cần đảm bảo chất lượng khoản vay và hiệu quả đầu tư.</li>`;
+                        } else if (deltaValue < -1) {
+                            verbalReportContent += `<li><strong>Tổng dư nợ tín dụng và đầu tư giảm (${delta}%)</strong>: Cần đánh giá nhu cầu tín dụng thị trường và chính sách cho vay của Ngân hàng.</li>`;
+                        }
+                    } else if (key === 'Tổng thu nhập ròng') {
+                         if (deltaValue > 2) {
+                            verbalReportContent += `<li><strong>Tổng thu nhập ròng tăng (${delta}%)</strong>: Cho thấy hoạt động kinh doanh tạo ra doanh thu tốt. Cần duy trì đà tăng trưởng và kiểm soát chi phí.</li>`;
+                        } else if (deltaValue < -2) {
+                            verbalReportContent += `<li><strong>Tổng thu nhập ròng giảm (${delta}%)</strong>: Cần rà soát các nguồn thu và chi phí để cải thiện hiệu suất.</li>`;
+                        }
+                    } else if (key === 'CAR (tỷ lệ an toàn vốn)') {
+                        if (deltaValue > 0.05) { // Significant change for CAR
+                            verbalReportContent += `<li><strong>Tỷ lệ an toàn vốn (CAR) tăng (${delta}%)</strong>: Cải thiện khả năng chống chịu rủi ro và tuân thủ các quy định của Ngân hàng Nhà nước. Đây là một chỉ số quan trọng cho sức khỏe tài chính.</li>`;
+                        } else if (deltaValue < -0.05) {
+                            verbalReportContent += `<li><strong>Tỷ lệ an toàn vốn (CAR) giảm (${delta}%)</strong>: Cần theo dõi chặt chẽ và có kế hoạch tăng cường vốn để đảm bảo tuân thủ quy định và duy trì bộ đệm an toàn.</li>`;
+                        }
+                    }
+                }
+
+                // Populate detailed table
+                for (const key in reportData) {
+                    const data = reportData[key];
+                    const delta = calculateDelta(data.today, data.yesterday);
+                    const deltaClass = getDeltaClass(delta);
+                    const deltaArrow = getDeltaArrow(delta);
+
+                    const rowHtml = `
+                        <tr>
+                            <td class="flex items-center"><i class="${data.icon} text-blue-500 mr-2"></i> ${key}</td>
+                            <td>${formatNumber(data.today)}</td>
+                            <td>${formatNumber(data.yesterday)}</td>
+                            <td class="${deltaClass}">${deltaArrow} ${delta}%</td>
+                        </tr>
+                    `;
+                    detailTableBody.innerHTML += rowHtml;
+                }
+
+                if (verbalReportContent === "") {
+                    verbalReportContent = "<li><strong>Tình hình chung ổn định</strong>: Các chỉ số tài chính cơ bản trong ngày không ghi nhận biến động lớn hay bất thường đáng chú ý. Ngân hàng đang duy trì hoạt động ở mức ổn định.</li>";
+                }
+                document.getElementById('verbal-report-content').innerHTML = verbalReportContent;
+            });
+        </script>
+
+        <!-- Overview Section -->
+        <div class="report-section mb-6">
+            <h2 class="text-2xl mb-4"><i class="fas fa-tachometer-alt mr-2 text-blue-600"></i> Tổng Quan Các Chỉ Tiêu Chính</h2>
+            <div id="overview-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Cards will be injected here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Detailed Data Section -->
+        <div class="report-section mb-6">
+            <h2 class="text-2xl mb-4"><i class="fas fa-table mr-2 text-blue-600"></i> Chi Tiết Số Liệu</h2>
+            <div class="overflow-x-auto rounded-lg">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="py-3 px-4">Chỉ Tiêu</th>
+                            <th class="py-3 px-4">Ngày Hiện Tại</th>
+                            <th class="py-3 px-4">Ngày Trước</th>
+                            <th class="py-3 px-4">Biến Động (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-table-body">
+                        <!-- Rows will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Verbal Report Section -->
+        <div class="report-section summary-box">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-bullhorn mr-2 text-green-700"></i> Báo Cáo Bằng Lời</h3>
+            <ul id="verbal-report-content" class="list-disc pl-5">
+                <!-- Verbal summary will be injected here by JavaScript -->
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>

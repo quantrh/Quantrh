@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển tài chính BIDV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            /* Subtle starry background with BIDV brand blue tint */
+            background: linear-gradient(135deg, #e0f2f1, #e0f7fa); /* Very light blue gradient */
+            background-image: radial-gradient(circle at top left, #e0f2f1 0%, transparent 50%),
+                              radial-gradient(circle at bottom right, #e0f7fa 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: starryBackground 60s linear infinite alternate; /* Slow animation for subtle effect */
+        }
+
+        /* Subtle star effect */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            /* Creating random dots as stars */
+            box-shadow:
+                0 0 10px rgba(255, 255, 255, 0.7),
+                100px 100px 2px rgba(255, 255, 255, 0.5),
+                200px 200px 2px rgba(255, 255, 255, 0.6),
+                300px 50px 1px rgba(255, 255, 255, 0.4),
+                -50px 300px 1px rgba(255, 255, 255, 0.3),
+                -150px -100px 1px rgba(255, 255, 255, 0.7),
+                250px -200px 1px rgba(255, 255, 255, 0.5),
+                /* Add more random stars if needed */
+                400px 150px 1px rgba(255, 255, 255, 0.6),
+                -250px 50px 2px rgba(255, 255, 255, 0.4),
+                150px -300px 2px rgba(255, 255, 255, 0.3);
+            animation: twinkle 15s infinite alternate;
+            opacity: 0.5; /* Make stars very subtle */
+            pointer-events: none; /* Ensure it doesn't block interactions */
+        }
+
+        @keyframes starryBackground {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.1; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative; /* For z-index of cards over background */
+            z-index: 10;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white for cards */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 107, 104, 0.1); /* Subtle BIDV border */
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .bg-bidv-primary {
+            background-color: #006B68;
+            color: #fff;
+        }
+        .text-bidv-primary {
+            color: #006B68;
+        }
+        .bg-bidv-accent {
+            background-color: #FFC62F;
+            color: #333; /* Ensure text is readable on yellow */
+        }
+        .text-bidv-accent {
+            color: #FFC62F;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-bidv-primary mb-6">Bảng điều khiển tài chính BIDV</h1>
+
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="card flex flex-col items-center justify-center p-6 bg-bidv-primary text-white rounded-lg shadow-md">
+                <i class="fas fa-dollar-sign text-4xl mb-2 text-bidv-accent"></i>
+                <div class="text-xl font-semibold">Tổng thu nhập</div>
+                <div id="total-income" class="text-3xl font-bold mt-2"></div>
+            </div>
+            <div class="card flex flex-col items-center justify-center p-6 bg-red-100 text-red-800 rounded-lg shadow-md" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid #006B68;">
+                <i class="fas fa-hand-holding-usd text-4xl mb-2 text-red-600"></i>
+                <div class="text-xl font-semibold text-bidv-primary">Tổng chi phí</div>
+                <div id="total-expenses" class="text-3xl font-bold mt-2 text-red-600"></div>
+            </div>
+            <div class="card flex flex-col items-center justify-center p-6 bg-green-100 text-green-800 rounded-lg shadow-md" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid #006B68;">
+                <i class="fas fa-chart-line text-4xl mb-2 text-green-600"></i>
+                <div class="text-xl font-semibold text-bidv-primary">Lợi nhuận ròng</div>
+                <div id="net-profit" class="text-3xl font-bold mt-2 text-green-600"></div>
+            </div>
+            <div class="card flex flex-col items-center justify-center p-6 bg-purple-100 text-purple-800 rounded-lg shadow-md" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid #006B68;">
+                <i class="fas fa-percentage text-4xl mb-2 text-purple-600"></i>
+                <div class="text-xl font-semibold text-bidv-primary">Tỷ lệ lợi nhuận</div>
+                <div id="profit-margin" class="text-3xl font-bold mt-2 text-purple-600"></div>
+            </div>
+        </div>
+
+        <!-- Income and Expenses Comparison Chart -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-bidv-primary mb-4">So sánh thu nhập và chi phí</h2>
+            <div class="chart-container">
+                <canvas id="incomeExpensesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Income Breakdown Chart -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-bidv-primary mb-4">Phân tích thu nhập theo hoạt động</h2>
+            <div class="chart-container">
+                <canvas id="incomeBreakdownChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Expenses Breakdown Chart -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-bidv-primary mb-4">Phân tích chi phí theo hoạt động</h2>
+            <div class="chart-container">
+                <canvas id="expensesBreakdownChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Detailed Data Table -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-bidv-primary mb-4">Dữ liệu chi tiết</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow overflow-hidden">
+                    <thead class="bg-bidv-primary text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Mục</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Năm trước</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Số thực hiện</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Hôm trước</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Thay đổi hôm trước</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">% HTKH Năm</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Cùng kỳ tháng trước</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-gray-200">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section for Key Observations -->
+        <div class="card mt-6">
+            <h2 class="text-2xl font-semibold text-bidv-primary mb-4">Nhận xét chính về biến động giữa 2 ngày</h2>
+
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Đối với Thu nhập:</h3>
+            <ul class="list-disc list-inside text-gray-700 ml-4 mb-4">
+                <li><strong class="text-bidv-primary">Thu nhập từ hoạt động cho vay (Thu lãi cho vay):</strong> Có sự tăng nhẹ ($41$ VND) so với ngày hôm trước, cho thấy hoạt động cho vay tiếp tục tạo ra giá trị tích cực.</li>
+                <li><strong class="text-bidv-primary">Thu từ nghiệp vụ bảo lãnh:</strong> Cho thấy một mức tăng đáng kể ($0.369$ VND) trong một ngày, đây là một biến động khá lớn so với các khoản thu khác trong cùng khoảng thời gian.</li>
+                <li><strong class="text-bidv-primary">Thu khác về hoạt động tín dụng:</strong> Không có sự thay đổi đáng kể ($0$ VND), cho thấy sự ổn định trong hoạt động này giữa hai ngày.</li>
+                <li><strong class="text-bidv-primary">Thu từ dịch vụ thanh toán và ngân quỹ:</strong> Có sự sụt giảm đáng kể ($-71$ VND), điều này cần được xem xét để tìm hiểu nguyên nhân và giải pháp.</li>
+                <li><strong class="text-bidv-primary">Thu lãi tiền gửi:</strong> Có sự sụt giảm ($-70$ VND) so với ngày hôm trước.</li>
+                <li><strong class="text-bidv-primary">Thu từ dịch vụ thanh toán:</strong> Không có sự thay đổi ($0$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu từ dịch vụ ngân quỹ:</strong> Không có sự thay đổi ($0$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu từ các hoạt động khác:</strong> Có sự sụt giảm nhẹ ($-27$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu lãi góp vốn mua cổ phần:</strong> Không có sự thay đổi ($0$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu từ tham gia thị trường tiền tệ:</strong> Có sự tăng nhẹ ($4$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu từ kinh doanh ngoại hối:</strong> Có sự sụt giảm ($-18$ VND), cần theo dõi chặt chẽ biến động thị trường ngoại hối.</li>
+                <li><strong class="text-bidv-primary">Thu từ nghiệp vụ đại lý ủy thác:</strong> Không có sự thay đổi ($0$ VND).</li>
+                <li><strong class="text-bidv-primary">Thu từ các dịch vụ khác:</strong> Có sự tăng nhẹ ($1$ VND).</li>
+                <li><strong class="text-bidv-primary">Các khoản thu khác:</strong> Có sự sụt giảm ($-14$ VND).</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Đối với Chi phí:</h3>
+            <ul class="list-disc list-inside text-gray-700 ml-4 mb-4">
+                <li><strong class="text-bidv-primary">Chi về hoạt động huy động vốn:</strong> Có sự tăng nhẹ ($18$ VND), cho thấy chi phí liên quan đến huy động vốn đã tăng lên.</li>
+                <li><strong class="text-bidv-primary">Trả lãi tiền gửi:</strong> Có sự tăng nhẹ ($24$ VND).</li>
+                <li><strong class="text-bidv-primary">Trả lãi tiền vay:</strong> Có sự sụt giảm đáng kể ($-9.225$ VND), cho thấy chi phí trả lãi vay đã giảm.</li>
+                <li><strong class="text-bidv-primary">Trả lãi phát hành giấy tờ có giá:</strong> Có sự tăng nhẹ ($3$ VND).</li>
+                <li><strong class="text-bidv-primary">Chi phí khác:</strong> Không có sự thay đổi ($0$ VND).</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Tóm tắt biến động:</h3>
+            <ul class="list-disc list-inside text-gray-700 ml-4">
+                <li>Phần lớn các khoản thu và chi có <strong>biến động nhỏ</strong> hoặc <strong>ổn định</strong>.</li>
+                <li>Một số khoản thu lớn như <strong>Thu từ dịch vụ thanh toán và ngân quỹ</strong> và <strong>Thu từ kinh doanh ngoại hối</strong> có sự sụt giảm.</li>
+                <li>Khoản chi <strong>Trả lãi tiền vay</strong> có sự giảm đáng kể, đây có thể là một điểm tích cực trong việc quản lý chi phí.</li>
+                <li>Các khoản thay đổi nhỏ ($0$ hoặc rất gần $0$) cho thấy sự ổn định trong hoạt động của những mục đó giữa hai ngày.</li>
+            </ul>
+            <p class="text-gray-700 mt-4">Những nhận xét này có thể là cơ sở để phân tích sâu hơn về các yếu tố ảnh hưởng đến từng chỉ tiêu và đưa ra các quyết định điều hành phù hợp.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Key for localStorage
+        const LOCAL_STORAGE_KEY = 'financialDashboardData';
+
+        // Default data extracted from the image, now structured as an array of objects
+        const defaultFinancialData = [
+            // Income
+            {
+                type: 'total-income',
+                title: "THU NHẬP",
+                namTruoc: 20522,
+                homTruoc: 9523,
+                soThucHien: 9467,
+                KHNam: 20603,
+                tyLeHTKHNam: 5.66,
+                cungKyThangTruoc: 0.38
+            },
+            {
+                type: 'income',
+                title: "Thu nhập từ hoạt động cho vay",
+                namTruoc: 14818,
+                homTruoc: 7369,
+                soThucHien: 7411,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.66
+            },
+            {
+                type: 'income',
+                title: "Thu lãi cho vay",
+                namTruoc: 14332,
+                homTruoc: 7157,
+                soThucHien: 7198,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.58
+            },
+            {
+                type: 'income',
+                title: "Thu từ nghiệp vụ bảo lãnh",
+                namTruoc: 273,
+                homTruoc: 116.235,
+                soThucHien: 116.604,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.06
+            },
+            {
+                type: 'income',
+                title: "Thu khác về hoạt động tín dụng",
+                namTruoc: 213,
+                homTruoc: 96.186,
+                soThucHien: 96.186,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 16.26
+            },
+            {
+                type: 'income',
+                title: "Thu từ dịch vụ thanh toán và ngân quỹ",
+                namTruoc: 1124,
+                homTruoc: 553,
+                soThucHien: 482,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -1.78
+            },
+            {
+                type: 'income',
+                title: "Thu lãi tiền gửi",
+                namTruoc: 585,
+                homTruoc: 337,
+                soThucHien: 267,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.11
+            },
+            {
+                type: 'income',
+                title: "Thu từ dịch vụ thanh toán",
+                namTruoc: 521,
+                homTruoc: 204,
+                soThucHien: 204,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -3.67
+            },
+            {
+                type: 'income',
+                title: "Thu từ dịch vụ ngân quỹ",
+                namTruoc: 17.712,
+                homTruoc: 11.316,
+                soThucHien: 11.316,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 2.64
+            },
+            {
+                type: 'income',
+                title: "Thu từ các hoạt động khác",
+                namTruoc: 4423,
+                homTruoc: 1601,
+                soThucHien: 1574,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -0.12
+            },
+            {
+                type: 'income',
+                title: "Thu lãi góp vốn mua cổ phần",
+                namTruoc: 25.338,
+                homTruoc: 7.995,
+                soThucHien: 7.995,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.55
+            },
+            {
+                type: 'income',
+                title: "Thu từ tham gia thị trường tiền tệ",
+                namTruoc: 1746,
+                homTruoc: 485,
+                soThucHien: 489,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.09
+            },
+            {
+                type: 'income',
+                title: "Thu từ kinh doanh ngoại hối",
+                namTruoc: 965,
+                homTruoc: 324,
+                soThucHien: 306,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -4.50
+            },
+            {
+                type: 'income',
+                title: "Thu từ nghiệp vụ đại lý ủy thác",
+                namTruoc: 9.84,
+                homTruoc: 4.428,
+                soThucHien: 4.428,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -0.64
+            },
+            {
+                type: 'income',
+                title: "Thu từ các dịch vụ khác",
+                namTruoc: 640,
+                homTruoc: 264,
+                soThucHien: 265,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -0.54
+            },
+            {
+                type: 'income',
+                title: "Các khoản thu khác",
+                namTruoc: 1037,
+                homTruoc: 516,
+                soThucHien: 502,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 6.26
+            },
+            // Expenses
+            {
+                type: 'total-expense',
+                title: "CHI PHÍ",
+                namTruoc: 16757,
+                homTruoc: 7501,
+                soThucHien: 7512,
+                KHNam: 16667,
+                tyLeHTKHNam: 5.55,
+                cungKyThangTruoc: 0.49
+            },
+            {
+                type: 'expense',
+                title: "Chi về hoạt động huy động vốn",
+                namTruoc: 9711,
+                homTruoc: 4855,
+                soThucHien: 4873,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 0.92
+            },
+            {
+                type: 'expense',
+                title: "Trả lãi tiền gửi",
+                namTruoc: 8176,
+                homTruoc: 4309,
+                soThucHien: 4333,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 1.67
+            },
+            {
+                type: 'expense',
+                title: "Trả lãi tiền vay",
+                namTruoc: 254,
+                homTruoc: 75.399,
+                soThucHien: 66.174,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -6.72
+            },
+            {
+                type: 'expense',
+                title: "Trả lãi phát hành giấy tờ có giá",
+                namTruoc: 1200,
+                homTruoc: 449,
+                soThucHien: 452,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: -2.51
+            },
+            {
+                type: 'expense',
+                title: "Chi phí khác",
+                namTruoc: 81.426,
+                homTruoc: 21.894,
+                soThucHien: 21.894,
+                KHNam: 0,
+                tyLeHTKHNam: 0,
+                cungKyThangTruoc: 58.86
+            }
+        ];
+
+
+        let financialData = []; // Changed to array
+        let totalIncomeValue = 0;
+        let totalExpensesValue = 0;
+
+        // Function to load data from localStorage
+        const loadData = () => {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedData) {
+                    financialData = JSON.parse(storedData);
+                } else {
+                    // If no data in localStorage, use default data and save it
+                    financialData = defaultFinancialData;
+                    saveData();
+                }
+                // Update global total variables after loading/setting financialData
+                const totalIncomeItem = financialData.find(item => item.type === 'total-income');
+                const totalExpensesItem = financialData.find(item => item.type === 'total-expense');
+                totalIncomeValue = totalIncomeItem ? totalIncomeItem.soThucHien : 0;
+                totalExpensesValue = totalExpensesItem ? totalExpensesItem.soThucHien : 0;
+                console.log("Financial Data Loaded:", financialData);
+                console.log("Total Income:", totalIncomeValue);
+                console.log("Total Expenses:", totalExpensesValue);
+
+            } catch (e) {
+                console.error("Error loading data from localStorage:", e);
+                // Fallback to default data in case of parsing error
+                financialData = defaultFinancialData;
+                const totalIncomeItem = financialData.find(item => item.type === 'total-income');
+                const totalExpensesItem = financialData.find(item => item.type === 'total-expense');
+                totalIncomeValue = totalIncomeItem ? totalIncomeItem.soThucHien : 0;
+                totalExpensesValue = totalExpensesItem ? totalExpensesItem.soThucHien : 0;
+            }
+        };
+
+        // Function to save data to localStorage
+        const saveData = () => {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(financialData));
+            } catch (e) {
+                console.error("Error saving data to localStorage:", e);
+            }
+        };
+
+        // Function to format numbers as currency
+        const formatCurrency = (value) => {
+            // Ensure value is a number before formatting
+            if (typeof value !== 'number' || isNaN(value)) {
+                return 'N/A';
+            }
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+        };
+
+        // Populate Overview Cards
+        const populateOverviewCards = () => {
+            const netProfit = totalIncomeValue - totalExpensesValue;
+            const profitMargin = (totalIncomeValue !== 0) ? (netProfit / totalIncomeValue) * 100 : 0; // Avoid division by zero
+
+            document.getElementById('total-income').textContent = formatCurrency(totalIncomeValue);
+            document.getElementById('total-expenses').textContent = formatCurrency(totalExpensesValue);
+            document.getElementById('net-profit').textContent = formatCurrency(netProfit);
+            document.getElementById('profit-margin').textContent = `${profitMargin.toFixed(2)} %`;
+        };
+
+        // Render Income and Expenses Comparison Chart
+        const renderIncomeExpensesChart = () => {
+            const ctx = document.getElementById('incomeExpensesChart').getContext('2d');
+            // Destroy existing chart if it exists to prevent re-rendering issues
+            if (window.incomeExpensesChartInstance) {
+                window.incomeExpensesChartInstance.destroy();
+            }
+            window.incomeExpensesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Thu nhập', 'Chi phí'],
+                    datasets: [{
+                        label: 'Số liệu hiện tại',
+                        data: [totalIncomeValue, totalExpensesValue],
+                        backgroundColor: ['#006B68', '#FFC62F'], /* BIDV brand colors */
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Số tiền (VND)',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        // Render Income Breakdown Chart
+        const renderIncomeBreakdownChart = () => {
+            const incomeItems = financialData.filter(item => item.type === 'income' && item.soThucHien > 0); // Filter for actual income items
+            const incomeLabels = incomeItems.map(item => item.title);
+            const incomeData = incomeItems.map(item => item.soThucHien);
+
+            const ctx = document.getElementById('incomeBreakdownChart').getContext('2d');
+            // Destroy existing chart if it exists to prevent re-rendering issues
+            if (window.incomeBreakdownChartInstance) {
+                window.incomeBreakdownChartInstance.destroy();
+            }
+            window.incomeBreakdownChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: incomeLabels,
+                    datasets: [{
+                        data: incomeData,
+                        backgroundColor: [
+                            '#006B68', '#FFC62F', '#4CAF50', '#2196F3', '#9C27B0', /* BIDV colors mixed with others */
+                            '#00BCD4', '#FF5722', '#607D8B', '#795548', '#E91E63',
+                            '#8BC34A', '#3F51B5', '#FFEB3B', '#F44336', '#673AB7',
+                            '#009688', '#FF9800', '#CDDC39'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        // Render Expenses Breakdown Chart
+        const renderExpensesBreakdownChart = () => {
+            const expenseItems = financialData.filter(item => item.type === 'expense' && item.soThucHien > 0); // Filter for actual expense items
+            const expensesLabels = expenseItems.map(item => item.title);
+            const expensesData = expenseItems.map(item => item.soThucHien);
+
+            const ctx = document.getElementById('expensesBreakdownChart').getContext('2d');
+            // Destroy existing chart if it exists to prevent re-rendering issues
+            if (window.expensesBreakdownChartInstance) {
+                window.expensesBreakdownChartInstance.destroy();
+            }
+            window.expensesBreakdownChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: expensesLabels,
+                    datasets: [{
+                        data: expensesData,
+                        backgroundColor: [
+                            '#FFC62F', '#006B68', '#F44336', '#E91E63', '#9C27B0', /* BIDV colors mixed with others */
+                            '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
+                            '#009688', '#4CAF50'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        // Populate Detailed Data Table (re-added dynamic table)
+        const populateDataTable = () => {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            financialData.forEach(item => {
+                if (item.type === 'total-income' || item.type === 'total-expense') {
+                    // Skip total rows for detailed table, as they are derived
+                    return;
+                }
+
+                const changeFromPreviousDay = item.soThucHien - item.homTruoc;
+                let changeText = '';
+                let changeClass = '';
+                if (changeFromPreviousDay > 0) {
+                    changeText = `<i class="fas fa-arrow-up text-green-500 mr-1"></i>${formatCurrency(changeFromPreviousDay)}`;
+                    changeClass = 'text-green-500';
+                } else if (changeFromPreviousDay < 0) {
+                    changeText = `<i class="fas fa-arrow-down text-red-500 mr-1"></i>${formatCurrency(Math.abs(changeFromPreviousDay))}`;
+                    changeClass = 'text-red-500';
+                } else {
+                    changeText = `${formatCurrency(changeFromPreviousDay)}`;
+                    changeClass = 'text-gray-500';
+                }
+
+                const rowClass = item.type === 'expense' ? 'hover:bg-gray-50 bg-red-50' : 'hover:bg-gray-50';
+                const titleClass = item.type === 'expense' ? 'text-red-700' : 'text-gray-900';
+                const valueClass = item.type === 'expense' ? 'text-red-500' : 'text-gray-500';
+
+                const row = `
+                    <tr class="${rowClass}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${titleClass}">${item.title}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${valueClass}">${formatCurrency(item.namTruoc)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${valueClass}">${formatCurrency(item.soThucHien)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${valueClass}">${formatCurrency(item.homTruoc)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${changeClass} font-semibold">${changeText}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${valueClass}">${item.tyLeHTKHNam !== undefined ? item.tyLeHTKHNam.toFixed(2) + ' %' : 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${valueClass}">${item.cungKyThangTruoc !== undefined ? item.cungKyThangTruoc.toFixed(2) + ' %' : 'N/A'}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        };
+
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(); // Load data from localStorage or use default
+            populateOverviewCards();
+            renderIncomeExpensesChart();
+            renderIncomeBreakdownChart();
+            renderExpensesBreakdownChart();
+            populateDataTable(); // Re-enabled dynamic table population
+        });
+    </script>
+</body>
+</html>
