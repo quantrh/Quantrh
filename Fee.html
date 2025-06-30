@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chương trình tính phí demo chi tiết và Fee Engine (Tương tác)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F8F8; /* Light grey background */
+            color: #333;
+        }
+        .container {
+            max-width: 1024px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .input-group input, .input-group select, .input-group textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #006B68; /* BIDV Teal */
+            box-shadow: 0 0 0 3px rgba(0, 107, 104, 0.25); /* Teal shadow */
+        }
+        .btn-primary {
+            background-color: #006B68; /* BIDV Teal */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #005A58; /* Darker Teal */
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #FFC62F; /* BIDV Yellow */
+            color: #333; /* Dark text for contrast */
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-secondary:hover {
+            background-color: #E6B02A; /* Darker Yellow */
+            transform: translateY(-1px);
+        }
+        .result-section {
+            background-color: #E0F7F7; /* Lighter teal background */
+            border-left: 5px solid #006B68; /* BIDV Teal border */
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .result-section h3 {
+            color: #004D4B; /* Darker teal heading */
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .result-item {
+            margin-bottom: 0.5rem;
+        }
+        .result-item strong {
+            color: #004D4B; /* Darker teal for strong text */
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #006B68; /* BIDV Teal */
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #E0F7F7; /* Light teal border */
+            padding-bottom: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .section-header:hover {
+            color: #005A58; /* Darker Teal on hover */
+        }
+        .subsection-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #006B68; /* BIDV Teal */
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .toggle-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-icon.rotated {
+            transform: rotate(90deg);
+        }
+        /* Add margin between sections */
+        .section + .section {
+            margin-top: 2rem; /* Adds a blank line/space */
+        }
+        .message-box {
+            background-color: #E0F7F7; /* Light teal */
+            color: #004D4B; /* Dark teal */
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid #006B68; /* BIDV Teal */
+            display: none; /* Hidden by default */
+        }
+        .message-box.error {
+            background-color: #FEE2E2; /* Light red */
+            color: #991B1B; /* Dark red */
+            border-color: #EF4444; /* Red */
+        }
+        .message-box.info {
+            background-color: #E0F2FE; /* Light blue */
+            color: #1E40AF; /* Dark blue */
+            border-color: #60A5FA; /* Blue */
+        }
+        .nested-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #006B68; /* BIDV Teal */
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #E0F7F7; /* Light teal border */
+            cursor: pointer;
+            user-select: none;
+        }
+        .nested-section-header:hover {
+            color: #005A58; /* Darker Teal on hover */
+        }
+        .nested-section-content {
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .fee-method-details {
+            background-color: #F0F9F9; /* Very light teal */
+            border-left: 3px solid #006B68;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #004D4B;
+        }
+        .fee-method-form {
+            border: 1px dashed #006B68;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            background-color: #F8FCFC;
+        }
+        .tier-item, .flexible-rule-item {
+            background-color: #E0F7F7;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        .tier-item button, .flexible-rule-item button {
+            background-color: #EF4444;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Chương trình tính phí demo chi tiết và Fee Engine</h1>
+
+        <!-- Section: Chính sách gói phí -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('policySectionContent', 'policyToggleIcon')">
+                <span>Chính sách gói phí</span>
+                <span id="policyToggleIcon" class="toggle-icon">&#9658;</span> <!-- Right-pointing triangle -->
+            </div>
+            <div id="policySectionContent" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Thông tin doanh nghiệp -->
+                    <h3 class="subsection-title col-span-full">1. Thông tin doanh nghiệp</h3>
+                    <div class="input-group">
+                        <label for="orgName" class="block text-sm mb-2">Tên tổ chức:</label>
+                        <input type="text" id="orgName" class="form-input" value="CÔNG TY TNHH ABC VIỆT NAM">
+                    </div>
+                    <div class="input-group">
+                        <label for="cif" class="block text-sm mb-2">CIF:</label>
+                        <input type="text" id="cif" class="form-input" value="1356">
+                    </div>
+                    <div class="input-group">
+                        <label for="businessSector" class="block text-sm mb-2">Ngành nghề kinh doanh chính:</label>
+                        <input type="text" id="businessSector" class="form-input" value="C1701 - Sản xuất giấy và Bao bì từ giấy">
+                    </div>
+                    <div class="input-group">
+                        <label for="customerSegment" class="block text-sm mb-2">Phân khúc KH:</label>
+                        <input type="text" id="customerSegment" class="form-input" value="L1-DN LON KHPT">
+                    </div>
+                    <div class="input-group">
+                        <label for="accountingSoftware" class="block text-sm mb-2">Phần mềm kế toán đang sử dụng:</label>
+                        <input type="text" id="accountingSoftware" class="form-input" value="MISA">
+                    </div>
+
+                    <!-- Tổng quan tình hình quan hệ, sử dụng SPDV tại BIDV -->
+                    <h3 class="subsection-title col-span-full">2. Tổng quan quan hệ & SPDV</h3>
+                    <div class="input-group">
+                        <label for="serviceStatus" class="block text-sm mb-2">Trạng thái sử dụng SPDV (Cho vay ngắn hạn):</label>
+                        <select id="serviceStatus" class="form-input">
+                            <option value="Active">Active</option>
+                            <option value="Used">Used</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="tntBase" class="block text-sm mb-2">TNT cơ sở của KH năm N (tỷ VND):</label>
+                        <input type="number" id="tntBase" class="form-input" value="3">
+                    </div>
+
+                    <!-- Quan hệ tín dụng với BIDV - Cho vay -->
+                    <h3 class="subsection-title col-span-full">3. Quan hệ tín dụng - Cho vay</h3>
+                    <div class="input-group">
+                        <label for="loanOutstanding" class="block text-sm mb-2">Dư nợ cuối kỳ (tỷ VND):</label>
+                        <input type="number" id="loanOutstanding" class="form-input" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="loanOutstandingUSD" class="block text-sm mb-2">Dư nợ cuối kỳ (triệu USD):</label>
+                        <input type="number" id="loanOutstandingUSD" class="form-input" value="5.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="averageLoanOutstanding" class="block text-sm mb-2">Dư nợ bình quân (tỷ VND):</label>
+                        <input type="number" id="averageLoanOutstanding" class="form-input" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="averageLoanOutstandingUSD" class="block text-sm mb-2">Dư nợ bình quân (triệu USD):</label>
+                        <input type="number" id="averageLoanOutstandingUSD" class="form-input" value="5.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="disbursementVolume" class="block text-sm mb-2">Doanh số giải ngân vay hạn mức (tỷ VND):</label>
+                        <input type="number" id="disbursementVolume" class="form-input" value="30">
+                    </div>
+                    <div class="input-group">
+                        <label for="debtCollectionVolume" class="block text-sm mb-2">Doanh số thu nợ vay ngắn hạn hạn mức (tỷ VND):</label>
+                        <input type="number" id="debtCollectionVolume" class="form-input" value="25">
+                    </div>
+
+                    <!-- Quan hệ tín dụng với BIDV - Bảo lãnh -->
+                    <h3 class="subsection-title col-span-full">4. Quan hệ tín dụng - Bảo lãnh</h3>
+                    <div class="input-group">
+                        <label for="guaranteeOutstanding" class="block text-sm mb-2">Dư bảo lãnh cuối kỳ (tỷ VND):</label>
+                        <input type="number" id="guaranteeOutstanding" class="form-input" value="1.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="avgGuaranteeOutstanding" class="block text-sm mb-2">Dư bảo lãnh bình quân (tỷ VND):</label>
+                        <input type="number" id="avgGuaranteeOutstanding" class="form-input" value="1.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="guaranteeIssuanceVolume" class="block text-sm mb-2">Doanh số phát hành bảo lãnh (tỷ VND):</label>
+                        <input type="number" id="guaranteeIssuanceVolume" class="form-input" value="5">
+                    </div>
+
+                    <!-- Quan hệ tín dụng với BIDV - TTTM -->
+                    <h3 class="subsection-title col-span-full">5. Quan hệ tín dụng - TTTM</h3>
+                    <div class="input-group">
+                        <label for="lcOutstanding" class="block text-sm mb-2">Dư phát hành L/C cuối kỳ (tỷ VND):</label>
+                        <input type="number" id="lcOutstanding" class="form-input" value="2000">
+                    </div>
+                    <div class="input-group">
+                        <label for="avgLcOutstanding" class="block text-sm mb-2">Dư phát hành L/C bình quân (tỷ VND):</label>
+                        <input type="number" id="avgLcOutstanding" class="form-input" value="2000">
+                    </div>
+                    <div class="input-group">
+                        <label for="lcIssuanceVolume" class="block text-sm mb-2">Doanh số phát hành LC (tỷ VND):</label>
+                        <input type="number" id="lcIssuanceVolume" class="form-input" value="15">
+                    </div>
+                    <div class="input-group">
+                        <label for="tttmService" class="block text-sm mb-2">Nghiệp vụ TTTM-DCTC:</label>
+                        <select id="tttmService" class="form-input">
+                            <option value="Xác nhận L/C">Xác nhận L/C</option>
+                            <option value="Nhận ủy thác phát hành L/C">Nhận ủy thác phát hành L/C</option>
+                            <option value="Hoàn trả LC trả chậm">Hoàn trả LC trả chậm</option>
+                            <option value="Mua hẳn miễn truy đòi">Mua hẳn miễn truy đòi</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="tttmVolume" class="block text-sm mb-2">Doanh số nghiệp vụ TTTM (tỷ VND):</label>
+                        <input type="number" id="tttmVolume" class="form-input" value="10000">
+                    </div>
+                    <div class="input-group">
+                        <label for="tttmFee" class="block text-sm mb-2">Phí thu được từ TTTM (triệu VND):</label>
+                        <input type="number" id="tttmFee" class="form-input" value="100">
+                    </div>
+
+                    <!-- Huy động vốn & Chuyển tiền -->
+                    <h3 class="subsection-title col-span-full">6. Huy động vốn & Chuyển tiền</h3>
+                    <div class="input-group">
+                        <label for="depositOutstanding" class="block text-sm mb-2">Huy động vốn cuối kỳ (tỷ VND):</label>
+                        <input type="number" id="depositOutstanding" class="form-input" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="avgDepositOutstanding" class="block text-sm mb-2">Huy động vốn bình quân (tỷ VND):</label>
+                        <input type="number" id="avgDepositOutstanding" class="form-input" value="50">
+                    </div>
+                    <div class="input-group">
+                        <label for="inflowVolume" class="block text-sm mb-2">Doanh số tiền về tài khoản (tỷ VND):</label>
+                        <input type="number" id="inflowVolume" class="form-input" value="20000">
+                    </div>
+                    <div class="input-group">
+                        <label for="outflowVolume" class="block text-sm mb-2">Doanh số chuyển tiền ra (tỷ VND):</label>
+                        <input type="number" id="outflowVolume" class="form-input" value="20000">
+                    </div>
+                    <div class="input-group">
+                        <label for="avgDepositAccountBalance" class="block text-sm mb-2">Số dư BQ TK tiền gửi (tỷ VND):</label>
+                        <input type="number" id="avgDepositAccountBalance" class="form-input" value="3000">
+                    </div>
+
+                    <!-- Quan hệ với BIDV - SPDV khác -->
+                    <h3 class="subsection-title col-span-full">7. Quan hệ với BIDV - SPDV khác</h3>
+                    <div class="input-group">
+                        <label for="fxTradingVolume" class="block text-sm mb-2">Doanh số MBNT (triệu USD):</label>
+                        <input type="number" id="fxTradingVolume" class="form-input" value="1.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="epayTransactions" class="block text-sm mb-2">Số món giao dịch E-pay (món):</label>
+                        <input type="number" id="epayTransactions" class="form-input" value="10000">
+                    </div>
+                    <div class="input-group">
+                        <label for="epayVolume" class="block text-sm mb-2">Doanh số E-pay (tỷ VND):</label>
+                        <input type="number" id="epayVolume" class="form-input" value="200">
+                    </div>
+
+                    <!-- Thông tin tiềm năng -->
+                    <h3 class="subsection-title col-span-full">8. Thông tin tiềm năng</h3>
+                    <div class="input-group">
+                        <label for="tenderValue" class="block text-sm mb-2">Giá trị gói thầu trúng (tỷ VND):</label>
+                        <input type="number" id="tenderValue" class="form-input" value="15">
+                    </div>
+                    <div class="input-group">
+                        <label for="importExportValue" class="block text-sm mb-2">Kim ngạch XNK (triệu USD):</label>
+                        <input type="number" id="importExportValue" class="form-input" value="15">
+                    </div>
+                </div>
+
+                <button onclick="calculateFee()" class="btn-primary w-full md:w-auto mb-8">Tính toán và đề xuất phí</button>
+
+                <div id="results" class="result-section hidden">
+                    <h3 class="text-xl mb-4">Kết quả và Đề xuất phí</h3>
+                    <div class="result-item"><strong>Tên tổ chức:</strong> <span id="resOrgName"></span></div>
+                    <div class="result-item"><strong>CIF:</strong> <span id="resCif"></span></div>
+                    <div class="result-item"><strong>Ngành nghề kinh doanh chính:</strong> <span id="resBusinessSector"></span></div>
+                    <div class="result-item"><strong>Phân khúc KH:</strong> <span id="resCustomerSegment"></span></div>
+                    <div class="result-item"><strong>Phần mềm kế toán:</strong> <span id="resAccountingSoftware"></span></div>
+                    <div class="result-item"><strong>Trạng thái SPDV (Cho vay ngắn hạn):</strong> <span id="resServiceStatus"></span></div>
+                    <div class="result-item"><strong>TNT cơ sở năm N:</strong> <span id="resTntBase"></span> tỷ VND</div>
+
+                    <h4 class="text-lg font-semibold mt-4 mb-2 text-gray-700">Thông tin tín dụng & Bảo lãnh:</h4>
+                    <div class="result-item">Dư nợ cuối kỳ: <span id="resLoanOutstanding"></span> tỷ VND (<span id="resLoanOutstandingUSD"></span> triệu USD)</div>
+                    <div class="result-item">Dư nợ bình quân: <span id="resAverageLoanOutstanding"></span> tỷ VND (<span id="resAverageLoanOutstandingUSD"></span> triệu USD)</div>
+                    <div class="result-item">Doanh số giải ngân vay hạn mức: <span id="resDisbursementVolume"></span> tỷ VND</div>
+                    <div class="result-item">Doanh số thu nợ vay ngắn hạn: <span id="resDebtCollectionVolume"></span> tỷ VND</div>
+                    <div class="result-item">Dư bảo lãnh cuối kỳ: <span id="resGuaranteeOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Dư bảo lãnh bình quân: <span id="resAvgGuaranteeOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Doanh số phát hành bảo lãnh: <span id="resGuaranteeIssuanceVolume"></span> tỷ VND</div>
+
+                    <h4 class="text-lg font-semibold mt-4 mb-2 text-gray-700">Thông tin TTTM:</h4>
+                    <div class="result-item">Dư phát hành L/C cuối kỳ: <span id="resLcOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Dư phát hành L/C bình quân: <span id="resAvgLcOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Doanh số phát hành LC: <span id="resLcIssuanceVolume"></span> tỷ VND</div>
+                    <div class="result-item">Nghiệp vụ TTTM-DCTC: <span id="resTttmService"></span></div>
+                    <div class="result-item">Doanh số nghiệp vụ TTTM: <span id="resTttmVolume"></span> tỷ VND</div>
+                    <div class="result-item">Phí thu được từ TTTM: <span id="resTttmFee"></span> triệu VND</div>
+
+                    <h4 class="text-lg font-semibold mt-4 mb-2 text-gray-700">Thông tin Huy động vốn & Chuyển tiền:</h4>
+                    <div class="result-item">Huy động vốn cuối kỳ: <span id="resDepositOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Huy động vốn bình quân: <span id="resAvgDepositOutstanding"></span> tỷ VND</div>
+                    <div class="result-item">Doanh số tiền về tài khoản: <span id="resInflowVolume"></span> tỷ VND</div>
+                    <div class="result-item">Doanh số chuyển tiền ra: <span id="resOutflowVolume"></span> tỷ VND</div>
+                    <div class="result-item">Số dư BQ TK tiền gửi: <span id="resAvgDepositAccountBalance"></span> tỷ VND</div>
+
+                    <h4 class="text-lg font-semibold mt-4 mb-2 text-gray-700">Thông tin SPDV khác & Tiềm năng:</h4>
+                    <div class="result-item">Doanh số MBNT: <span id="resFxTradingVolume"></span> triệu USD</div>
+                    <div class="result-item">Số món giao dịch E-pay: <span id="resEpayTransactions"></span> món</div>
+                    <div class="result-item">Doanh số E-pay: <span id="resEpayVolume"></span> tỷ VND</div>
+                    <div class="result-item">Giá trị gói thầu trúng: <span id="resTenderValue"></span> tỷ VND</div>
+                    <div class="result-item">Kim ngạch XNK: <span id="resImportExportValue"></span> triệu USD</div>
+
+                    <h4 class="text-lg font-semibold mt-4 mb-2 text-gray-700">Đề xuất phí dịch vụ:</h4>
+                    <div id="feeSuggestion" class="text-blue-800 font-medium text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Fee Engine -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('feeEngineSectionContent', 'feeEngineToggleIcon')">
+                <span>Fee Engine</span>
+                <span id="feeEngineToggleIcon" class="toggle-icon">&#9658;</span> <!-- Right-pointing triangle -->
+            </div>
+            <div id="feeEngineSectionContent" class="section-content hidden">
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <!-- 1. Quản lý danh mục sản phẩm, dịch vụ -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('manageProductsContent', 'manageProductsIcon')">
+                            <span>1. Quản lý danh mục sản phẩm, dịch vụ</span>
+                            <span id="manageProductsIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="manageProductsContent" class="nested-section-content hidden">
+                            <h4 class="font-semibold mb-2">1.1 Khai báo sản phẩm, dịch vụ</h4>
+                            <div class="input-group mb-2">
+                                <label for="productName" class="block text-sm mb-1">Tên sản phẩm:</label>
+                                <input type="text" id="productName" class="form-input" placeholder="Ví dụ: Dịch vụ chuyển tiền">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="productDescription" class="block text-sm mb-1">Mô tả đặc tính:</label>
+                                <textarea id="productDescription" class="form-input" rows="2" placeholder="Mô tả chi tiết về sản phẩm"></textarea>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="productPrice" class="block text-sm mb-1">Giá phí (VND):</label>
+                                <input type="number" id="productPrice" class="form-input" value="10000">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="productStartDate" class="block text-sm mb-1">Thời gian bắt đầu:</label>
+                                <input type="date" id="productStartDate" class="form-input">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="productEndDate" class="block text-sm mb-1">Thời gian kết thúc:</label>
+                                <input type="date" id="productEndDate" class="form-input">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="productCustomerTarget" class="block text-sm mb-1">Đối tượng KH:</label>
+                                <select id="productCustomerTarget" class="form-input">
+                                    <option value="">Chọn đối tượng</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="input-group mb-4">
+                                <label for="productChannel" class="block text-sm mb-1">Kênh áp dụng:</label>
+                                <select id="productChannel" class="form-input">
+                                    <option value="">Chọn kênh</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="input-group mb-4">
+                                <label for="productCategory" class="block text-sm mb-1">Danh mục sản phẩm (Category):</label>
+                                <select id="productCategory" class="form-input">
+                                    <option value="">Chọn danh mục</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+
+                            <button onclick="addProduct()" class="btn-secondary">Thêm sản phẩm</button>
+                            <div id="productMessage" class="message-box"></div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Danh sách sản phẩm đã thêm:</h5>
+                                <ul id="productList" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+                             <div class="mt-4">
+                                <h5 class="font-medium">Lịch sử thay đổi sản phẩm:</h5>
+                                <ul id="productHistory" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+
+                            <h4 class="font-semibold mb-2 mt-6">1.2 Khai báo, đăng ký gói sản phẩm, dịch vụ</h4>
+                            <div class="input-group mb-2">
+                                <label for="packageName" class="block text-sm mb-1">Tên gói sản phẩm:</label>
+                                <input type="text" id="packageName" class="form-input" placeholder="Ví dụ: Gói ưu đãi Doanh nghiệp">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="packageStartDate" class="block text-sm mb-1">Thời gian bắt đầu gói:</label>
+                                <input type="date" id="packageStartDate" class="form-input">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="packageEndDate" class="block text-sm mb-1">Thời gian kết thúc gói:</label>
+                                <input type="date" id="packageEndDate" class="form-input">
+                            </div>
+                            <div class="input-group mb-4">
+                                <label for="packageProducts" class="block text-sm mb-1">Chọn sản phẩm trong gói (giữ Ctrl/Cmd để chọn nhiều):</label>
+                                <select id="packageProducts" multiple class="form-input h-24"></select>
+                            </div>
+                            <button onclick="addPackage()" class="btn-secondary">Thêm gói sản phẩm</button>
+                            <div id="packageMessage" class="message-box"></div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Danh sách gói sản phẩm đã thêm:</h5>
+                                <ul id="packageList" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+
+                            <h4 class="font-semibold mb-2 mt-6">1.2.1 Đăng ký/Hủy đăng ký/Thay đổi sử dụng gói sản phẩm cho khách hàng</h4>
+                            <div class="input-group mb-2">
+                                <label for="customerCifPackage" class="block text-sm mb-1">CIF Khách hàng:</label>
+                                <input type="text" id="customerCifPackage" class="form-input" value="KH12345">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="packageToManage" class="block text-sm mb-1">Chọn gói để quản lý:</label>
+                                <select id="packageToManage" class="form-input">
+                                    <option value="">Chọn gói</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div class="flex space-x-2 mt-2">
+                                <button onclick="registerPackageForCustomer()" class="btn-secondary">Đăng ký</button>
+                                <button onclick="unregisterPackageForCustomer()" class="btn-secondary bg-red-500 hover:bg-red-700">Hủy đăng ký</button>
+                                <button onclick="modifyPackageForCustomer()" class="btn-secondary bg-blue-500 hover:bg-blue-700">Thay đổi</button>
+                            </div>
+                            <div id="packageCustomerMessage" class="message-box"></div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Gói đã đăng ký cho khách hàng (Demo):</h5>
+                                <ul id="customerPackagesList" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+
+                            <h4 class="font-semibold mb-2 mt-6">1.2.2 Kết nối gói với iBank và ứng dụng khác</h4>
+                            <div class="input-group mb-2">
+                                <label for="packageToSync" class="block text-sm mb-1">Chọn gói để đồng bộ:</label>
+                                <select id="packageToSync" class="form-input">
+                                    <option value="">Chọn gói</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="targetApplication" class="block text-sm mb-1">Ứng dụng mục tiêu:</label>
+                                <select id="targetApplication" class="form-input">
+                                    <option value="iBank">iBank</option>
+                                    <option value="MPA">MPA</option>
+                                    <option value="MIS">MIS</option>
+                                    <option value="ODS">ODS</option>
+                                    <option value="Core Banking">Core Banking</option>
+                                </select>
+                            </div>
+                            <button onclick="syncWithApplication()" class="btn-secondary">Đồng bộ</button>
+                            <div id="syncMessage" class="message-box"></div>
+
+                            <h4 class="font-semibold mb-2 mt-6">1.3 Quản lý dữ liệu danh mục sản phẩm</h4>
+                            <button onclick="viewProductData()" class="btn-secondary">Xem dữ liệu sản phẩm/gói hiện tại</button>
+                            <div id="viewProductDataMessage" class="message-box"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Quản lý giá phí sản phẩm, dịch vụ -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('manageFeeContent', 'manageFeeIcon')">
+                            <span>2. Quản lý giá phí sản phẩm, dịch vụ</span>
+                            <span id="manageFeeIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="manageFeeContent" class="nested-section-content hidden">
+                            <h4 class="font-semibold mb-2">2.1 Khai báo mã phí và cách thức tính phí</h4>
+                            <div class="input-group mb-2">
+                                <label for="feeCodeId" class="block text-sm mb-1">Mã phí:</label>
+                                <input type="text" id="feeCodeId" class="form-input" placeholder="Ví dụ: FT001">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="feeCodeName" class="block text-sm mb-1">Tên mã phí:</label>
+                                <input type="text" id="feeCodeName" class="form-input" placeholder="Ví dụ: Phí chuyển tiền nhanh">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="feeCodeProductCategory" class="block text-sm mb-1">Gắn với danh mục SPDV:</label>
+                                <select id="feeCodeProductCategory" class="form-input">
+                                    <option value="">Chọn danh mục</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="feeMethod" class="block text-sm mb-1">Chọn cách thức tính phí:</label>
+                                <select id="feeMethod" class="form-input" onchange="updateFeeMethodFormVisibility()">
+                                    <option value="Fixed">Phí cố định</option>
+                                    <option value="Percentage">Phí theo tỷ lệ phần trăm</option>
+                                    <option value="Tiered">Phí theo bậc</option>
+                                    <option value="Flexible">Phí linh hoạt</option>
+                                    <option value="Combined">Phí kết hợp</option>
+                                </select>
+                            </div>
+                            <div id="feeMethodDescription" class="fee-method-details mb-4">
+                                <!-- Description will be populated here -->
+                            </div>
+                            <div class="input-group mb-4">
+                                <label for="feeType" class="block text-sm mb-1">Loại phí:</label>
+                                <select id="feeType" class="form-input" onchange="updateFeeTypeDescription()">
+                                    <option value="Periodic">Phí định kỳ (tháng/quý)</option>
+                                    <option value="OneTime">Phí một lần (phí theo sự kiện)</option>
+                                    <option value="PerTransaction">Phí theo giao dịch</option>
+                                    <option value="PerTransactionNoPeriodic">Phí theo giao dịch nhưng không thu định kỳ</option>
+                                </select>
+                            </div>
+                            <div id="feeTypeDescription" class="fee-method-details mb-4">
+                                <!-- Description will be populated here -->
+                            </div>
+
+                            <!-- Dynamic Fee Method Forms -->
+                            <div id="feeDetailsInput" class="mb-4">
+                                <!-- Fixed Fee Form -->
+                                <div id="fixedFeeForm" class="fee-method-form hidden">
+                                    <h5 class="font-semibold mb-2">Chi tiết Phí cố định</h5>
+                                    <div class="input-group mb-2">
+                                        <label for="fixedAmount" class="block text-sm mb-1">Mức phí cố định (VND):</label>
+                                        <input type="number" id="fixedAmount" class="form-input" value="10000" min="0">
+                                    </div>
+                                </div>
+
+                                <!-- Percentage Fee Form -->
+                                <div id="percentageFeeForm" class="fee-method-form hidden">
+                                    <h5 class="font-semibold mb-2">Chi tiết Phí theo tỷ lệ phần trăm</h5>
+                                    <div class="input-group mb-2">
+                                        <label for="percentageRate" class="block text-sm mb-1">Tỷ lệ phần trăm (%):</label>
+                                        <input type="number" id="percentageRate" class="form-input" value="0.05" step="0.01" min="0" max="100">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <label for="minFeePercentage" class="block text-sm mb-1">Phí tối thiểu (VND):</label>
+                                        <input type="number" id="minFeePercentage" class="form-input" value="5000" min="0">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <label for="maxFeePercentage" class="block text-sm mb-1">Phí tối đa (VND):</label>
+                                        <input type="number" id="maxFeePercentage" class="form-input" value="50000" min="0">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <label for="basisForCalculation" class="block text-sm mb-1">Cơ sở tính toán:</label>
+                                        <select id="basisForCalculation" class="form-input">
+                                            <option value="Giá trị giao dịch">Giá trị giao dịch</option>
+                                            <option value="Dư nợ">Dư nợ</option>
+                                            <option value="Doanh số">Doanh số</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Tiered Fee Form -->
+                                <div id="tieredFeeForm" class="fee-method-form hidden">
+                                    <h5 class="font-semibold mb-2">Chi tiết Phí theo bậc</h5>
+                                    <div class="input-group mb-2">
+                                        <label class="block text-sm mb-1">Loại bậc:</label>
+                                        <input type="radio" id="tierTypeThreshold" name="tierType" value="Threshold" checked>
+                                        <label for="tierTypeThreshold" class="inline-block ml-1 mr-4">Bậc ngưỡng</label>
+                                        <input type="radio" id="tierTypeCumulative" name="tierType" value="Cumulative">
+                                        <label for="tierTypeCumulative" class="inline-block ml-1">Bậc thang (cộng dồn)</label>
+                                    </div>
+                                    <div class="flex space-x-2 mb-2">
+                                        <div class="input-group flex-1">
+                                            <label for="minThreshold" class="block text-sm mb-1">Ngưỡng tối thiểu:</label>
+                                            <input type="number" id="minThreshold" class="form-input" value="0" min="0">
+                                        </div>
+                                        <div class="input-group flex-1">
+                                            <label for="maxThreshold" class="block text-sm mb-1">Ngưỡng tối đa:</label>
+                                            <input type="number" id="maxThreshold" class="form-input" value="100" min="0">
+                                        </div>
+                                        <div class="input-group flex-1">
+                                            <label for="tierFeeAmount" class="block text-sm mb-1">Phí bậc (VND):</label>
+                                            <input type="number" id="tierFeeAmount" class="form-input" value="10000" min="0">
+                                        </div>
+                                    </div>
+                                    <button onclick="addTier()" class="btn-secondary">Thêm bậc</button>
+                                    <ul id="tierList" class="mt-2 list-disc list-inside text-sm text-gray-700"></ul>
+                                </div>
+
+                                <!-- Flexible Fee Form -->
+                                <div id="flexibleFeeForm" class="fee-method-form hidden">
+                                    <h5 class="font-semibold mb-2">Chi tiết Phí linh hoạt</h5>
+                                    <div class="flex space-x-2 mb-2">
+                                        <div class="input-group flex-1">
+                                            <label for="criteriaType" class="block text-sm mb-1">Loại tiêu chí:</label>
+                                            <select id="criteriaType" class="form-input">
+                                                <option value="Phân khúc KH">Phân khúc KH</option>
+                                                <option value="Ngành nghề">Ngành nghề</option>
+                                                <option value="Số dư BQ">Số dư BQ</option>
+                                                <option value="Tình hình sử dụng SPDV">Tình hình sử dụng SPDV</option>
+                                                <option value="Tuổi">Tuổi</option>
+                                                <option value="Tần suất GD">Tần suất GD</option>
+                                                <option value="CASA">CASA</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group flex-1">
+                                            <label for="criteriaValue" class="block text-sm mb-1">Giá trị tiêu chí:</label>
+                                            <input type="text" id="criteriaValue" class="form-input" placeholder="Ví dụ: DN Lớn, >50, <10 GD/tháng">
+                                        </div>
+                                        <div class="input-group flex-1">
+                                            <label for="flexibleFeeAmount" class="block text-sm mb-1">Mức phí (VND):</label>
+                                            <input type="number" id="flexibleFeeAmount" class="form-input" value="1000" min="0">
+                                        </div>
+                                    </div>
+                                    <button onclick="addFlexibleRule()" class="btn-secondary">Thêm quy tắc</button>
+                                    <ul id="flexibleRuleList" class="mt-2 list-disc list-inside text-sm text-gray-700"></ul>
+                                </div>
+
+                                <!-- Combined Fee Form -->
+                                <div id="combinedFeeForm" class="fee-method-form hidden">
+                                    <h5 class="font-semibold mb-2">Chi tiết Phí kết hợp</h5>
+                                    <div class="input-group mb-2">
+                                        <label for="combinedFeeCodes" class="block text-sm mb-1">Chọn các mã phí để kết hợp (giữ Ctrl/Cmd để chọn nhiều):</label>
+                                        <select id="combinedFeeCodes" multiple class="form-input h-24"></select>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <label for="combinedDescription" class="block text-sm mb-1">Mô tả thêm về cách kết hợp:</label>
+                                        <textarea id="combinedDescription" class="form-input" rows="2" placeholder="Ví dụ: Phí cố định + Phí theo giao dịch"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="addFeeCode()" class="btn-primary">Thêm mã phí</button>
+                            <div id="feeCodeMessage" class="message-box"></div>
+
+                            <div class="mt-4">
+                                <h5 class="font-medium">Danh sách mã phí đã khai báo:</h5>
+                                <ul id="definedFeeCodesList" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Lịch sử thay đổi mã phí:</h5>
+                                <ul id="feeCodeHistory" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+
+                            <h4 class="font-semibold mb-2 mt-6">2.2 Xây dựng các chính sách phí cho gói sản phẩm</h4>
+                            <div class="input-group mb-2">
+                                <label for="policyPackageSelect" class="block text-sm mb-1">Chọn gói áp dụng chính sách:</label>
+                                <select id="policyPackageSelect" class="form-input">
+                                    <option value="">Chọn gói</option>
+                                </select>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyCustomerSegment" class="block text-sm mb-1">Phân khúc KH áp dụng:</label>
+                                <select id="policyCustomerSegment" class="form-input">
+                                    <option value="">Tất cả</option>
+                                    <option value="Doanh nghiệp lớn">Doanh nghiệp lớn</option>
+                                    <option value="Doanh nghiệp vừa và nhỏ">Doanh nghiệp vừa và nhỏ</option>
+                                    <option value="Cá nhân">Cá nhân</option>
+                                    <option value="Tổ chức tài chính">Tổ chức tài chính</option>
+                                </select>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyBusinessSector" class="block text-sm mb-1">Ngành nghề kinh doanh áp dụng:</label>
+                                <input type="text" id="policyBusinessSector" class="form-input" placeholder="Để trống nếu áp dụng cho tất cả">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyAvgBalance" class="block text-sm mb-1">Số dư BQ tối thiểu (tỷ VND):</label>
+                                <input type="number" id="policyAvgBalance" class="form-input" value="0" min="0">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyServiceUsage" class="block text-sm mb-1">Tình hình sử dụng SPDV khác:</label>
+                                <input type="text" id="policyServiceUsage" class="form-input" placeholder="Ví dụ: Có sử dụng SP cho vay">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyFeeAmount" class="block text-sm mb-1">Mức phí cụ thể (VND):</label>
+                                <input type="number" id="policyFeeAmount" class="form-input" value="0" min="0">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyDiscountRate" class="block text-sm mb-1">Mức ưu đãi/miễn giảm (%):</label>
+                                <input type="number" id="policyDiscountRate" class="form-input" value="0" min="0" max="100">
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="policyStartDate" class="block text-sm mb-1">Thời gian bắt đầu chính sách:</label>
+                                <input type="date" id="policyStartDate" class="form-input">
+                            </div>
+                            <div class="input-group mb-4">
+                                <label for="policyEndDate" class="block text-sm mb-1">Thời gian kết thúc chính sách:</label>
+                                <input type="date" id="policyEndDate" class="form-input">
+                            </div>
+                            <button onclick="addFeePolicy()" class="btn-secondary">Thêm chính sách phí</button>
+                            <div id="feePolicyMessage" class="message-box"></div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Danh sách chính sách phí đã thêm:</h5>
+                                <ul id="feePolicyList" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+                            <div class="mt-4">
+                                <h5 class="font-medium">Lịch sử thay đổi chính sách phí:</h5>
+                                <ul id="feePolicyHistory" class="list-disc list-inside text-sm text-gray-700"></ul>
+                            </div>
+
+                            <h4 class="font-semibold mb-2 mt-6">2.3 Chương trình ưu đãi miễn giảm phí cho khách hàng</h4>
+                            <div class="input-group mb-2">
+                                <label for="customerDiscount" class="block text-sm mb-1">Mức miễn giảm cho KH (%):</label>
+                                <input type="number" id="customerDiscount" class="form-input" value="0" min="0" max="100">
+                            </div>
+                            <button onclick="applyCustomerDiscount()" class="btn-secondary">Áp dụng miễn giảm</button>
+                            <div id="customerDiscountMessage" class="message-box"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Thu phí và quản lý số phí sản phẩm, dịch vụ -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('feeCollectionContent', 'feeCollectionIcon')">
+                            <span>3. Thu phí và quản lý số phí sản phẩm, dịch vụ</span>
+                            <span id="feeCollectionIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="feeCollectionContent" class="nested-section-content hidden">
+                            <h4 class="font-semibold mb-2">3.1 Thu phí tự động</h4>
+                            <div class="mb-4">
+                                <p class="text-sm text-gray-700">Tổng phí đã thu (demo): <span id="totalCollectedFee" class="font-semibold text-blue-700">0 VND</span></p>
+                            </div>
+                            <button onclick="simulateAutoCollectFee()" class="btn-secondary">Mô phỏng thu phí tự động</button>
+                            <div id="autoCollectMessage" class="message-box"></div>
+
+                            <h4 class="font-semibold mb-2 mt-6">3.2 Thu phí thủ công</h4>
+                            <div class="input-group mb-2">
+                                <label for="manualFeeAmount" class="block text-sm mb-1">Số tiền thu thủ công (VND):</label>
+                                <input type="number" id="manualFeeAmount" class="form-input" value="50000">
+                            </div>
+                            <button onclick="manualCollectFee()" class="btn-secondary">Thu phí thủ công</button>
+                            <div id="manualCollectMessage" class="message-box"></div>
+
+                            <h4 class="font-semibold mb-2 mt-6">3.3 Dự thu dự chi và phân bổ phí</h4>
+                            <button onclick="simulateAccrual()" class="btn-secondary">Mô phỏng dự thu/dự chi</button>
+                            <div id="accrualMessage" class="message-box"></div>
+
+                            <h4 class="font-semibold mb-2 mt-6">3.4 Phân bổ phí theo sản phẩm/gói sản phẩm</h4>
+                            <button onclick="simulateFeeAllocation()" class="btn-secondary">Mô phỏng phân bổ phí</button>
+                            <div id="feeAllocationMessage" class="message-box"></div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Báo cáo -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('reportsContent', 'reportsIcon')">
+                            <span>4. Báo cáo</span>
+                            <span id="reportsIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="reportsContent" class="nested-section-content hidden">
+                            <h4 class="font-semibold mb-2">4.1 Hệ thống báo cáo về sản phẩm, dịch vụ</h4>
+                            <button onclick="generateProductReport()" class="btn-secondary">Tạo báo cáo SPDV</button>
+                            <div id="productReportMessage" class="message-box"></div>
+
+                            <h4 class="font-semibold mb-2 mt-6">4.2 Hệ thống báo cáo về phí</h4>
+                            <button onclick="generateFeeReport()" class="btn-secondary">Tạo báo cáo phí</button>
+                            <div id="feeReportMessage" class="message-box"></div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Tích hợp với các hệ thống khác -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('integrationContent', 'integrationIcon')">
+                            <span>5. Tích hợp với các hệ thống khác</span>
+                            <span id="integrationIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="integrationContent" class="nested-section-content hidden">
+                            <p class="text-sm text-gray-700">
+                                Hệ thống Fee Engine tích hợp với các chương trình đầu vào (cung cấp dữ liệu) và đầu ra (nhận dữ liệu phí).
+                                <br>
+                                **Đầu vào:** Chi tiết theo từng chức năng.
+                                <br>
+                                **Đầu ra:** MPA, Hóa đơn điện tử, MIS, ODS và các ứng dụng nhận số tiền phí (Core).
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 6. Cầu phân chi phí -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('costAllocationContent', 'costAllocationIcon')">
+                            <span>6. Cầu phân chi phí</span>
+                            <span id="costAllocationIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="costAllocationContent" class="nested-section-content hidden">
+                            <p class="text-sm text-gray-700">
+                                Hệ thống tập hợp dữ liệu chi phí từ các chương trình liên quan.
+                                <br>
+                                Thực hiện ghi nhận và phân bổ chi phí tới giao dịch, sản phẩm, khách hàng, chi nhánh, toàn hàng để đánh giá hiệu quả.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 7. Quản lý dữ liệu (Local Storage) -->
+                    <div class="border p-4 rounded-lg bg-gray-50">
+                        <div class="nested-section-header" onclick="toggleSection('dataManagementContent', 'dataManagementIcon')">
+                            <span>7. Quản lý dữ liệu (Local Storage)</span>
+                            <span id="dataManagementIcon" class="toggle-icon">&#9658;</span>
+                        </div>
+                        <div id="dataManagementContent" class="nested-section-content hidden">
+                            <h4 class="font-semibold mb-2">Lưu/Tải dữ liệu demo</h4>
+                            <button onclick="saveDataToLocalStorage()" class="btn-secondary mr-2">Lưu dữ liệu</button>
+                            <button onclick="loadDataFromLocalStorage()" class="btn-secondary mr-2">Tải dữ liệu</button>
+                            <button onclick="clearLocalStorage()" class="btn-secondary bg-red-500 hover:bg-red-700">Xóa dữ liệu</button>
+                            <div id="localStorageMessage" class="message-box"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global arrays to store products and packages for demo purposes
+        let products = [];
+        let packages = [];
+        let collectedFee = 0;
+        let productHistoryLog = []; // New array for product history
+        let customerPackageRegistrations = []; // New array to store customer package registrations
+        let feePolicies = []; // New array to store fee policies
+        let definedFeeCodes = []; // New array to store defined fee codes
+
+        // Demo data for dropdowns
+        const customerTargets = ["Doanh nghiệp lớn", "Doanh nghiệp vừa và nhỏ", "Cá nhân", "Tổ chức tài chính"];
+        const channels = ["iBank", "Quầy giao dịch", "Mobile App", "ATM"];
+        const categories = ["Dịch vụ thanh toán", "Tín dụng", "Huy động vốn", "TTTM", "Dịch vụ khác"];
+
+        // Descriptions for fee methods
+        const feeMethodDescriptions = {
+            "Fixed": "Mức phí không thay đổi, áp dụng cho mỗi giao dịch hoặc dịch vụ.",
+            "Percentage": "Phí được tính theo tỷ lệ phần trăm trên giá trị giao dịch hoặc dư nợ (áp dụng cho cả phí thu định kỳ và thu theo giao dịch). Bao gồm mức phí tối thiểu, tối đa.",
+            "Tiered": "Gồm phí bậc ngưỡng (ở bước nào thì sẽ tính phí theo cách tính của bước ấy), phí bậc thang (phí cộng dồn của các bậc trước đó).",
+            "Flexible": "Dựa trên việc kết hợp ma trận giữa các tham số từ bảng tham số đầu vào (áp dụng cho cả phí thu định kỳ và thu theo giao dịch).",
+            "Combined": "Cho phép kết hợp các loại phí nêu trên (phí cố định, phí phần trăm, phí giao dịch).",
+        };
+
+        // Descriptions for fee types
+        const feeTypeDescriptions = {
+            "Periodic": "Áp dụng phí thu theo chu kỳ ngày, tháng, năm (VD các phí định kỳ như QLTK,BSMS).",
+            "OneTime": "Chỉ áp dụng và thu 1 lần (Phí mở tài khoản số đẹp).",
+            "PerTransaction": "Áp dụng theo các giao dịch từ nguồn/kênh (Phí chuyển tiền).",
+            "PerTransactionNoPeriodic": "Phí theo giao dịch nhưng không thu định kỳ (tháng/quý).",
+        };
+
+        // Temporary storage for tiered and flexible rules
+        let currentTiers = [];
+        let currentFlexibleRules = [];
+
+        // Function to toggle section visibility
+        function toggleSection(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotated'); // Rotate icon for visual cue
+        }
+
+        // Helper function to display messages
+        function showMessage(elementId, message, type) {
+            const msgBox = document.getElementById(elementId);
+            if (msgBox) {
+                msgBox.innerHTML = message; // Use innerHTML to allow bold tags
+                msgBox.className = 'message-box'; // Reset classes
+                if (type === 'success') {
+                    msgBox.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+                } else if (type === 'error') {
+                    msgBox.classList.add('bg-red-100', 'text-red-800', 'border-red-300', 'error');
+                } else if (type === 'info') {
+                    msgBox.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300', 'info');
+                }
+                msgBox.style.display = 'block';
+                setTimeout(() => {
+                    msgBox.style.display = 'none';
+                }, 5000); // Hide after 5 seconds
+            } else {
+                console.error(`Error: Message box element with ID '${elementId}' not found.`);
+            }
+        }
+
+        // Function to populate dropdowns
+        function populateDropdowns() {
+            const productCustomerTargetSelect = document.getElementById('productCustomerTarget');
+            const productChannelSelect = document.getElementById('productChannel');
+            const productCategorySelect = document.getElementById('productCategory');
+            const feeCodeProductCategorySelect = document.getElementById('feeCodeProductCategory'); // New
+            const packageToManageSelect = document.getElementById('packageToManage');
+            const packageToSyncSelect = document.getElementById('packageToSync');
+            const policyPackageSelect = document.getElementById('policyPackageSelect');
+            const combinedFeeCodesSelect = document.getElementById('combinedFeeCodes'); // New
+
+            // Clear existing options (except the first "Chọn..." option)
+            productCustomerTargetSelect.innerHTML = '<option value="">Chọn đối tượng</option>';
+            productChannelSelect.innerHTML = '<option value="">Chọn kênh</option>';
+            productCategorySelect.innerHTML = '<option value="">Chọn danh mục</option>';
+            feeCodeProductCategorySelect.innerHTML = '<option value="">Chọn danh mục</option>'; // New
+            packageToManageSelect.innerHTML = '<option value="">Chọn gói</option>';
+            packageToSyncSelect.innerHTML = '<option value="">Chọn gói</option>';
+            policyPackageSelect.innerHTML = '<option value="">Chọn gói</option>';
+            combinedFeeCodesSelect.innerHTML = ''; // New, no default option for multi-select
+
+
+            customerTargets.forEach(target => {
+                const option = document.createElement('option');
+                option.value = target;
+                option.textContent = target;
+                productCustomerTargetSelect.appendChild(option);
+            });
+
+            channels.forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel;
+                option.textContent = channel;
+                productChannelSelect.appendChild(option);
+            });
+
+            categories.forEach(category => {
+                const option1 = document.createElement('option');
+                option1.value = category;
+                option1.textContent = category;
+                productCategorySelect.appendChild(option1);
+
+                const option2 = document.createElement('option'); // For feeCodeProductCategory
+                option2.value = category;
+                option2.textContent = category;
+                feeCodeProductCategorySelect.appendChild(option2);
+            });
+            
+            // Populate package selection dropdowns
+            packages.forEach((pkg, index) => {
+                const option1 = document.createElement('option');
+                option1.value = index;
+                option1.textContent = pkg.name;
+                packageToManageSelect.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = index;
+                option2.textContent = pkg.name;
+                packageToSyncSelect.appendChild(option2);
+
+                const option3 = document.createElement('option');
+                option3.value = index;
+                option3.textContent = pkg.name;
+                policyPackageSelect.appendChild(option3);
+            });
+
+            // Populate combined fee codes dropdown
+            definedFeeCodes.filter(fc => fc.method !== 'Combined').forEach(feeCode => { // Only allow non-combined fees to be combined
+                const option = document.createElement('option');
+                option.value = feeCode.id;
+                option.textContent = `${feeCode.code} - ${feeCode.name} (${feeCode.method})`;
+                combinedFeeCodesSelect.appendChild(option);
+            });
+        }
+
+        // Function to set default demo data for 1.1 fields
+        function setDemoProductData() {
+            document.getElementById('productName').value = 'Dịch vụ Thanh toán Trực tuyến';
+            document.getElementById('productDescription').value = 'Hỗ trợ thanh toán nhanh chóng qua Internet Banking';
+            document.getElementById('productPrice').value = '5000';
+            document.getElementById('productStartDate').valueAsDate = new Date(); // Current date
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + 1); // One year from now
+            document.getElementById('productEndDate').valueAsDate = endDate;
+            document.getElementById('productCustomerTarget').value = 'Doanh nghiệp vừa và nhỏ';
+            document.getElementById('productChannel').value = 'iBank';
+            document.getElementById('productCategory').value = 'Dịch vụ thanh toán';
+
+            // Add some initial products if local storage is empty
+            if (products.length === 0) {
+                products.push({
+                    name: 'Dịch vụ Thanh toán Trực tuyến',
+                    description: 'Hỗ trợ thanh toán nhanh chóng qua Internet Banking',
+                    price: 5000,
+                    startDate: new Date().toISOString().split('T')[0],
+                    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+                    customerTarget: 'Doanh nghiệp vừa và nhỏ',
+                    channel: 'iBank',
+                    category: 'Dịch vụ thanh toán',
+                    id: Date.now() - 1000
+                });
+                products.push({
+                    name: 'Gói Tín dụng Ưu đãi Doanh nghiệp',
+                    description: 'Gói vay vốn lãi suất ưu đãi cho doanh nghiệp',
+                    price: 0, // No direct fee for the product itself, fee is in policy
+                    startDate: new Date().toISOString().split('T')[0],
+                    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0],
+                    customerTarget: 'Doanh nghiệp lớn',
+                    channel: 'Quầy giao dịch',
+                    category: 'Tín dụng',
+                    id: Date.now() - 2000
+                });
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm sản phẩm demo: Dịch vụ Thanh toán Trực tuyến`,
+                    details: products[0]
+                });
+                 productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm sản phẩm demo: Gói Tín dụng Ưu đãi Doanh nghiệp`,
+                    details: products[1]
+                });
+                updateProductList();
+                updateProductHistory();
+            }
+
+            // Add some initial packages if local storage is empty
+            if (packages.length === 0) {
+                const today = new Date();
+                const nextYear = new Date();
+                nextYear.setFullYear(today.getFullYear() + 1);
+
+                packages.push({
+                    name: 'Gói Chuyển tiền Tiết kiệm',
+                    products: [products[0]], // Assuming products[0] is "Dịch vụ Thanh toán Trực tuyến"
+                    startDate: today.toISOString().split('T')[0],
+                    endDate: nextYear.toISOString().split('T')[0],
+                    id: Date.now() - 3000
+                });
+                packages.push({
+                    name: 'Gói Doanh nghiệp Toàn diện',
+                    products: [products[0], products[1]], // Assuming products[0] and products[1]
+                    startDate: today.toISOString().split('T')[0],
+                    endDate: nextYear.toISOString().split('T')[0],
+                    id: Date.now() - 4000
+                });
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm gói sản phẩm demo: Gói Chuyển tiền Tiết kiệm`,
+                    details: packages[0]
+                });
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm gói sản phẩm demo: Gói Doanh nghiệp Toàn diện`,
+                    details: packages[1]
+                });
+                updatePackageList();
+                updateProductHistory();
+            }
+
+            // Add some initial customer package registrations
+            if (customerPackageRegistrations.length === 0) {
+                customerPackageRegistrations.push({
+                    cif: 'KH12345',
+                    packageName: 'Gói Chuyển tiền Tiết kiệm',
+                    packageId: packages[0].id,
+                    registrationDate: new Date().toISOString().split('T')[0],
+                    status: 'Active'
+                });
+                customerPackageRegistrations.push({
+                    cif: 'KH67890',
+                    packageName: 'Gói Doanh nghiệp Toàn diện',
+                    packageId: packages[1].id,
+                    registrationDate: new Date().toISOString().split('T')[0],
+                    status: 'Active'
+                });
+                updateCustomerPackagesList();
+            }
+
+            // Add some initial fee policies
+            if (feePolicies.length === 0 && packages.length > 0) {
+                const today = new Date();
+                const futureDate = new Date();
+                futureDate.setFullYear(today.getFullYear() + 1);
+
+                feePolicies.push({
+                    id: Date.now() + 100,
+                    packageName: packages[0].name,
+                    packageId: packages[0].id,
+                    customerSegment: 'Doanh nghiệp lớn',
+                    businessSector: '',
+                    avgBalance: 100, // tỷ VND
+                    serviceUsage: 'Có sử dụng SP cho vay',
+                    feeAmount: 2000, // VND
+                    discountRate: 10, // %
+                    startDate: today.toISOString().split('T')[0],
+                    endDate: futureDate.toISOString().split('T')[0],
+                    description: 'Chính sách ưu đãi cho gói Chuyển tiền Tiết kiệm dành cho DN Lớn có số dư BQ > 100 tỷ VND và có SP cho vay.'
+                });
+
+                feePolicies.push({
+                    id: Date.now() + 200,
+                    packageName: packages[1].name,
+                    packageId: packages[1].id,
+                    customerSegment: 'Cá nhân',
+                    businessSector: '',
+                    avgBalance: 0,
+                    serviceUsage: '',
+                    feeAmount: 0,
+                    discountRate: 50, // %
+                    startDate: today.toISOString().split('T')[0],
+                    endDate: futureDate.toISOString().split('T')[0],
+                    description: 'Chính sách giảm 50% phí cho gói Doanh nghiệp Toàn diện dành cho khách hàng cá nhân.'
+                });
+                updateFeePolicyList();
+                updateFeePolicyHistory();
+            }
+
+            // Add some initial defined fee codes
+            if (definedFeeCodes.length === 0) {
+                definedFeeCodes.push({
+                    id: 'FC001',
+                    code: 'FC001',
+                    name: 'Phí cố định tài khoản',
+                    productCategory: 'Dịch vụ thanh toán',
+                    method: 'Fixed',
+                    type: 'Periodic',
+                    details: { fixedAmount: 15000 }
+                });
+                definedFeeCodes.push({
+                    id: 'FC002',
+                    code: 'FC002',
+                    name: 'Phí chuyển tiền liên ngân hàng',
+                    productCategory: 'Dịch vụ thanh toán',
+                    method: 'Percentage',
+                    type: 'PerTransaction',
+                    details: { percentageRate: 0.03, minFeePercentage: 2000, maxFeePercentage: 50000, basisForCalculation: 'Giá trị giao dịch' }
+                });
+                definedFeeCodes.push({
+                    id: 'FC003',
+                    code: 'FC003',
+                    name: 'Phí quản lý dư nợ tín dụng',
+                    productCategory: 'Tín dụng',
+                    method: 'Tiered',
+                    type: 'Periodic',
+                    details: {
+                        tierType: 'Threshold',
+                        tiers: [
+                            { minThreshold: 0, maxThreshold: 50, tierFeeAmount: 50000 },
+                            { minThreshold: 51, maxThreshold: 200, tierFeeAmount: 100000 },
+                            { minThreshold: 201, maxThreshold: Infinity, tierFeeAmount: 200000 }
+                        ]
+                    }
+                });
+                definedFeeCodes.push({
+                    id: 'FC004',
+                    code: 'FC004',
+                    name: 'Phí dịch vụ ưu tiên linh hoạt',
+                    productCategory: 'Dịch vụ khác',
+                    method: 'Flexible',
+                    type: 'Periodic',
+                    details: {
+                        rules: [
+                            { criteriaType: 'Phân khúc KH', criteriaValue: 'Doanh nghiệp lớn', flexibleFeeAmount: 100000 },
+                            { criteriaType: 'Số dư BQ', criteriaValue: '>100 tỷ VND', flexibleFeeAmount: 50000 }
+                        ]
+                    }
+                });
+                definedFeeCodes.push({
+                    id: 'FC005',
+                    code: 'FC005',
+                    name: 'Phí tổng hợp dịch vụ tài chính',
+                    productCategory: 'Dịch vụ khác',
+                    method: 'Combined',
+                    type: 'Periodic',
+                    details: {
+                        combinedFeeCodeIds: ['FC001', 'FC002'],
+                        combinedDescription: 'Tổng phí cố định tài khoản và phí chuyển tiền liên ngân hàng'
+                    }
+                });
+
+                updateDefinedFeeCodesList();
+                updateFeeCodeHistory();
+            }
+        }
+
+
+        // --- Fee Engine Demo Functions ---
+
+        // 1. Quản lý danh mục sản phẩm, dịch vụ
+        function addProduct() {
+            const productName = document.getElementById('productName').value;
+            const productDescription = document.getElementById('productDescription').value;
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const productStartDate = document.getElementById('productStartDate').value;
+            const productEndDate = document.getElementById('productEndDate').value;
+            const productCustomerTarget = document.getElementById('productCustomerTarget').value;
+            const productChannel = document.getElementById('productChannel').value;
+            const productCategory = document.getElementById('productCategory').value;
+
+            if (productName && !isNaN(productPrice) && productPrice >= 0 && productCustomerTarget && productChannel && productCategory) {
+                const product = {
+                    name: productName,
+                    description: productDescription,
+                    price: productPrice,
+                    startDate: productStartDate,
+                    endDate: productEndDate,
+                    customerTarget: productCustomerTarget,
+                    channel: productChannel,
+                    category: productCategory,
+                    id: Date.now() // Simple unique ID
+                };
+                products.push(product);
+                
+                // Add to history log
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm sản phẩm: ${product.name} (ID: ${product.id})`,
+                    details: product
+                });
+
+                updateProductList();
+                updateProductHistory(); // Update history display
+
+                // Clear form fields
+                document.getElementById('productName').value = '';
+                document.getElementById('productDescription').value = '';
+                document.getElementById('productPrice').value = '10000';
+                document.getElementById('productStartDate').value = '';
+                document.getElementById('productEndDate').value = '';
+                document.getElementById('productCustomerTarget').value = '';
+                document.getElementById('productChannel').value = '';
+                document.getElementById('productCategory').value = '';
+
+                showMessage('productMessage', `Đã thêm sản phẩm: <strong>${productName}</strong> - ${productPrice.toLocaleString('vi-VN')} VND.`, 'success');
+            } else {
+                showMessage('productMessage', 'Vui lòng điền đầy đủ thông tin sản phẩm (Tên, Giá, Đối tượng KH, Kênh, Danh mục).', 'error');
+            }
+        }
+
+        function updateProductList() {
+            const productListUl = document.getElementById('productList');
+            const packageProductsSelect = document.getElementById('packageProducts');
+            
+            productListUl.innerHTML = '';
+            packageProductsSelect.innerHTML = '';
+
+            products.forEach((product, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${product.name}</strong> (${product.price.toLocaleString('vi-VN')} VND) - Category: ${product.category || 'N/A'}<br>
+                                <em>Mô tả: ${product.description || 'N/A'} | KH: ${product.customerTarget || 'N/A'} | Kênh: ${product.channel || 'N/A'}</em><br>
+                                <em>Hiệu lực: ${product.startDate || 'N/A'} đến ${product.endDate || 'N/A'}</em>`;
+                productListUl.appendChild(li);
+
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = product.name;
+                packageProductsSelect.appendChild(option);
+            });
+
+            updatePackageForPolicySelect();
+            populateDropdowns(); // Re-populate dropdowns that use products/packages
+        }
+
+        function updateProductHistory() {
+            const productHistoryUl = document.getElementById('productHistory');
+            productHistoryUl.innerHTML = '';
+            productHistoryLog.forEach(log => {
+                const li = document.createElement('li');
+                li.textContent = `${log.timestamp}: ${log.action}`;
+                productHistoryUl.appendChild(li);
+            });
+        }
+
+        function addPackage() {
+            const packageName = document.getElementById('packageName').value;
+            const packageStartDate = document.getElementById('packageStartDate').value;
+            const packageEndDate = document.getElementById('packageEndDate').value;
+            const selectedProductIndices = Array.from(document.getElementById('packageProducts').selectedOptions).map(option => parseInt(option.value));
+
+            if (packageName && selectedProductIndices.length > 0 && packageStartDate && packageEndDate) {
+                const selectedProducts = selectedProductIndices.map(index => products[index]);
+                const packageObj = {
+                    name: packageName,
+                    products: selectedProducts,
+                    startDate: packageStartDate,
+                    endDate: packageEndDate,
+                    id: Date.now()
+                };
+                packages.push(packageObj);
+
+                // Add to history log
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thêm gói sản phẩm: ${packageObj.name} (ID: ${packageObj.id})`,
+                    details: packageObj
+                });
+
+                updatePackageList();
+                updateProductHistory(); // Update history display
+
+                document.getElementById('packageName').value = '';
+                document.getElementById('packageStartDate').value = '';
+                document.getElementById('packageEndDate').value = '';
+                document.getElementById('packageProducts').selectedIndex = -1; // Deselect all
+                showMessage('packageMessage', `Đã thêm gói sản phẩm: <strong>${packageName}</strong> với ${selectedProducts.length} sản phẩm.`, 'success');
+            } else {
+                showMessage('packageMessage', 'Vui lòng nhập tên gói, thời gian áp dụng và chọn ít nhất một sản phẩm.', 'error');
+            }
+        }
+
+        function updatePackageList() {
+            const packageListUl = document.getElementById('packageList');
+            packageListUl.innerHTML = '';
+
+            packages.forEach(pkg => {
+                const li = document.createElement('li');
+                const productNames = pkg.products.map(p => p.name).join(', ');
+                li.innerHTML = `<strong>${pkg.name}</strong>: [${productNames}]<br>
+                                <em>Hiệu lực: ${pkg.startDate || 'N/A'} đến ${pkg.endDate || 'N/A'}</em>`;
+                packageListUl.appendChild(li);
+            });
+            updatePackageForPolicySelect();
+            populateDropdowns(); // Re-populate dropdowns that use products/packages
+        }
+
+        function viewProductData() {
+            let message = "Dữ liệu sản phẩm hiện tại:\n";
+            if (products.length === 0) {
+                message += "- Không có sản phẩm nào.\n";
+            } else {
+                products.forEach(p => message += `- ${p.name} (ID: ${p.id}, Giá: ${p.price.toLocaleString('vi-VN')} VND, Category: ${p.category || 'N/A'})\n`);
+            }
+
+            message += "\nDữ liệu gói sản phẩm hiện tại:\n";
+            if (packages.length === 0) {
+                message += "- Không có gói sản phẩm nào.\n";
+            } else {
+                packages.forEach(pkg => {
+                    const productNames = pkg.products.map(p => p.name).join(', ');
+                    message += `- ${pkg.name} (ID: ${pkg.id}): [${productNames}] (Hiệu lực: ${pkg.startDate || 'N/A'} đến ${pkg.endDate || 'N/A'})\n`;
+                });
+            }
+            showMessage('viewProductDataMessage', message, 'info');
+        }
+
+        // 1.2.1 Đăng ký/Hủy đăng ký/Thay đổi sử dụng gói sản phẩm cho khách hàng
+        function registerPackageForCustomer() {
+            const customerCif = document.getElementById('customerCifPackage').value;
+            const selectedPackageIndex = document.getElementById('packageToManage').value;
+
+            if (!customerCif || selectedPackageIndex === '') {
+                showMessage('packageCustomerMessage', 'Vui lòng nhập CIF khách hàng và chọn gói sản phẩm.', 'error');
+                return;
+            }
+
+            const selectedPackage = packages[parseInt(selectedPackageIndex)];
+            const existingRegistration = customerPackageRegistrations.find(reg => reg.cif === customerCif && reg.packageId === selectedPackage.id);
+
+            if (existingRegistration) {
+                showMessage('packageCustomerMessage', `Khách hàng <strong>${customerCif}</strong> đã đăng ký gói <strong>${selectedPackage.name}</strong> rồi.`, 'info');
+                return;
+            }
+
+            const newRegistration = {
+                cif: customerCif,
+                packageName: selectedPackage.name,
+                packageId: selectedPackage.id,
+                registrationDate: new Date().toISOString().split('T')[0],
+                status: 'Active'
+            };
+            customerPackageRegistrations.push(newRegistration);
+            
+            productHistoryLog.push({
+                timestamp: new Date().toLocaleString('vi-VN'),
+                action: `Đăng ký gói '${selectedPackage.name}' cho KH: ${customerCif}`,
+                details: newRegistration
+            });
+            updateProductHistory();
+            updateCustomerPackagesList();
+            showMessage('packageCustomerMessage', `Đã đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> thành công!`, 'success');
+        }
+
+        function unregisterPackageForCustomer() {
+            const customerCif = document.getElementById('customerCifPackage').value;
+            const selectedPackageIndex = document.getElementById('packageToManage').value;
+
+            if (!customerCif || selectedPackageIndex === '') {
+                showMessage('packageCustomerMessage', 'Vui lòng nhập CIF khách hàng và chọn gói sản phẩm để hủy đăng ký.', 'error');
+                return;
+            }
+
+            const selectedPackage = packages[parseInt(selectedPackageIndex)];
+            const initialLength = customerPackageRegistrations.length;
+            customerPackageRegistrations = customerPackageRegistrations.filter(reg => !(reg.cif === customerCif && reg.packageId === selectedPackage.id));
+
+            if (customerPackageRegistrations.length < initialLength) {
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Hủy đăng ký gói '${selectedPackage.name}' cho KH: ${customerCif}`,
+                    details: { cif: customerCif, packageName: selectedPackage.name, packageId: selectedPackage.id }
+                });
+                updateProductHistory();
+                updateCustomerPackagesList();
+                showMessage('packageCustomerMessage', `Đã hủy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> thành công!`, 'success');
+            } else {
+                showMessage('packageCustomerMessage', `Không tìm thấy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong>.`, 'info');
+            }
+        }
+
+        function modifyPackageForCustomer() {
+            const customerCif = document.getElementById('customerCifPackage').value;
+            const selectedPackageIndex = document.getElementById('packageToManage').value;
+
+            if (!customerCif || selectedPackageIndex === '') {
+                showMessage('packageCustomerMessage', 'Vui lòng nhập CIF khách hàng và chọn gói sản phẩm để thay đổi.', 'error');
+                return;
+            }
+
+            const selectedPackage = packages[parseInt(selectedPackageIndex)];
+            const registration = customerPackageRegistrations.find(reg => reg.cif === customerCif && reg.packageId === selectedPackage.id);
+
+            if (registration) {
+                // For demo, we'll just toggle status or simulate a change
+                registration.status = registration.status === 'Active' ? 'Inactive' : 'Active';
+                registration.lastModified = new Date().toISOString().split('T')[0];
+                
+                productHistoryLog.push({
+                    timestamp: new Date().toLocaleString('vi-VN'),
+                    action: `Thay đổi trạng thái gói '${selectedPackage.name}' của KH ${customerCif} thành: ${registration.status}`,
+                    details: registration
+                });
+                updateProductHistory();
+                updateCustomerPackagesList();
+                showMessage('packageCustomerMessage', `Đã thay đổi gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong>. Trạng thái mới: <strong>${registration.status}</strong>.`, 'success');
+            } else {
+                showMessage('packageCustomerMessage', `Không tìm thấy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> để thay đổi.`, 'info');
+            }
+        }
+
+        function updateCustomerPackagesList() {
+            const customerPackagesListUl = document.getElementById('customerPackagesList');
+            customerPackagesListUl.innerHTML = '';
+            if (customerPackageRegistrations.length === 0) {
+                customerPackagesListUl.innerHTML = '<li>Chưa có gói nào được đăng ký cho khách hàng.</li>';
+                return;
+            }
+            customerPackageRegistrations.forEach(reg => {
+                const li = document.createElement('li');
+                li.textContent = `CIF: ${reg.cif} - Gói: ${reg.packageName} (ID: ${reg.packageId}) - Trạng thái: ${reg.status} - Đăng ký: ${reg.registrationDate}`;
+                customerPackagesListUl.appendChild(li);
+            });
+        }
+
+        // 1.2.2 Kết nối gói với iBank và ứng dụng khác
+        function syncWithApplication() {
+            const selectedPackageIndex = document.getElementById('packageToSync').value;
+            const targetApp = document.getElementById('targetApplication').value;
+
+            if (selectedPackageIndex === '') {
+                showMessage('syncMessage', 'Vui lòng chọn gói để đồng bộ.', 'error');
+                return;
+            }
+
+            const selectedPackage = packages[parseInt(selectedPackageIndex)];
+            showMessage('syncMessage', `Đang đồng bộ gói <strong>${selectedPackage.name}</strong> với ứng dụng <strong>${targetApp}</strong>. (Mô phỏng)`, 'info');
+            
+            productHistoryLog.push({
+                timestamp: new Date().toLocaleString('vi-VN'),
+                action: `Đồng bộ gói '${selectedPackage.name}' với ứng dụng '${targetApp}'`,
+                details: { packageId: selectedPackage.id, app: targetApp }
+            });
+            updateProductHistory();
+
+            setTimeout(() => {
+                showMessage('syncMessage', `Đồng bộ gói <strong>${selectedPackage.name}</strong> với <strong>${targetApp}</strong> thành công!`, 'success');
+            }, 1500);
+        }
+
+        // 2. Quản lý giá phí sản phẩm, dịch vụ
+
+        // New: Update visibility of fee method forms
+        function updateFeeMethodFormVisibility() {
+            const feeMethod = document.getElementById('feeMethod').value;
+            const forms = ['fixedFeeForm', 'percentageFeeForm', 'tieredFeeForm', 'flexibleFeeForm', 'combinedFeeForm'];
+
+            forms.forEach(formId => {
+                document.getElementById(formId).classList.add('hidden');
+            });
+
+            if (feeMethod) {
+                document.getElementById(`${feeMethod.toLowerCase()}FeeForm`).classList.remove('hidden');
+            }
+
+            // Update description as well
+            updateFeeMethodDescription();
+
+            // Reset temporary tiered/flexible data when changing method
+            currentTiers = [];
+            updateTierList();
+            currentFlexibleRules = [];
+            updateFlexibleRuleList();
+        }
+
+        function updateFeeMethodDescription() {
+            const feeMethod = document.getElementById('feeMethod').value;
+            document.getElementById('feeMethodDescription').textContent = feeMethodDescriptions[feeMethod] || '';
+        }
+
+        function updateFeeTypeDescription() {
+            const feeType = document.getElementById('feeType').value;
+            document.getElementById('feeTypeDescription').textContent = feeTypeDescriptions[feeType] || '';
+        }
+
+        // New: Add Tier for Tiered Fee
+        function addTier() {
+            const minThreshold = parseFloat(document.getElementById('minThreshold').value);
+            const maxThreshold = parseFloat(document.getElementById('maxThreshold').value);
+            const tierFeeAmount = parseFloat(document.getElementById('tierFeeAmount').value);
+
+            if (isNaN(minThreshold) || isNaN(maxThreshold) || isNaN(tierFeeAmount) || minThreshold < 0 || maxThreshold < 0 || tierFeeAmount < 0 || minThreshold > maxThreshold) {
+                showMessage('feeCodeMessage', 'Vui lòng nhập thông tin bậc phí hợp lệ (Ngưỡng tối thiểu <= Ngưỡng tối đa, tất cả phải là số dương).', 'error');
+                return;
+            }
+
+            currentTiers.push({ minThreshold, maxThreshold, tierFeeAmount });
+            updateTierList();
+
+            // Clear inputs for next tier
+            document.getElementById('minThreshold').value = maxThreshold + 1; // Suggest next min threshold
+            document.getElementById('maxThreshold').value = '';
+            document.getElementById('tierFeeAmount').value = '10000';
+            showMessage('feeCodeMessage', 'Đã thêm bậc phí.', 'info');
+        }
+
+        // New: Update Tier List display
+        function updateTierList() {
+            const tierListUl = document.getElementById('tierList');
+            tierListUl.innerHTML = '';
+            currentTiers.forEach((tier, index) => {
+                const li = document.createElement('li');
+                li.className = 'tier-item';
+                li.innerHTML = `Ngưỡng: ${tier.minThreshold.toLocaleString('vi-VN')} - ${tier.maxThreshold === Infinity ? 'Max' : tier.maxThreshold.toLocaleString('vi-VN')} | Phí: ${tier.tierFeeAmount.toLocaleString('vi-VN')} VND <button onclick="removeTier(${index})">Xóa</button>`;
+                tierListUl.appendChild(li);
+            });
+        }
+
+        // New: Remove Tier
+        function removeTier(index) {
+            currentTiers.splice(index, 1);
+            updateTierList();
+            showMessage('feeCodeMessage', 'Đã xóa bậc phí.', 'info');
+        }
+
+        // New: Add Flexible Rule
+        function addFlexibleRule() {
+            const criteriaType = document.getElementById('criteriaType').value;
+            const criteriaValue = document.getElementById('criteriaValue').value;
+            const flexibleFeeAmount = parseFloat(document.getElementById('flexibleFeeAmount').value);
+
+            if (!criteriaType || !criteriaValue || isNaN(flexibleFeeAmount) || flexibleFeeAmount < 0) {
+                showMessage('feeCodeMessage', 'Vui lòng nhập đầy đủ thông tin quy tắc linh hoạt hợp lệ.', 'error');
+                return;
+            }
+
+            currentFlexibleRules.push({ criteriaType, criteriaValue, flexibleFeeAmount });
+            updateFlexibleRuleList();
+
+            // Clear inputs for next rule
+            document.getElementById('criteriaValue').value = '';
+            document.getElementById('flexibleFeeAmount').value = '1000';
+            showMessage('feeCodeMessage', 'Đã thêm quy tắc linh hoạt.', 'info');
+        }
+
+        // New: Update Flexible Rule List display
+        function updateFlexibleRuleList() {
+            const flexibleRuleListUl = document.getElementById('flexibleRuleList');
+            flexibleRuleListUl.innerHTML = '';
+            currentFlexibleRules.forEach((rule, index) => {
+                const li = document.createElement('li');
+                li.className = 'flexible-rule-item';
+                li.innerHTML = `Tiêu chí: ${rule.criteriaType} = "${rule.criteriaValue}" | Phí: ${rule.flexibleFeeAmount.toLocaleString('vi-VN')} VND <button onclick="removeFlexibleRule(${index})">Xóa</button>`;
+                flexibleRuleListUl.appendChild(li);
+            });
+        }
+
+        // New: Remove Flexible Rule
+        function removeFlexibleRule(index) {
+            currentFlexibleRules.splice(index, 1);
+            updateFlexibleRuleList();
+            showMessage('feeCodeMessage', 'Đã xóa quy tắc linh hoạt.', 'info');
+        }
+
+
+        // New: Add Fee Code
+        function addFeeCode() {
+            const feeCodeId = document.getElementById('feeCodeId').value;
+            const feeCodeName = document.getElementById('feeCodeName').value;
+            const feeCodeProductCategory = document.getElementById('feeCodeProductCategory').value;
+            const feeMethod = document.getElementById('feeMethod').value;
+            const feeType = document.getElementById('feeType').value;
+            let feeDetails = {};
+
+            if (!feeCodeId || !feeCodeName || !feeCodeProductCategory || !feeMethod || !feeType) {
+                showMessage('feeCodeMessage', 'Vui lòng điền đầy đủ thông tin Mã phí, Tên mã phí, Danh mục SPDV, Cách thức và Loại phí.', 'error');
+                return;
+            }
+
+            // Check for duplicate fee code ID
+            if (definedFeeCodes.some(fc => fc.code === feeCodeId)) {
+                showMessage('feeCodeMessage', `Mã phí <strong>${feeCodeId}</strong> đã tồn tại. Vui lòng chọn mã khác.`, 'error');
+                return;
+            }
+
+            // Collect method-specific details
+            switch (feeMethod) {
+                case 'Fixed':
+                    const fixedAmount = parseFloat(document.getElementById('fixedAmount').value);
+                    if (isNaN(fixedAmount) || fixedAmount < 0) {
+                        showMessage('feeCodeMessage', 'Vui lòng nhập mức phí cố định hợp lệ.', 'error');
+                        return;
+                    }
+                    feeDetails = { fixedAmount };
+                    break;
+                case 'Percentage':
+                    const percentageRate = parseFloat(document.getElementById('percentageRate').value);
+                    const minFeePercentage = parseFloat(document.getElementById('minFeePercentage').value);
+                    const maxFeePercentage = parseFloat(document.getElementById('maxFeePercentage').value);
+                    const basisForCalculation = document.getElementById('basisForCalculation').value;
+                    if (isNaN(percentageRate) || isNaN(minFeePercentage) || isNaN(maxFeePercentage) || percentageRate < 0 || minFeePercentage < 0 || maxFeePercentage < 0 || minFeePercentage > maxFeePercentage || !basisForCalculation) {
+                        showMessage('feeCodeMessage', 'Vui lòng nhập đầy đủ và hợp lệ thông tin phí phần trăm.', 'error');
+                        return;
+                    }
+                    feeDetails = { percentageRate, minFeePercentage, maxFeePercentage, basisForCalculation };
+                    break;
+                case 'Tiered':
+                    if (currentTiers.length === 0) {
+                        showMessage('feeCodeMessage', 'Vui lòng thêm ít nhất một bậc phí cho cách tính phí theo bậc.', 'error');
+                        return;
+                    }
+                    const tierType = document.querySelector('input[name="tierType"]:checked').value;
+                    feeDetails = { tierType, tiers: [...currentTiers] }; // Copy current tiers
+                    break;
+                case 'Flexible':
+                    if (currentFlexibleRules.length === 0) {
+                        showMessage('feeCodeMessage', 'Vui lòng thêm ít nhất một quy tắc cho cách tính phí linh hoạt.', 'error');
+                        return;
+                    }
+                    feeDetails = { rules: [...currentFlexibleRules] }; // Copy current rules
+                    break;
+                case 'Combined':
+                    const selectedCombinedFeeCodeIds = Array.from(document.getElementById('combinedFeeCodes').selectedOptions).map(option => option.value);
+                    const combinedDescription = document.getElementById('combinedDescription').value;
+                    if (selectedCombinedFeeCodeIds.length === 0) {
+                        showMessage('feeCodeMessage', 'Vui lòng chọn ít nhất một mã phí để kết hợp.', 'error');
+                        return;
+                    }
+                    feeDetails = { combinedFeeCodeIds, combinedDescription };
+                    break;
+            }
+
+            const newFeeCode = {
+                id: feeCodeId, // Using the user-provided feeCodeId as the unique ID
+                code: feeCodeId,
+                name: feeCodeName,
+                productCategory: feeCodeProductCategory,
+                method: feeMethod,
+                type: feeType,
+                details: feeDetails
+            };
+
+            definedFeeCodes.push(newFeeCode);
+            
+            productHistoryLog.push({
+                timestamp: new Date().toLocaleString('vi-VN'),
+                action: `Thêm mã phí: ${newFeeCode.name} (Mã: ${newFeeCode.code}, Cách tính: ${newFeeCode.method}, Loại: ${newFeeCode.type})`,
+                details: newFeeCode
+            });
+
+            updateDefinedFeeCodesList();
+            updateFeeCodeHistory();
+            populateDropdowns(); // Update dropdowns that might use fee codes (e.g., combined fee codes)
+
+            // Clear form fields after adding
+            document.getElementById('feeCodeId').value = '';
+            document.getElementById('feeCodeName').value = '';
+            document.getElementById('feeCodeProductCategory').value = '';
+            document.getElementById('feeMethod').value = 'Fixed'; // Reset to default
+            document.getElementById('feeType').value = 'Periodic'; // Reset to default
+            updateFeeMethodFormVisibility(); // Hide all forms again
+            currentTiers = []; // Clear temporary tiers
+            currentFlexibleRules = []; // Clear temporary flexible rules
+            updateTierList(); // Clear tier display
+            updateFlexibleRuleList(); // Clear flexible rule display
+            document.getElementById('combinedDescription').value = '';
+            document.getElementById('combinedFeeCodes').selectedIndex = -1;
+
+
+            showMessage('feeCodeMessage', `Đã thêm mã phí: <strong>${feeCodeName} (${feeCodeId})</strong> thành công!`, 'success');
+        }
+
+        function updateDefinedFeeCodesList() {
+            const definedFeeCodesListUl = document.getElementById('definedFeeCodesList');
+            definedFeeCodesListUl.innerHTML = '';
+            if (definedFeeCodes.length === 0) {
+                definedFeeCodesListUl.innerHTML = '<li>Chưa có mã phí nào được khai báo.</li>';
+                return;
+            }
+            definedFeeCodes.forEach(feeCode => {
+                const li = document.createElement('li');
+                let detailsHtml = '';
+                switch (feeCode.method) {
+                    case 'Fixed':
+                        detailsHtml = `Mức phí: ${feeCode.details.fixedAmount.toLocaleString('vi-VN')} VND`;
+                        break;
+                    case 'Percentage':
+                        detailsHtml = `Tỷ lệ: ${feeCode.details.percentageRate}% | Min: ${feeCode.details.minFeePercentage.toLocaleString('vi-VN')} VND | Max: ${feeCode.details.maxFeePercentage.toLocaleString('vi-VN')} VND | Cơ sở: ${feeCode.details.basisForCalculation}`;
+                        break;
+                    case 'Tiered':
+                        detailsHtml = `Loại bậc: ${feeCode.details.tierType} | Bậc: ${feeCode.details.tiers.map(t => `${t.minThreshold}-${t.maxThreshold} (${t.tierFeeAmount.toLocaleString('vi-VN')} VND)`).join('; ')}`;
+                        break;
+                    case 'Flexible':
+                        detailsHtml = `Quy tắc: ${feeCode.details.rules.map(r => `${r.criteriaType}="${r.criteriaValue}" (${r.flexibleFeeAmount.toLocaleString('vi-VN')} VND)`).join('; ')}`;
+                        break;
+                    case 'Combined':
+                        const combinedNames = feeCode.details.combinedFeeCodeIds.map(id => {
+                            const found = definedFeeCodes.find(fc => fc.id === id);
+                            return found ? found.name : id;
+                        }).join(', ');
+                        detailsHtml = `Kết hợp các mã: [${combinedNames}] | Mô tả: ${feeCode.details.combinedDescription}`;
+                        break;
+                }
+                li.innerHTML = `<strong>${feeCode.code} - ${feeCode.name}</strong> (Danh mục: ${feeCode.productCategory || 'N/A'})<br>
+                                <em>Cách tính: ${feeCode.method} | Loại phí: ${feeCode.type} | Chi tiết: ${detailsHtml}</em>`;
+                definedFeeCodesListUl.appendChild(li);
+            });
+        }
+
+        function updateFeeCodeHistory() {
+            const feeCodeHistoryUl = document.getElementById('feeCodeHistory');
+            feeCodeHistoryUl.innerHTML = '';
+            // Filter productHistoryLog for fee code related actions
+            const feeCodeLogs = productHistoryLog.filter(log => log.action.includes('Thêm mã phí'));
+            if (feeCodeLogs.length === 0) {
+                feeCodeHistoryUl.innerHTML = '<li>Chưa có lịch sử thay đổi mã phí.</li>';
+                return;
+            }
+            feeCodeLogs.forEach(log => {
+                const li = document.createElement('li');
+                li.textContent = `${log.timestamp}: ${log.action}`;
+                feeCodeHistoryUl.appendChild(li);
+            });
+        }
+
+
+        function updatePackageForPolicySelect() {
+            const packageForPolicySelect = document.getElementById('policyPackageSelect'); // Corrected ID
+            packageForPolicySelect.innerHTML = '';
+            if (packages.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Chưa có gói sản phẩm';
+                packageForPolicySelect.appendChild(option);
+                packageForPolicySelect.disabled = true;
+            } else {
+                packageForPolicySelect.disabled = false;
+                packages.forEach((pkg, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = pkg.name;
+                    packageForPolicySelect.appendChild(option);
+                });
+            }
+        }
+
+        function addFeePolicy() {
+            const selectedPackageIndex = document.getElementById('policyPackageSelect').value;
+            const customerSegment = document.getElementById('policyCustomerSegment').value;
+            const businessSector = document.getElementById('policyBusinessSector').value;
+            const avgBalance = parseFloat(document.getElementById('policyAvgBalance').value);
+            const serviceUsage = document.getElementById('policyServiceUsage').value;
+            const feeAmount = parseFloat(document.getElementById('policyFeeAmount').value);
+            const discountRate = parseFloat(document.getElementById('policyDiscountRate').value);
+            const policyStartDate = document.getElementById('policyStartDate').value;
+            const policyEndDate = document.getElementById('policyEndDate').value;
+
+            if (selectedPackageIndex === '' || isNaN(feeAmount) || isNaN(discountRate) || !policyStartDate || !policyEndDate) {
+                showMessage('feePolicyMessage', 'Vui lòng điền đầy đủ thông tin chính sách phí (Gói, Mức phí/Ưu đãi, Thời gian).', 'error');
+                return;
+            }
+
+            const selectedPackage = packages[parseInt(selectedPackageIndex)];
+            const newPolicy = {
+                id: Date.now(),
+                packageName: selectedPackage.name,
+                packageId: selectedPackage.id,
+                customerSegment: customerSegment || 'Tất cả',
+                businessSector: businessSector || 'Tất cả',
+                avgBalance: avgBalance,
+                serviceUsage: serviceUsage || 'Không yêu cầu',
+                feeAmount: feeAmount,
+                discountRate: discountRate,
+                startDate: policyStartDate,
+                endDate: policyEndDate
+            };
+            feePolicies.push(newPolicy);
+
+            productHistoryLog.push({
+                timestamp: new Date().toLocaleString('vi-VN'),
+                action: `Thêm chính sách phí cho gói '${newPolicy.packageName}' (ID: ${newPolicy.id})`,
+                details: newPolicy
+            });
+            updateProductHistory();
+            updateFeePolicyList();
+            updateFeePolicyHistory(); // Call to update history display
+
+
+            showMessage('feePolicyMessage', `Đã thêm chính sách phí cho gói <strong>${newPolicy.packageName}</strong> thành công!`, 'success');
+
+            // Clear form fields
+            document.getElementById('policyFeeAmount').value = '0';
+            document.getElementById('policyDiscountRate').value = '0';
+            document.getElementById('policyStartDate').value = '';
+            document.getElementById('policyEndDate').value = '';
+            document.getElementById('policyCustomerSegment').value = '';
+            document.getElementById('policyBusinessSector').value = '';
+            document.getElementById('policyAvgBalance').value = '0';
+            document.getElementById('policyServiceUsage').value = '';
+        }
+
+        function updateFeePolicyList() {
+            const feePolicyListUl = document.getElementById('feePolicyList');
+            feePolicyListUl.innerHTML = '';
+            if (feePolicies.length === 0) {
+                feePolicyListUl.innerHTML = '<li>Chưa có chính sách phí nào được thêm.</li>';
+                return;
+            }
+            feePolicies.forEach(policy => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>Gói: ${policy.packageName}</strong> (ID: ${policy.id})<br>
+                                <em>KH: ${policy.customerSegment} | Ngành nghề: ${policy.businessSector} | Số dư BQ >= ${policy.avgBalance.toLocaleString('vi-VN')} tỷ VND</em><br>
+                                <em>SPDV khác: ${policy.serviceUsage}</em><br>
+                                <em>Mức phí: ${policy.feeAmount.toLocaleString('vi-VN')} VND | Ưu đãi: ${policy.discountRate}%</em><br>
+                                <em>Hiệu lực: ${policy.startDate} đến ${policy.endDate}</em>`;
+                feePolicyListUl.appendChild(li);
+            });
+        }
+
+        function updateFeePolicyHistory() {
+            const feePolicyHistoryUl = document.getElementById('feePolicyHistory');
+            feePolicyHistoryUl.innerHTML = '';
+            // Filter productHistoryLog for fee policy related actions
+            const policyLogs = productHistoryLog.filter(log => log.action.includes('chính sách phí'));
+            if (policyLogs.length === 0) {
+                feePolicyHistoryUl.innerHTML = '<li>Chưa có lịch sử thay đổi chính sách phí.</li>';
+                return;
+            }
+            policyLogs.forEach(log => {
+                const li = document.createElement('li');
+                li.textContent = `${log.timestamp}: ${log.action}`;
+                feePolicyHistoryUl.appendChild(li);
+            });
+        }
+
+        function applyFeePolicy() {
+            // This function is now redundant as addFeePolicy handles the "application"
+            // Keeping it for consistency with previous structure, but its logic is now simple.
+            showMessage('feePolicyMessage', 'Sử dụng "Thêm chính sách phí" để định nghĩa chính sách mới.', 'info');
+        }
+
+        function applyCustomerDiscount() {
+            const customerDiscount = parseFloat(document.getElementById('customerDiscount').value);
+            if (!isNaN(customerDiscount) && customerDiscount >= 0 && customerDiscount <= 100) {
+                showMessage('customerDiscountMessage', `Đã áp dụng mức miễn giảm <strong>${customerDiscount}%</strong> cho khách hàng.`, 'success');
+            } else {
+                showMessage('customerDiscountMessage', 'Vui lòng nhập mức miễn giảm hợp lệ (0-100%).', 'error');
+            }
+        }
+
+        // 3. Thu phí và quản lý số phí sản phẩm, dịch vụ
+        function simulateAutoCollectFee() {
+            const feeAmount = Math.floor(Math.random() * 50000) + 10000; // Random fee between 10,000 and 60,000 VND
+            collectedFee += feeAmount;
+            document.getElementById('totalCollectedFee').textContent = collectedFee.toLocaleString('vi-VN') + ' VND';
+            showMessage('autoCollectMessage', `Đã thu tự động ${feeAmount.toLocaleString('vi-VN')} VND.`, 'success');
+        }
+
+        function manualCollectFee() {
+            const manualAmount = parseFloat(document.getElementById('manualFeeAmount').value);
+            if (!isNaN(manualAmount) && manualAmount > 0) {
+                collectedFee += manualAmount;
+                document.getElementById('totalCollectedFee').textContent = collectedFee.toLocaleString('vi-VN') + ' VND';
+                showMessage('manualCollectMessage', `Đã thu thủ công ${manualAmount.toLocaleString('vi-VN')} VND.`, 'success');
+            } else {
+                showMessage('manualCollectMessage', 'Vui lòng nhập số tiền thu thủ công hợp lệ.', 'error');
+            }
+        }
+
+        function simulateAccrual() {
+            showMessage('accrualMessage', 'Đang mô phỏng quá trình dự thu/dự chi và phân bổ phí...', 'info');
+            setTimeout(() => {
+                showMessage('accrualMessage', 'Mô phỏng dự thu/dự chi hoàn tất. Dữ liệu đã được cập nhật.', 'success');
+            }, 1000);
+        }
+
+        function simulateFeeAllocation() {
+            showMessage('feeAllocationMessage', 'Đang mô phỏng quá trình phân bổ phí theo sản phẩm/gói sản phẩm...', 'info');
+            setTimeout(() => {
+                showMessage('feeAllocationMessage', 'Mô phỏng phân bổ phí hoàn tất. Phí đã được phân bổ.', 'success');
+            }, 1000);
+        }
+
+        // 4. Báo cáo
+        function generateProductReport() {
+            showMessage('productReportMessage', 'Đang tạo báo cáo về sản phẩm và dịch vụ. Vui lòng chờ...', 'info');
+            setTimeout(() => {
+                showMessage('productReportMessage', 'Báo cáo sản phẩm và dịch vụ đã được tạo thành công!', 'success');
+            }, 1500);
+        }
+
+        function generateFeeReport() {
+            showMessage('feeReportMessage', 'Đang tạo báo cáo về phí. Vui lòng chờ...', 'info');
+            setTimeout(() => {
+                showMessage('feeReportMessage', 'Báo cáo phí đã được tạo thành công!', 'success');
+            }, 1500);
+        }
+
+        // 7. Quản lý dữ liệu (Local Storage)
+        function saveDataToLocalStorage() {
+            try {
+                localStorage.setItem('feeEngineProducts', JSON.stringify(products));
+                localStorage.setItem('feeEnginePackages', JSON.stringify(packages));
+                localStorage.setItem('feeEngineCollectedFee', collectedFee.toString());
+                localStorage.setItem('feeEngineProductHistory', JSON.stringify(productHistoryLog)); // Save history
+                localStorage.setItem('feeEngineCustomerRegistrations', JSON.stringify(customerPackageRegistrations)); // Save customer registrations
+                localStorage.setItem('feeEngineFeePolicies', JSON.stringify(feePolicies)); // Save fee policies
+                localStorage.setItem('feeEngineDefinedFeeCodes', JSON.stringify(definedFeeCodes)); // Save defined fee codes
+                showMessage('localStorageMessage', 'Dữ liệu đã được lưu vào Local Storage thành công!', 'success');
+            } catch (e) {
+                showMessage('localStorageMessage', `Lỗi khi lưu dữ liệu: ${e.message}`, 'error');
+                console.error("Error saving to local storage:", e);
+            }
+        }
+
+        function loadDataFromLocalStorage() {
+            try {
+                const storedProducts = localStorage.getItem('feeEngineProducts');
+                const storedPackages = localStorage.getItem('feeEnginePackages');
+                const storedCollectedFee = localStorage.getItem('feeEngineCollectedFee');
+                const storedProductHistory = localStorage.getItem('feeEngineProductHistory'); // Load history
+                const storedCustomerRegistrations = localStorage.getItem('feeEngineCustomerRegistrations'); // Load customer registrations
+                const storedFeePolicies = localStorage.getItem('feeEngineFeePolicies'); // Load fee policies
+                const storedDefinedFeeCodes = localStorage.getItem('feeEngineDefinedFeeCodes'); // Load defined fee codes
+
+                if (storedProducts) {
+                    products = JSON.parse(storedProducts);
+                    updateProductList();
+                } else {
+                    products = [];
+                }
+
+                if (storedPackages) {
+                    packages = JSON.parse(storedPackages);
+                    updatePackageList();
+                } else {
+                    packages = [];
+                }
+
+                if (storedCollectedFee) {
+                    collectedFee = parseFloat(storedCollectedFee);
+                    document.getElementById('totalCollectedFee').textContent = collectedFee.toLocaleString('vi-VN') + ' VND';
+                } else {
+                    collectedFee = 0;
+                    document.getElementById('totalCollectedFee').textContent = '0 VND';
+                }
+
+                if (storedProductHistory) {
+                    productHistoryLog = JSON.parse(storedProductHistory);
+                    updateProductHistory();
+                } else {
+                    productHistoryLog = [];
+                }
+
+                if (storedCustomerRegistrations) {
+                    customerPackageRegistrations = JSON.parse(storedCustomerRegistrations);
+                    updateCustomerPackagesList();
+                } else {
+                    customerPackageRegistrations = [];
+                }
+
+                if (storedFeePolicies) {
+                    feePolicies = JSON.parse(storedFeePolicies);
+                    updateFeePolicyList();
+                } else {
+                    feePolicies = [];
+                }
+
+                if (storedDefinedFeeCodes) {
+                    definedFeeCodes = JSON.parse(storedDefinedFeeCodes);
+                    updateDefinedFeeCodesList(); // Update the list of defined fee codes
+                } else {
+                    definedFeeCodes = [];
+                }
+
+
+                if (storedProducts || storedPackages || storedCollectedFee || storedProductHistory || storedCustomerRegistrations || storedFeePolicies || storedDefinedFeeCodes) {
+                    showMessage('localStorageMessage', 'Dữ liệu đã được tải từ Local Storage thành công!', 'success');
+                } else {
+                    showMessage('localStorageMessage', 'Không tìm thấy dữ liệu trong Local Storage. Đã khởi tạo dữ liệu trống.', 'info');
+                }
+            } catch (e) {
+                showMessage('localStorageMessage', `Lỗi khi tải dữ liệu: ${e.message}`, 'error');
+                console.error("Error loading from local storage:", e);
+            }
+        }
+
+        function clearLocalStorage() {
+            if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu demo đã lưu trong Local Storage không?')) {
+                localStorage.removeItem('feeEngineProducts');
+                localStorage.removeItem('feeEnginePackages');
+                localStorage.removeItem('feeEngineCollectedFee');
+                localStorage.removeItem('feeEngineProductHistory'); // Clear history
+                localStorage.removeItem('feeEngineCustomerRegistrations'); // Clear customer registrations
+                localStorage.removeItem('feeEngineFeePolicies'); // Clear fee policies
+                localStorage.removeItem('feeEngineDefinedFeeCodes'); // Clear defined fee codes
+                products = [];
+                packages = [];
+                collectedFee = 0;
+                productHistoryLog = []; // Reset history
+                customerPackageRegistrations = []; // Reset customer registrations
+                feePolicies = []; // Reset fee policies
+                definedFeeCodes = []; // Reset defined fee codes
+                updateProductList();
+                updatePackageList();
+                updateProductHistory(); // Clear history display
+                updateCustomerPackagesList(); // Clear customer packages display
+                updateFeePolicyList(); // Clear fee policy display
+                updateDefinedFeeCodesList(); // Clear defined fee codes display
+                document.getElementById('totalCollectedFee').textContent = '0 VND';
+                showMessage('localStorageMessage', 'Dữ liệu đã được xóa khỏi Local Storage!', 'success');
+            }
+        }
+
+        // Load data when the page loads
+        window.onload = function() {
+            populateDropdowns(); // Populate dropdowns first
+            loadDataFromLocalStorage();
+            // If no data was loaded from local storage, set some initial demo products
+            if (products.length === 0 && packages.length === 0 && feePolicies.length === 0 && definedFeeCodes.length === 0) { // Check all to avoid double-populating
+                setDemoProductData();
+            }
+            // Set initial descriptions for fee methods and types
+            updateFeeMethodFormVisibility(); // Call this to set initial form visibility and description
+            updateFeeTypeDescription();
+        };
+
+
+        // --- Original Fee Calculation Logic (remains the same) ---
+        function calculateFee() {
+            // Lấy giá trị từ các trường nhập liệu
+            const orgName = document.getElementById('orgName').value;
+            const cif = document.getElementById('cif').value;
+            const businessSector = document.getElementById('businessSector').value;
+            const customerSegment = document.getElementById('customerSegment').value;
+            const accountingSoftware = document.getElementById('accountingSoftware').value;
+            const serviceStatus = document.getElementById('serviceStatus').value;
+            const tntBase = parseFloat(document.getElementById('tntBase').value);
+
+            const loanOutstanding = parseFloat(document.getElementById('loanOutstanding').value);
+            const loanOutstandingUSD = parseFloat(document.getElementById('loanOutstandingUSD').value);
+            const averageLoanOutstanding = parseFloat(document.getElementById('averageLoanOutstanding').value);
+            const averageLoanOutstandingUSD = parseFloat(document.getElementById('averageLoanOutstandingUSD').value);
+            const disbursementVolume = parseFloat(document.getElementById('disbursementVolume').value);
+            const debtCollectionVolume = parseFloat(document.getElementById('debtCollectionVolume').value);
+
+            const guaranteeOutstanding = parseFloat(document.getElementById('guaranteeOutstanding').value);
+            const avgGuaranteeOutstanding = parseFloat(document.getElementById('avgGuaranteeOutstanding').value);
+            const guaranteeIssuanceVolume = parseFloat(document.getElementById('guaranteeIssuanceVolume').value);
+
+            const lcOutstanding = parseFloat(document.getElementById('lcOutstanding').value);
+            const avgLcOutstanding = parseFloat(document.getElementById('avgLcOutstanding').value);
+            const lcIssuanceVolume = parseFloat(document.getElementById('lcIssuanceVolume').value);
+            const tttmService = document.getElementById('tttmService').value;
+            const tttmVolume = parseFloat(document.getElementById('tttmVolume').value);
+            const tttmFee = parseFloat(document.getElementById('tttmFee').value);
+
+            const depositOutstanding = parseFloat(document.getElementById('depositOutstanding').value);
+            const avgDepositOutstanding = parseFloat(document.getElementById('avgDepositOutstanding').value);
+            const inflowVolume = parseFloat(document.getElementById('inflowVolume').value);
+            const outflowVolume = parseFloat(document.getElementById('outflowVolume').value);
+            const avgDepositAccountBalance = parseFloat(document.getElementById('avgDepositAccountBalance').value);
+
+            const fxTradingVolume = parseFloat(document.getElementById('fxTradingVolume').value);
+            const epayTransactions = parseFloat(document.getElementById('epayTransactions').value);
+            const epayVolume = parseFloat(document.getElementById('epayVolume').value);
+
+            const tenderValue = parseFloat(document.getElementById('tenderValue').value);
+            const importExportValue = parseFloat(document.getElementById('importExportValue').value);
+
+
+            // Hiển thị các giá trị đã nhập vào phần kết quả
+            document.getElementById('resOrgName').textContent = orgName;
+            document.getElementById('resCif').textContent = cif;
+            document.getElementById('resBusinessSector').textContent = businessSector;
+            document.getElementById('resCustomerSegment').textContent = customerSegment;
+            document.getElementById('resAccountingSoftware').textContent = accountingSoftware;
+            document.getElementById('resServiceStatus').textContent = serviceStatus;
+            document.getElementById('resTntBase').textContent = tntBase.toLocaleString('vi-VN');
+
+            document.getElementById('resLoanOutstanding').textContent = loanOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resLoanOutstandingUSD').textContent = loanOutstandingUSD.toLocaleString('en-US');
+            document.getElementById('resAverageLoanOutstanding').textContent = averageLoanOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resAverageLoanOutstandingUSD').textContent = averageLoanOutstandingUSD.toLocaleString('en-US');
+            document.getElementById('resDisbursementVolume').textContent = disbursementVolume.toLocaleString('vi-VN');
+            document.getElementById('resDebtCollectionVolume').textContent = debtCollectionVolume.toLocaleString('vi-VN');
+
+            document.getElementById('resGuaranteeOutstanding').textContent = guaranteeOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resAvgGuaranteeOutstanding').textContent = avgGuaranteeOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resGuaranteeIssuanceVolume').textContent = guaranteeIssuanceVolume.toLocaleString('vi-VN');
+
+            document.getElementById('resLcOutstanding').textContent = lcOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resAvgLcOutstanding').textContent = avgLcOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resLcIssuanceVolume').textContent = lcIssuanceVolume.toLocaleString('vi-VN');
+            document.getElementById('resTttmService').textContent = tttmService;
+            document.getElementById('resTttmVolume').textContent = tttmVolume.toLocaleString('vi-VN');
+            document.getElementById('resTttmFee').textContent = tttmFee.toLocaleString('vi-VN');
+
+            document.getElementById('resDepositOutstanding').textContent = depositOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resAvgDepositOutstanding').textContent = avgDepositOutstanding.toLocaleString('vi-VN');
+            document.getElementById('resInflowVolume').textContent = inflowVolume.toLocaleString('vi-VN');
+            document.getElementById('resOutflowVolume').textContent = outflowVolume.toLocaleString('vi-VN');
+            document.getElementById('resAvgDepositAccountBalance').textContent = avgDepositAccountBalance.toLocaleString('vi-VN');
+
+            document.getElementById('resFxTradingVolume').textContent = fxTradingVolume.toLocaleString('en-US');
+            document.getElementById('resEpayTransactions').textContent = epayTransactions.toLocaleString('vi-VN');
+            document.getElementById('resEpayVolume').textContent = epayVolume.toLocaleString('vi-VN');
+
+            // Hiển thị các giá trị đã nhập vào phần kết quả
+            document.getElementById('resTenderValue').textContent = tenderValue.toLocaleString('vi-VN');
+            document.getElementById('resImportExportValue').textContent = importExportValue.toLocaleString('en-US');
+
+            // Logic đề xuất phí (đây là logic demo, cần được tùy chỉnh theo nghiệp vụ thực tế)
+            let feeSuggestion = "Chưa có đề xuất cụ thể. Vui lòng liên hệ chuyên viên.";
+            let score = 0; // Điểm để đánh giá mức độ ưu tiên của khách hàng
+
+            // Tiêu chí đánh giá
+            if (customerSegment.includes("DN LON")) {
+                score += 3; // Khách hàng doanh nghiệp lớn
+            }
+            if (tntBase >= 3) { // TNT cơ sở từ 3 tỷ VND trở lên
+                score += 2;
+            }
+            if (loanOutstanding >= 100 || depositOutstanding >= 100) { // Dư nợ hoặc huy động vốn lớn
+                score += 2;
+            }
+            if (inflowVolume >= 10000 && outflowVolume >= 10000) { // Doanh số tiền về/ra lớn
+                score += 1;
+            }
+            if (tenderValue >= 10 || importExportValue >= 10) { // Tiềm năng trúng thầu/XNK lớn
+                score += 2;
+            }
+            if (serviceStatus === "Active") { // Sử dụng SPDV tích cực
+                score += 1;
+            }
+            if (guaranteeIssuanceVolume > 0 || lcIssuanceVolume > 0) { // Có hoạt động bảo lãnh/TTTM
+                score += 1;
+            }
+            if (epayTransactions > 5000 || fxTradingVolume > 1) { // Sử dụng SPDV khác
+                score += 1;
+            }
+
+            // Đề xuất phí dựa trên điểm
+            if (score >= 10) {
+                feeSuggestion = "Đề xuất gói phí **VIP Platinum** với các ưu đãi vượt trội cho toàn bộ SPDV, miễn/giảm phí giao dịch lớn, và chính sách chăm sóc đặc biệt.";
+            } else if (score >= 7) {
+                feeSuggestion = "Đề xuất gói phí **Ưu đãi Doanh nghiệp Cao cấp**, áp dụng mức phí cạnh tranh cho các giao dịch tín dụng, TTTM và chuyển tiền, cùng các quyền lợi ưu tiên.";
+            } else if (score >= 4) {
+                feeSuggestion = "Đề xuất gói phí **Tiêu chuẩn Doanh nghiệp**, với mức phí hợp lý cho các SPDV chính, có thể xem xét thêm ưu đãi nếu khách hàng sử dụng thêm SPDV tiềm năng.";
+            } else {
+                feeSuggestion = "Đề xuất gói phí **Cơ bản**, khuyến khích khách hàng tăng cường sử dụng SPDV tại BIDV để đủ điều kiện nhận các ưu đãi phí cao hơn trong tương lai.";
+            }
+
+            document.getElementById('feeSuggestion').textContent = feeSuggestion;
+
+            // Hiển thị phần kết quả
+            document.getElementById('results').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
