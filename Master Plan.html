@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Dõi Kế Hoạch Dự Án (Gantt Chart)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS library for Excel import/export -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px; /* Max width for better readability on large screens */
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .input-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .input-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        .input-section input[type="text"],
+        .input-section input[type="date"],
+        .input-section input[type="number"], /* Added for percentage */
+        .input-section textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        .input-section input[type="text"]:focus,
+        .input-section input[type="date"]:focus,
+        .input-section input[type="number"]:focus, /* Added for percentage */
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        .input-section textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+        }
+        .input-section button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .input-section button.add-task {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .input-section button.add-task:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+        .input-section button.clear-all {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .input-section button.clear-all:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .task-list {
+            margin-top: 30px;
+        }
+        .task-item {
+            background-color: #ecf0f1;
+            border: 1px solid #dcdcdc;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column; /* Stack details and actions on small screens */
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .task-item:hover {
+            transform: translateY(-2px);
+        }
+        .task-item.completed {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .task-item .task-details {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            color: #34495e;
+        }
+        .task-item .task-details strong {
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        .task-item .task-details small {
+            color: #7f8c8d;
+        }
+        .task-item .task-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .task-item .task-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .task-item .task-actions button.edit {
+            background-color: #f39c12;
+            color: white;
+        }
+        .task-item .task-actions button.edit:hover {
+            background-color: #e67e22;
+        }
+        .task-item .task-actions button.toggle-complete {
+            background-color: #3498db;
+            color: white;
+        }
+        .task-item .task-actions button.toggle-complete:hover {
+            background-color: #2980b9;
+        }
+        .task-item .task-actions button.delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .task-item .task-actions button.delete:hover {
+            background-color: #c0392b;
+        }
+        .task-item button.add-subtask {
+            background-color: #6c757d;
+            color: white;
+        }
+        .task-item button.add-subtask:hover {
+            background-color: #5a6268;
+        }
+
+        /* Subtask specific styling */
+        .subtask-item {
+            background-color: #f8f9fa;
+            border: 1px dashed #e0e0e0;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .subtask-item.completed {
+            background-color: #e2f0d9;
+            border-color: #d0e7c9;
+        }
+        .subtask-item .task-details strong {
+            font-size: 1rem;
+        }
+        .subtask-input-form {
+            background-color: #f0f8ff;
+            border: 1px solid #cceeff;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 10px;
+        }
+        .subtask-input-form.active {
+            display: flex;
+        }
+        .subtask-input-form input[type="text"],
+        .subtask-input-form input[type="date"],
+        .subtask-input-form textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #aaddff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        .subtask-input-form button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .subtask-input-form button.add {
+            background-color: #3498db;
+            color: white;
+        }
+        .subtask-input-form button.add:hover {
+            background-color: #2980b9;
+        }
+        .subtask-input-form button.cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .subtask-input-form button.cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+
+        /* Gantt Chart Styling */
+        .gantt-chart {
+            margin-top: 30px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fdfdfd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .gantt-timeline-wrapper {
+            position: relative;
+            overflow-x: auto; /* This will handle the scrolling for the entire chart */
+            padding-top: 10px; /* Space for headers */
+        }
+
+        .gantt-months-header,
+        .gantt-days-header {
+            display: flex;
+            position: sticky; /* Make headers sticky */
+            top: 0;
+            background-color: #fdfdfd; /* Match chart background */
+            z-index: 5; /* Ensure headers are above bars when scrolling */
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 5px;
+            padding-left: 180px; 
+        }
+
+        .gantt-month-label {
+            text-align: center;
+            font-weight: 600;
+            color: #34495e;
+            border-right: 1px solid #eee; /* Separator for months */
+            box-sizing: border-box;
+            padding: 5px 0;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .gantt-day-label {
+            text-align: center;
+            padding-left: 0;
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            flex-shrink: 0; /* Prevent shrinking */
+            box-sizing: border-box;
+            border-right: 1px solid #f0f0f0; /* Lighter separator for days */
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+
+        #ganttChartContent {
+            /* This will contain the actual task rows */
+            padding-top: 10px; /* Space below day header */
+        }
+
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .gantt-task-name {
+            width: 180px; /* Fixed width for task names */
+            flex-shrink: 0;
+            font-weight: 600;
+            padding-right: 15px;
+            color: #2c3e50;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* Indentation for subtask names in Gantt chart */
+        .gantt-task-name[data-level="2"] { padding-left: 20px; }
+        .gantt-task-name[data-level="3"] { padding-left: 40px; }
+        .gantt-task-name[data-level="4"] { padding-left: 60px; }
+        .gantt-task-name[data-level="5"] { padding-left: 80px; }
+        .gantt-task-name[data-level="6"] { padding-left: 100px; } /* New level 6 */
+        .gantt-task-name[data-level="7"] { padding-left: 120px; } /* New level 7 */
+
+
+        .gantt-bar-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            height: 25px; /* Height of the Gantt bars */
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            position: relative; /* For tooltip positioning */
+        }
+        .gantt-bar {
+            height: 100%;
+            background-color: #3498db; /* Default bar color */
+            border-radius: 4px;
+            position: absolute; /* Position bars absolutely within container */
+            transition: background-color 0.3s ease;
+            display: flex; /* To center percentage text */
+            align-items: center;
+            justify-content: flex-end; /* Align percentage text to the right */
+            overflow: hidden; /* Hide overflow for progress fill */
+        }
+        .gantt-bar.completed {
+            background-color: #2ecc71; /* Completed bar color */
+        }
+        /* Different bar colors for different levels (optional, could be more subtle) */
+        .gantt-bar[data-level="2"] { background-color: #9b59b6; height: 20px; top: 50%; transform: translateY(-50%); }
+        .gantt-bar[data-level="3"] { background-color: #e67e22; height: 18px; top: 50%; transform: translateY(-50%); }
+        .gantt-bar[data-level="4"] { background-color: #f1c40f; height: 16px; top: 50%; transform: translateY(-50%); }
+        .gantt-bar[data-level="5"] { background-color: #e74c3c; height: 14px; top: 50%; transform: translateY(-50%); }
+        .gantt-bar[data-level="6"] { background-color: #1abc9c; height: 12px; top: 50%; transform: translateY(-50%); } /* New level 6 color */
+        .gantt-bar[data-level="7"] { background-color: #34495e; height: 10px; top: 50%; transform: translateY(-50%); } /* New level 7 color */
+
+        /* Progress fill inside the bar */
+        .gantt-progress-fill {
+            height: 100%;
+            background-color: rgba(46, 204, 113, 0.7); /* A semi-transparent green for progress */
+            border-radius: 4px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.3s ease;
+            z-index: 1; /* Below the percentage text */
+        }
+        .gantt-bar.completed .gantt-progress-fill {
+            background-color: #2ecc71; /* Solid green if fully completed */
+            width: 100% !important; /* Ensure it's full width if marked completed */
+        }
+
+        /* Percentage text on the bar */
+        .gantt-percentage-text {
+            position: relative; /* Relative to its parent .gantt-bar */
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 2; /* Above the fill */
+            padding-right: 5px; /* Spacing from the right edge */
+        }
+
+        /* Milestone specific styling */
+        .gantt-milestone {
+            background-color: #f39c12; /* Orange for milestones */
+            width: 25px; /* Fixed width for diamond */
+            height: 25px; /* Fixed height for diamond */
+            border-radius: 0; /* No border-radius for diamond */
+            transform: rotate(45deg); /* Rotate to form diamond */
+            position: absolute;
+            left: 0; /* Will be adjusted by JS */
+            top: 50%; /* Center vertically */
+            margin-left: -12.5px; /* Adjust for half width to center on the day */
+            margin-top: -12.5px; /* Adjust for half height to center on the day */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Add shadow for pop-out effect */
+        }
+
+        .gantt-milestone.completed {
+            background-color: #2ecc71; /* Green if completed */
+        }
+
+        .gantt-milestone .gantt-percentage-text,
+        .gantt-milestone .gantt-progress-fill {
+            display: none; /* Hide percentage and progress for milestones */
+        }
+
+        .gantt-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            display: none;
+            z-index: 10;
+            bottom: calc(100% + 8px); /* Position above the bar with some spacing */
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none; /* Allow interaction with elements below */
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .gantt-bar:hover .gantt-tooltip,
+        .gantt-milestone:hover .gantt-tooltip { /* Add milestone hover */
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px); /* Slight lift on hover */
+        }
+
+        /* Add today's marker */
+        .today-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px; /* Line width */
+            background-color: #e74c3c; /* Red color for today */
+            z-index: 6; /* Above bars, below tooltips */
+            pointer-events: none; /* Don't block clicks */
+        }
+
+        /* Zoom control styling */
+        .zoom-control {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background-color: #f0f4f7;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .zoom-control label {
+            font-weight: 600;
+            color: #34495e;
+        }
+        .zoom-control input[type="range"] {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+        .zoom-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .zoom-control input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .task-item {
+                flex-direction: row; /* Row layout on larger screens */
+                justify-content: space-between;
+                align-items: center;
+            }
+            .task-item .task-actions {
+                flex-wrap: nowrap; /* Prevent buttons from wrapping on larger screens */
+            }
+            .subtask-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        /* Custom Modal Styles */
+        .custom-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .custom-modal-content {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .custom-modal-content h3 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .custom-modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        .custom-modal-content input[type="text"],
+        .custom-modal-content input[type="date"],
+        .custom-modal-content input[type="number"], /* Added for percentage */
+        .custom-modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .custom-modal-content .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .custom-modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .custom-modal-content button.confirm {
+            background-color: #3498db;
+            color: white;
+        }
+        .custom-modal-content button.confirm:hover {
+            background-color: #2980b9;
+        }
+        .custom-modal-content button.cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .custom-modal-content button.cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* New styles for collapsible sections */
+        .collapsible-section {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            overflow: hidden; /* Ensures content is hidden when collapsed */
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: #e9ecef;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #34495e;
+            border-radius: 12px 12px 0 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .section-header:hover {
+            background-color: #dfe4e8;
+        }
+
+        .toggle-arrow {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .section-content {
+            padding: 20px 25px;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            max-height: 1000px; /* Arbitrarily large value for expanded state */
+            opacity: 1;
+            overflow-y: auto; /* Added for scroll functionality */
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            visibility: hidden; /* Hide completely when collapsed */
+        }
+
+        /* Table specific styles for input */
+        #taskInputTable th, #taskInputTable td {
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            text-align: left;
+        }
+        #taskInputTable thead th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+        }
+        #taskInputTable input, #taskInputTable textarea, #taskInputTable select {
+            border: 1px solid #dcdcdc;
+            border-radius: 4px;
+            padding: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #taskInputTable select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.9%204.9-4.7%2011.6-2.9%2017.7l139.3%20205.2c5.6%208.2%2015.9%2011.8%2025.9%2011.8s20.3-3.6%2025.9-11.8l139.3-205.2c1.7-6.1.9-12.8-2.9-17.7z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 12px;
+            padding-right: 25px;
+        }
+        #taskInputTable button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        #taskInputTable button.save-row {
+            background-color: #34d399; /* Tailwind green-400 */
+            color: white;
+        }
+        #taskInputTable button.save-row:hover {
+            background-color: #10b981; /* Tailwind green-500 */
+        }
+        #taskInputTable button.remove-row {
+            background-color: #ef4444; /* Tailwind red-500 */
+            color: white;
+        }
+        #taskInputTable button.remove-row:hover {
+            background-color: #dc2626; /* Tailwind red-600 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl text-center mb-6">Theo Dõi Kế Hoạch Dự Án</h1>
+
+        <!-- Project Management Section -->
+        <div id="projectManagementSection" class="collapsible-section">
+            <div class="section-header" onclick="toggleSection('projectManagementSection')">
+                <h2>Quản lý Dự án (<span id="currentProjectNameDisplay"></span>)</h2>
+                <span class="toggle-arrow">&#9654;</span>
+            </div>
+            <div class="section-content">
+                <div class="input-section">
+                    <h3 class="text-xl font-semibold mb-4">Tạo / Chọn Dự Án</h3>
+                    <div class="mb-4">
+                        <label for="newProjectName" class="block mb-2">Tên Dự Án Mới:</label>
+                        <input type="text" id="newProjectName" placeholder="Nhập tên dự án mới" class="w-full p-2 border rounded-md">
+                        <button onclick="addNewProject()" class="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-lg mt-2">Tạo Dự Án Mới</button>
+                    </div>
+                    <div class="mb-4">
+                        <label for="projectSelector" class="block mb-2">Chọn Dự Án:</label>
+                        <select id="projectSelector" onchange="selectProject(this.value)" class="w-full p-2 border rounded-md">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <button onclick="deleteCurrentProject()" class="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-lg">Xóa Dự Án Hiện Tại</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input and Task List Section -->
+        <div id="inputSection" class="collapsible-section">
+            <div class="section-header" onclick="toggleSection('inputSection')">
+                <h2>Nhập Liệu & Danh Sách Công Việc</h2>
+                <span class="toggle-arrow">&#9654;</span> <!-- Right arrow -->
+            </div>
+            <div class="section-content">
+                <div class="input-section">
+                    <h2 class="text-2xl">Thêm Công Việc Mới</h2>
+                    <table id="taskInputTable" class="w-full mb-4 border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border text-left">Tên Công Việc</th>
+                                <th class="py-2 px-4 border text-left">Ngày Bắt Đầu</th>
+                                <th class="py-2 px-4 border text-left">Ngày Kết Thúc</th>
+                                <th class="py-2 px-4 border text-left">Mô Tả</th>
+                                <th class="py-2 px-4 border text-left">Cấp Độ</th>
+                                <th class="py-2 px-4 border text-left">Tỷ lệ HT (%)</th>
+                                <th class="py-2 px-4 border text-left">Vị trí chèn (Index)</th>
+                                <th class="py-2 px-4 border text-left">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic rows will be added here by JavaScript -->
+                        </tbody>
+                    </table>
+                    <div class="button-group">
+                        <button onclick="addNewInputRow()" class="add-task">Thêm Dòng Mới</button>
+                        <button onclick="clearAllTasks()" class="clear-all">Xóa Tất Cả Công Việc</button>
+                        <button onclick="exportToExcel()" class="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-lg transition-colors">Xuất Excel</button>
+                        <label for="excelFileInput" class="px-4 py-2 bg-purple-500 text-white rounded-lg cursor-pointer hover:bg-purple-600 transition-colors">Nhập Excel</label>
+                        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="importFromExcel(event)">
+                    </div>
+                </div>
+
+                <div class="task-list">
+                    <h2 class="text-2xl">Danh Sách Công Việc</h2>
+                    <div class="filter-controls mb-4 flex items-center gap-4">
+                        <label for="levelFilter" class="font-semibold text-gray-700">Lọc theo cấp độ:</label>
+                        <select id="levelFilter" class="p-2 border rounded-md" onchange="applyFilter()">
+                            <option value="all">Tất cả</option>
+                            <option value="1">Cấp 1</option>
+                            <option value="2">Cấp 2</option>
+                            <option value="3">Cấp 3</option>
+                            <option value="4">Cấp 4</option>
+                            <option value="5">Cấp 5</option>
+                            <option value="6">Cấp 6</option>
+                            <option value="7">Cấp 7</option>
+                        </select>
+                    </div>
+                    <div id="tasksContainer">
+                        <!-- Tasks will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gantt Chart Section -->
+        <div id="ganttSection" class="collapsible-section">
+            <div class="section-header" onclick="toggleSection('ganttSection')">
+                <h2>Biểu Đồ Gantt</h2>
+                <span class="toggle-arrow">&#9654;</span> <!-- Right arrow -->
+            </div>
+            <div class="section-content">
+                <div class="zoom-control">
+                    <label for="zoomSlider">Phóng to/Thu nhỏ:</label>
+                    <input type="range" id="zoomSlider" min="10" max="100" value="30" step="5">
+                </div>
+                <div class="button-group mt-4 mb-4">
+                    <button onclick="exportGanttToPdf()" class="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-lg transition-colors">Xuất PDF</button>
+                    <button onclick="exportGanttToDoc()" class="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-lg transition-colors">Xuất DOC (HTML)</button>
+                </div>
+
+                <div id="ganttTimelineWrapper" class="gantt-timeline-wrapper">
+                    <div id="ganttMonthsHeader" class="gantt-months-header"></div>
+                    <div id="ganttDaysHeader" class="gantt-days-header"></div>
+                    <div id="ganttChartContent">
+                        <!-- Gantt chart rows will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Key for storing all projects in Local Storage
+        const PROJECTS_STORAGE_KEY = 'allProjectData';
+        // Object to hold all project data, where keys are project names and values are objects containing 'tasks' array
+        let allProjects = {};
+        // Current active project name
+        let currentProjectName = 'Dự Án Mặc Định';
+
+        // Base width for each day, will be scaled by zoom level
+        const BASE_DAY_WIDTH_PX = 30;
+        // Current zoom level, initialized to the slider's default value
+        let currentZoomLevel = 30; // Matches the default value of the slider
+        // Current filter level, 'all' by default
+        let currentFilterLevel = 'all';
+
+        /**
+         * Helper function to get start of day in local time from a date string (YYYY-MM-DD).
+         * This helps prevent timezone issues when calculating date differences.
+         * @param {string|Date} dateInput - The date string or Date object.
+         * @returns {Date} A Date object representing the start of the day in local time.
+         */
+        function getStartOfDay(dateInput) {
+            let date;
+            if (typeof dateInput === 'string') {
+                // Parse as ISO-MM-DD to avoid timezone interpretation issues on some browsers
+                const parts = dateInput.split('-');
+                date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            } else if (dateInput instanceof Date) {
+                date = new Date(dateInput.getFullYear(), dateInput.getMonth(), dateInput.getDate());
+            } else {
+                date = new Date(); // Fallback to current date if input is invalid
+            }
+            date.setHours(0, 0, 0, 0); // Normalize to start of day
+            return date;
+        }
+
+        /**
+         * Renders the Gantt chart based on the current tasks of the selected project.
+         * Calculates the overall project duration to scale the bars.
+         * Creates a visual bar for each task, representing its duration and position.
+         * Includes tooltips for detailed information on hover.
+         */
+        function renderGanttChart() {
+            console.log('--- Starting renderGanttChart ---');
+
+            const ganttChartContainer = document.getElementById('ganttChartContent');
+            const ganttTimelineWrapper = document.getElementById('ganttTimelineWrapper');
+            const ganttMonthsHeader = document.getElementById('ganttMonthsHeader');
+            const ganttDaysHeader = document.getElementById('ganttDaysHeader');
+
+            ganttChartContainer.innerHTML = ''; // Clear existing chart content
+            ganttMonthsHeader.innerHTML = '';
+            ganttDaysHeader.innerHTML = '';
+
+            // Get tasks for the current project
+            const tasks = allProjects[currentProjectName] ? allProjects[currentProjectName].tasks : [];
+
+            // Calculate the actual day width based on the current zoom level
+            const DAY_WIDTH_PX = BASE_DAY_WIDTH_PX * (currentZoomLevel / 30);
+
+            let minDate, maxDate;
+            let allDates = [];
+
+            // Recursive function to collect all dates from tasks and subtasks
+            function collectDatesRecursive(taskList, level) {
+                taskList.forEach(task => {
+                    // Apply filter before collecting dates
+                    if (currentFilterLevel === 'all' || level === parseInt(currentFilterLevel)) {
+                        const taskStartSOD = getStartOfDay(task.startDate);
+                        const taskEndSOD = getStartOfDay(task.endDate);
+                        allDates.push(taskStartSOD.getTime());
+                        allDates.push(taskEndSOD.getTime());
+                    }
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        collectDatesRecursive(task.subtasks, level + 1); // Recurse for subtasks
+                    }
+                });
+            }
+            collectDatesRecursive(tasks, 1); // Start collecting from top-level tasks at level 1
+
+            if (allDates.length === 0) {
+                // If no tasks, set a default timeline range (e.g., current month + next 3 months)
+                const today = getStartOfDay(new Date());
+                minDate = getStartOfDay(new Date(today.getFullYear(), today.getMonth(), 1)); // Start of current month
+                maxDate = getStartOfDay(new Date(today.getFullYear(), today.getMonth() + 3, 0)); // End of 3 months from now
+            } else {
+                // If tasks exist, determine range from tasks directly, with a small buffer
+                const earliestTaskTime = Math.min(...allDates);
+                const latestTaskTime = Math.max(...allDates);
+
+                let tempMinDate = getStartOfDay(new Date(earliestTaskTime));
+                tempMinDate.setDate(tempMinDate.getDate() - 7); // Buffer 7 days before
+                minDate = getStartOfDay(tempMinDate); // Ensure normalized after setDate
+
+                let tempMaxDate = getStartOfDay(new Date(latestTaskTime));
+                tempMaxDate.setDate(tempMaxDate.getDate() + 7); // Buffer 7 days after
+                maxDate = getStartOfDay(tempMaxDate); // Ensure normalized after setDate
+            }
+
+            console.log('Timeline Min Date (calculated):', minDate.toLocaleDateString('vi-VN'));
+            console.log('Timeline Max Date (calculated):', maxDate.toLocaleDateString('vi-VN'));
+            const totalDays = (maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+            console.log('Total Days in Timeline span:', totalDays);
+            const chartContentWidth = totalDays * DAY_WIDTH_PX;
+            console.log('Calculated Chart Content Width:', chartContentWidth);
+
+            // Set the width of the timeline headers and chart content to enable horizontal scrolling
+            ganttMonthsHeader.style.width = `${chartContentWidth}px`;
+            ganttDaysHeader.style.width = `${chartContentWidth}px`;
+            ganttChartContainer.style.width = `${chartContentWidth}px`; // Apply width to the container of rows
+
+            // --- Render Timeline Headers ---
+            let currentMonthForHeader = new Date(minDate.getFullYear(), minDate.getMonth(), 1); // Start from 1st of minDate's month
+            console.log('Rendering month headers from:', currentMonthForHeader.toLocaleDateString('vi-VN'));
+
+            // Calculate initial offset for the first month label if minDate is not the 1st of its month
+            let initialMonthOffsetDays = 0;
+            if (minDate.getDate() !== 1) {
+                initialMonthOffsetDays = (minDate.getTime() - currentMonthForHeader.getTime()) / (1000 * 60 * 60 * 24);
+            }
+            console.log('Initial month header offset days:', initialMonthOffsetDays);
+
+            // Render Months Header
+            while (currentMonthForHeader.getTime() <= maxDate.getTime()) {
+                const nextMonth = new Date(currentMonthForHeader.getFullYear(), currentMonthForHeader.getMonth() + 1, 0);
+                const monthEndForCalculation = getStartOfDay(nextMonth);
+
+                let daysInMonthSegment = 0;
+                let segmentStart = getStartOfDay(new Date(Math.max(currentMonthForHeader.getTime(), minDate.getTime())));
+                let segmentEnd = getStartOfDay(new Date(Math.min(monthEndForCalculation.getTime(), maxDate.getTime())));
+
+                if (segmentStart.getTime() <= segmentEnd.getTime()) {
+                    daysInMonthSegment = (segmentEnd.getTime() - segmentStart.getTime()) / (1000 * 60 * 60 * 24) + 1;
+                }
+                
+                if (daysInMonthSegment > 0) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'gantt-month-label';
+                    monthLabel.textContent = `Tháng ${currentMonthForHeader.getMonth() + 1}/${currentMonthForHeader.getFullYear()}`;
+                    monthLabel.style.width = `${daysInMonthSegment * DAY_WIDTH_PX}px`;
+                    
+                    // Apply offset only to the first month label
+                    if (ganttMonthsHeader.children.length === 0 && initialMonthOffsetDays > 0) {
+                        monthLabel.style.marginLeft = `${initialMonthOffsetDays * DAY_WIDTH_PX}px`;
+                    }
+                    
+                    ganttMonthsHeader.appendChild(monthLabel);
+                }
+
+                currentMonthForHeader.setMonth(currentMonthForHeader.getMonth() + 1);
+                currentMonthForHeader.setDate(1);
+            }
+
+            // Render Days Header
+            let tempDate = new Date(minDate);
+            console.log('Rendering day headers from:', tempDate.toLocaleDateString('vi-VN'));
+            while (tempDate.getTime() <= maxDate.getTime()) {
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'gantt-day-label';
+                dayLabel.textContent = tempDate.getDate(); // Just the day number
+                dayLabel.style.width = `${DAY_WIDTH_PX}px`;
+                ganttDaysHeader.appendChild(dayLabel);
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+
+            // Add Today Marker
+            const today = getStartOfDay(new Date());
+            const todayOffsetDays = (today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+            console.log('Today Marker Date:', today.toLocaleDateString('vi-VN'));
+            console.log('Today Offset Days:', todayOffsetDays);
+
+            // Remove existing today marker if any
+            const existingMarker = ganttTimelineWrapper.querySelector('.today-marker');
+            if (existingMarker) {
+                existingMarker.remove();
+            }
+
+            if (todayOffsetDays >= 0 && todayOffsetDays < totalDays) {
+                const todayMarker = document.createElement('div');
+                todayMarker.className = 'today-marker';
+                todayMarker.style.left = `${todayOffsetDays * DAY_WIDTH_PX}px`;
+                ganttTimelineWrapper.appendChild(todayMarker);
+            }
+
+
+            // --- Render Gantt Bars (only if tasks exist) ---
+            if (tasks.length > 0) {
+                // Recursive function to render Gantt bars for tasks and subtasks
+                function renderGanttBarsRecursive(taskList, level) {
+                    taskList.forEach(task => {
+                        // Apply filter before rendering the bar
+                        if (currentFilterLevel === 'all' || level === parseInt(currentFilterLevel)) {
+                            const taskRow = document.createElement('div');
+                            taskRow.className = 'gantt-row';
+
+                            const taskNameDiv = document.createElement('div');
+                            taskNameDiv.className = 'gantt-task-name';
+                            taskNameDiv.textContent = task.name;
+                            taskNameDiv.setAttribute('data-level', level); // Set data-level for CSS styling
+                            taskNameDiv.style.paddingLeft = `${(level - 1) * 20}px`; // Indent based on level
+                            taskRow.appendChild(taskNameDiv);
+
+                            const barContainer = document.createElement('div');
+                            barContainer.className = 'gantt-bar-container';
+
+                            const taskStartDate = getStartOfDay(task.startDate);
+                            const taskEndDate = getStartOfDay(task.endDate);
+                            const durationDays = (taskEndDate.getTime() - taskStartDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+                            const offsetDays = (taskStartDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                            let bar;
+                            if (durationDays === 1 && taskStartDate.getTime() === taskEndDate.getTime()) {
+                                // This is a milestone
+                                bar = document.createElement('div');
+                                bar.className = `gantt-milestone ${task.completed ? 'completed' : ''}`;
+                                bar.style.left = `${offsetDays * DAY_WIDTH_PX + (DAY_WIDTH_PX / 2)}px`; // Center milestone on the day
+                            } else {
+                                // This is a regular task bar
+                                bar = document.createElement('div');
+                                bar.className = `gantt-bar ${task.completed ? 'completed' : ''}`;
+                                bar.setAttribute('data-level', level); // Set data-level for CSS styling
+                                bar.style.left = `${offsetDays * DAY_WIDTH_PX}px`;
+                                bar.style.width = `${durationDays * DAY_WIDTH_PX}px`;
+
+                                // Add progress fill for regular bars
+                                const progressFill = document.createElement('div');
+                                progressFill.className = 'gantt-progress-fill';
+                                const percentage = Math.max(0, Math.min(100, task.completionPercentage || 0));
+                                progressFill.style.width = `${percentage}%`;
+                                bar.appendChild(progressFill);
+
+                                // Add percentage text for regular bars
+                                const percentageText = document.createElement('span');
+                                percentageText.className = 'gantt-percentage-text';
+                                percentageText.textContent = `${percentage}%`;
+                                bar.appendChild(percentageText);
+                            }
+
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'gantt-tooltip';
+                            tooltip.textContent = `${task.name} (Cấp ${level}, ${task.completionPercentage || 0}% HT): ${task.startDate} - ${task.endDate}`;
+                            bar.appendChild(tooltip);
+
+                            barContainer.appendChild(bar);
+                            taskRow.appendChild(barContainer);
+                            ganttChartContainer.appendChild(taskRow);
+                        }
+
+                        // Recursively render subtasks regardless of current filter, as their parent might be filtered out
+                        // but they might still need to be shown if their level matches the filter
+                        if (task.subtasks && task.subtasks.length > 0) {
+                            renderGanttBarsRecursive(task.subtasks, level + 1);
+                        }
+                    });
+                }
+                renderGanttBarsRecursive(tasks, 1); // Start rendering from level 1
+            } else {
+                // If no tasks, display a message within the chart content area
+                ganttChartContainer.innerHTML = '<p class="text-gray-600 text-center py-4">Thêm công việc để hiển thị biểu đồ Gantt.</p>';
+            }
+            console.log('--- Finished renderGanttChart ---');
+        }
+
+
+        /**
+         * Loads tasks from Local Storage when the page is loaded.
+         * Parses the stored JSON string back into the tasks array.
+         * Renders the task list and the Gantt chart.
+         * Initializes the zoom slider listener.
+         */
+        function loadTasks() {
+            const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
+            if (storedProjects) {
+                allProjects = JSON.parse(storedProjects);
+                // Try to load the last active project, or default to 'Dự Án Mặc Định'
+                const lastProject = localStorage.getItem('lastActiveProject');
+                if (lastProject && allProjects[lastProject]) {
+                    currentProjectName = lastProject;
+                } else if (Object.keys(allProjects).length > 0) {
+                    currentProjectName = Object.keys(allProjects)[0]; // Fallback to first project
+                } else {
+                    // No projects exist, create a default one
+                    allProjects['Dự Án Mặc Định'] = { tasks: [] };
+                    currentProjectName = 'Dự Án Mặc Định';
+                }
+            } else {
+                // No projects exist, create a default one
+                allProjects['Dự Án Mặc Định'] = { tasks: [] };
+                currentProjectName = 'Dự Án Mặc Định';
+            }
+
+            populateProjectDropdown();
+            updateCurrentProjectDisplay();
+            renderTasks();
+            renderGanttChart(); // Initial render
+
+            // Add event listener for the zoom slider
+            const zoomSlider = document.getElementById('zoomSlider');
+            if (zoomSlider) {
+                zoomSlider.value = currentZoomLevel; // Set initial slider position
+                zoomSlider.addEventListener('input', (event) => {
+                    currentZoomLevel = parseInt(event.target.value);
+                    renderGanttChart(); // Re-render chart on zoom change
+                });
+            }
+
+            // Initialize collapsible sections
+            document.querySelectorAll('.collapsible-section').forEach(section => {
+                const header = section.querySelector('.section-header');
+                const content = section.querySelector('.section-content');
+                const arrow = section.querySelector('.toggle-arrow');
+
+                // Set initial state (expanded by default)
+                content.classList.remove('collapsed');
+                arrow.classList.add('rotated'); // Point down initially
+            });
+
+            // Add an initial empty row to the input table for manual entry
+            addNewInputRow();
+        }
+
+        /**
+         * Saves the current projects object to Local Storage.
+         * Also saves the currently active project name.
+         */
+        function saveTasks() {
+            localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(allProjects));
+            localStorage.setItem('lastActiveProject', currentProjectName);
+        }
+
+        /**
+         * Populates the project selection dropdown with available project names.
+         */
+        function populateProjectDropdown() {
+            const projectSelector = document.getElementById('projectSelector');
+            projectSelector.innerHTML = ''; // Clear existing options
+
+            const projectNames = Object.keys(allProjects);
+            if (projectNames.length === 0) {
+                // If no projects, add a disabled default option
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Không có dự án nào';
+                option.disabled = true;
+                projectSelector.appendChild(option);
+                projectSelector.value = '';
+            } else {
+                projectNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    projectSelector.appendChild(option);
+                });
+                projectSelector.value = currentProjectName; // Set selected project
+            }
+        }
+
+        /**
+         * Updates the display of the current project name.
+         */
+        function updateCurrentProjectDisplay() {
+            document.getElementById('currentProjectNameDisplay').textContent = currentProjectName;
+        }
+
+        /**
+         * Adds a new project to the allProjects object.
+         */
+        function addNewProject() {
+            const newProjectNameInput = document.getElementById('newProjectName');
+            const newName = newProjectNameInput.value.trim();
+
+            if (!newName) {
+                showMessageBox('Vui lòng nhập tên dự án mới.');
+                return;
+            }
+            if (allProjects[newName]) {
+                showMessageBox(`Dự án "${newName}" đã tồn tại. Vui lòng chọn tên khác.`);
+                return;
+            }
+
+            allProjects[newName] = { tasks: [] };
+            currentProjectName = newName;
+            saveTasks();
+            populateProjectDropdown();
+            updateCurrentProjectDisplay();
+            renderTasks();
+            renderGanttChart();
+            newProjectNameInput.value = ''; // Clear input field
+            showMessageBox(`Dự án "${newName}" đã được tạo và chọn.`);
+        }
+
+        /**
+         * Switches the active project.
+         * @param {string} projectName - The name of the project to switch to.
+         */
+        function selectProject(projectName) {
+            if (allProjects[projectName]) {
+                currentProjectName = projectName;
+                saveTasks(); // Save the last active project
+                updateCurrentProjectDisplay();
+                renderTasks();
+                renderGanttChart();
+                showMessageBox(`Đã chuyển sang dự án "${projectName}".`);
+            } else {
+                showMessageBox('Dự án không tồn tại.');
+            }
+        }
+
+        /**
+         * Deletes the currently active project.
+         */
+        function deleteCurrentProject() {
+            if (Object.keys(allProjects).length === 1 && currentProjectName === 'Dự Án Mặc Định') {
+                showMessageBox('Không thể xóa dự án mặc định khi không có dự án nào khác.');
+                return;
+            }
+
+            showConfirmBox(`Bạn có chắc chắn muốn xóa dự án "${currentProjectName}" và tất cả công việc của nó? Hành động này không thể hoàn tác.`, () => {
+                delete allProjects[currentProjectName];
+
+                const projectNames = Object.keys(allProjects);
+                if (projectNames.length > 0) {
+                    currentProjectName = projectNames[0]; // Switch to the first available project
+                } else {
+                    // If no projects left, create a new default one
+                    allProjects['Dự Án Mặc Định'] = { tasks: [] };
+                    currentProjectName = 'Dự Án Mặc Định';
+                }
+
+                saveTasks();
+                populateProjectDropdown();
+                updateCurrentProjectDisplay();
+                renderTasks();
+                renderGanttChart();
+                showMessageBox(`Dự án "${currentProjectName}" đã được xóa.`);
+            });
+        }
+
+
+        /**
+         * Adds a new empty row to the task input table.
+         * This row is for adding new TOP-LEVEL tasks.
+         */
+        function addNewInputRow() {
+            const tableBody = document.querySelector('#taskInputTable tbody');
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+                <td class="py-2 px-4 border"><input type="text" placeholder="Tên công việc" class="rounded-lg task-name-input"></td>
+                <td class="py-2 px-4 border"><input type="date" class="rounded-lg task-start-date-input"></td>
+                <td class="py-2 px-4 border"><input type="date" class="rounded-lg task-end-date-input"></td>
+                <td class="py-2 px-4 border"><textarea placeholder="Mô tả" class="rounded-lg task-description-input"></textarea></td>
+                <td class="py-2 px-4 border">
+                    <select class="rounded-lg task-level-input">
+                        <option value="1">Cấp 1</option>
+                        <option value="2">Cấp 2</option>
+                        <option value="3">Cấp 3</option>
+                        <option value="4">Cấp 4</option>
+                        <option value="5">Cấp 5</option>
+                        <option value="6">Cấp 6</option>
+                        <option value="7">Cấp 7</option>
+                    </select>
+                </td>
+                <td class="py-2 px-4 border"><input type="number" min="0" max="100" value="0" class="rounded-lg task-completion-percentage-input"></td>
+                <td class="py-2 px-4 border"><input type="number" min="0" placeholder="Để trống để thêm cuối" class="rounded-lg task-insertion-index-input"></td>
+                <td class="py-2 px-4 border">
+                    <button onclick="saveInputRow(this)" class="save-row">Lưu</button>
+                    <button onclick="removeInputRow(this)" class="remove-row ml-2">Xóa</button>
+                </td>
+            `;
+            // Set default level to 1 for new input rows
+            newRow.querySelector('.task-level-input').value = '1';
+        }
+
+        /**
+         * Saves the data from a specific input row as a new task.
+         * This function is for adding new TOP-LEVEL tasks from the input table.
+         * For adding subtasks, use showAddSubtaskModal.
+         * @param {HTMLElement} buttonElement - The button element that triggered the save.
+         */
+        function saveInputRow(buttonElement) {
+            const row = buttonElement.closest('tr');
+            const nameInput = row.querySelector('.task-name-input');
+            const startDateInput = row.querySelector('.task-start-date-input');
+            const endDateInput = row.querySelector('.task-end-date-input');
+            const descriptionInput = row.querySelector('.task-description-input');
+            const levelInput = row.querySelector('.task-level-input');
+            const completionPercentageInput = row.querySelector('.task-completion-percentage-input');
+            const insertionIndexInput = row.querySelector('.task-insertion-index-input');
+
+            const tasks = allProjects[currentProjectName].tasks; // Get tasks for current project
+
+            const name = nameInput.value.trim();
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const description = descriptionInput.value.trim();
+            const level = parseInt(levelInput.value);
+            let completionPercentage = parseInt(completionPercentageInput.value);
+            const insertionIndex = parseInt(insertionIndexInput.value);
+
+
+            if (!name || !startDate || !endDate) {
+                showMessageBox('Vui lòng nhập đầy đủ Tên Công Việc, Ngày Bắt Đầu và Ngày Kết Thúc cho dòng này.');
+                return;
+            }
+
+            if (getStartOfDay(startDate) > getStartOfDay(endDate)) {
+                showMessageBox('Ngày Bắt Đầu không thể lớn hơn Ngày Kết Thúc cho dòng này.');
+                return;
+            }
+
+            // Validate and clamp completion percentage
+            if (isNaN(completionPercentage) || completionPercentage < 0) {
+                completionPercentage = 0;
+            } else if (completionPercentage > 100) {
+                completionPercentage = 100;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                description: description,
+                level: level, // Store the chosen level
+                completed: completionPercentage === 100, // Mark as completed if 100%
+                completionPercentage: completionPercentage, // New field
+                subtasks: [] // New tasks always start with empty subtasks array
+            };
+
+            if (!isNaN(insertionIndex) && insertionIndex >= 0 && insertionIndex <= tasks.length) {
+                tasks.splice(insertionIndex, 0, newTask); // Insert at specific index
+            } else {
+                tasks.push(newTask); // Add to end if index is invalid or not provided
+            }
+
+            saveTasks();
+            renderTasks();
+            renderGanttChart();
+
+            // Clear the row inputs after saving
+            nameInput.value = '';
+            startDateInput.value = '';
+            endDateInput.value = '';
+            descriptionInput.value = '';
+            levelInput.value = '1'; // Reset level to default
+            completionPercentageInput.value = '0'; // Reset percentage to default
+            insertionIndexInput.value = ''; // Clear insertion index
+        }
+
+        /**
+         * Removes a specific input row from the table.
+         * @param {HTMLElement} buttonElement - The button element that triggered the removal.
+         */
+        function removeInputRow(buttonElement) {
+            const row = buttonElement.closest('tr');
+            row.remove();
+        }
+
+        /**
+         * Renders the list of tasks and their subtasks in the #tasksContainer.
+         * Clears existing content and creates new HTML elements for each task/subtask.
+         * Includes buttons for toggling completion, editing, and deleting.
+         */
+        function renderTasks() {
+            const tasksContainer = document.getElementById('tasksContainer');
+            tasksContainer.innerHTML = ''; // Clear existing tasks
+
+            const tasks = allProjects[currentProjectName] ? allProjects[currentProjectName].tasks : [];
+
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = '<p class="text-gray-600">Chưa có công việc nào. Hãy thêm một công việc mới!</p>';
+                return;
+            }
+
+            // Recursive helper function to render tasks and their subtasks
+            function renderTaskAndSubtasks(taskList, containerElement, level) {
+                // Sort tasks at the current level by start date for consistent display
+                const sortedTasksAtLevel = [...taskList].sort((a, b) => {
+                    return getStartOfDay(a.startDate).getTime() - getStartOfDay(b.startDate).getTime();
+                });
+
+                sortedTasksAtLevel.forEach(task => {
+                    // Apply filter before rendering the task item
+                    if (currentFilterLevel === 'all' || level === parseInt(currentFilterLevel)) {
+                        const taskItem = document.createElement('div');
+                        taskItem.className = `task-item ${task.completed ? 'completed' : ''} rounded-lg`;
+                        taskItem.style.marginLeft = `${(level - 1) * 20}px`; // Indent based on level
+                        taskItem.setAttribute('data-level', level); // Store level for styling/debugging
+
+                        taskItem.innerHTML = `
+                            <div class="task-details">
+                                <strong>${task.name}</strong> (Cấp ${level}) (${task.startDate} đến ${task.endDate})
+                                ${task.description ? `<br><small>${task.description}</small>` : ''}
+                                <br><small>Trạng thái: ${task.completed ? 'Hoàn thành' : 'Đang tiến hành'} (${task.completionPercentage || 0}%)</small>
+                            </div>
+                            <div class="task-actions">
+                                <button class="toggle-complete" onclick="toggleCompleteTask(${task.id})">
+                                    ${task.completed ? 'Chưa HT' : 'Hoàn thành'}
+                                </button>
+                                <button class="edit" onclick="editTask(${task.id})">Sửa</button>
+                                <button class="delete" onclick="deleteTask(${task.id})">Xóa</button>
+                                <button class="add-subtask" onclick="showAddSubtaskModal(${task.id}, ${level})">Thêm Công Việc Con</button>
+                            </div>
+                        `;
+                        containerElement.appendChild(taskItem);
+                    }
+
+                    // Recursively render subtasks (they will apply their own filter)
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        renderTaskAndSubtasks(task.subtasks, containerElement, level + 1);
+                    }
+                });
+            }
+
+            renderTaskAndSubtasks(tasks, tasksContainer, 1); // Start rendering from level 1
+        }
+
+        /**
+         * Finds a task by its ID recursively in the hierarchical tasks array of the current project.
+         * @param {number} id - The ID of the task.
+         * @param {Array} currentTaskList - The array to search within (e.g., `tasks` or a subtasks array).
+         * @returns {object|null} The found task object or null if not found.
+         */
+        function findTaskById(id, currentTaskList = allProjects[currentProjectName].tasks) {
+            for (const task of currentTaskList) {
+                if (task.id === id) {
+                    return task;
+                }
+                if (task.subtasks && task.subtasks.length > 0) {
+                    const foundSubtask = findTaskById(id, task.subtasks);
+                    if (foundSubtask) {
+                        return foundSubtask;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Finds the parent of a task by its ID recursively in the hierarchical tasks array of the current project.
+         * @param {number} id - The ID of the task whose parent is sought.
+         * @param {Array} currentTaskList - The array to search within.
+         * @returns {object|null} The parent task object or null if not found (or if it's a top-level task).
+         */
+        function findParentTaskById(id, currentTaskList = allProjects[currentProjectName].tasks) {
+            for (const task of currentTaskList) {
+                if (task.subtasks && task.subtasks.length > 0) {
+                    if (task.subtasks.some(sub => sub.id === id)) {
+                        return task;
+                    }
+                    const foundParentInSubtasks = findParentTaskById(id, task.subtasks);
+                    if (foundParentInSubtasks) {
+                        return foundParentInSubtasks;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Shows a custom modal for adding a subtask.
+         * @param {number} parentId - The ID of the parent task.
+         * @param {number} parentLevel - The level of the parent task.
+         */
+        function showAddSubtaskModal(parentId, parentLevel) {
+            const modalId = 'addSubtaskModal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'custom-modal';
+                modal.innerHTML = `
+                    <div class="custom-modal-content">
+                        <h3>Thêm Công Việc Con (Cấp ${parentLevel + 1})</h3>
+                        <label for="modalSubtaskName">Tên Công Việc Con:</label>
+                        <input type="text" id="modalSubtaskName" placeholder="Nhập tên công việc con">
+
+                        <label for="modalSubtaskStartDate">Ngày Bắt Đầu:</label>
+                        <input type="date" id="modalSubtaskStartDate">
+
+                        <label for="modalSubtaskEndDate">Ngày Kết Thúc:</label>
+                        <input type="date" id="modalSubtaskEndDate">
+
+                        <label for="modalSubtaskDescription">Mô Tả:</label>
+                        <textarea id="modalSubtaskDescription" placeholder="Mô tả công việc con (tùy chọn)"></textarea>
+
+                        <label for="modalSubtaskCompletionPercentage">Tỷ lệ HT (%):</label>
+                        <input type="number" id="modalSubtaskCompletionPercentage" min="0" max="100" value="0">
+
+                        <label for="modalSubtaskInsertionIndex">Vị trí chèn (Index):</label>
+                        <input type="number" id="modalSubtaskInsertionIndex" min="0" placeholder="Để trống để thêm cuối">
+
+                        <div class="button-group">
+                            <button class="confirm" id="modalAddSubtaskConfirm">Thêm</button>
+                            <button class="cancel" id="modalAddSubtaskCancel">Hủy</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } else {
+                modal.querySelector('h3').textContent = `Thêm Công Việc Con (Cấp ${parentLevel + 1})`;
+                modal.style.display = 'flex';
+                // Clear inputs if reusing the modal
+                document.getElementById('modalSubtaskName').value = '';
+                document.getElementById('modalSubtaskStartDate').value = '';
+                document.getElementById('modalSubtaskEndDate').value = '';
+                document.getElementById('modalSubtaskDescription').value = '';
+                document.getElementById('modalSubtaskCompletionPercentage').value = '0';
+                document.getElementById('modalSubtaskInsertionIndex').value = ''; // Clear insertion index
+            }
+
+            const confirmBtn = document.getElementById('modalAddSubtaskConfirm');
+            const cancelBtn = document.getElementById('modalAddSubtaskCancel');
+
+            // Clear previous listeners
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+
+            confirmBtn.onclick = () => {
+                const name = document.getElementById('modalSubtaskName').value.trim();
+                const startDate = document.getElementById('modalSubtaskStartDate').value;
+                const endDate = document.getElementById('modalSubtaskEndDate').value;
+                const description = document.getElementById('modalSubtaskDescription').value.trim();
+                let completionPercentage = parseInt(document.getElementById('modalSubtaskCompletionPercentage').value);
+                const insertionIndex = parseInt(document.getElementById('modalSubtaskInsertionIndex').value);
+
+
+                if (!name || !startDate || !endDate) {
+                    showMessageBox('Vui lòng nhập đầy đủ Tên Công Việc Con, Ngày Bắt Đầu và Ngày Kết Thúc.');
+                    return;
+                }
+                if (getStartOfDay(startDate) > getStartOfDay(endDate)) {
+                    showMessageBox('Ngày Bắt Đầu không thể lớn hơn Ngày Kết Thúc.');
+                    return;
+                }
+
+                // Validate and clamp completion percentage
+                if (isNaN(completionPercentage) || completionPercentage < 0) {
+                    completionPercentage = 0;
+                } else if (completionPercentage > 100) {
+                    completionPercentage = 100;
+                }
+
+                const newSubtask = {
+                    id: Date.now(),
+                    name: name,
+                    startDate: startDate,
+                    endDate: endDate,
+                    description: description,
+                    completed: completionPercentage === 100,
+                    completionPercentage: completionPercentage,
+                    subtasks: [] // New subtasks can also have subtasks
+                };
+
+                // Find the parent task recursively and add the new subtask
+                const parentTask = findTaskById(parentId);
+                if (parentTask) {
+                    if (!parentTask.subtasks) { // Ensure subtasks array exists
+                        parentTask.subtasks = [];
+                    }
+                    if (!isNaN(insertionIndex) && insertionIndex >= 0 && insertionIndex <= parentTask.subtasks.length) {
+                        parentTask.subtasks.splice(insertionIndex, 0, newSubtask); // Insert at specific index
+                    } else {
+                        parentTask.subtasks.push(newSubtask); // Add to end if index is invalid or not provided
+                    }
+
+                    saveTasks();
+                    renderTasks();
+                    renderGanttChart();
+                    modal.remove(); // Close the modal
+                } else {
+                    showMessageBox('Không tìm thấy công việc cha để thêm công việc con.');
+                }
+            };
+
+            cancelBtn.onclick = () => {
+                modal.remove(); // Close the modal
+            };
+        }
+
+        /**
+         * Edits an existing task or subtask using a custom modal.
+         * @param {number} id - The ID of the task/subtask to edit.
+         */
+        async function editTask(id) {
+            const tasks = allProjects[currentProjectName].tasks; // Get tasks for current project
+            const taskToEdit = findTaskById(id, tasks);
+            if (!taskToEdit) {
+                showMessageBox('Không tìm thấy công việc để chỉnh sửa.');
+                return;
+            }
+
+            // Determine the current level of the task for the edit modal's dropdown
+            let currentLevel = 1;
+            function determineLevel(taskList, targetId, level = 1) {
+                for (const task of taskList) {
+                    if (task.id === targetId) {
+                        return level;
+                    }
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        const foundLevel = determineLevel(task.subtasks, targetId, level + 1);
+                        if (foundLevel) return foundLevel;
+                    }
+                }
+                return null;
+            }
+            currentLevel = determineLevel(tasks, id) || 1;
+
+
+            const result = await new Promise(resolve => showEditTaskModal(taskToEdit, currentLevel, resolve));
+
+            if (result) {
+                const { name, startDate, endDate, description, level: newLevel, completionPercentage } = result;
+
+                if (!name || !startDate || !endDate) {
+                    showMessageBox('Vui lòng nhập đầy đủ Tên Công Việc, Ngày Bắt Đầu và Ngày Kết Thúc.');
+                    return;
+                }
+                if (getStartOfDay(startDate) > getStartOfDay(endDate)) {
+                    showMessageBox('Ngày Bắt Đầu không thể lớn hơn Ngày Kết Thúc.');
+                    return;
+                }
+
+                taskToEdit.name = name;
+                taskToEdit.startDate = startDate;
+                taskToEdit.endDate = endDate;
+                taskToEdit.description = description;
+                taskToEdit.level = newLevel;
+                taskToEdit.completionPercentage = completionPercentage;
+                taskToEdit.completed = completionPercentage === 100; // Update completed status based on percentage
+
+                saveTasks();
+                renderTasks();
+                renderGanttChart();
+            }
+        }
+
+        /**
+         * Deletes a task or subtask from the list recursively.
+         * @param {number} id - The ID of the task/subtask to delete.
+         */
+        function deleteTask(id) {
+            showConfirmBox('Bạn có chắc chắn muốn xóa công việc này? Điều này cũng sẽ xóa tất cả công việc con của nó.', () => {
+                const tasks = allProjects[currentProjectName].tasks; // Get tasks for current project
+                // Recursive function to remove a task/subtask
+                function removeTaskRecursive(taskList, targetId) {
+                    for (let i = 0; i < taskList.length; i++) {
+                        if (taskList[i].id === targetId) {
+                            taskList.splice(i, 1); // Remove the task
+                            return true; // Task found and removed
+                        }
+                        if (taskList[i].subtasks && taskList[i].subtasks.length > 0) {
+                            if (removeTaskRecursive(taskList[i].subtasks, targetId)) {
+                                return true; // Task found and removed in subtasks
+                            }
+                        }
+                    }
+                    return false; // Task not found in this list
+                }
+
+                if (removeTaskRecursive(tasks, id)) {
+                    saveTasks();
+                    renderTasks();
+                    renderGanttChart();
+                } else {
+                    showMessageBox('Không tìm thấy công việc để xóa.');
+                }
+            });
+        }
+
+        /**
+         * Toggles the completion status of a task or subtask recursively.
+         * @param {number} id - The ID of the task/subtask to toggle.
+         */
+        function toggleCompleteTask(id) {
+            const tasks = allProjects[currentProjectName].tasks; // Get tasks for current project
+            const taskToToggle = findTaskById(id, tasks);
+            if (taskToToggle) {
+                taskToToggle.completed = !taskToToggle.completed;
+                // If manually toggled to completed, set percentage to 100, else to 0
+                taskToToggle.completionPercentage = taskToToggle.completed ? 100 : 0;
+                saveTasks();
+                renderTasks();
+                renderGanttChart();
+            } else {
+                showMessageBox('Không tìm thấy công việc để cập nhật trạng thái.');
+            }
+        }
+
+        /**
+         * Clears all tasks from the list of the current project.
+         * Confirms with the user as this action is irreversible.
+         */
+        function clearAllTasks() {
+            showConfirmBox('Bạn có chắc chắn muốn xóa TẤT CẢ công việc trong dự án hiện tại? Hành động này không thể hoàn tác.', () => {
+                if (allProjects[currentProjectName]) {
+                    allProjects[currentProjectName].tasks = []; // Empty the tasks array for current project
+                    saveTasks(); // Save empty array
+                    renderTasks(); // Re-render (will show no tasks message)
+                    renderGanttChart(); // Re-render (will show no chart message)
+                }
+            });
+        }
+
+        /**
+         * Shows a custom message box.
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            const modalId = 'messageBoxModal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+                        <p class="text-lg font-semibold mb-4">${message}</p>
+                        <button onclick="document.getElementById('${modalId}').remove()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">Đóng</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } else {
+                modal.querySelector('p').textContent = message;
+                modal.style.display = 'flex'; // Ensure it's visible if reused
+            }
+        }
+
+        /**
+         * Shows a custom confirmation box.
+         * @param {string} message - The confirmation message.
+         * @param {function} onConfirm - Callback function to execute if confirmed.
+         */
+        function showConfirmBox(message, onConfirm) {
+            const modalId = 'confirmBoxModal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+                        <p class="text-lg font-semibold mb-4">${message}</p>
+                        <div class="flex justify-center gap-4">
+                            <button id="confirmYesBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">Có</button>
+                            <button id="confirmNoBtn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Không</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                document.getElementById('confirmYesBtn').onclick = () => {
+                    onConfirm();
+                    modal.remove();
+                };
+                document.getElementById('confirmNoBtn').onclick = () => {
+                    modal.remove();
+                };
+            } else {
+                modal.querySelector('p').textContent = message;
+                modal.style.display = 'flex';
+                // Re-attach event listeners to ensure they point to the correct onConfirm
+                document.getElementById('confirmYesBtn').onclick = () => {
+                    onConfirm();
+                    modal.remove();
+                };
+                document.getElementById('confirmNoBtn').onclick = () => {
+                    modal.remove();
+                };
+            }
+        }
+
+        /**
+         * Shows a custom modal for editing task details.
+         * @param {object} task - The task object to edit.
+         * @param {number} currentLevel - The current level of the task being edited.
+         * @param {function} onComplete - Callback function (result: object | null) when the modal is closed.
+         */
+        function showEditTaskModal(task, currentLevel, onComplete) {
+            const modalId = 'editTaskModal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'custom-modal';
+                modal.innerHTML = `
+                    <div class="custom-modal-content">
+                        <h3>Chỉnh Sửa Công Việc</h3>
+                        <label for="editTaskName">Tên Công Việc:</label>
+                        <input type="text" id="editTaskName">
+
+                        <label for="editStartDate">Ngày Bắt Đầu:</label>
+                        <input type="date" id="editStartDate">
+
+                        <label for="editEndDate">Ngày Kết Thúc:</label>
+                        <input type="date" id="editEndDate">
+
+                        <label for="editDescription">Mô Tả:</label>
+                        <textarea id="editDescription"></textarea>
+
+                        <label for="editLevel">Cấp Độ:</label>
+                        <select id="editLevel">
+                            <option value="1">Cấp 1</option>
+                            <option value="2">Cấp 2</option>
+                            <option value="3">Cấp 3</option>
+                            <option value="4">Cấp 4</option>
+                            <option value="5">Cấp 5</option>
+                            <option value="6">Cấp 6</option>
+                            <option value="7">Cấp 7</option>
+                        </select>
+
+                        <label for="editCompletionPercentage">Tỷ lệ HT (%):</label>
+                        <input type="number" id="editCompletionPercentage" min="0" max="100">
+
+                        <div class="button-group">
+                            <button class="confirm" id="editConfirmBtn">Lưu</button>
+                            <button class="cancel" id="editCancelBtn">Hủy</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } else {
+                modal.style.display = 'flex';
+            }
+
+            // Populate fields with current task data
+            document.getElementById('editTaskName').value = task.name;
+            document.getElementById('editStartDate').value = task.startDate;
+            document.getElementById('editEndDate').value = task.endDate;
+            document.getElementById('editDescription').value = task.description || '';
+            // Set the level in the dropdown. If task.level is undefined (e.g., old data), use currentLevel.
+            document.getElementById('editLevel').value = task.level || currentLevel;
+            document.getElementById('editCompletionPercentage').value = task.completionPercentage || 0;
+
+
+            const confirmBtn = document.getElementById('editConfirmBtn');
+            const cancelBtn = document.getElementById('editCancelBtn');
+
+            // Clear previous listeners
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+
+            confirmBtn.onclick = () => {
+                const name = document.getElementById('editTaskName').value.trim();
+                const startDate = document.getElementById('editStartDate').value;
+                const endDate = document.getElementById('editEndDate').value;
+                const description = document.getElementById('editDescription').value.trim();
+                const level = parseInt(document.getElementById('editLevel').value);
+                let completionPercentage = parseInt(document.getElementById('editCompletionPercentage').value);
+
+                // Validate and clamp completion percentage
+                if (isNaN(completionPercentage) || completionPercentage < 0) {
+                    completionPercentage = 0;
+                } else if (completionPercentage > 100) {
+                    completionPercentage = 100;
+                }
+
+                onComplete({ name, startDate, endDate, description, level, completionPercentage });
+                modal.remove();
+            };
+
+            cancelBtn.onclick = () => {
+                onComplete(null); // User cancelled
+                modal.remove();
+            };
+        }
+
+        /**
+         * Toggles the collapse/expand state of a section.
+         * @param {string} sectionId - The ID of the section to toggle.
+         */
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const content = section.querySelector('.section-content');
+            const arrow = section.querySelector('.toggle-arrow');
+
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                arrow.classList.add('rotated'); // Point down
+            } else {
+                content.classList.add('collapsed');
+                arrow.classList.remove('rotated'); // Point right
+            }
+        }
+
+        /**
+         * Exports the current tasks data to an Excel file.
+         * Flattens the hierarchical structure for export.
+         */
+        function exportToExcel() {
+            const tasks = allProjects[currentProjectName] ? allProjects[currentProjectName].tasks : [];
+            if (tasks.length === 0) {
+                showMessageBox('Không có dữ liệu để xuất Excel.');
+                return;
+            }
+
+            const dataForExcel = [];
+
+            // Recursive function to flatten tasks for Excel export
+            function flattenTasks(taskList, level) {
+                taskList.forEach(task => {
+                    dataForExcel.push({
+                        'Tên Công Việc': task.name,
+                        'Ngày Bắt Đầu': task.startDate,
+                        'Ngày Kết Thúc': task.endDate,
+                        'Mô Tả': task.description,
+                        'Cấp Độ': level, // Export the calculated level
+                        'Tỷ lệ HT (%)': task.completionPercentage || 0, // Export completion percentage
+                        'Hoàn Thành': task.completed ? 'Có' : 'Không'
+                    });
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        flattenTasks(task.subtasks, level + 1);
+                    }
+                });
+            }
+            flattenTasks(tasks, 1); // Start flattening from level 1
+
+            const ws = XLSX.utils.json_to_sheet(dataForExcel);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Công Việc");
+
+            // Generate file and download
+            XLSX.writeFile(wb, `${currentProjectName}_DanhSachCongViec.xlsx`);
+            showMessageBox(`Dữ liệu của dự án "${currentProjectName}" đã được xuất ra file Excel.`);
+        }
+
+        /**
+         * Imports tasks data from an Excel file, reconstructing the hierarchy based on 'Cấp Độ' and order.
+         * @param {Event} event - The change event from the file input.
+         */
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                if (json.length === 0) {
+                    showMessageBox('File Excel không chứa dữ liệu hoặc định dạng không đúng.');
+                    return;
+                }
+
+                const newTasksHierarchy = [];
+                // currentParentStack[level-1] stores the last added task object at that level.
+                // E.g., currentParentStack[0] is the last level 1 task.
+                const currentParentStack = []; 
+                let importErrors = [];
+
+                json.forEach((row, index) => {
+                    const name = row['Tên Công Việc'] ? String(row['Tên Công Việc']).trim() : '';
+                    let startDate = '';
+                    if (typeof row['Ngày Bắt Đầu'] === 'number') {
+                        startDate = XLSX.utils.format_cell(worksheet[XLSX.utils.encode_cell({r: index + 1, c: 1})], { raw: false });
+                    } else {
+                        startDate = row['Ngày Bắt Đầu'] ? String(row['Ngày Bắt Đầu']).trim() : '';
+                    }
+
+                    let endDate = '';
+                    if (typeof row['Ngày Kết Thúc'] === 'number') {
+                        endDate = XLSX.utils.format_cell(worksheet[XLSX.utils.encode_cell({r: index + 1, c: 2})], { raw: false });
+                    } else {
+                        endDate = row['Ngày Kết Thúc'] ? String(row['Ngày Kết Thúc']).trim() : '';
+                    }
+
+                    const description = row['Mô Tả'] ? String(row['Mô Tả']).trim() : '';
+                    let level = row['Cấp Độ'] ? parseInt(row['Cấp Độ']) : 1;
+                    let completionPercentage = row['Tỷ lệ HT (%)'] ? parseInt(row['Tỷ lệ HT (%)']) : 0; // Read percentage
+                    const completed = row['Hoàn Thành'] ? (String(row['Hoàn Thành']).toLowerCase() === 'có') : (completionPercentage === 100); // Prioritize percentage for completed status
+
+                    // Basic validation for imported data
+                    if (!name || !startDate || !endDate) {
+                        importErrors.push(`Dòng ${index + 2}: Thiếu Tên Công Việc, Ngày Bắt Đầu hoặc Ngày Kết Thúc. Bỏ qua dòng này.`);
+                        return; // Skip this row if essential data is missing
+                    }
+                    if (isNaN(level) || level < 1) { // Level must be at least 1
+                        importErrors.push(`Dòng ${index + 2}: Cấp Độ không hợp lệ (${row['Cấp Độ']}). Đặt mặc định là 1.`);
+                        level = 1;
+                    }
+                    // Validate and clamp completion percentage
+                    if (isNaN(completionPercentage) || completionPercentage < 0) {
+                        completionPercentage = 0;
+                    } else if (completionPercentage > 100) {
+                        completionPercentage = 100;
+                    }
+
+
+                    // Attempt to normalize date strings to ISO-MM-DD
+                    const normalizedStartDate = formatDateForInput(startDate);
+                    const normalizedEndDate = formatDateForInput(endDate);
+
+                    if (getStartOfDay(normalizedStartDate) > getStartOfDay(normalizedEndDate)) {
+                        importErrors.push(`Dòng ${index + 2}: Ngày Bắt Đầu (${normalizedStartDate}) lớn hơn Ngày Kết Thúc (${normalizedEndDate}). Bỏ qua dòng này.`);
+                        return;
+                    }
+
+                    const newTask = {
+                        id: Date.now() + index, // Assign a new unique ID
+                        name: name,
+                        startDate: normalizedStartDate,
+                        endDate: normalizedEndDate,
+                        description: description,
+                        completed: completed,
+                        completionPercentage: completionPercentage, // Store percentage
+                        subtasks: [] // Initialize subtasks array for imported tasks
+                    };
+
+                    // Logic to reconstruct hierarchy
+                    if (level === 1) {
+                        newTasksHierarchy.push(newTask);
+                        currentParentStack[0] = newTask;
+                        currentParentStack.length = 1; // Clear deeper levels
+                    } else {
+                        const parentLevelIndex = level - 2; // Index for parent in stack
+                        let parent = currentParentStack[parentLevelIndex];
+
+                        // If direct parent is missing or its level is incorrect, find the closest valid ancestor
+                        if (!parent || (parent && parentLevelIndex >= 0 && parent.level !== level - 1)) {
+                            importErrors.push(`Dòng ${index + 2}: Cấu trúc cấp độ không hợp lệ (Cấp ${level} không có cấp ${level - 1} cha trực tiếp). Cố gắng gắn vào cấp cha cao hơn.`);
+                            let foundAncestor = null;
+                            for (let i = parentLevelIndex - 1; i >= 0; i--) {
+                                if (currentParentStack[i]) {
+                                    foundAncestor = currentParentStack[i];
+                                    level = i + 2; // Adjust new task's level to be child of foundAncestor
+                                    break;
+                                }
+                            }
+
+                            if (foundAncestor) {
+                                parent = foundAncestor;
+                                // newTask.level = level; // Update task's level to reflect actual placement - This line is not needed as level is already correct for the new task
+                            } else {
+                                // No valid ancestor found, treat as top-level task
+                                newTasksHierarchy.push(newTask);
+                                currentParentStack[0] = newTask;
+                                currentParentStack.length = 1;
+                                newTask.level = 1; // Ensure it's marked as level 1
+                                importErrors.push(`Dòng ${index + 2}: Không tìm thấy cấp cha hợp lệ. Đã thêm công việc này như một công việc cấp 1.`);
+                                return; // Use return instead of continue in forEach
+                            }
+                        }
+                        
+                        // Attach to the determined parent
+                        if (parent) {
+                            parent.subtasks.push(newTask);
+                            currentParentStack[level - 1] = newTask; // Update stack for this level
+                            currentParentStack.length = level; // Clear deeper levels if any
+                        }
+                    }
+                });
+
+                if (importErrors.length > 0) {
+                    showMessageBox('Có lỗi trong quá trình nhập dữ liệu từ Excel:\n' + importErrors.join('\n') + '\nCác công việc hợp lệ đã được thêm.');
+                } else {
+                    showMessageBox('Dữ liệu từ Excel đã được nhập thành công.');
+                }
+
+                // Replace existing tasks with newly imported hierarchical tasks for the current project
+                allProjects[currentProjectName].tasks = newTasksHierarchy;
+                saveTasks();
+                renderTasks();
+                renderGanttChart();
+                event.target.value = ''; // Clear file input
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Helper to normalize date string to ISO-MM-DD format for input[type="date"]
+        function formatDateForInput(dateString) {
+            try {
+                // First, try direct parsing (handles ISO-MM-DD, MM/DD/YYYY, etc.)
+                let date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString().split('T')[0];
+                }
+
+                // If direct parsing fails, try common Vietnamese date formats (DD/MM/YYYY)
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const d = parseInt(parts[0]);
+                    const m = parseInt(parts[1]) - 1; // Month is 0-indexed
+                    const y = parseInt(parts[2]);
+                    date = new Date(y, m, d);
+                    if (!isNaN(date.getTime())) {
+                        return date.toISOString().split('T')[0];
+                    }
+                }
+                // Fallback for other formats or invalid dates
+                return '';
+            } catch (e) {
+                console.error("Error formatting date:", dateString, e);
+                return '';
+            }
+        }
+
+        /**
+         * Applies the selected filter level and re-renders tasks and Gantt chart.
+         */
+        function applyFilter() {
+            const levelFilter = document.getElementById('levelFilter');
+            currentFilterLevel = levelFilter.value;
+            renderTasks();
+            renderGanttChart();
+        }
+
+        /**
+         * Exports the Gantt chart to a PDF file.
+         */
+        function exportGanttToPdf() {
+            const ganttElement = document.getElementById('ganttTimelineWrapper');
+            if (!ganttElement) {
+                showMessageBox('Không tìm thấy biểu đồ Gantt để xuất PDF.');
+                return;
+            }
+
+            showMessageBox('Đang tạo PDF... Vui lòng chờ.');
+
+            // Temporarily adjust styles to ensure full content is rendered for html2canvas
+            const originalOverflowX = ganttElement.style.overflowX;
+            const originalWidth = ganttElement.style.width;
+            const originalHeight = ganttElement.style.height; // Capture original height if set
+
+            ganttElement.style.overflowX = 'visible';
+            ganttElement.style.width = `${ganttElement.scrollWidth}px`; // Ensure full width is rendered
+            ganttElement.style.height = 'auto'; // Allow height to expand
+
+            html2canvas(ganttElement, {
+                scale: 2, // Higher scale for better resolution
+                useCORS: true, // If any external images are used (though none currently)
+                logging: false, // Suppress html2canvas logs
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF('l', 'mm', 'a4'); // Landscape A4 page
+                const imgWidth = 297; // A4 landscape width in mm
+                const pageHeight = 210; // A4 landscape height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                pdf.save(`${currentProjectName}_bieu_do_gantt.pdf`);
+                showMessageBox('Biểu đồ Gantt đã được xuất ra PDF.');
+
+                // Restore original styles
+                ganttElement.style.overflowX = originalOverflowX;
+                ganttElement.style.width = originalWidth;
+                ganttElement.style.height = originalHeight; // Restore original height
+            }).catch(error => {
+                console.error('Lỗi khi xuất PDF:', error);
+                showMessageBox('Có lỗi xảy ra khi xuất PDF. Vui lòng thử lại.');
+                // Ensure styles are restored even on error
+                ganttElement.style.overflowX = originalOverflowX;
+                ganttElement.style.width = originalWidth;
+                ganttElement.style.height = originalHeight; // Restore original height
+            });
+        }
+
+        /**
+         * Exports the Gantt chart as an HTML file that can be opened by Microsoft Word.
+         */
+        function exportGanttToDoc() {
+            const ganttElement = document.getElementById('ganttTimelineWrapper');
+            if (!ganttElement) {
+                showMessageBox('Không tìm thấy biểu đồ Gantt để xuất DOC.');
+                return;
+            }
+
+            // Clone the element to avoid modifying the live DOM
+            const clonedGantt = ganttElement.cloneNode(true);
+
+            // Remove scrollbar styles from the clone if they interfere with Word's rendering
+            clonedGantt.style.overflowX = 'visible';
+            clonedGantt.style.width = 'auto'; // Let Word handle width
+
+            // Get the HTML content of the cloned Gantt chart
+            // Include relevant CSS directly in the HTML for better rendering in Word
+            let htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Biểu Đồ Gantt</title>
+                    <style>
+                        body { font-family: 'Inter', sans-serif; margin: 20px; }
+                        .gantt-timeline-wrapper { position: relative; overflow-x: visible !important; width: auto !important; }
+                        .gantt-months-header, .gantt-days-header { display: flex; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; padding-left: 180px; }
+                        .gantt-month-label { text-align: center; font-weight: 600; color: #34495e; border-right: 1px solid #eee; box-sizing: border-box; padding: 5px 0; flex-shrink: 0; }
+                        .gantt-day-label { text-align: center; font-size: 0.75rem; color: #7f8c8d; flex-shrink: 0; box-sizing: border-box; border-right: 1px solid #f0f0f0; padding-top: 2px; padding-bottom: 2px; }
+                        #ganttChartContent { padding-top: 10px; }
+                        .gantt-row { display: flex; align-items: center; margin-bottom: 8px; }
+                        .gantt-task-name { width: 180px; flex-shrink: 0; font-weight: 600; padding-right: 15px; color: #2c3e50; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                        .gantt-task-name[data-level="2"] { padding-left: 20px; }
+                        .gantt-task-name[data-level="3"] { padding-left: 40px; }
+                        .gantt-task-name[data-level="4"] { padding-left: 60px; }
+                        .gantt-task-name[data-level="5"] { padding-left: 80px; }
+                        .gantt-task-name[data-level="6"] { padding-left: 100px; }
+                        .gantt-task-name[data-level="7"] { padding-left: 120px; }
+                        .gantt-bar-container { flex-grow: 1; display: flex; align-items: center; height: 25px; background-color: #f0f0f0; border-radius: 4px; position: relative; }
+                        .gantt-bar { height: 100%; background-color: #3498db; border-radius: 4px; position: absolute; transition: background-color 0.3s ease; display: flex; align-items: center; justify-content: flex-end; overflow: hidden; }
+                        .gantt-bar.completed { background-color: #2ecc71; }
+                        .gantt-bar[data-level="2"] { background-color: #9b59b6; height: 20px; top: 50%; transform: translateY(-50%); }
+                        .gantt-bar[data-level="3"] { background-color: #e67e22; height: 18px; top: 50%; transform: translateY(-50%); }
+                        .gantt-bar[data-level="4"] { background-color: #f1c40f; height: 16px; top: 50%; transform: translateY(-50%); }
+                        .gantt-bar[data-level="5"] { background-color: #e74c3c; height: 14px; top: 50%; transform: translateY(-50%); }
+                        .gantt-bar[data-level="6"] { background-color: #1abc9c; height: 12px; top: 50%; transform: translateY(-50%); }
+                        .gantt-bar[data-level="7"] { background-color: #34495e; height: 10px; top: 50%; transform: translateY(-50%); }
+                        .gantt-progress-fill { height: 100%; background-color: rgba(46, 204, 113, 0.7); border-radius: 4px; position: absolute; left: 0; top: 0; transition: width 0.3s ease; z-index: 1; }
+                        .gantt-bar.completed .gantt-progress-fill { background-color: #2ecc71; width: 100% !important; }
+                        .gantt-percentage-text { position: relative; color: white; font-size: 0.7rem; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); z-index: 2; padding-right: 5px; }
+                        .gantt-milestone { background-color: #f39c12; width: 25px; height: 25px; border-radius: 0; transform: rotate(45deg); position: absolute; left: 0; top: 50%; margin-left: -12.5px; margin-top: -12.5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+                        .gantt-milestone.completed { background-color: #2ecc71; }
+                        .gantt-milestone .gantt-percentage-text, .gantt-milestone .gantt-progress-fill { display: none; }
+                        .today-marker { position: absolute; top: 0; bottom: 0; width: 2px; background-color: #e74c3c; z-index: 6; pointer-events: none; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Biểu Đồ Gantt Kế Hoạch Dự Án</h1>
+                    ${clonedGantt.outerHTML}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'application/msword' }); // Use application/msword to suggest Word
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentProjectName}_bieu_do_gantt.doc`; // Suggest .doc extension
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessageBox('Biểu đồ Gantt đã được xuất ra file HTML (có thể mở bằng Word).');
+        }
+
+
+        // Load tasks when the window finishes loading
+        window.onload = loadTasks;
+    </script>
+</body>
+</html>
