@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Tính Phí Tổng Hợp</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom font for better aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+        /* Ensure inputs and buttons have consistent styling */
+        input[type="number"], input[type="text"], input[type="date"], select, button, textarea {
+            border-radius: 0.5rem; /* Rounded corners */
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db; /* Light gray border */
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #006B68; /* Brand color for focus border */
+            box-shadow: 0 0 0 3px rgba(0, 107, 104, 0.25); /* Brand color for focus shadow */
+        }
+        button {
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            display: inline-flex; /* Use flex for centering content if needed */
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem; /* Space between icon and text */
+        }
+        /* Primary button style */
+        .btn-primary {
+            background-color: #006B68; /* Brand color 1 */
+        }
+        .btn-primary:hover {
+            background-color: #004F4C; /* Darker shade of brand color 1 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .section-separator {
+            height: 2rem; /* Space between sections */
+        }
+        /* Style for the clear data button */
+        #clearDataBtn {
+            background-color: #ef4444; /* Red button */
+        }
+        #clearDataBtn:hover {
+            background-color: #dc2626; /* Darker red on hover */
+        }
+        .action-button {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        .edit-button {
+            background-color: #f59e0b; /* Amber - keeping for now, can be adjusted */
+        }
+        .edit-button:hover {
+            background-color: #FFC62F; /* Brand color 2 for hover */
+            color: #333; /* Darker text on light background */
+        }
+        .delete-button {
+            background-color: #ef4444; /* Red */
+        }
+        .delete-button:hover {
+            background-color: #dc2626; /* Darker red on hover */
+        }
+        .cancel-edit-button {
+            background-color: #6b7280; /* Gray */
+        }
+        .cancel-edit-button:hover {
+            background-color: #4b5563;
+        }
+        /* Ensure table is scrollable horizontally */
+        .overflow-x-auto {
+            overflow-x: auto;
+        }
+        table {
+            min-width: 1200px; /* Ensure table is wide enough to prevent excessive wrapping */
+        }
+
+        /* Tab styles */
+        .tab-button {
+            background-color: #e2e8f0; /* Light gray for inactive tab */
+            color: #4a5568; /* Dark gray text */
+            padding: 0.75rem 1.5rem;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-bottom-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            border-bottom: 2px solid transparent; /* Highlight active tab */
+        }
+        .tab-button.active {
+            background-color: #fff; /* White for active tab */
+            color: #006B68; /* Brand color 1 text for active tab */
+            border-bottom: 2px solid #006B68; /* Brand color 1 border for active tab */
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #cbd5e0; /* Slightly darker gray on hover */
+        }
+        .tab-content {
+            display: none;
+            padding-top: 1rem;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Collapsible section styles */
+        .collapsible-header {
+            background-color: #006B68; /* Brand color */
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .collapsible-header:hover {
+            background-color: #004F4C; /* Darker shade on hover */
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 1.5rem; /* Padding to match header, but top/bottom will be managed by max-height */
+        }
+        .collapsible-content.expanded {
+            max-height: 400px; /* Adjusted to a more reasonable height for scrolling */
+            overflow-y: auto; /* Add scrollbar for vertical overflow */
+            padding: 1.5rem; /* Apply padding when expanded */
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: #fdfdfd;
+        }
+        .collapsible-header .icon {
+            transition: transform 0.3s ease-out;
+        }
+        .collapsible-header.expanded .icon {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8 lg:p-12">
+    <div class="max-w-5xl mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Demo Chức Năng Tính Phí Tổng Hợp</h1>
+
+        <!-- Instruction Section (New) -->
+        <div class="mb-8 p-0 rounded-lg shadow-sm">
+            <div id="instructionHeader" class="collapsible-header">
+                <span><i class="fas fa-info-circle mr-2"></i> Hướng Dẫn & Nguyên Lý Tính Phí</span>
+                <i class="fas fa-chevron-right icon"></i>
+            </div>
+            <div id="instructionContent" class="collapsible-content">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">1) Nguyên lý và cơ chế tính phí</h3>
+                <p class="mb-2">Hệ thống tính phí hoạt động dựa trên việc khớp các thuộc tính của giao dịch với các "Tham số Phí" đã được khai báo. Khi một giao dịch được thực hiện, hệ thống sẽ kiểm tra từng tham số phí để tìm ra quy tắc phù hợp nhất.</p>
+                <p class="mb-2">Các tiêu chí chính để khớp tham số phí bao gồm:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li><strong>Sản phẩm chuyển tiền (Payment Type):</strong> Ví dụ: Chuyển tiền nội bộ (IFT), Chuyển tiền trong nước đi (DRO).</li>
+                    <li><strong>Giao dịch trong/ngoài hệ thống (On Us Transaction):</strong> Giao dịch giữa các tài khoản cùng ngân hàng hay khác ngân hàng.</li>
+                    <li><strong>Ứng dụng thực hiện giao dịch (Channel ID):</strong> Kênh giao dịch như TPTL, WebCSR.</li>
+                    <li><strong>Cấp độ áp dụng biểu phí (Level Type):</strong> Mức độ áp dụng phí (toàn hệ thống, theo chi nhánh, theo khách hàng, theo gói sản phẩm, theo tỉnh/thành phố).</li>
+                    <li><strong>Chi tiết cấp độ áp dụng biểu phí (Level Detail):</strong> Đây là giá trị cụ thể của cấp độ áp dụng biểu phí.
+                        <ul class="list-disc list-inside ml-6 mt-2">
+                            <li>Nếu <strong>Level Type</strong> là "HO (Áp dụng toàn hệ thống)", <strong>Level Detail</strong> sẽ mặc định là "HO".</li>
+                            <li>Nếu <strong>Level Type</strong> là "PROVINCE (Theo địa bàn Tỉnh/thành phố)", <strong>Level Detail</strong> sẽ là mã tỉnh/thành phố (ví dụ: "01" cho Hà Nội, "79" cho TP.HCM).</li>
+                            <li>Nếu <strong>Level Type</strong> là "BRANCH (Theo Chi nhánh)", <strong>Level Detail</strong> sẽ là mã chi nhánh (ví dụ: "120000" cho CN Sở Giao dịch I).</li>
+                            <li>Nếu <strong>Level Type</strong> là "PACKAGE (Theo Gói sản phẩm)", <strong>Level Detail</strong> sẽ là mã gói sản phẩm (ví dụ: "PACKAGE_GOLD", "TEST UAT3").</li>
+                            <li>Nếu <strong>Level Type</strong> là "CIF (Theo Khách hàng)", <strong>Level Detail</strong> sẽ là số CIF của khách hàng (ví dụ: "369565").</li>
+                        </ul>
+                        <p class="mt-2"><strong>Ví dụ:</strong> Nếu bạn muốn áp dụng phí cho khách hàng có số CIF "1234567", bạn sẽ chọn Level Type là "CIF" và nhập "1234567" vào Level Detail.</p>
+                    </li>
+                    <li><strong>Phạm vi áp dụng biểu phí (Branch):</strong> Tiêu chí này xác định chi nhánh hoặc phạm vi địa lý mà biểu phí được áp dụng.
+                        <ul class="list-disc list-inside ml-6 mt-2">
+                            <li>Nếu chọn "ALL (Toàn hệ thống)", biểu phí sẽ áp dụng cho tất cả các chi nhánh.</li>
+                            <li>Nếu chọn một mã chi nhánh cụ thể (ví dụ: "120100 - CN HÀ NỘI"), biểu phí chỉ áp dụng cho giao dịch tại chi nhánh đó.</li>
+                        </ul>
+                        <p class="mt-2"><strong>Ví dụ:</strong> Nếu bạn muốn một biểu phí chỉ áp dụng riêng cho Chi nhánh Hà Nội, bạn sẽ chọn "120100 - CN HÀ NỘI" ở trường Branch.</p>
+                    </li>
+                    <li><strong>Mối quan hệ (Relationship):</strong> Mối quan hệ giữa chủ tài khoản và chi nhánh (ví dụ: cùng chủ tài khoản, cùng chi nhánh).</li>
+                    <li><strong>Đối tượng khách hàng chịu phí (Customer Fee Type):</strong> Phân loại khách hàng (cá nhân, tổ chức, ngân hàng).</li>
+                    <li><strong>Nguồn tiền giao dịch (Funding Option):</strong> Nguồn tiền được sử dụng cho giao dịch (tài khoản khách hàng, tiền mặt).</li>
+                    <li><strong>Ngày hiệu lực (Effective Date From/To):</strong> Đảm bảo tham số phí còn hiệu lực tại thời điểm giao dịch.</li>
+                </ul>
+                <p class="mb-2">Khi một tham số phí khớp, hệ thống sẽ áp dụng "Mã Mức Phí" (Fee Code) được liên kết với tham số đó để tính toán số tiền phí. Mã Mức Phí có thể là:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li><strong>Phí cố định (AMTFIX):</strong> Một số tiền cụ thể được áp dụng.</li>
+                    <li><strong>Phí tỷ lệ (PERCENT):</strong> Một phần trăm của số tiền giao dịch.</li>
+                    <li><strong>Giá trị tối thiểu (AMTMIN) và tối đa (AMTMAX):</strong> Giới hạn phí áp dụng khi tính theo tỷ lệ.</li>
+                </ul>
+
+                <h4 class="font-semibold mt-4 mb-2">Ví dụ minh họa:</h4>
+                <p class="mb-2">Giả sử bạn khai báo một Tham số Phí như sau:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li>Sản phẩm chuyển tiền: IFT</li>
+                    <li>Giao dịch trong/ngoài hệ thống: ALL</li>
+                    <li>Cấp độ áp dụng: HO (Toàn hệ thống)</li>
+                    <li>Mã Mức phí VND: VND_0.02_10000_500000 (Phí 0.02%, Min 10.000 VND, Max 500.000 VND)</li>
+                </ul>
+                <p class="mb-2">Nếu bạn thực hiện giao dịch chuyển tiền nội bộ (IFT) với số tiền 10.000.000 VND:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li>Phí ban đầu: $10.000.000 \times 0.02\% = 2.000$ VND.</li>
+                    <li>Vì 2.000 VND nhỏ hơn mức tối thiểu 10.000 VND, phí áp dụng sẽ là <strong>10.000 VND</strong>.</li>
+                </ul>
+                <p class="mb-2">Nếu bạn thực hiện giao dịch với số tiền 5.000.000.000 VND:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li>Phí ban đầu: $5.000.000.000 \times 0.02\% = 1.000.000$ VND.</li>
+                    <li>Vì 1.000.000 VND lớn hơn mức tối đa 500.000 VND, phí áp dụng sẽ là <strong>500.000 VND</strong>.</li>
+                </ul>
+
+                <h3 class="text-xl font-semibold text-gray-700 mt-4 mb-3">2) Hướng dẫn sử dụng chương trình</h3>
+                <p class="mb-2">Chương trình này mô phỏng quá trình khai báo và tính toán phí giao dịch. Bạn có thể tương tác với các phần sau:</p>
+                <ul class="list-disc list-inside ml-4 mb-3">
+                    <li><strong>Tab "1. Khai báo Tham số Phí":</strong>
+                        <ul class="list-disc list-inside ml-6">
+                            <li>Điền thông tin vào các trường để định nghĩa một tham số phí mới.</li>
+                            <li>Nhấn "Lưu Tham Số" để thêm vào danh sách.</li>
+                            <li>Bạn có thể "Chỉnh sửa" hoặc "Xóa" các tham số đã có trong bảng.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Tab "1.2.3. Khai báo Mã Mức Phí":</strong>
+                        <ul class="list-disc list-inside ml-6">
+                            <li>Định nghĩa các "Mã Mức Phí" với các giá trị cố định, tỷ lệ, min/max.</li>
+                            <li>Các Mã Mức Phí này sẽ được sử dụng trong phần khai báo Tham số Phí.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Mục "2. Khách Hàng Demo":</strong>
+                        <ul class="list-disc list-inside ml-6">
+                            <li>Chọn một khách hàng demo từ danh sách để tự động điền các thông tin liên quan đến khách hàng vào các trường.</li>
+                            <li>Bạn cũng có thể tự chỉnh sửa các thông tin này.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Mục "3. Demo Chuyển Tiền":</strong>
+                        <ul class="list-disc list-inside ml-6">
+                            <li>Nhập "Số Tiền Chuyển Khoản" và các thông tin giao dịch khác.</li>
+                            <li>Nhấn "Tính Phí" để xem kết quả "Tổng Phí" và "Số Tiền Khách Hàng Nhận Được", cùng với "Chi Tiết Tính Phí & Thuyết Minh Logic" đầy đủ.</li>
+                            <li>Nhấn "✨ Giải thích phí dễ hiểu" để nhận được bản tóm tắt, đơn giản hóa của phần thuyết minh logic, giúp người dùng phổ thông dễ hiểu hơn.</li>
+                            <li>Nhấn "Xóa Toàn Bộ Dữ Liệu" để xóa tất cả dữ liệu đã lưu trong trình duyệt và đặt lại chương trình về trạng thái ban đầu.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p>Mọi thay đổi bạn thực hiện trên các biểu mẫu và bảng sẽ được tự động lưu vào bộ nhớ cục bộ của trình duyệt (Local Storage) để bạn có thể tiếp tục công việc sau này.</p>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button class="tab-button active" data-tab="fee-params">1. Khai báo Tham số Phí</button>
+            <button class="tab-button" data-tab="fee-codes">1.2.3. Khai báo Mã Mức Phí</button>
+        </div>
+
+        <!-- Tab Content: Fee Parameters -->
+        <div id="fee-params-tab-content" class="tab-content active">
+            <!-- Section 1: Fee Parameters -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">1. Khai báo Phí</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="feePlanCode" class="block text-sm font-medium text-gray-700 mb-1">Mã Biểu phí (Fee Plan Code)</label>
+                        <input type="text" id="feePlanCode" value="DN1B" class="w-full">
+                    </div>
+                    <div>
+                        <label for="feeType" class="block text-sm font-medium text-gray-700 mb-1">Loại phí (Fee Type)</label>
+                        <select id="feeType" class="w-full">
+                            <option value="1">1 - Transaction Fee</option>
+                            <option value="2">2 - SI Fee</option>
+                            <option value="3">3 - Payout Fee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="paymentType" class="block text-sm font-medium text-gray-700 mb-1">Sản phẩm chuyển tiền (Payment Type)</label>
+                        <select id="paymentType" class="w-full">
+                            <option value="IFT">IFT - Chuyển tiền nội bộ BIDV</option>
+                            <option value="DRO">DRO - Chuyển tiền trong nước đi</option>
+                            <option value="INBP">INBP - Chuyển tiền liên chi nhánh (đi và chi trả)</option>
+                            <option value="DROIN">DROIN - Chuyển tiền trong nước đến (chờ chi trả)</option>
+                            <option value="SPO">SPO - Chuyển tiền định kỳ</option>
+                            <option value="SCO">SCO - Nhờ thu định kỳ</option>
+                            <option value="CBROUT">CBROUT - Chuyển tiền biên mậu đi</option>
+                            <option value="CBRIN">CBRIN - Chuyển tiền biên mậu đến (đến và chi trả)</option>
+                            <option value="CBRINV">CBRINV - Tra soát chuyển tiền biên mậu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="onUsTransaction" class="block text-sm font-medium text-gray-700 mb-1">Giao dịch trong/ ngoài hệ thống (On Us Transaction)</label>
+                        <select id="onUsTransaction" class="w-full">
+                            <option value="2">2 - ALL (Không phân biệt)</option>
+                            <option value="1">1 - Yes (Trong hệ thống)</option>
+                            <option value="0">0 - No (Ngoài hệ thống)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="channelID" class="block text-sm font-medium text-gray-700 mb-1">Ứng dụng thực hiện giao dịch (Channel ID)</label>
+                        <select id="channelID" class="w-full">
+                            <option value="22">22 - TPTL</option>
+                            <option value="2">2 - WebCSR</option>
+                            <option value="2000">2000 - WEBCSR Bulk Upload</option>
+                            <option value="86">86 - IMAP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="effectiveDateFrom" class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu hiệu lực (Effective Date From)</label>
+                        <input type="date" id="effectiveDateFrom" class="w-full">
+                    </div>
+                    <div>
+                        <label for="effectiveDateTo" class="block text-sm font-medium text-gray-700 mb-1">Ngày hết hiệu lực (Effective Date To)</label>
+                        <input type="date" id="effectiveDateTo" class="w-full">
+                    </div>
+                    <div>
+                        <label for="levelType" class="block text-sm font-medium text-gray-700 mb-1">Cấp độ áp dụng biểu phí (Level Type)</label>
+                        <select id="levelType" class="w-full">
+                            <option value="5">5 - HO (Áp dụng toàn hệ thống)</option>
+                            <option value="4">4 - PROVINCE (Theo địa bàn Tỉnh/thành phố)</option>
+                            <option value="3">3 - BRANCH (Theo Chi nhánh)</option>
+                            <option value="2">2 - PACKAGE (Theo Gói sản phẩm)</option>
+                            <option value="1">1 - CIF (Theo Khách hàng)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="levelDetail" class="block text-sm font-medium text-gray-700 mb-1">Chi tiết cấp độ áp dụng biểu phí (Level Detail)</label>
+                        <input type="text" id="levelDetail" value="HO" class="w-full">
+                    </div>
+                    <div>
+                        <label for="branch" class="block text-sm font-medium text-gray-700 mb-1">Phạm vi áp dụng biểu phí (Branch)</label>
+                        <select id="branch" class="w-full">
+                            <option value="ALL">ALL (Toàn hệ thống)</option>
+                            <option value="120000">120000 - CN SỞ GIAO DỊCH I</option>
+                            <option value="120100">120100 - CN HÀ NỘI</option>
+                            <option value="120150">120150 - PGD HOÀN KIẾM</option>
+                            <option value="120200">120200 - CN ĐÔNG HÀ NỘI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="relationship" class="block text-sm font-medium text-gray-700 mb-1">Mối quan hệ (Relationship)</label>
+                        <select id="relationship" class="w-full">
+                            <option value="0">0 - ALL</option>
+                            <option value="1">1 - Cùng chủ tài khoản, Cùng chi nhánh</option>
+                            <option value="2">2 - Khác chủ tài khoản, Cùng chi nhánh</option>
+                            <option value="3">3 - Cùng chủ tài khoản, Khác chi nhánh</option>
+                            <option value="4">4 - Khác chủ tài khoản, Khác chi nhánh</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="customerFeeType" class="block text-sm font-medium text-gray-700 mb-1">Đối tượng khách hàng chịu phí (Customer Fee Type)</label>
+                        <select id="customerFeeType" class="w-full">
+                            <option value="4">4 - Cá nhân/ Hộ gia đình</option>
+                            <option value="1">1 - Ngân hàng</option>
+                            <option value="2">2 - Định chế tài chính phi ngân hàng</option>
+                            <option value="3">3 - Tổ chức</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="fundingOption" class="block text-sm font-medium text-gray-700 mb-1">Nguồn tiền giao dịch (Funding Option)</label>
+                        <select id="fundingOption" class="w-full">
+                        <option value="2">2 - Tài khoản khách hàng</option>
+                            <option value="ALL">ALL</option>
+                            <option value="1">1 - Tiền mặt</option>
+                            <option value="3">3 - Tài khoản GL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="feeCodeHomeCurrency" class="block text-sm font-medium text-gray-700 mb-1">Mã Mức phí VND (Fee Code – Home Currency)</label>
+                        <select id="feeCodeHomeCurrency" class="w-full">
+                            <!-- Options will be dynamically loaded by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="feeCodeForeignCurrency" class="block text-sm font-medium text-gray-700 mb-1">Mã Mức phí ngoại tệ (Fee Code – Foreign Currency)</label>
+                        <select id="feeCodeForeignCurrency" class="w-full">
+                            <!-- Options will be dynamically loaded by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+                    <button id="saveFeeParamBtn" class="btn-primary px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <i class="fas fa-save"></i> Lưu Tham Số
+                    </button>
+                    <button id="cancelEditBtn" class="cancel-edit-button px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 hidden">
+                        <i class="fas fa-times-circle"></i> Hủy Chỉnh Sửa
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-separator"></div>
+
+            <!-- Section 1.1: Fee Parameters Table -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">1.1. Danh sách Tham số Phí Đã Khai Báo</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-md">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-3 text-left">Mã BP</th>
+                                <th class="py-3 px-3 text-left">Loại phí</th>
+                                <th class="py-3 px-3 text-left">Sản phẩm</th>
+                                <th class="py-3 px-3 text-left">On Us Trans</th>
+                                <th class="py-3 px-3 text-left">Channel ID</th>
+                                <th class="py-3 px-3 text-left">Ngày BĐ HL</th>
+                                <th class="py-3 px-3 text-left">Ngày KT HL</th>
+                                <th class="py-3 px-3 text-left">Cấp độ</th>
+                                <th class="py-3 px-3 text-left">Chi tiết CĐ</th>
+                                <th class="py-3 px-3 text-left">Phạm vi Áp dụng</th>
+                                <th class="py-3 px-3 text-left">Mối quan hệ</th>
+                                <th class="py-3 px-3 text-left">Đối tượng KH</th>
+                                <th class="py-3 px-3 text-left">Nguồn tiền</th>
+                                <th class="py-3 px-3 text-left">Mã phí VND</th>
+                                <th class="py-3 px-3 text-left">Mã phí Ngoại tệ</th>
+                                <th class="py-3 px-3 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feeParametersTableBody" class="text-gray-700 text-sm font-light">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Fee Codes -->
+        <div id="fee-codes-tab-content" class="tab-content">
+            <!-- Section 1.2.3: Fee Code Declaration -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">1.2.3. Khai báo Mã Mức Phí (Fee Code)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="feeCode_code" class="block text-sm font-medium text-gray-700 mb-1">Mã mức phí (CODE)</label>
+                        <input type="text" id="feeCode_code" class="w-full" placeholder="Ví dụ: VND_0.02_10.000_500.000">
+                    </div>
+                    <div>
+                        <label for="feeCode_desc" class="block text-sm font-medium text-gray-700 mb-1">Mô tả Mã mức phí (DESC)</label>
+                        <input type="text" id="feeCode_desc" class="w-full">
+                    </div>
+                    <div>
+                        <label for="feeCode_currency" class="block text-sm font-medium text-gray-700 mb-1">Loại tiền của Mức phí (ZFEECRCD)</label>
+                        <select id="feeCode_currency" class="w-full">
+                            <option value="VND">VND</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="CNY">CNY</option>
+                            <option value="">Để trống (mặc định VND)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="feeCode_amtfix" class="block text-sm font-medium text-gray-700 mb-1">Số tiền cố định (AMTFIX)</label>
+                        <input type="text" id="feeCode_amtfix" class="w-full text-right" placeholder="Để trống nếu không có">
+                    </div>
+                    <div>
+                        <label for="feeCode_percent" class="block text-sm font-medium text-gray-700 mb-1">Giá trị % của Mức phí (PERCENT)</label>
+                        <input type="number" id="feeCode_percent" step="0.01" class="w-full text-right" placeholder="Để trống nếu không có">
+                    </div>
+                    <div>
+                        <label for="feeCode_amtmin" class="block text-sm font-medium text-gray-700 mb-1">Giá trị tối thiểu (AMTMIN)</label>
+                        <input type="text" id="feeCode_amtmin" class="w-full text-right" placeholder="Để trống nếu không có">
+                    </div>
+                    <div>
+                        <label for="feeCode_amtmax" class="block text-sm font-medium text-gray-700 mb-1">Giá trị tối đa (AMTMAX)</label>
+                        <input type="text" id="feeCode_amtmax" class="w-full text-right" placeholder="Để trống nếu không có">
+                    </div>
+                </div>
+                <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+                    <button id="saveFeeCodeBtn" class="btn-primary px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <i class="fas fa-save"></i> Lưu Mã Mức Phí
+                    </button>
+                    <button id="cancelFeeCodeEditBtn" class="cancel-edit-button px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 hidden">
+                        <i class="fas fa-times-circle"></i> Hủy Chỉnh Sửa
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-separator"></div>
+
+            <!-- Section 1.2.3.1: Fee Code Table -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">1.2.3.1. Danh sách Mã Mức Phí</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-md">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-3 text-left">Mã mức phí</th>
+                                <th class="py-3 px-3 text-left">Mô tả</th>
+                                <th class="py-3 px-3 text-left">Loại tiền</th>
+                                <th class="py-3 px-3 text-right">Cố định</th>
+                                <th class="py-3 px-3 text-right">Tỷ lệ (%)</th>
+                                <th class="py-3 px-3 text-right">Min</th>
+                                <th class="py-3 px-3 text-right">Max</th>
+                                <th class="py-3 px-3 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feeCodesTableBody" class="text-gray-700 text-sm font-light">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-separator"></div>
+
+        <!-- Section 2: Demo Customer -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">2. Khách Hàng Demo</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="md:col-span-full lg:col-span-3">
+                    <label for="customerSelect" class="block text-sm font-medium text-gray-700 mb-1">Chọn Khách Hàng Demo</label>
+                    <select id="customerSelect" class="w-full">
+                        <!-- Options will be dynamically loaded by JS -->
+                    </select>
+                </div>
+                <div>
+                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Tên Khách Hàng</label>
+                    <input type="text" id="customerName" value="Nguyễn Văn A" class="w-full">
+                </div>
+                <div>
+                    <label for="customer_levelType" class="block text-sm font-medium text-gray-700 mb-1">Cấp độ áp dụng biểu phí (Level Type)</label>
+                    <select id="customer_levelType" class="w-full">
+                        <option value="5">5 - HO (Áp dụng toàn hệ thống)</option>
+                        <option value="4">4 - PROVINCE (Theo địa bàn Tỉnh/thành phố)</option>
+                        <option value="3">3 - BRANCH (Theo Chi nhánh)</option>
+                        <option value="2">2 - PACKAGE (Theo Gói sản phẩm)</option>
+                        <option value="1">1 - CIF (Theo Khách hàng)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="customer_levelDetail" class="block text-sm font-medium text-gray-700 mb-1">Chi tiết cấp độ áp dụng biểu phí (Level Detail)</label>
+                    <input type="text" id="customer_levelDetail" value="HO" class="w-full">
+                </div>
+                <div>
+                    <label for="customer_branch" class="block text-sm font-medium text-gray-700 mb-1">Phạm vi áp dụng biểu phí (Branch)</label>
+                    <select id="customer_branch" class="w-full">
+                        <option value="ALL">ALL (Toàn hệ thống)</option>
+                        <option value="120000">120000 - CN SỞ GIAO DỊCH I</option>
+                        <option value="120100">120100 - CN HÀ NỘI</option>
+                        <option value="120150">120150 - PGD HOÀN KIẾM</option>
+                        <option value="120200">120200 - CN ĐÔNG HÀ NỘI</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="customer_customerFeeType" class="block text-sm font-medium text-gray-700 mb-1">Đối tượng khách hàng chịu phí (Customer Fee Type)</label>
+                    <select id="customer_customerFeeType" class="w-full">
+                        <option value="4">4 - Cá nhân/ Hộ gia đình</option>
+                        <option value="1">1 - Ngân hàng</option>
+                        <option value="2">2 - Định chế tài chính phi ngân hàng</option>
+                        <option value="3">3 - Tổ chức</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-separator"></div>
+
+        <!-- Section 3: Remittance Demo -->
+        <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">3. Demo Chuyển Tiền</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label for="transferAmount" class="block text-sm font-medium text-gray-700 mb-1">Số Tiền Chuyển Khoản (VND)</label>
+                    <input type="text" id="transferAmount" value="1,000,000" class="w-full text-right">
+                </div>
+                <div>
+                    <label for="recipientBank" class="block text-sm font-medium text-gray-700 mb-1">Ngân hàng thụ hưởng</label>
+                    <select id="recipientBank" class="w-full">
+                        <option value="BIDV">BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</option>
+                        <option value="VCB">VCB - Ngân hàng TMCP Ngoại thương Việt Nam</option>
+                        <option value="ACB">ACB - Ngân hàng TMCP Á Châu</option>
+                        <option value="TPB">TPB - Ngân hàng TMCP Tiên Phong</option>
+                        <option value="OTHER">Ngân hàng khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="recipientAccount" class="block text-sm font-medium text-gray-700 mb-1">Số tài khoản thụ hưởng</label>
+                    <input type="text" id="recipientAccount" value="1234567890" class="w-full">
+                </div>
+                <div>
+                    <label for="transferMessage" class="block text-sm font-medium text-gray-700 mb-1">Nội dung chuyển khoản</label>
+                    <textarea id="transferMessage" rows="2" class="w-full" placeholder="Nhập nội dung chuyển khoản"></textarea>
+                </div>
+                <div>
+                    <label for="transfer_relationship" class="block text-sm font-medium text-gray-700 mb-1">Mối quan hệ (Relationship)</label>
+                    <select id="transfer_relationship" class="w-full">
+                        <option value="0">0 - ALL</option>
+                        <option value="1">1 - Cùng chủ tài khoản, Cùng chi nhánh</option>
+                        <option value="2">2 - Khác chủ tài khoản, Cùng chi nhánh</option>
+                        <option value="3">3 - Cùng chủ tài khoản, Khác chi nhánh</option>
+                        <option value="4">4 - Khác chủ tài khoản, Khác chi nhánh</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transfer_fundingOption" class="block text-sm font-medium text-gray-700 mb-1">Nguồn tiền giao dịch (Funding Option)</label>
+                    <select id="transfer_fundingOption" class="w-full">
+                        <option value="2">2 - Tài khoản khách hàng</option>
+                        <option value="ALL">ALL</option>
+                        <option value="1">1 - Tiền mặt</option>
+                        <option value="3">3 - Tài khoản GL</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+                <button id="calculateBtn" class="btn-primary px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    <i class="fas fa-calculator"></i> Tính Phí
+                </button>
+                <button id="simplifyExplanationBtn" class="btn-primary px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50">
+                    <i class="fas fa-magic"></i> ✨ Giải thích phí dễ hiểu
+                </button>
+                <button id="clearDataBtn" class="px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                    <i class="fas fa-eraser"></i> Xóa Toàn Bộ Dữ Liệu
+                </button>
+            </div>
+
+            <div class="mt-8 p-4 bg-white rounded-lg shadow-inner">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3"><i class="fas fa-info-circle"></i> Kết Quả Tính Phí</h3>
+                <div class="space-y-2 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tổng Phí:</label>
+                        <p id="totalFeeDisplay" class="text-lg font-bold text-blue-600">0 VND</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Số Tiền Khách Hàng Nhận Được:</label>
+                        <p id="amountReceivedDisplay" class="text-lg font-bold text-green-600">0 VND</p>
+                    </div>
+                </div>
+                <div id="feeCalculationExplanation" class="text-gray-800 text-sm bg-gray-100 p-3 rounded-md border border-gray-200">
+                    <p class="font-bold mb-2">Chi Tiết Tính Phí & Thuyết Minh Logic:</p>
+                    <pre id="explanationText" class="whitespace-pre-wrap">Nhấn "Tính Phí" để xem chi tiết.</pre>
+                </div>
+                <div id="simplifiedFeeExplanationContainer" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-3"><i class="fas fa-magic"></i> Giải Thích Phí Dễ Hiểu ✨</h3>
+                    <pre id="simplifiedExplanationText" class="whitespace-pre-wrap text-gray-700">Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.</pre>
+                </div>
+                <div id="messageBox" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md mt-4" role="alert">
+                    <p class="font-bold">Lưu ý:</p>
+                    <p id="messageText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = "https://rmbsxccrwrktbjlnezpu.supabase.co";
+        // LƯU Ý QUAN TRỌNG: SUPABASE_ANON_KEY là khóa API công khai, KHÔNG phải là mã token JWT của người dùng.
+        // Hàm Supabase của bạn yêu cầu một mã token JWT hợp lệ của người dùng đã xác thực trong header Authorization.
+        // Việc sử dụng SUPABASE_ANON_KEY ở đây sẽ dẫn đến lỗi "Unauthorized: Invalid token or user not found" từ hàm Supabase.
+        // Để khắc phục, bạn cần triển khai xác thực người dùng trên client và gửi session.access_token thay vì SUPABASE_ANON_KEY.
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y";
+        const SUPABASE_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/analyze-activities-with-gemini`;
+
+        // Function to format numbers as currency (VND)
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Function to format number input with thousand separators
+        function formatNumberInput(inputElement) {
+            let value = inputElement.value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+            if (value) {
+                inputElement.value = new Intl.NumberFormat('en-US').format(parseFloat(value));
+            } else {
+                inputElement.value = '';
+            }
+        }
+
+        // Function to parse formatted number string to float
+        function parseFormattedNumber(formattedString) {
+            return parseFloat(formattedString.replace(/,/g, ''));
+        }
+
+        // Function to show a custom message box instead of alert()
+        function showMessageBox(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            // Optionally hide after some time
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Helper function to get text content from select element based on value
+        function getSelectText(selectElement, value) {
+            const option = selectElement.querySelector(`option[value="${value}"]`);
+            return option ? option.textContent : value;
+        }
+
+        // Get references to DOM elements for Fee Parameters
+        const feePlanCodeInput = document.getElementById('feePlanCode');
+        const feeTypeSelect = document.getElementById('feeType');
+        const paymentTypeSelect = document.getElementById('paymentType');
+        const onUsTransactionSelect = document.getElementById('onUsTransaction');
+        const channelIDSelect = document.getElementById('channelID');
+        const effectiveDateFromInput = document.getElementById('effectiveDateFrom');
+        const effectiveDateToInput = document.getElementById('effectiveDateTo');
+        const levelTypeSelect = document.getElementById('levelType');
+        const levelDetailInput = document.getElementById('levelDetail');
+        const branchSelect = document.getElementById('branch');
+        const relationshipSelect = document.getElementById('relationship');
+        const customerFeeTypeSelect = document.getElementById('customerFeeType');
+        const fundingOptionSelect = document.getElementById('fundingOption');
+        const feeCodeHomeCurrencySelect = document.getElementById('feeCodeHomeCurrency');
+        const feeCodeForeignCurrencySelect = document.getElementById('feeCodeForeignCurrency');
+        const saveFeeParamBtn = document.getElementById('saveFeeParamBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const feeParametersTableBody = document.getElementById('feeParametersTableBody');
+
+        // Get references to DOM elements for Fee Codes
+        const feeCode_code_Input = document.getElementById('feeCode_code');
+        const feeCode_desc_Input = document.getElementById('feeCode_desc');
+        const feeCode_currency_Select = document.getElementById('feeCode_currency');
+        const feeCode_amtfix_Input = document.getElementById('feeCode_amtfix');
+        const feeCode_percent_Input = document.getElementById('feeCode_percent');
+        const feeCode_amtmin_Input = document.getElementById('feeCode_amtmin');
+        const feeCode_amtmax_Input = document.getElementById('feeCode_amtmax');
+        const saveFeeCodeBtn = document.getElementById('saveFeeCodeBtn');
+        const cancelFeeCodeEditBtn = document.getElementById('cancelFeeCodeEditBtn');
+        const feeCodesTableBody = document.getElementById('feeCodesTableBody');
+
+        // Get references to DOM elements for Customer Demo & Remittance
+        const customerSelect = document.getElementById('customerSelect'); // New
+        const customerNameInput = document.getElementById('customerName');
+        const customer_levelTypeSelect = document.getElementById('customer_levelType'); // New
+        const customer_levelDetailInput = document.getElementById('customer_levelDetail'); // New
+        const customer_branchSelect = document.getElementById('customer_branch'); // New
+        const customer_customerFeeTypeSelect = document.getElementById('customer_customerFeeType'); // New
+        
+        // Get references to new DOM elements for Transfer Demo
+        const transferAmountInput = document.getElementById('transferAmount');
+        const recipientBankSelect = document.getElementById('recipientBank');
+        const recipientAccountInput = document.getElementById('recipientAccount');
+        const transferMessageInput = document.getElementById('transferMessage');
+        const transfer_relationshipSelect = document.getElementById('transfer_relationship');
+        const transfer_fundingOptionSelect = document.getElementById('transfer_fundingOption');
+        const explanationText = document.getElementById('explanationText');
+        const simplifiedExplanationText = document.getElementById('simplifiedExplanationText'); // New
+        const simplifyExplanationBtn = document.getElementById('simplifyExplanationBtn'); // New
+
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const totalFeeDisplay = document.getElementById('totalFeeDisplay');
+        const amountReceivedDisplay = document.getElementById('amountReceivedDisplay');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        // Tab elements
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Collapsible instruction section elements
+        const instructionHeader = document.getElementById('instructionHeader');
+        const instructionContent = document.getElementById('instructionContent');
+
+        let feeParametersData = []; // Array to store fee parameter objects
+        let editingFeeParamId = null; // Stores the ID of the fee parameter being edited
+
+        let feeCodesData = []; // Array to store fee code objects
+        let editingFeeCodeId = null; // Stores the ID of the fee code being edited
+
+        // Default values for inputs
+        const defaultValues = {
+            feePlanCode: 'DN1B',
+            feeType: '1', // Transaction Fee
+            paymentType: 'IFT',
+            onUsTransaction: '2', // ALL
+            channelID: '22', // TPTL
+            effectiveDateFrom: new Date().toISOString().slice(0, 10), // Current date
+            effectiveDateTo: '2099-12-31', // Far future date
+            levelType: '5', // HO
+            levelDetail: 'HO',
+            branch: 'ALL',
+            relationship: '0', // ALL
+            customerFeeType: '4', // Individual/Household
+            fundingOption: '2', // Customer Account
+
+            feeCodeHomeCurrency: 'VND_0.02_10000_500000', // Default Fee Code VND
+            feeCodeForeignCurrency: 'USD_0.01_2_100', // Default Fee Code Foreign
+
+            customerName: 'Nguyễn Văn A',
+            transactionAmount: 1000000
+        };
+
+        // Demo data for fee parameters table
+        const initialFeeParametersData = [
+            {
+                id: 'fp1', feePlanCode: 'DN1B', feeType: '1', paymentType: 'IFT', onUsTransaction: '2', channelID: '22',
+                effectiveDateFrom: '2023-01-01', effectiveDateTo: '2099-12-31', levelType: '5', levelDetail: 'HO',
+                branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2',
+                feeCodeHomeCurrency: 'VND_0.02_10000_500000', feeCodeForeignCurrency: ''
+            },
+            {
+                id: 'fp2', feePlanCode: 'DN2B', feeType: '1', paymentType: 'DRO', onUsTransaction: '1', channelID: '2',
+                effectiveDateFrom: '2023-01-01', effectiveDateTo: '2099-12-31', levelType: '3', levelDetail: '120100', // Branch 120100
+                branch: '120100', relationship: '0', customerFeeType: '3', fundingOption: '1',
+                feeCodeHomeCurrency: 'VND_0.01_15000_750000', feeCodeForeignCurrency: 'USD_0.01_5_100'
+            },
+            {
+                id: 'fp3', feePlanCode: 'DN3F', feeType: '3', paymentType: 'INBP', onUsTransaction: '2', channelID: '22',
+                effectiveDateFrom: '2023-01-01', effectiveDateTo: '2099-12-31', levelType: '1', levelDetail: '369565', // CIF 369565
+                branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2',
+                feeCodeHomeCurrency: 'VND_FIX_5000', feeCodeForeignCurrency: ''
+            },
+            {
+                id: 'fp4', feePlanCode: 'DN4C', feeType: '2', paymentType: 'SPO', onUsTransaction: '0', channelID: '2000',
+                effectiveDateFrom: '2023-06-01', effectiveDateTo: '2024-12-31', levelType: '2', levelDetail: 'PACKAGE_GOLD', // Package GOLD
+                branch: 'ALL', relationship: '0', customerFeeType: '1', fundingOption: '2',
+                feeCodeHomeCurrency: 'VND_0.025_20000_1000000', feeCodeForeignCurrency: 'USD_0.025_5_50'
+            }
+        ];
+
+        // Demo data for fee codes table
+        const initialFeeCodesData = [
+            {
+                id: 'fc1', code: 'VND_0.02_10000_500000', desc: 'Phí 0.02%, Min 10k, Max 500k VND', currency: 'VND',
+                amtfix: '', percent: 0.02, amtmin: 10000, amtmax: 500000
+            },
+            {
+                id: 'fc2', code: 'USD_0.01_2_100', desc: 'Phí 0.01%, Min 2, Max 100 USD', currency: 'USD',
+                amtfix: '', percent: 0.01, amtmin: 2, amtmax: 100
+            },
+            {
+                id: 'fc3', code: 'OTHERFEECODE', desc: 'Mã phí khác (không tính phí)', currency: '',
+                amtfix: '', percent: '', amtmin: '', amtmax: ''
+            },
+            {
+                id: 'fc4', code: 'VND_FIX_5000', desc: 'Phí cố định 5.000 VND', currency: 'VND',
+                amtfix: 5000, percent: '', amtmin: '', amtmax: ''
+            },
+            {
+                id: 'fc5', code: 'VND_0.01_15000_750000', desc: 'Phí 0.01%, Min 15k, Max 750k VND', currency: 'VND',
+                amtfix: '', percent: 0.01, amtmin: 15000, amtmax: 750000
+            },
+            {
+                id: 'fc6', code: 'USD_0.01_5_100', desc: 'Phí 0.01%, Min 5, Max 100 USD', currency: 'USD',
+                amtfix: '', percent: 0.01, amtmin: 5, amtmax: 100
+            },
+            {
+                id: 'fc7', code: 'VND_0.025_20000_1000000', desc: 'Phí 0.025%, Min 20k, Max 1M VND', currency: 'VND',
+                amtfix: '', percent: 0.025, amtmin: 20000, amtmax: 1000000
+            },
+            {
+                id: 'fc8', code: 'USD_0.025_5_50', desc: 'Phí 0.025%, Min 5, Max 50 USD', currency: 'USD',
+                amtfix: '', percent: 0.025, amtmin: 5, amtmax: 50
+            }
+        ];
+
+        // Demo Customer Data (New)
+        const demoCustomers = [
+            {
+                id: 'cust1', name: 'Nguyễn Văn A (Cá nhân, HO)', transactionAmount: 1000000,
+                levelType: '5', levelDetail: 'HO', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+            },
+            {
+                id: 'cust2', name: 'Công ty B (Tổ chức, CN Hà Nội)', transactionAmount: 5000000,
+                levelType: '3', levelDetail: '120100', branch: '120100', relationship: '0', customerFeeType: '3', fundingOption: '2'
+            },
+            {
+                id: 'cust3', name: 'Khách hàng VIP (CIF: 369565)', transactionAmount: 200000,
+                levelType: '1', levelDetail: '369565', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+            },
+            {
+                id: 'cust4', name: 'Gói Vàng (Package: GOLD)', transactionAmount: 750000,
+                levelType: '2', levelDetail: 'PACKAGE_GOLD', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+            }
+        ];
+
+        // Function to update levelDetail input based on levelType selection (for Fee Parameters tab)
+        function updateLevelDetailInput() {
+            const levelType = levelTypeSelect.value;
+            levelDetailInput.readOnly = false;
+            levelDetailInput.value = ''; // Clear previous value
+            levelDetailInput.placeholder = ''; // Clear previous placeholder
+
+            switch (levelType) {
+                case '1': // CIF
+                    levelDetailInput.placeholder = 'Ví dụ: 369565 (Số CIF khách hàng)';
+                    break;
+                case '2': // PACKAGE
+                    levelDetailInput.placeholder = 'Ví dụ: TEST UAT3 (Mã gói sản phẩm)';
+                    break;
+                case '3': // BRANCH
+                    levelDetailInput.placeholder = 'Ví dụ: 120000 (Mã chi nhánh)';
+                    break;
+                case '4': // PROVINCE
+                    levelDetailInput.placeholder = 'Ví dụ: 01 (Mã Tỉnh/thành phố)';
+                    break;
+                case '5': // HO
+                    levelDetailInput.value = 'HO';
+                    levelDetailInput.readOnly = true;
+                    break;
+                default:
+                    levelDetailInput.placeholder = '';
+                    break;
+            }
+            saveDataToLocalStorage(); // Save changes to levelDetail input
+        }
+
+        // Function to update customer levelDetail input based on levelType selection (for Customer Demo tab)
+        function updateCustomerLevelDetailInput() {
+            const levelType = customer_levelTypeSelect.value;
+            customer_levelDetailInput.readOnly = false;
+            customer_levelDetailInput.value = ''; // Clear previous value
+            customer_levelDetailInput.placeholder = ''; // Clear previous placeholder
+
+            switch (levelType) {
+                case '1': // CIF
+                    customer_levelDetailInput.placeholder = 'Ví dụ: 369565 (Số CIF khách hàng)';
+                    break;
+                case '2': // PACKAGE
+                    customer_levelDetailInput.placeholder = 'Ví dụ: TEST UAT3 (Mã gói sản phẩm)';
+                    break;
+                case '3': // BRANCH
+                    customer_levelDetailInput.placeholder = 'Ví dụ: 120000 (Mã chi nhánh)';
+                    break;
+                case '4': // PROVINCE
+                    customer_levelDetailInput.placeholder = 'Ví dụ: 01 (Mã Tỉnh/thành phố)';
+                    break;
+                case '5': // HO
+                    customer_levelDetailInput.value = 'HO';
+                    customer_levelDetailInput.readOnly = true;
+                    break;
+                default:
+                    customer_levelDetailInput.placeholder = '';
+                    break;
+            }
+            saveDataToLocalStorage(); // Save changes to customer levelDetail input
+        }
+
+        // --- Customer Demo Functions (New) ---
+        function populateCustomerDropdown() {
+            customerSelect.innerHTML = '<option value="">-- Chọn khách hàng demo --</option>';
+            demoCustomers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                customerSelect.appendChild(option);
+            });
+        }
+
+        function loadSelectedCustomerData() {
+            const selectedCustomerId = customerSelect.value;
+            const selectedCustomer = demoCustomers.find(cust => cust.id === selectedCustomerId);
+
+            if (selectedCustomer) {
+                customerNameInput.value = selectedCustomer.name;
+                // Only update customer-specific fields in section 2
+                customer_levelTypeSelect.value = selectedCustomer.levelType;
+                customer_levelDetailInput.value = selectedCustomer.levelDetail;
+                customer_branchSelect.value = selectedCustomer.branch;
+                customer_customerFeeTypeSelect.value = selectedCustomer.customerFeeType;
+                
+                // Update transfer-specific fields in section 3
+                transferAmountInput.value = new Intl.NumberFormat('en-US').format(selectedCustomer.transactionAmount);
+                transfer_relationshipSelect.value = selectedCustomer.relationship;
+                transfer_fundingOptionSelect.value = selectedCustomer.fundingOption;
+
+            } else {
+                // Reset to default customer values if no customer is selected
+                customerNameInput.value = defaultValues.customerName;
+                customer_levelTypeSelect.value = defaultValues.levelType;
+                customer_levelDetailInput.value = defaultValues.levelDetail;
+                customer_branchSelect.value = defaultValues.branch;
+                customer_customerFeeTypeSelect.value = defaultValues.customerFeeType;
+
+                transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount);
+                transfer_relationshipSelect.value = defaultValues.relationship;
+                transfer_fundingOptionSelect.value = defaultValues.fundingOption;
+            }
+            updateCustomerLevelDetailInput(); // Update placeholder/readonly for customer levelDetail
+            saveDataToLocalStorage();
+        }
+
+        // Function to perform fee calculation
+        function calculateFee() {
+            try {
+                const transferAmount = parseFormattedNumber(transferAmountInput.value);
+                let totalFee = 0;
+                let explanation = '';
+
+                // Reset simplified explanation
+                simplifiedExplanationText.textContent = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+
+                // Basic validation
+                if (isNaN(transferAmount) || transferAmount < 0) {
+                    showMessageBox('Vui lòng nhập số tiền chuyển khoản hợp lệ.');
+                    explanationText.textContent = 'Vui lòng nhập số tiền chuyển khoản hợp lệ.';
+                    totalFeeDisplay.textContent = formatCurrency(0);
+                    amountReceivedDisplay.textContent = formatCurrency(0);
+                    return;
+                }
+
+                // Collect all attributes for matching
+                const transactionAttributes = {
+                    paymentType: paymentTypeSelect.value, // From Fee Parameters tab
+                    onUsTransaction: onUsTransactionSelect.value, // From Fee Parameters tab
+                    channelID: channelIDSelect.value, // From Fee Parameters tab
+                    levelType: customer_levelTypeSelect.value, // From Customer Demo tab
+                    levelDetail: customer_levelDetailInput.value, // From Customer Demo tab
+                    branch: customer_branchSelect.value, // From Customer Demo tab
+                    relationship: transfer_relationshipSelect.value, // From Transfer Demo tab
+                    customerFeeType: customer_customerFeeTypeSelect.value, // From Customer Demo tab
+                    fundingOption: transfer_fundingOptionSelect.value // From Transfer Demo tab
+                };
+
+                explanation += `**Thông tin giao dịch:**\n`;
+                for (const key in transactionAttributes) {
+                    explanation += `- ${key}: ${transactionAttributes[key]}\n`;
+                }
+                explanation += `- Số tiền chuyển khoản: ${formatCurrency(transferAmount)}\n\n`;
+
+                // Find a matching fee parameter
+                let matchedFeeParam = null;
+                // Iterate through feeParametersData to find the first exact match.
+                // A real system would have more complex rule matching logic (e.g., wildcards, date ranges, priorities for more specific rules).
+                for (const param of feeParametersData) {
+                    // Check if the current date is within the effective date range of the fee parameter
+                    const currentDate = new Date().toISOString().slice(0, 10);
+                    
+                    const isDateValid = (currentDate >= param.effectiveDateFrom && currentDate <= param.effectiveDateTo);
+                    
+                    // Check if all attributes match, considering "ALL" as a wildcard
+                    const isMatch = isDateValid &&
+                        (param.paymentType === transactionAttributes.paymentType) &&
+                        (param.onUsTransaction === transactionAttributes.onUsTransaction) &&
+                        (param.channelID === transactionAttributes.channelID) &&
+                        (param.levelType === transactionAttributes.levelType) &&
+                        (param.levelDetail === transactionAttributes.levelDetail) &&
+                        (param.branch === 'ALL' || param.branch === transactionAttributes.branch) &&
+                        (param.relationship === 'ALL' || param.relationship === transactionAttributes.relationship) &&
+                        (param.customerFeeType === transactionAttributes.customerFeeType) &&
+                        (param.fundingOption === 'ALL' || param.fundingOption === transactionAttributes.fundingOption);
+
+                    if (isMatch) {
+                        matchedFeeParam = param;
+                        break; // Found a match, take the first one
+                    }
+                }
+
+                if (matchedFeeParam) {
+                    explanation += `**Kết quả khớp tham số:**\n`;
+                    explanation += `- Đã tìm thấy tham số phí phù hợp: Mã Biểu phí "${matchedFeeParam.feePlanCode}" (ID: ${matchedFeeParam.id}).\n`;
+                    const selectedHomeFeeCodeId = matchedFeeParam.feeCodeHomeCurrency;
+                    // const selectedForeignFeeCodeId = matchedFeeParam.feeCodeForeignCurrency; // Not used for calculation yet
+
+                    if (selectedHomeFeeCodeId) {
+                        const homeFeeCode = feeCodesData.find(code => code.code === selectedHomeFeeCodeId);
+                        if (homeFeeCode) {
+                            explanation += `- Áp dụng Mã Mức Phí VND: "${homeFeeCode.code}" - "${homeFeeCode.desc}".\n`;
+                            if (homeFeeCode.amtfix !== '') {
+                                totalFee = parseFloat(homeFeeCode.amtfix);
+                                explanation += `- Loại phí: Cố định. Số tiền cố định được áp dụng: ${formatCurrency(totalFee)}.\n`;
+                            } else if (homeFeeCode.percent !== '') {
+                                totalFee = (parseFloat(homeFeeCode.percent) / 100) * transferAmount;
+                                explanation += `- Loại phí: Tỷ lệ (${homeFeeCode.percent}%).\n`;
+                                explanation += `- Số tiền phí ban đầu (trước khi áp dụng Min/Max): ${formatCurrency(totalFee)}.\n`;
+
+                                // Apply min/max if percentage fee and min/max are defined
+                                if (homeFeeCode.amtmin !== '' && totalFee < parseFloat(homeFeeCode.amtmin)) {
+                                    totalFee = parseFloat(homeFeeCode.amtmin);
+                                    explanation += `- Áp dụng mức tối thiểu: ${formatCurrency(homeFeeCode.amtmin)} (vì phí ban đầu nhỏ hơn Min).\n`;
+                                }
+                                if (homeFeeCode.amtmax !== '' && totalFee > parseFloat(homeFeeCode.amtmax)) {
+                                    totalFee = parseFloat(homeFeeCode.amtmax);
+                                    explanation += `- Áp dụng mức tối đa: ${formatCurrency(homeFeeCode.amtmax)} (vì phí ban đầu lớn hơn Max).\n`;
+                                }
+                            } else {
+                                explanation += `- Mã mức phí này không có giá trị cố định hoặc tỷ lệ. Phí được áp dụng: 0 VND.\n`;
+                            }
+                        } else {
+                            explanation += `- Lỗi: Không tìm thấy chi tiết cho Mã mức phí VND: "${selectedHomeFeeCodeId}". Phí được áp dụng: 0 VND.\n`;
+                            showMessageBox(`Không tìm thấy chi tiết cho Mã mức phí VND: ${selectedHomeFeeCodeId}`);
+                        }
+                    } else {
+                        explanation += `- Tham số phí phù hợp không có Mã mức phí VND được khai báo. Phí được áp dụng: 0 VND.\n`;
+                        showMessageBox('Tham số phí phù hợp không có Mã mức phí VND được khai báo.');
+                    }
+                } else {
+                    explanation += '**Kết quả khớp tham số:**\n';
+                    explanation += '- Không tìm thấy tham số phí phù hợp cho khách hàng và giao dịch này dựa trên các tiêu chí đã chọn. Phí được áp dụng: 0 VND.\n';
+                    showMessageBox('Không tìm thấy tham số phí phù hợp cho khách hàng và giao dịch này. Vui lòng kiểm tra lại khai báo phí.');
+                }
+
+                // Calculate amount customer receives
+                const amountReceived = transferAmount - totalFee;
+
+                // Update display using formatCurrency
+                totalFeeDisplay.textContent = formatCurrency(totalFee);
+                amountReceivedDisplay.textContent = formatCurrency(amountReceived);
+                explanationText.textContent = explanation;
+
+                // Optional: Provide feedback if amount received is negative
+                if (amountReceived < 0) {
+                    showMessageBox('Lưu ý: Số tiền khách hàng nhận được là âm. Vui lòng kiểm tra lại số tiền giao dịch hoặc thông số phí.');
+                }
+
+            } catch (error) {
+                console.error("Lỗi khi tính toán phí:", error);
+                explanationText.textContent = `Đã xảy ra lỗi trong quá trình tính toán: ${error.message}. Vui lòng thử lại.`;
+                showMessageBox('Đã xảy ra lỗi trong quá trình tính toán. Vui lòng thử lại.');
+            }
+        }
+
+        // Function to get simplified explanation from Supabase Edge Function
+        async function getSimplifiedFeeExplanation(detailedExplanation) {
+            if (!detailedExplanation || detailedExplanation.trim() === 'Nhấn "Tính Phí" để xem chi tiết.') {
+                return "Không có thông tin chi tiết để giải thích.";
+            }
+
+            // Construct payload for Supabase Edge Function
+            // Note: The Supabase function's internal prompt is for "running activities".
+            // We are sending fee explanation text as "activities" data.
+            // This might lead to irrelevant AI responses.
+            const payload = {
+                // Wrap the detailed explanation in an array, as the Supabase function expects 'activities' to be an array.
+                // The Supabase function's prompt will then JSON.stringify this.
+                activities: [{ description: detailedExplanation }], // Using 'description' as a generic field
+                runnerCredentialId: null, // Not applicable for fee explanation
+                clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone // Get client's timezone
+            };
+
+            try {
+                simplifiedExplanationText.textContent = "Đang tạo giải thích dễ hiểu... Vui lòng chờ.";
+                simplifiedExplanationText.classList.add('text-gray-500', 'italic');
+
+                const response = await fetch(SUPABASE_EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // LƯU Ý QUAN TRỌNG: Hàm Supabase của bạn yêu cầu một mã token JWT hợp lệ của người dùng đã xác thực.
+                        // SUPABASE_ANON_KEY KHÔNG phải là mã token JWT của người dùng, nên việc sử dụng nó ở đây sẽ gây lỗi "Unauthorized".
+                        // Để hàm Supabase hoạt động, bạn cần thay thế SUPABASE_ANON_KEY bằng session.access_token của người dùng đã đăng nhập.
+                        // HOẶC, nếu hàm không cần xác thực người dùng, bạn cần chỉnh sửa code của hàm Supabase để bỏ qua kiểm tra này.
+                        // 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    return result.analysis;
+                } else {
+                    console.error("Error from Supabase Edge Function:", result.error || "Unknown error");
+                    return `Lỗi từ hàm Supabase: ${result.error || 'Lỗi không xác định'}. Vui lòng kiểm tra console để biết chi tiết.`;
+                }
+            } catch (error) {
+                console.error("Error calling Supabase Edge Function:", error);
+                return `Lỗi khi gọi hàm Supabase: ${error.message}. Vui lòng thử lại.`;
+            } finally {
+                simplifiedExplanationText.classList.remove('text-gray-500', 'italic');
+            }
+        }
+
+        // --- Fee Parameters Table Functions ---
+        function renderFeeParametersTable() {
+            feeParametersTableBody.innerHTML = ''; // Clear existing rows
+            if (feeParametersData.length === 0) {
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = `<td colspan="16" class="py-3 px-6 text-center text-gray-500">Chưa có tham số phí nào được khai báo.</td>`;
+                feeParametersTableBody.appendChild(noDataRow);
+                return;
+            }
+
+            feeParametersData.forEach(param => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                row.innerHTML = `
+                    <td class="py-3 px-3 text-left whitespace-nowrap">${param.feePlanCode}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(feeTypeSelect, param.feeType)}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(paymentTypeSelect, param.paymentType).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(onUsTransactionSelect, param.onUsTransaction).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(channelIDSelect, param.channelID).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${param.effectiveDateFrom}</td>
+                    <td class="py-3 px-3 text-left">${param.effectiveDateTo}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(levelTypeSelect, param.levelType).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${param.levelDetail}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(branchSelect, param.branch).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(relationshipSelect, param.relationship).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(customerFeeTypeSelect, param.customerFeeType).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(fundingOptionSelect, param.fundingOption).split(' - ')[0]}</td>
+                    <td class="py-3 px-3 text-left">${param.feeCodeHomeCurrency}</td>
+                    <td class="py-3 px-3 text-left">${param.feeCodeForeignCurrency}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        <button onclick="editFeeParameter('${param.id}')" class="action-button edit-button rounded-md hover:bg-amber-600"><i class="fas fa-edit"></i> Chỉnh sửa</button>
+                        <button onclick="deleteFeeParameter('${param.id}')" class="action-button delete-button rounded-md hover:bg-red-600"><i class="fas fa-trash-alt"></i> Xóa</button>
+                    </td>
+                `;
+                feeParametersTableBody.appendChild(row);
+            });
+            saveDataToLocalStorage(); // Save after rendering
+        }
+
+        function addOrUpdateFeeParameter() {
+            const newParam = {
+                id: editingFeeParamId || Date.now().toString(), // Use existing ID or generate new
+                feePlanCode: feePlanCodeInput.value,
+                feeType: feeTypeSelect.value,
+                paymentType: paymentTypeSelect.value,
+                onUsTransaction: onUsTransactionSelect.value,
+                channelID: channelIDSelect.value,
+                effectiveDateFrom: effectiveDateFromInput.value,
+                effectiveDateTo: effectiveDateToInput.value,
+                levelType: levelTypeSelect.value,
+                levelDetail: levelDetailInput.value,
+                branch: branchSelect.value,
+                relationship: relationshipSelect.value,
+                customerFeeType: customerFeeTypeSelect.value,
+                fundingOption: fundingOptionSelect.value,
+                feeCodeHomeCurrency: feeCodeHomeCurrencySelect.value,
+                feeCodeForeignCurrency: feeCodeForeignCurrencySelect.value
+            };
+
+            // Basic validation for required fields
+            if (!newParam.feePlanCode || !newParam.effectiveDateFrom || !newParam.effectiveDateTo || !newParam.levelDetail || (!newParam.feeCodeHomeCurrency && !newParam.feeCodeForeignCurrency)) {
+                showMessageBox('Vui lòng điền đầy đủ các trường bắt buộc và chọn ít nhất một Mã mức phí.');
+                return;
+            }
+
+            if (editingFeeParamId) {
+                // Update existing parameter
+                const index = feeParametersData.findIndex(p => p.id === editingFeeParamId);
+                if (index !== -1) {
+                    feeParametersData[index] = newParam;
+                    showMessageBox('Tham số phí đã được cập nhật.');
+                }
+                editingFeeParamId = null; // Exit edit mode
+                cancelEditBtn.classList.add('hidden');
+                saveFeeParamBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Tham Số'; // Reset button text and icon
+            } else {
+                // Add new parameter
+                feeParametersData.push(newParam);
+                showMessageBox('Tham số phí đã được thêm mới.');
+            }
+            clearFeeParameterForm(); // Clear form after saving
+            renderFeeParametersTable(); // Re-render table
+        }
+
+        function editFeeParameter(id) {
+            const paramToEdit = feeParametersData.find(p => p.id === id);
+            if (paramToEdit) {
+                feePlanCodeInput.value = paramToEdit.feePlanCode;
+                feeTypeSelect.value = paramToEdit.feeType;
+                paymentTypeSelect.value = paramToEdit.paymentType;
+                onUsTransactionSelect.value = paramToEdit.onUsTransaction;
+                channelIDSelect.value = paramToEdit.channelID;
+                effectiveDateFromInput.value = paramToEdit.effectiveDateFrom;
+                effectiveDateToInput.value = paramToEdit.effectiveDateTo;
+                levelTypeSelect.value = paramToEdit.levelType;
+                levelDetailInput.value = paramToEdit.levelDetail;
+                branchSelect.value = paramToEdit.branch;
+                relationshipSelect.value = paramToEdit.relationship;
+                customerFeeTypeSelect.value = paramToEdit.customerFeeType;
+                fundingOptionSelect.value = paramToEdit.fundingOption;
+                feeCodeHomeCurrencySelect.value = paramToEdit.feeCodeHomeCurrency;
+                feeCodeForeignCurrencySelect.value = paramToEdit.feeCodeForeignCurrency;
+
+                editingFeeParamId = id; // Set editing mode
+                saveFeeParamBtn.innerHTML = '<i class="fas fa-pencil-alt"></i> Cập nhật Tham Số'; // Change button text and icon
+                cancelEditBtn.classList.remove('hidden');
+                updateLevelDetailInput(); // Update placeholder/readonly for levelDetail
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
+            }
+        }
+
+        function deleteFeeParameter(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa tham số phí này?')) {
+                feeParametersData = feeParametersData.filter(p => p.id !== id);
+                renderFeeParametersTable();
+                showMessageBox('Tham số phí đã được xóa.');
+                if (editingFeeParamId === id) { // If the deleted item was being edited
+                    cancelEditFeeParam();
+                }
+            }
+        }
+
+        function clearFeeParameterForm() {
+            feePlanCodeInput.value = defaultValues.feePlanCode;
+            feeTypeSelect.value = defaultValues.feeType;
+            paymentTypeSelect.value = defaultValues.paymentType;
+            onUsTransactionSelect.value = defaultValues.onUsTransaction;
+            channelIDSelect.value = defaultValues.channelID;
+            effectiveDateFromInput.value = defaultValues.effectiveDateFrom;
+            effectiveDateToInput.value = defaultValues.effectiveDateTo;
+            levelTypeSelect.value = defaultValues.levelType;
+            levelDetailInput.value = defaultValues.levelDetail;
+            branchSelect.value = defaultValues.branch;
+            relationshipSelect.value = defaultValues.relationship;
+            customerFeeTypeSelect.value = defaultValues.customerFeeType;
+            fundingOptionSelect.value = defaultValues.fundingOption;
+            feeCodeHomeCurrencySelect.value = '';
+            feeCodeForeignCurrencySelect.value = '';
+            updateLevelDetailInput(); // Reset levelDetail input placeholder/readonly
+        }
+
+        function cancelEditFeeParam() {
+            editingFeeParamId = null;
+            saveFeeParamBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Tham Số'; // Reset button text and icon
+            cancelEditBtn.classList.add('hidden');
+            clearFeeParameterForm();
+        }
+
+        // --- Fee Codes Table Functions ---
+        function populateFeeCodeDropdowns() {
+            feeCodeHomeCurrencySelect.innerHTML = '<option value="">-- Chọn --</option>';
+            feeCodeForeignCurrencySelect.innerHTML = '<option value="">-- Chọn --</option>';
+
+            feeCodesData.forEach(code => {
+                const option = document.createElement('option');
+                option.value = code.code;
+                option.textContent = code.code + (code.desc ? ` - ${code.desc}` : '');
+                
+                if (code.currency === 'VND' || code.currency === '') { // Assuming empty currency defaults to VND
+                    feeCodeHomeCurrencySelect.appendChild(option.cloneNode(true));
+                } else {
+                    feeCodeForeignCurrencySelect.appendChild(option.cloneNode(true));
+                }
+            });
+        }
+
+        function renderFeeCodesTable() {
+            feeCodesTableBody.innerHTML = ''; // Clear existing rows
+            if (feeCodesData.length === 0) {
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = `<td colspan="8" class="py-3 px-6 text-center text-gray-500">Chưa có mã mức phí nào được khai báo.</td>`;
+                feeCodesTableBody.appendChild(noDataRow);
+                return;
+            }
+
+            feeCodesData.forEach(code => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                row.innerHTML = `
+                    <td class="py-3 px-3 text-left whitespace-nowrap">${code.code}</td>
+                    <td class="py-3 px-3 text-left">${code.desc}</td>
+                    <td class="py-3 px-3 text-left">${code.currency}</td>
+                    <td class="py-3 px-3 text-right">${code.amtfix ? new Intl.NumberFormat('en-US').format(code.amtfix) : ''}</td>
+                    <td class="py-3 px-3 text-right">${code.percent !== '' ? code.percent + '%' : ''}</td>
+                    <td class="py-3 px-3 text-right">${code.amtmin ? new Intl.NumberFormat('en-US').format(code.amtmin) : ''}</td>
+                    <td class="py-3 px-3 text-right">${code.amtmax ? new Intl.NumberFormat('en-US').format(code.amtmax) : ''}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        <button onclick="editFeeCode('${code.id}')" class="action-button edit-button rounded-md hover:bg-amber-600"><i class="fas fa-edit"></i> Chỉnh sửa</button>
+                        <button onclick="deleteFeeCode('${code.id}')" class="action-button delete-button rounded-md hover:bg-red-600"><i class="fas fa-trash-alt"></i> Xóa</button>
+                    </td>
+                `;
+                feeCodesTableBody.appendChild(row);
+            });
+            saveDataToLocalStorage(); // Save after rendering
+        }
+
+        function addOrUpdateFeeCode() {
+            const newFeeCode = {
+                id: editingFeeCodeId || Date.now().toString(),
+                code: feeCode_code_Input.value,
+                desc: feeCode_desc_Input.value,
+                currency: feeCode_currency_Select.value,
+                amtfix: feeCode_amtfix_Input.value ? parseFormattedNumber(feeCode_amtfix_Input.value) : '',
+                percent: feeCode_percent_Input.value ? parseFloat(feeCode_percent_Input.value) : '',
+                amtmin: feeCode_amtmin_Input.value ? parseFormattedNumber(feeCode_amtmin_Input.value) : '',
+                amtmax: feeCode_amtmax_Input.value ? parseFormattedNumber(feeCode_amtmax_Input.value) : ''
+            };
+
+            // Basic validation
+            if (!newFeeCode.code) {
+                showMessageBox('Vui lòng nhập Mã mức phí (CODE).');
+                return;
+            }
+
+            if (editingFeeCodeId) {
+                const index = feeCodesData.findIndex(c => c.id === editingFeeCodeId);
+                if (index !== -1) {
+                    feeCodesData[index] = newFeeCode;
+                    showMessageBox('Mã mức phí đã được cập nhật.');
+                }
+                editingFeeCodeId = null;
+                cancelFeeCodeEditBtn.classList.add('hidden');
+                saveFeeCodeBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Mã Mức Phí'; // Reset button text and icon
+            } else {
+                feeCodesData.push(newFeeCode);
+                showMessageBox('Mã mức phí đã được thêm mới.');
+            }
+            clearFeeCodeForm();
+            populateFeeCodeDropdowns(); // Re-populate dropdowns after adding/updating
+            renderFeeCodesTable();
+        }
+
+        function editFeeCode(id) {
+            const codeToEdit = feeCodesData.find(c => c.id === id);
+            if (codeToEdit) {
+                feeCode_code_Input.value = codeToEdit.code;
+                feeCode_desc_Input.value = codeToEdit.desc;
+                feeCode_currency_Select.value = codeToEdit.currency;
+                feeCode_amtfix_Input.value = codeToEdit.amtfix ? new Intl.NumberFormat('en-US').format(codeToEdit.amtfix) : '';
+                feeCode_percent_Input.value = codeToEdit.percent;
+                feeCode_amtmin_Input.value = codeToEdit.amtmin ? new Intl.NumberFormat('en-US').format(codeToEdit.amtmin) : '';
+                feeCode_amtmax_Input.value = codeToEdit.amtmax ? new Intl.NumberFormat('en-US').format(codeToEdit.amtmax) : '';
+
+                editingFeeCodeId = id;
+                saveFeeCodeBtn.innerHTML = '<i class="fas fa-pencil-alt"></i> Cập nhật Mã Mức Phí'; // Change button text and icon
+                cancelFeeCodeEditBtn.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function deleteFeeCode(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa mã mức phí này?')) {
+                feeCodesData = feeCodesData.filter(c => c.id !== id);
+                renderFeeCodesTable();
+                populateFeeCodeDropdowns(); // Re-populate dropdowns after deleting
+                showMessageBox('Mã mức phí đã được xóa.');
+                if (editingFeeCodeId === id) {
+                    cancelEditFeeCode();
+                }
+            }
+        }
+
+        function clearFeeCodeForm() {
+            feeCode_code_Input.value = '';
+            feeCode_desc_Input.value = '';
+            feeCode_currency_Select.value = '';
+            feeCode_amtfix_Input.value = '';
+            feeCode_percent_Input.value = '';
+            feeCode_amtmin_Input.value = '';
+            feeCode_amtmax_Input.value = '';
+        }
+
+        function cancelEditFeeCode() {
+            editingFeeCodeId = null;
+            saveFeeCodeBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Mã Mức Phí'; // Reset button text and icon
+            cancelFeeCodeEditBtn.classList.add('hidden');
+            clearFeeCodeForm();
+        }
+
+        // --- Tab Switching Logic ---
+        function switchTab(selectedTabId) {
+            tabButtons.forEach(button => {
+                if (button.dataset.tab === selectedTabId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+
+            tabContents.forEach(content => {
+                if (content.id === selectedTabId + '-tab-content') {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            saveDataToLocalStorage(); // Save state when switching tabs
+        }
+
+        // --- Collapsible Instruction Section Logic ---
+        function toggleInstructions() {
+            instructionContent.classList.toggle('expanded');
+            instructionHeader.classList.toggle('expanded');
+            const isExpanded = instructionContent.classList.contains('expanded');
+            localStorage.setItem('instructionsExpanded', isExpanded); // Save state
+        }
+
+        // Function to save all data to Local Storage
+        function saveDataToLocalStorage() {
+            // Save Fee Parameters form data
+            localStorage.setItem('feePlanCode', feePlanCodeInput.value);
+            localStorage.setItem('feeType', feeTypeSelect.value);
+            localStorage.setItem('paymentType', paymentTypeSelect.value);
+            localStorage.setItem('onUsTransaction', onUsTransactionSelect.value);
+            localStorage.setItem('channelID', channelIDSelect.value);
+            localStorage.setItem('effectiveDateFrom', effectiveDateFromInput.value);
+            localStorage.setItem('effectiveDateTo', effectiveDateToInput.value);
+            localStorage.setItem('levelType', levelTypeSelect.value);
+            localStorage.setItem('levelDetail', levelDetailInput.value);
+            localStorage.setItem('branch', branchSelect.value);
+            localStorage.setItem('relationship', relationshipSelect.value);
+            localStorage.setItem('customerFeeType', customerFeeTypeSelect.value);
+            localStorage.setItem('fundingOption', fundingOptionSelect.value);
+            localStorage.setItem('feeCodeHomeCurrency', feeCodeHomeCurrencySelect.value);
+            localStorage.setItem('feeCodeForeignCurrency', feeCodeForeignCurrencySelect.value);
+
+            // Save Fee Codes form data
+            localStorage.setItem('feeCode_code', feeCode_code_Input.value);
+            localStorage.setItem('feeCode_desc', feeCode_desc_Input.value);
+            localStorage.setItem('feeCode_currency', feeCode_currency_Select.value);
+            localStorage.setItem('feeCode_amtfix', feeCode_amtfix_Input.value);
+            localStorage.setItem('feeCode_percent', feeCode_percent_Input.value);
+            localStorage.setItem('feeCode_amtmin', feeCode_amtmin_Input.value);
+            localStorage.setItem('feeCode_amtmax', feeCode_amtmax_Input.value);
+
+            // Save Customer Demo data
+            localStorage.setItem('customerName', customerNameInput.value);
+            localStorage.setItem('customer_levelType', customer_levelTypeSelect.value);
+            localStorage.setItem('customer_levelDetail', customer_levelDetailInput.value);
+            localStorage.setItem('customer_branch', customer_branchSelect.value);
+            localStorage.setItem('customer_customerFeeType', customer_customerFeeTypeSelect.value);
+            localStorage.setItem('selectedCustomer', customerSelect.value);
+
+            // Save Transfer Demo data
+            localStorage.setItem('transferAmount', transferAmountInput.value);
+            localStorage.setItem('recipientBank', recipientBankSelect.value);
+            localStorage.setItem('recipientAccount', recipientAccountInput.value);
+            localStorage.setItem('transferMessage', transferMessageInput.value);
+            localStorage.setItem('transfer_relationship', transfer_relationshipSelect.value);
+            localStorage.setItem('transfer_fundingOption', transfer_fundingOptionSelect.value);
+            localStorage.setItem('explanationTextContent', explanationText.textContent);
+            localStorage.setItem('simplifiedExplanationTextContent', simplifiedExplanationText.textContent);
+
+
+            // Save table data
+            localStorage.setItem('feeParametersData', JSON.stringify(feeParametersData));
+            localStorage.setItem('feeCodesData', JSON.stringify(feeCodesData));
+        }
+
+        // Function to load all data from Local Storage and populate inputs
+        function loadDataFromLocalStorage() {
+            // Load Fee Parameters form data
+            feePlanCodeInput.value = localStorage.getItem('feePlanCode') || defaultValues.feePlanCode;
+            feeTypeSelect.value = localStorage.getItem('feeType') || defaultValues.feeType;
+            paymentTypeSelect.value = localStorage.getItem('paymentType') || defaultValues.paymentType;
+            onUsTransactionSelect.value = localStorage.getItem('onUsTransaction') || defaultValues.onUsTransaction;
+            channelIDSelect.value = localStorage.getItem('channelID') || defaultValues.channelID;
+            effectiveDateFromInput.value = localStorage.getItem('effectiveDateFrom') || defaultValues.effectiveDateFrom;
+            effectiveDateToInput.value = localStorage.getItem('effectiveDateTo') || defaultValues.effectiveDateTo;
+            levelTypeSelect.value = localStorage.getItem('levelType') || defaultValues.levelType;
+            levelDetailInput.value = localStorage.getItem('levelDetail') || defaultValues.levelDetail;
+            branchSelect.value = localStorage.getItem('branch') || defaultValues.branch;
+            relationshipSelect.value = localStorage.getItem('relationship') || defaultValues.relationship;
+            customerFeeTypeSelect.value = localStorage.getItem('customerFeeType') || defaultValues.customerFeeType;
+            fundingOptionSelect.value = localStorage.getItem('fundingOption') || defaultValues.fundingOption;
+
+            // Load Fee Codes form data
+            feeCode_code_Input.value = localStorage.getItem('feeCode_code') || '';
+            feeCode_desc_Input.value = localStorage.getItem('feeCode_desc') || '';
+            feeCode_currency_Select.value = localStorage.getItem('feeCode_currency') || '';
+            feeCode_amtfix_Input.value = localStorage.getItem('feeCode_amtfix') || '';
+            feeCode_percent_Input.value = localStorage.getItem('feeCode_percent') || '';
+            feeCode_amtmin_Input.value = localStorage.getItem('feeCode_amtmin') || '';
+            feeCode_amtmax_Input.value = localStorage.getItem('feeCode_amtmax') || '';
+
+            // Load Customer Demo data
+            customerNameInput.value = localStorage.getItem('customerName') || defaultValues.customerName;
+            customer_levelTypeSelect.value = localStorage.getItem('customer_levelType') || defaultValues.levelType;
+            customer_levelDetailInput.value = localStorage.getItem('customer_levelDetail') || defaultValues.levelDetail;
+            customer_branchSelect.value = localStorage.getItem('customer_branch') || defaultValues.branch;
+            customer_customerFeeTypeSelect.value = localStorage.getItem('customer_customerFeeType') || defaultValues.customerFeeType;
+            
+            // Load Transfer Demo data
+            transferAmountInput.value = localStorage.getItem('transferAmount') || new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount);
+            recipientBankSelect.value = localStorage.getItem('recipientBank') || 'BIDV';
+            recipientAccountInput.value = localStorage.getItem('recipientAccount') || '1234567890';
+            transferMessageInput.value = localStorage.getItem('transferMessage') || '';
+            transfer_relationshipSelect.value = localStorage.getItem('transfer_relationship') || defaultValues.relationship;
+            transfer_fundingOptionSelect.value = localStorage.getItem('transfer_fundingOption') || defaultValues.fundingOption;
+            explanationText.textContent = localStorage.getItem('explanationTextContent') || 'Nhấn "Tính Phí" để xem chi tiết.';
+            simplifiedExplanationText.textContent = localStorage.getItem('simplifiedExplanationTextContent') || 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+
+
+            // Load table data
+            const storedFeeParams = localStorage.getItem('feeParametersData');
+            feeParametersData = storedFeeParams ? JSON.parse(storedFeeParams) : initialFeeParametersData;
+
+            const storedFeeCodes = localStorage.getItem('feeCodesData');
+            feeCodesData = storedFeeCodes ? JSON.parse(storedFeeCodes) : initialFeeCodesData;
+
+            // Populate Fee Code dropdowns first as they are needed by fee parameters table
+            populateFeeCodeDropdowns();
+
+            // Load selected fee codes for fee parameters form
+            feeCodeHomeCurrencySelect.value = localStorage.getItem('feeCodeHomeCurrency') || defaultValues.feeCodeHomeCurrency;
+            feeCodeForeignCurrencySelect.value = localStorage.getItem('feeCodeForeignCurrency') || defaultValues.feeCodeForeignCurrency;
+
+            // Populate customer dropdown and load selected customer data
+            populateCustomerDropdown();
+            customerSelect.value = localStorage.getItem('selectedCustomer') || '';
+            // No need to call loadSelectedCustomerData here, as all fields are loaded directly
+
+            // Apply formatting to number inputs that are not handled by loadSelectedCustomerData
+            formatNumberInput(feeCode_amtfix_Input);
+            formatNumberInput(feeCode_amtmin_Input);
+            formatNumberInput(feeCode_amtmax_Input);
+            // transactionAmountInput is now transferAmountInput
+            formatNumberInput(transferAmountInput);
+
+
+            // Update dynamic inputs
+            updateLevelDetailInput(); // For fee parameters tab
+            updateCustomerLevelDetailInput(); // For customer demo tab
+
+            // Render tables
+            renderFeeParametersTable();
+            renderFeeCodesTable();
+
+            // Load instruction section state
+            const instructionsExpanded = localStorage.getItem('instructionsExpanded');
+            if (instructionsExpanded === 'true') {
+                instructionContent.classList.add('expanded');
+                instructionHeader.classList.add('expanded');
+            } else {
+                instructionContent.classList.remove('expanded');
+                instructionHeader.classList.remove('expanded');
+            }
+
+            // Immediately calculate fees if data was loaded
+            calculateFee();
+        }
+
+        // Function to clear all data from Local Storage and reset inputs/display
+        function clearLocalStorageAndReset() {
+            localStorage.clear(); // Clear all relevant local storage items
+
+            // Reset Fee Parameters inputs to default values
+            feePlanCodeInput.value = defaultValues.feePlanCode;
+            feeTypeSelect.value = defaultValues.feeType;
+            paymentTypeSelect.value = defaultValues.paymentType;
+            onUsTransactionSelect.value = defaultValues.onUsTransaction;
+            channelIDSelect.value = defaultValues.channelID;
+            effectiveDateFromInput.value = defaultValues.effectiveDateFrom;
+            effectiveDateToInput.value = defaultValues.effectiveDateTo;
+            levelTypeSelect.value = defaultValues.levelType;
+            levelDetailInput.value = defaultValues.levelDetail;
+            branchSelect.value = defaultValues.branch;
+            relationshipSelect.value = defaultValues.relationship;
+            customerFeeTypeSelect.value = defaultValues.customerFeeType;
+            fundingOptionSelect.value = defaultValues.fundingOption;
+            feeCodeHomeCurrencySelect.value = ''; // Clear new fields
+            feeCodeForeignCurrencySelect.value = ''; // Clear new fields
+
+            // Reset Fee Codes inputs
+            feeCode_code_Input.value = '';
+            feeCode_desc_Input.value = '';
+            feeCode_currency_Select.value = '';
+            feeCode_amtfix_Input.value = '';
+            feeCode_percent_Input.value = '';
+            feeCode_amtmin_Input.value = '';
+            feeCode_amtmax_Input.value = '';
+
+            // Reset Customer Demo data
+            customerNameInput.value = defaultValues.customerName;
+            customer_levelTypeSelect.value = defaultValues.levelType;
+            customer_levelDetailInput.value = defaultValues.levelDetail;
+            customer_branchSelect.value = defaultValues.branch;
+            customer_customerFeeTypeSelect.value = defaultValues.customerFeeType;
+            customerSelect.value = ''; // Clear selected customer
+
+            // Reset Transfer Demo data
+            transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount); // Format default value
+            recipientBankSelect.value = 'BIDV';
+            recipientAccountInput.value = '1234567890';
+            transferMessageInput.value = '';
+            transfer_relationshipSelect.value = defaultValues.relationship;
+            transfer_fundingOptionSelect.value = defaultValues.fundingOption;
+            explanationText.textContent = 'Nhấn "Tính Phí" để xem chi tiết.';
+            simplifiedExplanationText.textContent = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+
+
+            // Reset table data to initial demo data
+            feeParametersData = [...initialFeeParametersData];
+            feeCodesData = [...initialFeeCodesData];
+
+            // Reset display
+            totalFeeDisplay.textContent = formatCurrency(0);
+            amountReceivedDisplay.textContent = formatCurrency(0);
+
+            showMessageBox('Dữ liệu đã được xóa khỏi Local Storage và các trường đã được đặt lại.');
+            
+            populateFeeCodeDropdowns(); // Repopulate dropdowns after reset
+            populateCustomerDropdown(); // Repopulate customer dropdown after reset
+            updateLevelDetailInput(); // Reset levelDetail input for fee parameters
+            updateCustomerLevelDetailInput(); // Reset customer levelDetail input
+            renderFeeParametersTable(); // Re-render table with default data
+            renderFeeCodesTable(); // Re-render fee codes table with default data
+            calculateFee(); // Recalculate with default values
+            cancelEditFeeParam(); // Exit fee param edit mode
+            cancelEditFeeCode(); // Exit fee code edit mode
+            
+            // Reset instruction section to collapsed
+            instructionContent.classList.remove('expanded');
+            instructionHeader.classList.remove('expanded');
+            localStorage.setItem('instructionsExpanded', 'false');
+        }
+
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDataFromLocalStorage();
+            // Set initial active tab
+            switchTab('fee-params'); // Default to fee parameters tab
+        });
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchTab(button.dataset.tab);
+            });
+        });
+
+        calculateBtn.addEventListener('click', () => {
+            saveDataToLocalStorage(); // Save current input values
+            calculateFee();
+        });
+
+        clearDataBtn.addEventListener('click', clearLocalStorageAndReset);
+
+        // New LLM feature button event listener
+        simplifyExplanationBtn.addEventListener('click', async () => {
+            const detailedExplanation = explanationText.textContent;
+            const simplifiedText = await getSimplifiedFeeExplanation(detailedExplanation);
+            simplifiedExplanationText.textContent = simplifiedText;
+            saveDataToLocalStorage(); // Save the generated explanation
+        });
+
+        // Collapsible instruction section event listener
+        instructionHeader.addEventListener('click', toggleInstructions);
+
+
+        // Fee Parameter Form Event Listeners
+        saveFeeParamBtn.addEventListener('click', addOrUpdateFeeParameter);
+        cancelEditBtn.addEventListener('click', cancelEditFeeParam);
+        levelTypeSelect.addEventListener('change', () => {
+            updateLevelDetailInput();
+            saveDataToLocalStorage();
+        });
+
+        // New Fee Code dropdowns change listeners
+        feeCodeHomeCurrencySelect.addEventListener('change', saveDataToLocalStorage);
+        feeCodeForeignCurrencySelect.addEventListener('change', saveDataToLocalStorage);
+
+
+        // Fee Code Form Event Listeners
+        saveFeeCodeBtn.addEventListener('click', addOrUpdateFeeCode);
+        cancelFeeCodeEditBtn.addEventListener('click', cancelEditFeeCode);
+
+        // Input event listeners for auto-saving and formatting
+        // Fee Parameters
+        feePlanCodeInput.addEventListener('input', saveDataToLocalStorage);
+        feeTypeSelect.addEventListener('change', saveDataToLocalStorage);
+        paymentTypeSelect.addEventListener('change', saveDataToLocalStorage);
+        onUsTransactionSelect.addEventListener('change', saveDataToLocalStorage);
+        channelIDSelect.addEventListener('change', saveDataToLocalStorage);
+        effectiveDateFromInput.addEventListener('change', saveDataToLocalStorage);
+        effectiveDateToInput.addEventListener('change', saveDataToLocalStorage);
+        levelDetailInput.addEventListener('input', saveDataToLocalStorage);
+        branchSelect.addEventListener('change', saveDataToLocalStorage);
+        relationshipSelect.addEventListener('change', saveDataToLocalStorage);
+        customerFeeTypeSelect.addEventListener('change', saveDataToLocalStorage);
+        fundingOptionSelect.addEventListener('change', saveDataToLocalStorage);
+        
+        // Fee Codes
+        feeCode_code_Input.addEventListener('input', saveDataToLocalStorage);
+        feeCode_desc_Input.addEventListener('input', saveDataToLocalStorage);
+        feeCode_currency_Select.addEventListener('change', saveDataToLocalStorage);
+        feeCode_percent_Input.addEventListener('input', saveDataToLocalStorage);
+
+        feeCode_amtfix_Input.addEventListener('input', () => formatNumberInput(feeCode_amtfix_Input));
+        feeCode_amtfix_Input.addEventListener('blur', saveDataToLocalStorage);
+        feeCode_amtmin_Input.addEventListener('input', () => formatNumberInput(feeCode_amtmin_Input));
+        feeCode_amtmin_Input.addEventListener('blur', saveDataToLocalStorage);
+        feeCode_amtmax_Input.addEventListener('input', () => formatNumberInput(feeCode_amtmax_Input));
+        feeCode_amtmax_Input.addEventListener('blur', saveDataToLocalStorage);
+
+        // Customer Demo (New)
+        customerSelect.addEventListener('change', loadSelectedCustomerData);
+        customerNameInput.addEventListener('input', saveDataToLocalStorage);
+        customer_levelTypeSelect.addEventListener('change', () => {
+            updateCustomerLevelDetailInput();
+            saveDataToLocalStorage();
+        });
+        customer_levelDetailInput.addEventListener('input', saveDataToLocalStorage);
+        customer_branchSelect.addEventListener('change', saveDataToLocalStorage);
+        customer_customerFeeTypeSelect.addEventListener('change', saveDataToLocalStorage);
+        
+        // Transfer Demo (New)
+        transferAmountInput.addEventListener('input', () => formatNumberInput(transferAmountInput));
+        transferAmountInput.addEventListener('blur', saveDataToLocalStorage);
+        recipientBankSelect.addEventListener('change', saveDataToLocalStorage);
+        recipientAccountInput.addEventListener('input', saveDataToLocalStorage);
+        transferMessageInput.addEventListener('input', saveDataToLocalStorage);
+        transfer_relationshipSelect.addEventListener('change', saveDataToLocalStorage);
+        transfer_fundingOptionSelect.addEventListener('change', saveDataToLocalStorage);
+
+    </script>
+</body>
+</html>
