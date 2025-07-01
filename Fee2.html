@@ -238,13 +238,14 @@
                     </li>
                     <li><strong>Mục "2. Khách Hàng Demo":</strong>
                         <ul class="list-disc list-inside ml-6">
-                            <li>Chọn một khách hàng demo từ danh sách để tự động điền các thông tin liên quan đến khách hàng vào các trường.</li>
-                            <li>Bạn cũng có thể tự chỉnh sửa các thông tin này.</li>
+                            <li>Chọn một khách hàng demo từ danh sách để tự động điền các thông tin liên quan đến khách hàng vào các trường giao dịch tại Mục 3.</li>
+                            <li>Bạn cũng có thể tự chỉnh sửa các thông tin này sau khi tải.</li>
                         </ul>
                     </li>
                     <li><strong>Mục "3. Demo Chuyển Tiền":</strong>
                         <ul class="list-disc list-inside ml-6">
                             <li>Nhập "Số Tiền Chuyển Khoản" và các thông tin giao dịch khác.</li>
+                            <li>Tất cả các tiêu chí để khớp phí sẽ được lấy trực tiếp từ các trường trong mục này.</li>
                             <li>Nhấn "Tính Phí" để xem kết quả "Tổng Phí" và "Số Tiền Khách Hàng Nhận Được", cùng với "Chi Tiết Tính Phí & Thuyết Minh Logic" đầy đủ.</li>
                             <li>Nhấn "✨ Giải thích phí dễ hiểu" để nhận được bản tóm tắt, đơn giản hóa của phần thuyết minh logic, giúp người dùng phổ thông dễ hiểu hơn.</li>
                             <li>Nhấn "Xóa Toàn Bộ Dữ Liệu" để xóa tất cả dữ liệu đã lưu trong trình duyệt và đặt lại chương trình về trạng thái ban đầu.</li>
@@ -522,45 +523,13 @@
                     <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Tên Khách Hàng</label>
                     <input type="text" id="customerName" value="Nguyễn Văn A" class="w-full">
                 </div>
-                <div>
-                    <label for="customer_levelType" class="block text-sm font-medium text-gray-700 mb-1">Cấp độ áp dụng biểu phí (Level Type)</label>
-                    <select id="customer_levelType" class="w-full">
-                        <option value="5">5 - HO (Áp dụng toàn hệ thống)</option>
-                        <option value="4">4 - PROVINCE (Theo địa bàn Tỉnh/thành phố)</option>
-                        <option value="3">3 - BRANCH (Theo Chi nhánh)</option>
-                        <option value="2">2 - PACKAGE (Theo Gói sản phẩm)</option>
-                        <option value="1">1 - CIF (Theo Khách hàng)</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="customer_levelDetail" class="block text-sm font-medium text-gray-700 mb-1">Chi tiết cấp độ áp dụng biểu phí (Level Detail)</label>
-                    <input type="text" id="customer_levelDetail" value="HO" class="w-full">
-                </div>
-                <div>
-                    <label for="customer_branch" class="block text-sm font-medium text-gray-700 mb-1">Phạm vi áp dụng biểu phí (Branch)</label>
-                    <select id="customer_branch" class="w-full">
-                        <option value="ALL">ALL (Toàn hệ thống)</option>
-                        <option value="120000">120000 - CN SỞ GIAO DỊCH I</option>
-                        <option value="120100">120100 - CN HÀ NỘI</option>
-                        <option value="120150">120150 - PGD HOÀN KIẾM</option>
-                        <option value="120200">120200 - CN ĐÔNG HÀ NỘI</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="customer_customerFeeType" class="block text-sm font-medium text-gray-700 mb-1">Đối tượng khách hàng chịu phí (Customer Fee Type)</label>
-                    <select id="customer_customerFeeType" class="w-full">
-                        <option value="4">4 - Cá nhân/ Hộ gia đình</option>
-                        <option value="1">1 - Ngân hàng</option>
-                        <option value="2">2 - Định chế tài chính phi ngân hàng</option>
-                        <option value="3">3 - Tổ chức</option>
-                    </select>
-                </div>
+                <!-- Customer-specific fields are now moved to Section 3 for transaction context -->
             </div>
         </div>
 
         <div class="section-separator"></div>
 
-        <!-- Section 3: Remittance Demo -->
+        <!-- Section 3: Remittance Demo - Now self-contained for transaction inputs -->
         <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">3. Demo Chuyển Tiền</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -586,6 +555,49 @@
                     <label for="transferMessage" class="block text-sm font-medium text-gray-700 mb-1">Nội dung chuyển khoản</label>
                     <textarea id="transferMessage" rows="2" class="w-full" placeholder="Nhập nội dung chuyển khoản"></textarea>
                 </div>
+
+                <!-- NEW FIELDS FOR TRANSACTION CONTEXT -->
+                <div>
+                    <label for="transfer_onUsTransaction" class="block text-sm font-medium text-gray-700 mb-1">Giao dịch trong/ ngoài hệ thống (On Us Transaction)</label>
+                    <select id="transfer_onUsTransaction" class="w-full">
+                        <option value="2">2 - ALL (Không phân biệt)</option>
+                        <option value="1">1 - Yes (Trong hệ thống)</option>
+                        <option value="0">0 - No (Ngoài hệ thống)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transfer_channelID" class="block text-sm font-medium text-gray-700 mb-1">Kênh thực hiện giao dịch (Channel ID)</label>
+                    <select id="transfer_channelID" class="w-full">
+                        <option value="22">22 - TPTL</option>
+                        <option value="2">2 - WebCSR</option>
+                        <option value="2000">2000 - WEBCSR Bulk Upload</option>
+                        <option value="86">86 - IMAP</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transfer_levelType" class="block text-sm font-medium text-gray-700 mb-1">Cấp độ áp dụng biểu phí (Level Type)</label>
+                    <select id="transfer_levelType" class="w-full">
+                        <option value="5">5 - HO (Áp dụng toàn hệ thống)</option>
+                        <option value="4">4 - PROVINCE (Theo địa bàn Tỉnh/thành phố)</option>
+                        <option value="3">3 - BRANCH (Theo Chi nhánh)</option>
+                        <option value="2">2 - PACKAGE (Theo Gói sản phẩm)</option>
+                        <option value="1">1 - CIF (Theo Khách hàng)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transfer_levelDetail" class="block text-sm font-medium text-gray-700 mb-1">Chi tiết cấp độ áp dụng biểu phí (Level Detail)</label>
+                    <input type="text" id="transfer_levelDetail" value="HO" class="w-full">
+                </div>
+                <div>
+                    <label for="transfer_branch" class="block text-sm font-medium text-gray-700 mb-1">Phạm vi áp dụng biểu phí (Branch)</label>
+                    <select id="transfer_branch" class="w-full">
+                        <option value="ALL">ALL (Toàn hệ thống)</option>
+                        <option value="120000">120000 - CN SỞ GIAO DỊCH I</option>
+                        <option value="120100">120100 - CN HÀ NỘI</option>
+                        <option value="120150">120150 - PGD HOÀN KIẾM</option>
+                        <option value="120200">120200 - CN ĐÔNG HÀ NỘI</option>
+                    </select>
+                </div>
                 <div>
                     <label for="transfer_relationship" class="block text-sm font-medium text-gray-700 mb-1">Mối quan hệ (Relationship)</label>
                     <select id="transfer_relationship" class="w-full">
@@ -594,6 +606,15 @@
                         <option value="2">2 - Khác chủ tài khoản, Cùng chi nhánh</option>
                         <option value="3">3 - Cùng chủ tài khoản, Khác chi nhánh</option>
                         <option value="4">4 - Khác chủ tài khoản, Khác chi nhánh</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transfer_customerFeeType" class="block text-sm font-medium text-gray-700 mb-1">Đối tượng khách hàng chịu phí (Customer Fee Type)</label>
+                    <select id="transfer_customerFeeType" class="w-full">
+                        <option value="4">4 - Cá nhân/ Hộ gia đình</option>
+                        <option value="1">1 - Ngân hàng</option>
+                        <option value="2">2 - Định chế tài chính phi ngân hàng</option>
+                        <option value="3">3 - Tổ chức</option>
                     </select>
                 </div>
                 <div>
@@ -633,11 +654,11 @@
                 </div>
                 <div id="feeCalculationExplanation" class="text-gray-800 text-sm bg-gray-100 p-3 rounded-md border border-gray-200">
                     <p class="font-bold mb-2">Chi Tiết Tính Phí & Thuyết Minh Logic:</p>
-                    <pre id="explanationText" class="whitespace-pre-wrap">Nhấn "Tính Phí" để xem chi tiết.</pre>
+                    <div id="explanationContentDiv" class="whitespace-pre-wrap">Nhấn "Tính Phí" để xem chi tiết.</div>
                 </div>
                 <div id="simplifiedFeeExplanationContainer" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
                     <h3 class="text-xl font-semibold text-gray-700 mb-3"><i class="fas fa-magic"></i> Giải Thích Phí Dễ Hiểu ✨</h3>
-                    <pre id="simplifiedExplanationText" class="whitespace-pre-wrap text-gray-700">Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.</pre>
+                    <div id="simplifiedExplanationContentDiv" class="whitespace-pre-wrap text-gray-700">Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.</div>
                 </div>
                 <div id="messageBox" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md mt-4" role="alert">
                     <p class="font-bold">Lưu ý:</p>
@@ -692,12 +713,48 @@
             return option ? option.textContent : value;
         }
 
-        // Get references to DOM elements for Fee Parameters
+        // Mapping for display names of parameters
+        const paramDisplayNames = {
+            // Parameters for Fee Declaration (Section 1)
+            feePlanCode: 'Mã Biểu phí (Fee Plan Code)',
+            feeType: 'Loại phí (Fee Type)',
+            paymentType_declaration: 'Sản phẩm chuyển tiền (Payment Type) (Khai báo)', // Clarify for declaration
+            onUsTransaction_declaration: 'Giao dịch trong/ngoài hệ thống (On Us Transaction) (Khai báo)',
+            channelID_declaration: 'Ứng dụng thực hiện giao dịch (Channel ID) (Khai báo)',
+            effectiveDateFrom: 'Ngày bắt đầu hiệu lực (Effective Date From)',
+            effectiveDateTo: 'Ngày hết hiệu lực (Effective Date To)',
+            levelType_declaration: 'Cấp độ áp dụng biểu phí (Level Type) (Khai báo)',
+            levelDetail_declaration: 'Chi tiết cấp độ áp dụng biểu phí (Level Detail) (Khai báo)',
+            branch_declaration: 'Phạm vi áp dụng biểu phí (Branch) (Khai báo)',
+            relationship_declaration: 'Mối quan hệ (Relationship) (Khai báo)',
+            customerFeeType_declaration: 'Đối tượng khách hàng chịu phí (Customer Fee Type) (Khai báo)',
+            fundingOption_declaration: 'Nguồn tiền giao dịch (Funding Option) (Khai báo)',
+            feeCodeHomeCurrency: 'Mã Mức phí VND (Fee Code – Home Currency)',
+            feeCodeForeignCurrency: 'Mã Mức phí ngoại tệ (Fee Code – Foreign Currency)',
+
+            // Parameters for Transaction Demo (Section 3)
+            transferAmount: 'Số tiền chuyển khoản',
+            recipientBank: 'Ngân hàng thụ hưởng',
+            recipientAccount: 'Số tài khoản thụ hưởng',
+            transferMessage: 'Nội dung chuyển khoản',
+            paymentType_transaction: 'Sản phẩm chuyển tiền (Payment Type) (Giao dịch)', // Derived
+            onUsTransaction_transaction: 'Giao dịch trong/ngoài hệ thống (On Us Transaction) (Giao dịch)',
+            channelID_transaction: 'Kênh thực hiện giao dịch (Channel ID) (Giao dịch)',
+            levelType_transaction: 'Cấp độ áp dụng biểu phí (Level Type) (Giao dịch)',
+            levelDetail_transaction: 'Chi tiết cấp độ áp dụng biểu phí (Level Detail) (Giao dịch)',
+            branch_transaction: 'Phạm vi áp dụng biểu phí (Branch) (Giao dịch)',
+            relationship_transaction: 'Mối quan hệ (Relationship) (Giao dịch)',
+            customerFeeType_transaction: 'Đối tượng khách hàng chịu phí (Customer Fee Type) (Giao dịch)',
+            fundingOption_transaction: 'Nguồn tiền giao dịch (Funding Option) (Giao dịch)'
+        };
+
+
+        // Get references to DOM elements for Fee Parameters (Section 1)
         const feePlanCodeInput = document.getElementById('feePlanCode');
         const feeTypeSelect = document.getElementById('feeType');
-        const paymentTypeSelect = document.getElementById('paymentType');
+        const paymentTypeSelect = document.getElementById('paymentType'); // This is the declaration payment type
         const onUsTransactionSelect = document.getElementById('onUsTransaction');
-        const channelIDSelect = document.getElementById('channelID');
+        const channelIDSelect = document.getElementById('channelID'); // Declaration channel ID
         const effectiveDateFromInput = document.getElementById('effectiveDateFrom');
         const effectiveDateToInput = document.getElementById('effectiveDateTo');
         const levelTypeSelect = document.getElementById('levelType');
@@ -724,24 +781,27 @@
         const cancelFeeCodeEditBtn = document.getElementById('cancelFeeCodeEditBtn');
         const feeCodesTableBody = document.getElementById('feeCodesTableBody');
 
-        // Get references to DOM elements for Customer Demo & Remittance
-        const customerSelect = document.getElementById('customerSelect'); // New
+        // Get references to DOM elements for Customer Demo (Section 2)
+        const customerSelect = document.getElementById('customerSelect');
         const customerNameInput = document.getElementById('customerName');
-        const customer_levelTypeSelect = document.getElementById('customer_levelType'); // New
-        const customer_levelDetailInput = document.getElementById('customer_levelDetail'); // New
-        const customer_branchSelect = document.getElementById('customer_branch'); // New
-        const customer_customerFeeTypeSelect = document.getElementById('customer_customerFeeType'); // New
         
-        // Get references to new DOM elements for Transfer Demo
+        // Get references to DOM elements for Transfer Demo (Section 3) - All transaction inputs
         const transferAmountInput = document.getElementById('transferAmount');
         const recipientBankSelect = document.getElementById('recipientBank');
         const recipientAccountInput = document.getElementById('recipientAccount');
         const transferMessageInput = document.getElementById('transferMessage');
+        const transfer_onUsTransactionSelect = document.getElementById('transfer_onUsTransaction'); // NEW
+        const transfer_channelIDSelect = document.getElementById('transfer_channelID');
+        const transfer_levelTypeSelect = document.getElementById('transfer_levelType'); // NEW
+        const transfer_levelDetailInput = document.getElementById('transfer_levelDetail'); // NEW
+        const transfer_branchSelect = document.getElementById('transfer_branch'); // NEW
         const transfer_relationshipSelect = document.getElementById('transfer_relationship');
+        const transfer_customerFeeTypeSelect = document.getElementById('transfer_customerFeeType'); // NEW
         const transfer_fundingOptionSelect = document.getElementById('transfer_fundingOption');
-        const explanationText = document.getElementById('explanationText');
-        const simplifiedExplanationText = document.getElementById('simplifiedExplanationText'); // New
-        const simplifyExplanationBtn = document.getElementById('simplifyExplanationBtn'); // New
+
+        const explanationContentDiv = document.getElementById('explanationContentDiv');
+        const simplifiedExplanationContentDiv = document.getElementById('simplifiedExplanationContentDiv');
+        const simplifyExplanationBtn = document.getElementById('simplifyExplanationBtn');
 
         const calculateBtn = document.getElementById('calculateBtn');
         const clearDataBtn = document.getElementById('clearDataBtn');
@@ -766,25 +826,36 @@
 
         // Default values for inputs
         const defaultValues = {
+            // Section 1: Fee Declaration Defaults
             feePlanCode: 'DN1B',
             feeType: '1', // Transaction Fee
-            paymentType: 'IFT',
-            onUsTransaction: '2', // ALL
-            channelID: '22', // TPTL
+            paymentType_declaration: 'IFT',
+            onUsTransaction_declaration: '2', // ALL
+            channelID_declaration: '22', // TPTL
             effectiveDateFrom: new Date().toISOString().slice(0, 10), // Current date
             effectiveDateTo: '2099-12-31', // Far future date
-            levelType: '5', // HO
-            levelDetail: 'HO',
-            branch: 'ALL',
-            relationship: '0', // ALL
-            customerFeeType: '4', // Individual/Household
-            fundingOption: '2', // Customer Account
+            levelType_declaration: '5', // HO
+            levelDetail_declaration: 'HO',
+            branch_declaration: 'ALL',
+            relationship_declaration: '0', // ALL
+            customerFeeType_declaration: '4', // Individual/Household
+            fundingOption_declaration: '2', // Customer Account
+            feeCodeHomeCurrency: 'VND_0.02_10000_500000',
+            feeCodeForeignCurrency: 'USD_0.01_2_100',
 
-            feeCodeHomeCurrency: 'VND_0.02_10000_500000', // Default Fee Code VND
-            feeCodeForeignCurrency: 'USD_0.01_2_100', // Default Fee Code Foreign
-
-            customerName: 'Nguyễn Văn A',
-            transactionAmount: 1000000
+            // Section 3: Transaction Demo Defaults
+            transferAmount: 1000000,
+            recipientBank: 'BIDV',
+            recipientAccount: '1234567890',
+            transferMessage: 'Chuyển tiền demo',
+            onUsTransaction_transaction: '2', // ALL
+            channelID_transaction: '22', // TPTL
+            levelType_transaction: '5', // HO
+            levelDetail_transaction: 'HO',
+            branch_transaction: 'ALL',
+            relationship_transaction: '0', // ALL
+            customerFeeType_transaction: '4', // Individual/Household
+            fundingOption_transaction: '2' // Customer Account
         };
 
         // Demo data for fee parameters table
@@ -851,23 +922,27 @@
             }
         ];
 
-        // Demo Customer Data (New)
+        // Demo Customer Data (New) - These values will populate Section 3 fields
         const demoCustomers = [
             {
                 id: 'cust1', name: 'Nguyễn Văn A (Cá nhân, HO)', transactionAmount: 1000000,
-                levelType: '5', levelDetail: 'HO', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+                onUsTransaction: '2', channelID: '22', levelType: '5', levelDetail: 'HO', branch: 'ALL',
+                relationship: '0', customerFeeType: '4', fundingOption: '2'
             },
             {
                 id: 'cust2', name: 'Công ty B (Tổ chức, CN Hà Nội)', transactionAmount: 5000000,
-                levelType: '3', levelDetail: '120100', branch: '120100', relationship: '0', customerFeeType: '3', fundingOption: '2'
+                onUsTransaction: '1', channelID: '2', levelType: '3', levelDetail: '120100', branch: '120100',
+                relationship: '0', customerFeeType: '3', fundingOption: '1'
             },
             {
                 id: 'cust3', name: 'Khách hàng VIP (CIF: 369565)', transactionAmount: 200000,
-                levelType: '1', levelDetail: '369565', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+                onUsTransaction: '2', channelID: '86', levelType: '1', levelDetail: '369565', branch: 'ALL',
+                relationship: '0', customerFeeType: '4', fundingOption: '2'
             },
             {
                 id: 'cust4', name: 'Gói Vàng (Package: GOLD)', transactionAmount: 750000,
-                levelType: '2', levelDetail: 'PACKAGE_GOLD', branch: 'ALL', relationship: '0', customerFeeType: '4', fundingOption: '2'
+                onUsTransaction: '0', channelID: '2000', levelType: '2', levelDetail: 'PACKAGE_GOLD', branch: 'ALL',
+                relationship: '0', customerFeeType: '1', fundingOption: '2'
             }
         ];
 
@@ -902,38 +977,38 @@
             saveDataToLocalStorage(); // Save changes to levelDetail input
         }
 
-        // Function to update customer levelDetail input based on levelType selection (for Customer Demo tab)
-        function updateCustomerLevelDetailInput() {
-            const levelType = customer_levelTypeSelect.value;
-            customer_levelDetailInput.readOnly = false;
-            customer_levelDetailInput.value = ''; // Clear previous value
-            customer_levelDetailInput.placeholder = ''; // Clear previous placeholder
+        // Function to update transaction levelDetail input based on levelType selection (for Transaction Demo tab)
+        function updateTransferLevelDetailInput() {
+            const levelType = transfer_levelTypeSelect.value;
+            transfer_levelDetailInput.readOnly = false;
+            transfer_levelDetailInput.value = ''; // Clear previous value
+            transfer_levelDetailInput.placeholder = ''; // Clear previous placeholder
 
             switch (levelType) {
                 case '1': // CIF
-                    customer_levelDetailInput.placeholder = 'Ví dụ: 369565 (Số CIF khách hàng)';
+                    transfer_levelDetailInput.placeholder = 'Ví dụ: 369565 (Số CIF khách hàng)';
                     break;
                 case '2': // PACKAGE
-                    customer_levelDetailInput.placeholder = 'Ví dụ: TEST UAT3 (Mã gói sản phẩm)';
+                    transfer_levelDetailInput.placeholder = 'Ví dụ: TEST UAT3 (Mã gói sản phẩm)';
                     break;
                 case '3': // BRANCH
-                    customer_levelDetailInput.placeholder = 'Ví dụ: 120000 (Mã chi nhánh)';
+                    transfer_levelDetailInput.placeholder = 'Ví dụ: 120000 (Mã chi nhánh)';
                     break;
                 case '4': // PROVINCE
-                    customer_levelDetailInput.placeholder = 'Ví dụ: 01 (Mã Tỉnh/thành phố)';
+                    transfer_levelDetailInput.placeholder = 'Ví dụ: 01 (Mã Tỉnh/thành phố)';
                     break;
                 case '5': // HO
-                    customer_levelDetailInput.value = 'HO';
-                    customer_levelDetailInput.readOnly = true;
+                    transfer_levelDetailInput.value = 'HO';
+                    transfer_levelDetailInput.readOnly = true;
                     break;
                 default:
-                    customer_levelDetailInput.placeholder = '';
+                    transfer_levelDetailInput.placeholder = '';
                     break;
             }
-            saveDataToLocalStorage(); // Save changes to customer levelDetail input
+            saveDataToLocalStorage(); // Save changes to transfer_levelDetail input
         }
 
-        // --- Customer Demo Functions (New) ---
+        // --- Customer Demo Functions ---
         function populateCustomerDropdown() {
             customerSelect.innerHTML = '<option value="">-- Chọn khách hàng demo --</option>';
             demoCustomers.forEach(customer => {
@@ -950,30 +1025,35 @@
 
             if (selectedCustomer) {
                 customerNameInput.value = selectedCustomer.name;
-                // Only update customer-specific fields in section 2
-                customer_levelTypeSelect.value = selectedCustomer.levelType;
-                customer_levelDetailInput.value = selectedCustomer.levelDetail;
-                customer_branchSelect.value = selectedCustomer.branch;
-                customer_customerFeeTypeSelect.value = selectedCustomer.customerFeeType;
                 
-                // Update transfer-specific fields in section 3
+                // Populate transaction fields in Section 3
                 transferAmountInput.value = new Intl.NumberFormat('en-US').format(selectedCustomer.transactionAmount);
+                recipientBankSelect.value = 'BIDV'; // Default to BIDV when loading customer
+                transfer_onUsTransactionSelect.value = selectedCustomer.onUsTransaction;
+                transfer_channelIDSelect.value = selectedCustomer.channelID;
+                transfer_levelTypeSelect.value = selectedCustomer.levelType;
+                transfer_levelDetailInput.value = selectedCustomer.levelDetail;
+                transfer_branchSelect.value = selectedCustomer.branch;
                 transfer_relationshipSelect.value = selectedCustomer.relationship;
+                transfer_customerFeeTypeSelect.value = selectedCustomer.customerFeeType;
                 transfer_fundingOptionSelect.value = selectedCustomer.fundingOption;
 
             } else {
                 // Reset to default customer values if no customer is selected
-                customerNameInput.value = defaultValues.customerName;
-                customer_levelTypeSelect.value = defaultValues.levelType;
-                customer_levelDetailInput.value = defaultValues.levelDetail;
-                customer_branchSelect.value = defaultValues.branch;
-                customer_customerFeeTypeSelect.value = defaultValues.customerFeeType;
+                customerNameInput.value = 'Nguyễn Văn A'; // Default customer name
 
-                transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount);
-                transfer_relationshipSelect.value = defaultValues.relationship;
-                transfer_fundingOptionSelect.value = defaultValues.fundingOption;
+                transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transferAmount);
+                recipientBankSelect.value = defaultValues.recipientBank;
+                transfer_onUsTransactionSelect.value = defaultValues.onUsTransaction_transaction;
+                transfer_channelIDSelect.value = defaultValues.channelID_transaction;
+                transfer_levelTypeSelect.value = defaultValues.levelType_transaction;
+                transfer_levelDetailInput.value = defaultValues.levelDetail_transaction;
+                transfer_branchSelect.value = defaultValues.branch_transaction;
+                transfer_relationshipSelect.value = defaultValues.relationship_transaction;
+                transfer_customerFeeTypeSelect.value = defaultValues.customerFeeType_transaction;
+                transfer_fundingOptionSelect.value = defaultValues.fundingOption_transaction;
             }
-            updateCustomerLevelDetailInput(); // Update placeholder/readonly for customer levelDetail
+            updateTransferLevelDetailInput(); // Update placeholder/readonly for transfer_levelDetail
             saveDataToLocalStorage();
         }
 
@@ -982,50 +1062,60 @@
             try {
                 const transferAmount = parseFormattedNumber(transferAmountInput.value);
                 let totalFee = 0;
-                let explanation = '';
+                let explanationHtml = '';
 
                 // Reset simplified explanation
-                simplifiedExplanationText.textContent = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+                simplifiedExplanationContentDiv.innerHTML = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
 
-                // Basic validation
-                if (isNaN(transferAmount) || transferAmount < 0) {
-                    showMessageBox('Vui lòng nhập số tiền chuyển khoản hợp lệ.');
-                    explanationText.textContent = 'Vui lòng nhập số tiền chuyển khoản hợp lệ.';
-                    totalFeeDisplay.textContent = formatCurrency(0);
-                    amountReceivedDisplay.textContent = formatCurrency(0);
-                    return;
-                }
+                // Determine transaction Payment Type based on Recipient Bank
+                const derivedPaymentType = (recipientBankSelect.value === 'BIDV' ? 'IFT' : 'DRO');
 
-                // Collect all attributes for matching
+                // Collect all attributes for matching and display from Section 3
                 const transactionAttributes = {
-                    paymentType: paymentTypeSelect.value, // From Fee Parameters tab
-                    onUsTransaction: onUsTransactionSelect.value, // From Fee Parameters tab
-                    channelID: channelIDSelect.value, // From Fee Parameters tab
-                    levelType: customer_levelTypeSelect.value, // From Customer Demo tab
-                    levelDetail: customer_levelDetailInput.value, // From Customer Demo tab
-                    branch: customer_branchSelect.value, // From Customer Demo tab
-                    relationship: transfer_relationshipSelect.value, // From Transfer Demo tab
-                    customerFeeType: customer_customerFeeTypeSelect.value, // From Customer Demo tab
-                    fundingOption: transfer_fundingOptionSelect.value // From Transfer Demo tab
+                    paymentType: derivedPaymentType, // Derived from recipientBank
+                    onUsTransaction: transfer_onUsTransactionSelect.value,
+                    channelID: transfer_channelIDSelect.value,
+                    levelType: transfer_levelTypeSelect.value,
+                    levelDetail: transfer_levelDetailInput.value,
+                    branch: transfer_branchSelect.value,
+                    relationship: transfer_relationshipSelect.value,
+                    customerFeeType: transfer_customerFeeTypeSelect.value,
+                    fundingOption: transfer_fundingOptionSelect.value,
+                    
+                    // Additional display-only transaction info
+                    transferAmount: transferAmount,
+                    recipientBank: recipientBankSelect.value,
+                    recipientAccount: recipientAccountInput.value,
+                    transferMessage: transferMessageInput.value
                 };
 
-                explanation += `**Thông tin giao dịch:**\n`;
-                for (const key in transactionAttributes) {
-                    explanation += `- ${key}: ${transactionAttributes[key]}\n`;
-                }
-                explanation += `- Số tiền chuyển khoản: ${formatCurrency(transferAmount)}\n\n`;
+                explanationHtml += '<strong>Chi Tiết Tính Phí & Thuyết Minh Logic:</strong>';
+                explanationHtml += '<p><strong>📍THÔNG TIN GIAO DỊCH:</strong></p><ul>';
+                
+                // Display transaction attributes from Section 3
+                explanationHtml += `<li><strong>${paramDisplayNames.transferAmount}:</strong> ${formatCurrency(transactionAttributes.transferAmount)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.recipientBank}:</strong> ${getSelectText(recipientBankSelect, transactionAttributes.recipientBank)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.recipientAccount}:</strong> ${transactionAttributes.recipientAccount}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.transferMessage}:</strong> ${transactionAttributes.transferMessage}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.paymentType_transaction}:</strong> ${getSelectText(paymentTypeSelect, transactionAttributes.paymentType)}</li>`; // Use paymentTypeSelect for text
+                explanationHtml += `<li><strong>${paramDisplayNames.onUsTransaction_transaction}:</strong> ${getSelectText(transfer_onUsTransactionSelect, transactionAttributes.onUsTransaction)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.channelID_transaction}:</strong> ${getSelectText(transfer_channelIDSelect, transactionAttributes.channelID)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.levelType_transaction}:</strong> ${getSelectText(transfer_levelTypeSelect, transactionAttributes.levelType)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.levelDetail_transaction}:</strong> ${transactionAttributes.levelDetail}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.branch_transaction}:</strong> ${getSelectText(transfer_branchSelect, transactionAttributes.branch)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.relationship_transaction}:</strong> ${getSelectText(transfer_relationshipSelect, transactionAttributes.relationship)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.customerFeeType_transaction}:</strong> ${getSelectText(transfer_customerFeeTypeSelect, transactionAttributes.customerFeeType)}</li>`;
+                explanationHtml += `<li><strong>${paramDisplayNames.fundingOption_transaction}:</strong> ${getSelectText(transfer_fundingOptionSelect, transactionAttributes.fundingOption)}</li>`;
+                
+                explanationHtml += '</ul>';
 
                 // Find a matching fee parameter
                 let matchedFeeParam = null;
-                // Iterate through feeParametersData to find the first exact match.
-                // A real system would have more complex rule matching logic (e.g., wildcards, date ranges, priorities for more specific rules).
+                const currentDate = new Date().toISOString().slice(0, 10);
+                
                 for (const param of feeParametersData) {
-                    // Check if the current date is within the effective date range of the fee parameter
-                    const currentDate = new Date().toISOString().slice(0, 10);
-                    
                     const isDateValid = (currentDate >= param.effectiveDateFrom && currentDate <= param.effectiveDateTo);
                     
-                    // Check if all attributes match, considering "ALL" as a wildcard
                     const isMatch = isDateValid &&
                         (param.paymentType === transactionAttributes.paymentType) &&
                         (param.onUsTransaction === transactionAttributes.onUsTransaction) &&
@@ -1039,53 +1129,112 @@
 
                     if (isMatch) {
                         matchedFeeParam = param;
-                        break; // Found a match, take the first one
+                        break;
                     }
                 }
 
+                explanationHtml += '<p><strong>❤️KẾT QUẢ KHỚP THAM SỐ:</strong></p><ul>';
                 if (matchedFeeParam) {
-                    explanation += `**Kết quả khớp tham số:**\n`;
-                    explanation += `- Đã tìm thấy tham số phí phù hợp: Mã Biểu phí "${matchedFeeParam.feePlanCode}" (ID: ${matchedFeeParam.id}).\n`;
-                    const selectedHomeFeeCodeId = matchedFeeParam.feeCodeHomeCurrency;
-                    // const selectedForeignFeeCodeId = matchedFeeParam.feeCodeForeignCurrency; // Not used for calculation yet
+                    explanationHtml += `<li><strong>Trạng thái khớp:</strong> Đã tìm thấy tham số phí phù hợp.</li>`;
+                    explanationHtml += `<li><strong>Mã Biểu phí khớp:</strong> "${matchedFeeParam.feePlanCode}" (ID: ${matchedFeeParam.id})</li>`;
 
+                    // List all parameters from matchedFeeParam and compare with transactionAttributes
+                    const matchedParamKeys = Object.keys(matchedFeeParam).filter(key => key !== 'id'); // Exclude ID
+                    for (const key of matchedParamKeys) {
+                        let displayValue = matchedFeeParam[key];
+                        let status = '';
+                        let transactionValue = transactionAttributes[key]; // Value from the transaction
+
+                        if (key === 'effectiveDateFrom' || key === 'effectiveDateTo') {
+                            displayValue = matchedFeeParam[key];
+                            status = `(Hợp lệ: ${currentDate} nằm trong khoảng ${matchedFeeParam.effectiveDateFrom} đến ${matchedFeeParam.effectiveDateTo})`;
+                        } else if (matchedFeeParam[key] === 'ALL') {
+                            status = '(Tham số áp dụng cho mọi trường hợp)';
+                        } else if (matchedFeeParam[key] === transactionValue) {
+                            status = '(Khớp)';
+                        } else if (transactionValue === undefined) {
+                             status = '(Không áp dụng cho giao dịch này)'; // If transaction attribute doesn't exist for this key
+                        } else {
+                            status = `(Không khớp: Giá trị tham số "${matchedFeeParam[key]}" khác giá trị giao dịch "${transactionValue}")`;
+                        }
+
+                        // Get display text for select values for declaration parameters
+                        if (key === 'feeType') displayValue = getSelectText(feeTypeSelect, displayValue);
+                        if (key === 'paymentType') displayValue = getSelectText(paymentTypeSelect, displayValue);
+                        if (key === 'onUsTransaction') displayValue = getSelectText(onUsTransactionSelect, displayValue);
+                        if (key === 'channelID') displayValue = getSelectText(channelIDSelect, displayValue);
+                        if (key === 'levelType') displayValue = getSelectText(levelTypeSelect, displayValue);
+                        if (key === 'branch') displayValue = getSelectText(branchSelect, displayValue);
+                        if (key === 'relationship') displayValue = getSelectText(relationshipSelect, displayValue);
+                        if (key === 'customerFeeType') displayValue = getSelectText(customerFeeTypeSelect, displayValue);
+                        if (key === 'fundingOption') displayValue = getSelectText(fundingOptionSelect, displayValue);
+                        
+                        explanationHtml += `<li><strong>${paramDisplayNames[`${key}_declaration`] || paramDisplayNames[key] || key}:</strong> ${displayValue} ${status}</li>`;
+                    }
+
+                    const selectedHomeFeeCodeId = matchedFeeParam.feeCodeHomeCurrency;
                     if (selectedHomeFeeCodeId) {
                         const homeFeeCode = feeCodesData.find(code => code.code === selectedHomeFeeCodeId);
                         if (homeFeeCode) {
-                            explanation += `- Áp dụng Mã Mức Phí VND: "${homeFeeCode.code}" - "${homeFeeCode.desc}".\n`;
+                            explanationHtml += `<li><strong>Mã Mức Phí VND được áp dụng:</strong> "${homeFeeCode.code}" - "${homeFeeCode.desc}"</li><ul>`;
                             if (homeFeeCode.amtfix !== '') {
                                 totalFee = parseFloat(homeFeeCode.amtfix);
-                                explanation += `- Loại phí: Cố định. Số tiền cố định được áp dụng: ${formatCurrency(totalFee)}.\n`;
+                                explanationHtml += `<li><strong>Loại phí:</strong> Cố định.</li>`;
+                                explanationHtml += `<li><strong>Số tiền cố định được áp dụng:</strong> ${formatCurrency(totalFee)}.</li>`;
                             } else if (homeFeeCode.percent !== '') {
                                 totalFee = (parseFloat(homeFeeCode.percent) / 100) * transferAmount;
-                                explanation += `- Loại phí: Tỷ lệ (${homeFeeCode.percent}%).\n`;
-                                explanation += `- Số tiền phí ban đầu (trước khi áp dụng Min/Max): ${formatCurrency(totalFee)}.\n`;
+                                explanationHtml += `<li><strong>Loại phí:</strong> Tỷ lệ (${homeFeeCode.percent}%).</li>`;
+                                explanationHtml += `<li><strong>Số tiền phí ban đầu (trước khi áp dụng Min/Max):</strong> ${formatCurrency(totalFee)}.</li>`;
 
-                                // Apply min/max if percentage fee and min/max are defined
                                 if (homeFeeCode.amtmin !== '' && totalFee < parseFloat(homeFeeCode.amtmin)) {
                                     totalFee = parseFloat(homeFeeCode.amtmin);
-                                    explanation += `- Áp dụng mức tối thiểu: ${formatCurrency(homeFeeCode.amtmin)} (vì phí ban đầu nhỏ hơn Min).\n`;
+                                    explanationHtml += `<li><strong>Áp dụng mức tối thiểu:</strong> ${formatCurrency(homeFeeCode.amtmin)} (vì phí ban đầu nhỏ hơn Min).</li>`;
+                                } else if (homeFeeCode.amtmin === '') {
+                                    explanationHtml += `<li>Mức tối thiểu (Min): Không áp dụng.</li>`;
+                                } else {
+                                    explanationHtml += `<li>Mức tối thiểu (Min): ${formatCurrency(homeFeeCode.amtmin)} (Không áp dụng vì phí ban đầu lớn hơn hoặc bằng Min).</li>`;
                                 }
+
                                 if (homeFeeCode.amtmax !== '' && totalFee > parseFloat(homeFeeCode.amtmax)) {
                                     totalFee = parseFloat(homeFeeCode.amtmax);
-                                    explanation += `- Áp dụng mức tối đa: ${formatCurrency(homeFeeCode.amtmax)} (vì phí ban đầu lớn hơn Max).\n`;
+                                    explanationHtml += `<li><strong>Áp dụng mức tối đa:</strong> ${formatCurrency(homeFeeCode.amtmax)} (vì phí ban đầu lớn hơn Max).</li>`;
+                                } else if (homeFeeCode.amtmax === '') {
+                                    explanationHtml += `<li>Mức tối đa (Max): Không áp dụng.</li>`;
+                                } else {
+                                    explanationHtml += `<li>Mức tối đa (Max): ${formatCurrency(homeFeeCode.amtmax)} (Không áp dụng vì phí ban đầu nhỏ hơn hoặc bằng Max).</li>`;
                                 }
                             } else {
-                                explanation += `- Mã mức phí này không có giá trị cố định hoặc tỷ lệ. Phí được áp dụng: 0 VND.\n`;
+                                explanationHtml += `<li>Mã mức phí này không có giá trị cố định hoặc tỷ lệ. Phí được áp dụng: 0 VND.</li>`;
                             }
+                            explanationHtml += '</ul>';
                         } else {
-                            explanation += `- Lỗi: Không tìm thấy chi tiết cho Mã mức phí VND: "${selectedHomeFeeCodeId}". Phí được áp dụng: 0 VND.\n`;
+                            explanationHtml += `<li>Lỗi: Không tìm thấy chi tiết cho Mã mức phí VND: "${selectedHomeFeeCodeId}". Phí được áp dụng: 0 VND.</li>`;
                             showMessageBox(`Không tìm thấy chi tiết cho Mã mức phí VND: ${selectedHomeFeeCodeId}`);
                         }
                     } else {
-                        explanation += `- Tham số phí phù hợp không có Mã mức phí VND được khai báo. Phí được áp dụng: 0 VND.\n`;
+                        explanationHtml += `<li>Tham số phí phù hợp không có Mã mức phí VND được khai báo. Phí được áp dụng: 0 VND.</li>`;
                         showMessageBox('Tham số phí phù hợp không có Mã mức phí VND được khai báo.');
                     }
+                    
+                    // Foreign currency fee code - explicitly state if not applicable
+                    const selectedForeignFeeCodeId = matchedFeeParam.feeCodeForeignCurrency;
+                    if (selectedForeignFeeCodeId) {
+                        const foreignFeeCode = feeCodesData.find(code => code.code === selectedForeignFeeCodeId);
+                        if (foreignFeeCode) {
+                            explanationHtml += `<li><strong>Mã Mức Phí Ngoại tệ:</strong> "${foreignFeeCode.code}" - "${foreignFeeCode.desc}". (Không áp dụng cho giao dịch VND)</li>`;
+                        } else {
+                            explanationHtml += `<li><strong>Mã Mức Phí Ngoại tệ:</strong> "${selectedForeignFeeCodeId}" (Không tìm thấy chi tiết, không áp dụng cho giao dịch VND).</li>`;
+                        }
+                    } else {
+                        explanationHtml += `<li><strong>Mã Mức Phí Ngoại tệ:</strong> Không được khai báo hoặc không áp dụng cho giao dịch VND.</li>`;
+                    }
+
                 } else {
-                    explanation += '**Kết quả khớp tham số:**\n';
-                    explanation += '- Không tìm thấy tham số phí phù hợp cho khách hàng và giao dịch này dựa trên các tiêu chí đã chọn. Phí được áp dụng: 0 VND.\n';
+                    explanationHtml += '<li><strong>Trạng thái khớp:</strong> Không tìm thấy tham số phí phù hợp cho khách hàng và giao dịch này dựa trên các tiêu chí đã chọn.</li>';
+                    explanationHtml += '<li>Phí được áp dụng: 0 VND.</li>';
                     showMessageBox('Không tìm thấy tham số phí phù hợp cho khách hàng và giao dịch này. Vui lòng kiểm tra lại khai báo phí.');
                 }
+                explanationHtml += '</ul>';
 
                 // Calculate amount customer receives
                 const amountReceived = transferAmount - totalFee;
@@ -1093,7 +1242,7 @@
                 // Update display using formatCurrency
                 totalFeeDisplay.textContent = formatCurrency(totalFee);
                 amountReceivedDisplay.textContent = formatCurrency(amountReceived);
-                explanationText.textContent = explanation;
+                explanationContentDiv.innerHTML = explanationHtml; // Set innerHTML
 
                 // Optional: Provide feedback if amount received is negative
                 if (amountReceived < 0) {
@@ -1102,7 +1251,7 @@
 
             } catch (error) {
                 console.error("Lỗi khi tính toán phí:", error);
-                explanationText.textContent = `Đã xảy ra lỗi trong quá trình tính toán: ${error.message}. Vui lòng thử lại.`;
+                explanationContentDiv.innerHTML = `<p>Đã xảy ra lỗi trong quá trình tính toán: ${error.message}. Vui lòng thử lại.</p>`;
                 showMessageBox('Đã xảy ra lỗi trong quá trình tính toán. Vui lòng thử lại.');
             }
         }
@@ -1114,8 +1263,8 @@
             }
 
             const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const prompt = `Phân tích chi tiết tính phí sau đây và cung cấp một bản tóm tắt, giải thích dễ hiểu cho người dùng phổ thông.
-            Hãy chắc chắn rằng tất cả các mốc thời gian trong bình luận của bạn được tham chiếu và hiển thị theo múi giờ: ${clientTimezone}.
+            const prompt = `Phân tích chi tiết tính phí sau đây và cung cấp một bản tóm tắt, giải thích dễ hiểu cho người dùng phổ thông bằng tiếng Việt.
+            Hãy định dạng phản hồi của bạn bằng HTML (sử dụng các thẻ như <p>, <strong>, <ul>, <li>).
             Chi tiết tính phí: ${detailedExplanation}`;
 
             const geminiPayload = {
@@ -1132,8 +1281,8 @@
             };
 
             try {
-                simplifiedExplanationText.textContent = "Đang tạo giải thích dễ hiểu... Vui lòng chờ.";
-                simplifiedExplanationText.classList.add('text-gray-500', 'italic');
+                simplifiedExplanationContentDiv.innerHTML = "Đang tạo giải thích dễ hiểu... Vui lòng chờ.";
+                simplifiedExplanationContentDiv.classList.add('text-gray-500', 'italic');
 
                 if (!GEMINI_API_KEY) {
                     showMessageBox('Lỗi: Gemini API Key chưa được cấu hình. Vui lòng thêm API Key vào mã nguồn.');
@@ -1161,7 +1310,9 @@
                 console.error("Error calling Gemini API:", error);
                 return `Lỗi khi gọi Gemini API: ${error.message}. Vui lòng thử lại.`;
             } finally {
-                simplifiedExplanationText.classList.remove('text-gray-500', 'italic');
+                simplifiedExplanationContentDiv.classList.remove('text-gray-500', 'italic');
+                // Scroll to the simplified explanation section
+                simplifiedExplanationContentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
@@ -1290,17 +1441,17 @@
         function clearFeeParameterForm() {
             feePlanCodeInput.value = defaultValues.feePlanCode;
             feeTypeSelect.value = defaultValues.feeType;
-            paymentTypeSelect.value = defaultValues.paymentType;
-            onUsTransactionSelect.value = defaultValues.onUsTransaction;
-            channelIDSelect.value = defaultValues.channelID;
+            paymentTypeSelect.value = defaultValues.paymentType_declaration;
+            onUsTransactionSelect.value = defaultValues.onUsTransaction_declaration;
+            channelIDSelect.value = defaultValues.channelID_declaration;
             effectiveDateFromInput.value = defaultValues.effectiveDateFrom;
             effectiveDateToInput.value = defaultValues.effectiveDateTo;
-            levelTypeSelect.value = defaultValues.levelType;
-            levelDetailInput.value = defaultValues.levelDetail;
-            branchSelect.value = defaultValues.branch;
-            relationshipSelect.value = defaultValues.relationship;
-            customerFeeTypeSelect.value = defaultValues.customerFeeType;
-            fundingOptionSelect.value = defaultValues.fundingOption;
+            levelTypeSelect.value = defaultValues.levelType_declaration;
+            levelDetailInput.value = defaultValues.levelDetail_declaration;
+            branchSelect.value = defaultValues.branch_declaration;
+            relationshipSelect.value = defaultValues.relationship_declaration;
+            customerFeeTypeSelect.value = defaultValues.customerFeeType_declaration;
+            fundingOptionSelect.value = defaultValues.fundingOption_declaration;
             feeCodeHomeCurrencySelect.value = '';
             feeCodeForeignCurrencySelect.value = '';
             updateLevelDetailInput(); // Reset levelDetail input placeholder/readonly
@@ -1474,24 +1625,24 @@
 
         // Function to save all data to Local Storage
         function saveDataToLocalStorage() {
-            // Save Fee Parameters form data
+            // Save Fee Parameters form data (Section 1)
             localStorage.setItem('feePlanCode', feePlanCodeInput.value);
             localStorage.setItem('feeType', feeTypeSelect.value);
-            localStorage.setItem('paymentType', paymentTypeSelect.value);
-            localStorage.setItem('onUsTransaction', onUsTransactionSelect.value);
-            localStorage.setItem('channelID', channelIDSelect.value);
+            localStorage.setItem('paymentType_declaration', paymentTypeSelect.value); // Use specific key
+            localStorage.setItem('onUsTransaction_declaration', onUsTransactionSelect.value); // Use specific key
+            localStorage.setItem('channelID_declaration', channelIDSelect.value); // Use specific key
             localStorage.setItem('effectiveDateFrom', effectiveDateFromInput.value);
             localStorage.setItem('effectiveDateTo', effectiveDateToInput.value);
-            localStorage.setItem('levelType', levelTypeSelect.value);
-            localStorage.setItem('levelDetail', levelDetailInput.value);
-            localStorage.setItem('branch', branchSelect.value);
-            localStorage.setItem('relationship', relationshipSelect.value);
-            localStorage.setItem('customerFeeType', customerFeeTypeSelect.value);
-            localStorage.setItem('fundingOption', fundingOptionSelect.value);
+            localStorage.setItem('levelType_declaration', levelTypeSelect.value); // Use specific key
+            localStorage.setItem('levelDetail_declaration', levelDetailInput.value); // Use specific key
+            localStorage.setItem('branch_declaration', branchSelect.value); // Use specific key
+            localStorage.setItem('relationship_declaration', relationshipSelect.value); // Use specific key
+            localStorage.setItem('customerFeeType_declaration', customerFeeTypeSelect.value); // Use specific key
+            localStorage.setItem('fundingOption_declaration', fundingOptionSelect.value); // Use specific key
             localStorage.setItem('feeCodeHomeCurrency', feeCodeHomeCurrencySelect.value);
             localStorage.setItem('feeCodeForeignCurrency', feeCodeForeignCurrencySelect.value);
 
-            // Save Fee Codes form data
+            // Save Fee Codes form data (Section 1.2.3)
             localStorage.setItem('feeCode_code', feeCode_code_Input.value);
             localStorage.setItem('feeCode_desc', feeCode_desc_Input.value);
             localStorage.setItem('feeCode_currency', feeCode_currency_Select.value);
@@ -1500,24 +1651,26 @@
             localStorage.setItem('feeCode_amtmin', feeCode_amtmin_Input.value);
             localStorage.setItem('feeCode_amtmax', feeCode_amtmax_Input.value);
 
-            // Save Customer Demo data
+            // Save Customer Demo data (Section 2)
             localStorage.setItem('customerName', customerNameInput.value);
-            localStorage.setItem('customer_levelType', customer_levelTypeSelect.value);
-            localStorage.setItem('customer_levelDetail', customer_levelDetailInput.value);
-            localStorage.setItem('customer_branch', customer_branchSelect.value);
-            localStorage.setItem('customer_customerFeeType', customer_customerFeeTypeSelect.value);
             localStorage.setItem('selectedCustomer', customerSelect.value);
 
-            // Save Transfer Demo data
+            // Save Transfer Demo data (Section 3) - All transaction inputs
             localStorage.setItem('transferAmount', transferAmountInput.value);
             localStorage.setItem('recipientBank', recipientBankSelect.value);
             localStorage.setItem('recipientAccount', recipientAccountInput.value);
             localStorage.setItem('transferMessage', transferMessageInput.value);
+            localStorage.setItem('transfer_onUsTransaction', transfer_onUsTransactionSelect.value);
+            localStorage.setItem('transfer_channelID', transfer_channelIDSelect.value);
+            localStorage.setItem('transfer_levelType', transfer_levelTypeSelect.value);
+            localStorage.setItem('transfer_levelDetail', transfer_levelDetailInput.value);
+            localStorage.setItem('transfer_branch', transfer_branchSelect.value);
             localStorage.setItem('transfer_relationship', transfer_relationshipSelect.value);
+            localStorage.setItem('transfer_customerFeeType', transfer_customerFeeTypeSelect.value);
             localStorage.setItem('transfer_fundingOption', transfer_fundingOptionSelect.value);
-            localStorage.setItem('explanationTextContent', explanationText.textContent);
-            localStorage.setItem('simplifiedExplanationTextContent', simplifiedExplanationText.textContent);
 
+            localStorage.setItem('explanationTextContent', explanationContentDiv.innerHTML);
+            localStorage.setItem('simplifiedExplanationTextContent', simplifiedExplanationContentDiv.innerHTML);
 
             // Save table data
             localStorage.setItem('feeParametersData', JSON.stringify(feeParametersData));
@@ -1526,22 +1679,22 @@
 
         // Function to load all data from Local Storage and populate inputs
         function loadDataFromLocalStorage() {
-            // Load Fee Parameters form data
+            // Load Fee Parameters form data (Section 1)
             feePlanCodeInput.value = localStorage.getItem('feePlanCode') || defaultValues.feePlanCode;
             feeTypeSelect.value = localStorage.getItem('feeType') || defaultValues.feeType;
-            paymentTypeSelect.value = localStorage.getItem('paymentType') || defaultValues.paymentType;
-            onUsTransactionSelect.value = localStorage.getItem('onUsTransaction') || defaultValues.onUsTransaction;
-            channelIDSelect.value = localStorage.getItem('channelID') || defaultValues.channelID;
+            paymentTypeSelect.value = localStorage.getItem('paymentType_declaration') || defaultValues.paymentType_declaration;
+            onUsTransactionSelect.value = localStorage.getItem('onUsTransaction_declaration') || defaultValues.onUsTransaction_declaration;
+            channelIDSelect.value = localStorage.getItem('channelID_declaration') || defaultValues.channelID_declaration;
             effectiveDateFromInput.value = localStorage.getItem('effectiveDateFrom') || defaultValues.effectiveDateFrom;
             effectiveDateToInput.value = localStorage.getItem('effectiveDateTo') || defaultValues.effectiveDateTo;
-            levelTypeSelect.value = localStorage.getItem('levelType') || defaultValues.levelType;
-            levelDetailInput.value = localStorage.getItem('levelDetail') || defaultValues.levelDetail;
-            branchSelect.value = localStorage.getItem('branch') || defaultValues.branch;
-            relationshipSelect.value = localStorage.getItem('relationship') || defaultValues.relationship;
-            customerFeeTypeSelect.value = localStorage.getItem('customerFeeType') || defaultValues.customerFeeType;
-            fundingOptionSelect.value = localStorage.getItem('fundingOption') || defaultValues.fundingOption;
+            levelTypeSelect.value = localStorage.getItem('levelType_declaration') || defaultValues.levelType_declaration;
+            levelDetailInput.value = localStorage.getItem('levelDetail_declaration') || defaultValues.levelDetail_declaration;
+            branchSelect.value = localStorage.getItem('branch_declaration') || defaultValues.branch_declaration;
+            relationshipSelect.value = localStorage.getItem('relationship_declaration') || defaultValues.relationship_declaration;
+            customerFeeTypeSelect.value = localStorage.getItem('customerFeeType_declaration') || defaultValues.customerFeeType_declaration;
+            fundingOptionSelect.value = localStorage.getItem('fundingOption_declaration') || defaultValues.fundingOption_declaration;
 
-            // Load Fee Codes form data
+            // Load Fee Codes form data (Section 1.2.3)
             feeCode_code_Input.value = localStorage.getItem('feeCode_code') || '';
             feeCode_desc_Input.value = localStorage.getItem('feeCode_desc') || '';
             feeCode_currency_Select.value = localStorage.getItem('feeCode_currency') || '';
@@ -1550,23 +1703,25 @@
             feeCode_amtmin_Input.value = localStorage.getItem('feeCode_amtmin') || '';
             feeCode_amtmax_Input.value = localStorage.getItem('feeCode_amtmax') || '';
 
-            // Load Customer Demo data
+            // Load Customer Demo data (Section 2)
             customerNameInput.value = localStorage.getItem('customerName') || defaultValues.customerName;
-            customer_levelTypeSelect.value = localStorage.getItem('customer_levelType') || defaultValues.levelType;
-            customer_levelDetailInput.value = localStorage.getItem('customer_levelDetail') || defaultValues.levelDetail;
-            customer_branchSelect.value = localStorage.getItem('customer_branch') || defaultValues.branch;
-            customer_customerFeeTypeSelect.value = localStorage.getItem('customer_customerFeeType') || defaultValues.customerFeeType;
             
-            // Load Transfer Demo data
-            transferAmountInput.value = localStorage.getItem('transferAmount') || new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount);
-            recipientBankSelect.value = localStorage.getItem('recipientBank') || 'BIDV';
-            recipientAccountInput.value = localStorage.getItem('recipientAccount') || '1234567890';
-            transferMessageInput.value = localStorage.getItem('transferMessage') || '';
-            transfer_relationshipSelect.value = localStorage.getItem('transfer_relationship') || defaultValues.relationship;
-            transfer_fundingOptionSelect.value = localStorage.getItem('transfer_fundingOption') || defaultValues.fundingOption;
-            explanationText.textContent = localStorage.getItem('explanationTextContent') || 'Nhấn "Tính Phí" để xem chi tiết.';
-            simplifiedExplanationText.textContent = localStorage.getItem('simplifiedExplanationTextContent') || 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+            // Load Transfer Demo data (Section 3) - All transaction inputs
+            transferAmountInput.value = localStorage.getItem('transferAmount') || new Intl.NumberFormat('en-US').format(defaultValues.transferAmount);
+            recipientBankSelect.value = localStorage.getItem('recipientBank') || defaultValues.recipientBank;
+            recipientAccountInput.value = localStorage.getItem('recipientAccount') || defaultValues.recipientAccount;
+            transferMessageInput.value = localStorage.getItem('transferMessage') || defaultValues.transferMessage;
+            transfer_onUsTransactionSelect.value = localStorage.getItem('transfer_onUsTransaction') || defaultValues.onUsTransaction_transaction;
+            transfer_channelIDSelect.value = localStorage.getItem('transfer_channelID') || defaultValues.channelID_transaction;
+            transfer_levelTypeSelect.value = localStorage.getItem('transfer_levelType') || defaultValues.levelType_transaction;
+            transfer_levelDetailInput.value = localStorage.getItem('transfer_levelDetail') || defaultValues.levelDetail_transaction;
+            transfer_branchSelect.value = localStorage.getItem('transfer_branch') || defaultValues.branch_transaction;
+            transfer_relationshipSelect.value = localStorage.getItem('transfer_relationship') || defaultValues.relationship_transaction;
+            transfer_customerFeeTypeSelect.value = localStorage.getItem('transfer_customerFeeType') || defaultValues.customerFeeType_transaction;
+            transfer_fundingOptionSelect.value = localStorage.getItem('transfer_fundingOption') || defaultValues.fundingOption_transaction;
 
+            explanationContentDiv.innerHTML = localStorage.getItem('explanationTextContent') || 'Nhấn "Tính Phí" để xem chi tiết.';
+            simplifiedExplanationContentDiv.innerHTML = localStorage.getItem('simplifiedExplanationTextContent') || 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
 
             // Load table data
             const storedFeeParams = localStorage.getItem('feeParametersData');
@@ -1591,13 +1746,12 @@
             formatNumberInput(feeCode_amtfix_Input);
             formatNumberInput(feeCode_amtmin_Input);
             formatNumberInput(feeCode_amtmax_Input);
-            // transactionAmountInput is now transferAmountInput
             formatNumberInput(transferAmountInput);
 
 
             // Update dynamic inputs
             updateLevelDetailInput(); // For fee parameters tab
-            updateCustomerLevelDetailInput(); // For customer demo tab
+            updateTransferLevelDetailInput(); // For transaction demo tab
 
             // Render tables
             renderFeeParametersTable();
@@ -1621,24 +1775,24 @@
         function clearLocalStorageAndReset() {
             localStorage.clear(); // Clear all relevant local storage items
 
-            // Reset Fee Parameters inputs to default values
+            // Reset Fee Parameters inputs to default values (Section 1)
             feePlanCodeInput.value = defaultValues.feePlanCode;
             feeTypeSelect.value = defaultValues.feeType;
-            paymentTypeSelect.value = defaultValues.paymentType;
-            onUsTransactionSelect.value = defaultValues.onUsTransaction;
-            channelIDSelect.value = defaultValues.channelID;
+            paymentTypeSelect.value = defaultValues.paymentType_declaration;
+            onUsTransactionSelect.value = defaultValues.onUsTransaction_declaration;
+            channelIDSelect.value = defaultValues.channelID_declaration;
             effectiveDateFromInput.value = defaultValues.effectiveDateFrom;
             effectiveDateToInput.value = defaultValues.effectiveDateTo;
-            levelTypeSelect.value = defaultValues.levelType;
-            levelDetailInput.value = defaultValues.levelDetail;
-            branchSelect.value = defaultValues.branch;
-            relationshipSelect.value = defaultValues.relationship;
-            customerFeeTypeSelect.value = defaultValues.customerFeeType;
-            fundingOptionSelect.value = defaultValues.fundingOption;
-            feeCodeHomeCurrencySelect.value = ''; // Clear new fields
-            feeCodeForeignCurrencySelect.value = ''; // Clear new fields
+            levelTypeSelect.value = defaultValues.levelType_declaration;
+            levelDetailInput.value = defaultValues.levelDetail_declaration;
+            branchSelect.value = defaultValues.branch_declaration;
+            relationshipSelect.value = defaultValues.relationship_declaration;
+            customerFeeTypeSelect.value = defaultValues.customerFeeType_declaration;
+            fundingOptionSelect.value = defaultValues.fundingOption_declaration;
+            feeCodeHomeCurrencySelect.value = '';
+            feeCodeForeignCurrencySelect.value = '';
 
-            // Reset Fee Codes inputs
+            // Reset Fee Codes inputs (Section 1.2.3)
             feeCode_code_Input.value = '';
             feeCode_desc_Input.value = '';
             feeCode_currency_Select.value = '';
@@ -1647,23 +1801,26 @@
             feeCode_amtmin_Input.value = '';
             feeCode_amtmax_Input.value = '';
 
-            // Reset Customer Demo data
+            // Reset Customer Demo data (Section 2)
             customerNameInput.value = defaultValues.customerName;
-            customer_levelTypeSelect.value = defaultValues.levelType;
-            customer_levelDetailInput.value = defaultValues.levelDetail;
-            customer_branchSelect.value = defaultValues.branch;
-            customer_customerFeeTypeSelect.value = defaultValues.customerFeeType;
             customerSelect.value = ''; // Clear selected customer
 
-            // Reset Transfer Demo data
-            transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transactionAmount); // Format default value
-            recipientBankSelect.value = 'BIDV';
-            recipientAccountInput.value = '1234567890';
-            transferMessageInput.value = '';
-            transfer_relationshipSelect.value = defaultValues.relationship;
-            transfer_fundingOptionSelect.value = defaultValues.fundingOption;
-            explanationText.textContent = 'Nhấn "Tính Phí" để xem chi tiết.';
-            simplifiedExplanationText.textContent = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
+            // Reset Transfer Demo data (Section 3) - All transaction inputs
+            transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transferAmount);
+            recipientBankSelect.value = defaultValues.recipientBank;
+            recipientAccountInput.value = defaultValues.recipientAccount;
+            transferMessageInput.value = defaultValues.transferMessage;
+            transfer_onUsTransactionSelect.value = defaultValues.onUsTransaction_transaction;
+            transfer_channelIDSelect.value = defaultValues.channelID_transaction;
+            transfer_levelTypeSelect.value = defaultValues.levelType_transaction;
+            transfer_levelDetailInput.value = defaultValues.levelDetail_transaction;
+            transfer_branchSelect.value = defaultValues.branch_transaction;
+            transfer_relationshipSelect.value = defaultValues.relationship_transaction;
+            transfer_customerFeeTypeSelect.value = defaultValues.customerFeeType_transaction;
+            transfer_fundingOptionSelect.value = defaultValues.fundingOption_transaction;
+
+            explanationContentDiv.innerHTML = 'Nhấn "Tính Phí" để xem chi tiết.';
+            simplifiedExplanationContentDiv.innerHTML = 'Nhấn "Tính Phí" sau đó nhấn "Giải thích phí dễ hiểu" để xem.';
 
 
             // Reset table data to initial demo data
@@ -1679,7 +1836,7 @@
             populateFeeCodeDropdowns(); // Repopulate dropdowns after reset
             populateCustomerDropdown(); // Repopulate customer dropdown after reset
             updateLevelDetailInput(); // Reset levelDetail input for fee parameters
-            updateCustomerLevelDetailInput(); // Reset customer levelDetail input
+            updateTransferLevelDetailInput(); // Reset transaction levelDetail input
             renderFeeParametersTable(); // Re-render table with default data
             renderFeeCodesTable(); // Re-render fee codes table with default data
             calculateFee(); // Recalculate with default values
@@ -1715,9 +1872,9 @@
 
         // New LLM feature button event listener
         simplifyExplanationBtn.addEventListener('click', async () => {
-            const detailedExplanation = explanationText.textContent;
+            const detailedExplanation = explanationContentDiv.innerHTML; // Get HTML content
             const simplifiedText = await getSimplifiedFeeExplanation(detailedExplanation);
-            simplifiedExplanationText.textContent = simplifiedText;
+            simplifiedExplanationContentDiv.innerHTML = simplifiedText; // Set HTML content
             saveDataToLocalStorage(); // Save the generated explanation
         });
 
@@ -1725,7 +1882,7 @@
         instructionHeader.addEventListener('click', toggleInstructions);
 
 
-        // Fee Parameter Form Event Listeners
+        // Fee Parameter Form Event Listeners (Section 1)
         saveFeeParamBtn.addEventListener('click', addOrUpdateFeeParameter);
         cancelEditBtn.addEventListener('click', cancelEditFeeParam);
         levelTypeSelect.addEventListener('change', () => {
@@ -1738,12 +1895,12 @@
         feeCodeForeignCurrencySelect.addEventListener('change', saveDataToLocalStorage);
 
 
-        // Fee Code Form Event Listeners
+        // Fee Code Form Event Listeners (Section 1.2.3)
         saveFeeCodeBtn.addEventListener('click', addOrUpdateFeeCode);
         cancelFeeCodeEditBtn.addEventListener('click', cancelEditFeeCode);
 
         // Input event listeners for auto-saving and formatting
-        // Fee Parameters
+        // Fee Parameters (Section 1)
         feePlanCodeInput.addEventListener('input', saveDataToLocalStorage);
         feeTypeSelect.addEventListener('change', saveDataToLocalStorage);
         paymentTypeSelect.addEventListener('change', saveDataToLocalStorage);
@@ -1757,7 +1914,7 @@
         customerFeeTypeSelect.addEventListener('change', saveDataToLocalStorage);
         fundingOptionSelect.addEventListener('change', saveDataToLocalStorage);
         
-        // Fee Codes
+        // Fee Codes (Section 1.2.3)
         feeCode_code_Input.addEventListener('input', saveDataToLocalStorage);
         feeCode_desc_Input.addEventListener('input', saveDataToLocalStorage);
         feeCode_currency_Select.addEventListener('change', saveDataToLocalStorage);
@@ -1770,24 +1927,29 @@
         feeCode_amtmax_Input.addEventListener('input', () => formatNumberInput(feeCode_amtmax_Input));
         feeCode_amtmax_Input.addEventListener('blur', saveDataToLocalStorage);
 
-        // Customer Demo (New)
+        // Customer Demo (Section 2)
         customerSelect.addEventListener('change', loadSelectedCustomerData);
         customerNameInput.addEventListener('input', saveDataToLocalStorage);
-        customer_levelTypeSelect.addEventListener('change', () => {
-            updateCustomerLevelDetailInput();
-            saveDataToLocalStorage();
-        });
-        customer_levelDetailInput.addEventListener('input', saveDataToLocalStorage);
-        customer_branchSelect.addEventListener('change', saveDataToLocalStorage);
-        customer_customerFeeTypeSelect.addEventListener('change', saveDataToLocalStorage);
         
-        // Transfer Demo (New)
+        // Transfer Demo (Section 3) - All transaction inputs
         transferAmountInput.addEventListener('input', () => formatNumberInput(transferAmountInput));
         transferAmountInput.addEventListener('blur', saveDataToLocalStorage);
-        recipientBankSelect.addEventListener('change', saveDataToLocalStorage);
+        recipientBankSelect.addEventListener('change', () => {
+            saveDataToLocalStorage();
+            calculateFee(); // Recalculate when recipient bank changes (and thus payment type changes)
+        });
         recipientAccountInput.addEventListener('input', saveDataToLocalStorage);
         transferMessageInput.addEventListener('input', saveDataToLocalStorage);
+        transfer_onUsTransactionSelect.addEventListener('change', saveDataToLocalStorage); // NEW
+        transfer_channelIDSelect.addEventListener('change', saveDataToLocalStorage);
+        transfer_levelTypeSelect.addEventListener('change', () => { // NEW
+            updateTransferLevelDetailInput();
+            saveDataToLocalStorage();
+        });
+        transfer_levelDetailInput.addEventListener('input', saveDataToLocalStorage); // NEW
+        transfer_branchSelect.addEventListener('change', saveDataToLocalStorage); // NEW
         transfer_relationshipSelect.addEventListener('change', saveDataToLocalStorage);
+        transfer_customerFeeTypeSelect.addEventListener('change', saveDataToLocalStorage); // NEW
         transfer_fundingOptionSelect.addEventListener('change', saveDataToLocalStorage);
 
     </script>
