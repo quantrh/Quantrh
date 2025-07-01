@@ -433,13 +433,10 @@
                                 <label for="productName" class="block text-sm mb-1">Tên sản phẩm:</label>
                                 <input type="text" id="productName" class="form-input" placeholder="Ví dụ: Dịch vụ chuyển tiền">
                             </div>
+                            <!-- Removed productPrice as per request -->
                             <div class="input-group mb-2">
                                 <label for="productDescription" class="block text-sm mb-1">Mô tả đặc tính:</label>
                                 <textarea id="productDescription" class="form-input" rows="2" placeholder="Mô tả chi tiết về sản phẩm"></textarea>
-                            </div>
-                            <div class="input-group mb-2">
-                                <label for="productPrice" class="block text-sm mb-1">Giá phí (VND):</label>
-                                <input type="number" id="productPrice" class="form-input" value="10000">
                             </div>
                             <div class="input-group mb-2">
                                 <label for="productStartDate" class="block text-sm mb-1">Thời gian bắt đầu:</label>
@@ -574,9 +571,16 @@
                             </div>
                             <div class="input-group mb-2">
                                 <label for="feeCodeProductCategory" class="block text-sm mb-1">Gắn với danh mục SPDV:</label>
-                                <select id="feeCodeProductCategory" class="form-input">
+                                <select id="feeCodeProductCategory" class="form-input" onchange="updateFeeCodeProductDropdown()">
                                     <option value="">Chọn danh mục</option>
                                     <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="input-group mb-2">
+                                <label for="feeCodeProduct" class="block text-sm mb-1">Sản phẩm dịch vụ:</label>
+                                <select id="feeCodeProduct" class="form-input">
+                                    <option value="">Chọn sản phẩm</option>
+                                    <!-- Options populated by JS based on category -->
                                 </select>
                             </div>
                             <div class="input-group mb-2">
@@ -1034,8 +1038,8 @@
         // Function to set default demo data for 1.1 fields
         function setDemoProductData() {
             document.getElementById('productName').value = 'Dịch vụ Thanh toán Trực tuyến';
+            // Removed productPrice from here
             document.getElementById('productDescription').value = 'Hỗ trợ thanh toán nhanh chóng qua Internet Banking';
-            document.getElementById('productPrice').value = '5000';
             document.getElementById('productStartDate').valueAsDate = new Date(); // Current date
             const endDate = new Date();
             endDate.setFullYear(endDate.getFullYear() + 1); // One year from now
@@ -1049,7 +1053,7 @@
                 products.push({
                     name: 'Dịch vụ Thanh toán Trực tuyến',
                     description: 'Hỗ trợ thanh toán nhanh chóng qua Internet Banking',
-                    price: 5000,
+                    // Removed price from product object
                     startDate: new Date().toISOString().split('T')[0],
                     endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
                     customerTarget: 'Doanh nghiệp vừa và nhỏ',
@@ -1060,7 +1064,7 @@
                 products.push({
                     name: 'Gói Tín dụng Ưu đãi Doanh nghiệp',
                     description: 'Gói vay vốn lãi suất ưu đãi cho doanh nghiệp',
-                    price: 0, // No direct fee for the product itself, fee is in policy
+                    // Removed price from product object
                     startDate: new Date().toISOString().split('T')[0],
                     endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0],
                     customerTarget: 'Doanh nghiệp lớn',
@@ -1181,6 +1185,7 @@
                     code: 'FC001',
                     name: 'Phí cố định tài khoản',
                     productCategory: 'Dịch vụ thanh toán',
+                    productName: 'Dịch vụ Thanh toán Trực tuyến', // Added productName
                     method: 'Fixed',
                     type: 'Periodic',
                     details: { fixedAmount: 15000 }
@@ -1190,6 +1195,7 @@
                     code: 'FC002',
                     name: 'Phí chuyển tiền liên ngân hàng',
                     productCategory: 'Dịch vụ thanh toán',
+                    productName: 'Dịch vụ Thanh toán Trực tuyến', // Added productName
                     method: 'Percentage',
                     type: 'PerTransaction',
                     details: { percentageRate: 0.03, minFeePercentage: 2000, maxFeePercentage: 50000, basisForCalculation: 'Giá trị giao dịch' }
@@ -1199,6 +1205,7 @@
                     code: 'FC003',
                     name: 'Phí quản lý dư nợ tín dụng',
                     productCategory: 'Tín dụng',
+                    productName: 'Gói Tín dụng Ưu đãi Doanh nghiệp', // Added productName
                     method: 'Tiered',
                     type: 'Periodic',
                     details: {
@@ -1215,6 +1222,7 @@
                     code: 'FC004',
                     name: 'Phí dịch vụ ưu tiên linh hoạt',
                     productCategory: 'Dịch vụ khác',
+                    productName: '', // No specific product for this demo fee code
                     method: 'Flexible',
                     type: 'Periodic',
                     details: {
@@ -1229,6 +1237,7 @@
                     code: 'FC005',
                     name: 'Phí tổng hợp dịch vụ tài chính',
                     productCategory: 'Dịch vụ khác',
+                    productName: '', // No specific product for this demo fee code
                     method: 'Combined',
                     type: 'Periodic',
                     details: {
@@ -1249,18 +1258,18 @@
         function addProduct() {
             const productName = document.getElementById('productName').value;
             const productDescription = document.getElementById('productDescription').value;
-            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            // const productPrice = parseFloat(document.getElementById('productPrice').value); // Removed
             const productStartDate = document.getElementById('productStartDate').value;
             const productEndDate = document.getElementById('productEndDate').value;
             const productCustomerTarget = document.getElementById('productCustomerTarget').value;
             const productChannel = document.getElementById('productChannel').value;
             const productCategory = document.getElementById('productCategory').value;
 
-            if (productName && !isNaN(productPrice) && productPrice >= 0 && productCustomerTarget && productChannel && productCategory) {
+            if (productName && productCustomerTarget && productChannel && productCategory) { // Removed productPrice check
                 const product = {
                     name: productName,
                     description: productDescription,
-                    price: productPrice,
+                    // price: productPrice, // Removed from product object
                     startDate: productStartDate,
                     endDate: productEndDate,
                     customerTarget: productCustomerTarget,
@@ -1283,16 +1292,16 @@
                 // Clear form fields
                 document.getElementById('productName').value = '';
                 document.getElementById('productDescription').value = '';
-                document.getElementById('productPrice').value = '10000';
+                // document.getElementById('productPrice').value = '10000'; // Removed
                 document.getElementById('productStartDate').value = '';
                 document.getElementById('productEndDate').value = '';
                 document.getElementById('productCustomerTarget').value = '';
                 document.getElementById('productChannel').value = '';
                 document.getElementById('productCategory').value = '';
 
-                showMessage('productMessage', `Đã thêm sản phẩm: <strong>${productName}</strong> - ${productPrice.toLocaleString('vi-VN')} VND.`, 'success');
+                showMessage('productMessage', `Đã thêm sản phẩm: <strong>${productName}</strong> (Danh mục: ${productCategory}).`, 'success'); // Updated message
             } else {
-                showMessage('productMessage', 'Vui lòng điền đầy đủ thông tin sản phẩm (Tên, Giá, Đối tượng KH, Kênh, Danh mục).', 'error');
+                showMessage('productMessage', 'Vui lòng điền đầy đủ thông tin sản phẩm (Tên, Đối tượng KH, Kênh, Danh mục).', 'error'); // Updated message
             }
         }
 
@@ -1305,19 +1314,20 @@
 
             products.forEach((product, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<strong>${product.name}</strong> (${product.price.toLocaleString('vi-VN')} VND) - Category: ${product.category || 'N/A'}<br>
+                li.innerHTML = `<strong>${product.name}</strong> (Danh mục: ${product.category || 'N/A'})<br>
                                 <em>Mô tả: ${product.description || 'N/A'} | KH: ${product.customerTarget || 'N/A'} | Kênh: ${product.channel || 'N/A'}</em><br>
                                 <em>Hiệu lực: ${product.startDate || 'N/A'} đến ${product.endDate || 'N/A'}</em>`;
                 productListUl.appendChild(li);
 
                 const option = document.createElement('option');
-                option.value = index;
-                option.textContent = product.name;
+                option.value = product.id; // Use product ID for selection
+                option.textContent = `${product.name} (${product.category})`;
                 packageProductsSelect.appendChild(option);
             });
 
             updatePackageForPolicySelect();
             populateDropdowns(); // Re-populate dropdowns that use products/packages
+            updateFeeCodeProductDropdown(); // Ensure feeCodeProduct dropdown is updated
         }
 
         function updateProductHistory() {
@@ -1334,10 +1344,12 @@
             const packageName = document.getElementById('packageName').value;
             const packageStartDate = document.getElementById('packageStartDate').value;
             const packageEndDate = document.getElementById('packageEndDate').value;
-            const selectedProductIndices = Array.from(document.getElementById('packageProducts').selectedOptions).map(option => parseInt(option.value));
+            // Get selected product IDs, not indices
+            const selectedProductIds = Array.from(document.getElementById('packageProducts').selectedOptions).map(option => parseInt(option.value));
 
-            if (packageName && selectedProductIndices.length > 0 && packageStartDate && packageEndDate) {
-                const selectedProducts = selectedProductIndices.map(index => products[index]);
+            if (packageName && selectedProductIds.length > 0 && packageStartDate && packageEndDate) {
+                // Map IDs back to product objects
+                const selectedProducts = selectedProductIds.map(id => products.find(p => p.id === id));
                 const packageObj = {
                     name: packageName,
                     products: selectedProducts,
@@ -1387,7 +1399,7 @@
             if (products.length === 0) {
                 message += "- Không có sản phẩm nào.\n";
             } else {
-                products.forEach(p => message += `- ${p.name} (ID: ${p.id}, Giá: ${p.price.toLocaleString('vi-VN')} VND, Category: ${p.category || 'N/A'})\n`);
+                products.forEach(p => message += `- ${p.name} (ID: ${p.id}, Danh mục: ${p.category || 'N/A'})\n`); // Updated display
             }
 
             message += "\nDữ liệu gói sản phẩm hiện tại:\n";
@@ -1570,6 +1582,23 @@
             document.getElementById('feeTypeDescription').textContent = feeTypeDescriptions[feeType] || '';
         }
 
+        // New: Update feeCodeProduct dropdown based on selected category
+        function updateFeeCodeProductDropdown() {
+            const feeCodeProductCategory = document.getElementById('feeCodeProductCategory').value;
+            const feeCodeProductSelect = document.getElementById('feeCodeProduct');
+            feeCodeProductSelect.innerHTML = '<option value="">Chọn sản phẩm</option>'; // Reset options
+
+            if (feeCodeProductCategory) {
+                const filteredProducts = products.filter(p => p.category === feeCodeProductCategory);
+                filteredProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = product.name;
+                    feeCodeProductSelect.appendChild(option);
+                });
+            }
+        }
+
         // New: Add Tier for Tiered Fee
         function addTier() {
             const minThreshold = parseFloat(document.getElementById('minThreshold').value);
@@ -1655,6 +1684,7 @@
             const feeCodeId = document.getElementById('feeCodeId').value;
             const feeCodeName = document.getElementById('feeCodeName').value;
             const feeCodeProductCategory = document.getElementById('feeCodeProductCategory').value;
+            const feeCodeProductId = document.getElementById('feeCodeProduct').value; // Get selected product ID
             const feeMethod = document.getElementById('feeMethod').value;
             const feeType = document.getElementById('feeType').value;
             let feeDetails = {};
@@ -1663,6 +1693,10 @@
                 showMessage('feeCodeMessage', 'Vui lòng điền đầy đủ thông tin Mã phí, Tên mã phí, Danh mục SPDV, Cách thức và Loại phí.', 'error');
                 return;
             }
+            
+            // Get the actual product name from its ID for storage
+            const selectedProduct = products.find(p => p.id == feeCodeProductId);
+            const feeCodeProductName = selectedProduct ? selectedProduct.name : '';
 
             // Check for duplicate fee code ID
             if (definedFeeCodes.some(fc => fc.code === feeCodeId)) {
@@ -1722,6 +1756,8 @@
                 code: feeCodeId,
                 name: feeCodeName,
                 productCategory: feeCodeProductCategory,
+                productName: feeCodeProductName, // Store the product name
+                productId: feeCodeProductId, // Store the product ID
                 method: feeMethod,
                 type: feeType,
                 details: feeDetails
@@ -1743,6 +1779,7 @@
             document.getElementById('feeCodeId').value = '';
             document.getElementById('feeCodeName').value = '';
             document.getElementById('feeCodeProductCategory').value = '';
+            document.getElementById('feeCodeProduct').innerHTML = '<option value="">Chọn sản phẩm</option>'; // Clear and reset
             document.getElementById('feeMethod').value = 'Fixed'; // Reset to default
             document.getElementById('feeType').value = 'Periodic'; // Reset to default
             updateFeeMethodFormVisibility(); // Hide all forms again
@@ -1775,7 +1812,7 @@
                         detailsHtml = `Tỷ lệ: ${feeCode.details.percentageRate}% | Min: ${feeCode.details.minFeePercentage.toLocaleString('vi-VN')} VND | Max: ${feeCode.details.maxFeePercentage.toLocaleString('vi-VN')} VND | Cơ sở: ${feeCode.details.basisForCalculation}`;
                         break;
                     case 'Tiered':
-                        detailsHtml = `Loại bậc: ${feeCode.details.tierType} | Bậc: ${feeCode.details.tiers.map(t => `${t.minThreshold}-${t.maxThreshold} (${t.tierFeeAmount.toLocaleString('vi-VN')} VND)`).join('; ')}`;
+                        detailsHtml = `Loại bậc: ${feeCode.details.tierType} | Bậc: ${feeCode.details.tiers.map(t => `${t.minThreshold}-${t.maxThreshold === Infinity ? 'Max' : t.maxThreshold} (${t.tierFeeAmount.toLocaleString('vi-VN')} VND)`).join('; ')}`;
                         break;
                     case 'Flexible':
                         detailsHtml = `Quy tắc: ${feeCode.details.rules.map(r => `${r.criteriaType}="${r.criteriaValue}" (${r.flexibleFeeAmount.toLocaleString('vi-VN')} VND)`).join('; ')}`;
@@ -1788,7 +1825,7 @@
                         detailsHtml = `Kết hợp các mã: [${combinedNames}] | Mô tả: ${feeCode.details.combinedDescription}`;
                         break;
                 }
-                li.innerHTML = `<strong>${feeCode.code} - ${feeCode.name}</strong> (Danh mục: ${feeCode.productCategory || 'N/A'})<br>
+                li.innerHTML = `<strong>${feeCode.code} - ${feeCode.name}</strong> (Danh mục: ${feeCode.productCategory || 'N/A'}${feeCode.productName ? `, Sản phẩm: ${feeCode.productName}` : ''})<br>
                                 <em>Cách tính: ${feeCode.method} | Loại phí: ${feeCode.type} | Chi tiết: ${detailsHtml}</em>`;
                 definedFeeCodesListUl.appendChild(li);
             });
@@ -2110,6 +2147,7 @@
             // Set initial descriptions for fee methods and types
             updateFeeMethodFormVisibility(); // Call this to set initial form visibility and description
             updateFeeTypeDescription();
+            updateFeeCodeProductDropdown(); // Initial call to populate product dropdown for fee code
         };
 
 
