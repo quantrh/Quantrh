@@ -648,14 +648,9 @@
     </div>
 
     <script>
-        // Supabase configuration
-        const SUPABASE_URL = "https://rmbsxccrwrktbjlnezpu.supabase.co";
-        // LƯU Ý QUAN TRỌNG: SUPABASE_ANON_KEY là khóa API công khai, KHÔNG phải là mã token JWT của người dùng.
-        // Hàm Supabase của bạn yêu cầu một mã token JWT hợp lệ của người dùng đã xác thực trong header Authorization.
-        // Việc sử dụng SUPABASE_ANON_KEY ở đây sẽ dẫn đến lỗi "Unauthorized: Invalid token or user not found" từ hàm Supabase.
-        // Để khắc phục, bạn cần triển khai xác thực người dùng trên client và gửi session.access_token thay vì SUPABASE_ANON_KEY.
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y";
-        const SUPABASE_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/analyze-activities-with-gemini`;
+        // Gemini API configuration
+        const GEMINI_API_KEY = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // THAY THẾ BẰNG API KEY CỦA BẠN TẠI ĐÂY
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
         // Function to format numbers as currency (VND)
         function formatCurrency(amount) {
@@ -1112,52 +1107,59 @@
             }
         }
 
-        // Function to get simplified explanation from Supabase Edge Function
+        // Function to get simplified explanation from Gemini API
         async function getSimplifiedFeeExplanation(detailedExplanation) {
             if (!detailedExplanation || detailedExplanation.trim() === 'Nhấn "Tính Phí" để xem chi tiết.') {
                 return "Không có thông tin chi tiết để giải thích.";
             }
 
-            // Construct payload for Supabase Edge Function
-            // Note: The Supabase function's internal prompt is for "running activities".
-            // We are sending fee explanation text as "activities" data.
-            // This might lead to irrelevant AI responses.
-            const payload = {
-                // Wrap the detailed explanation in an array, as the Supabase function expects 'activities' to be an array.
-                // The Supabase function's prompt will then JSON.stringify this.
-                activities: [{ description: detailedExplanation }], // Using 'description' as a generic field
-                runnerCredentialId: null, // Not applicable for fee explanation
-                clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone // Get client's timezone
+            const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const prompt = `Phân tích chi tiết tính phí sau đây và cung cấp một bản tóm tắt, giải thích dễ hiểu cho người dùng phổ thông.
+            Hãy chắc chắn rằng tất cả các mốc thời gian trong bình luận của bạn được tham chiếu và hiển thị theo múi giờ: ${clientTimezone}.
+            Chi tiết tính phí: ${detailedExplanation}`;
+
+            const geminiPayload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ]
             };
 
             try {
                 simplifiedExplanationText.textContent = "Đang tạo giải thích dễ hiểu... Vui lòng chờ.";
                 simplifiedExplanationText.classList.add('text-gray-500', 'italic');
 
-                const response = await fetch(SUPABASE_EDGE_FUNCTION_URL, {
+                if (!GEMINI_API_KEY) {
+                    showMessageBox('Lỗi: Gemini API Key chưa được cấu hình. Vui lòng thêm API Key vào mã nguồn.');
+                    return "Lỗi: Gemini API Key chưa được cấu hình.";
+                }
+
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        // LƯU Ý QUAN TRỌNG: Hàm Supabase của bạn yêu cầu một mã token JWT hợp lệ của người dùng đã xác thực.
-                        // SUPABASE_ANON_KEY KHÔNG phải là mã token JWT của người dùng, nên việc sử dụng nó ở đây sẽ gây lỗi "Unauthorized".
-                        // Để hàm Supabase hoạt động, bạn cần thay thế SUPABASE_ANON_KEY bằng session.access_token của người dùng đã đăng nhập.
-                        // HOẶC, nếu hàm không cần xác thực người dùng, bạn cần chỉnh sửa code của hàm Supabase để bỏ qua kiểm tra này.
-                        // 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(geminiPayload)
                 });
 
                 const result = await response.json();
 
-                if (response.ok && result.success) {
-                    return result.analysis;
+                if (response.ok && result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const analysisText = result.candidates[0].content.parts[0].text;
+                    return analysisText;
                 } else {
-                    console.error("Error from Supabase Edge Function:", result.error || "Unknown error");
-                    return `Lỗi từ hàm Supabase: ${result.error || 'Lỗi không xác định'}. Vui lòng kiểm tra console để biết chi tiết.`;
+                    console.error("Error from Gemini API:", result.error || "Unknown error", result);
+                    return `Lỗi từ Gemini API: ${result.error?.message || JSON.stringify(result)}. Vui lòng kiểm tra console để biết chi tiết.`;
                 }
             } catch (error) {
-                console.error("Error calling Supabase Edge Function:", error);
-                return `Lỗi khi gọi hàm Supabase: ${error.message}. Vui lòng thử lại.`;
+                console.error("Error calling Gemini API:", error);
+                return `Lỗi khi gọi Gemini API: ${error.message}. Vui lòng thử lại.`;
             } finally {
                 simplifiedExplanationText.classList.remove('text-gray-500', 'italic');
             }
