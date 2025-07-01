@@ -188,6 +188,55 @@
             font-size: 0.8em;
             cursor: pointer;
         }
+        /* Styles for the scroll-to-top button */
+        #scrollToTopBtn {
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed position */
+            bottom: 20px; /* Place at the bottom */
+            right: 30px; /* Place at the right */
+            z-index: 99; /* Make sure it's on top */
+            border: none; /* Remove borders */
+            outline: none; /* Remove outline */
+            background-color: #006B68; /* BIDV Teal */
+            color: white; /* White text */
+            cursor: pointer; /* Add a mouse pointer on hover */
+            padding: 15px; /* Some padding */
+            border-radius: 50%; /* Rounded corners */
+            font-size: 18px; /* Increase font size */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+            transition: background-color 0.3s, transform 0.3s; /* Smooth transition */
+        }
+
+        #scrollToTopBtn:hover {
+            background-color: #005A58; /* Darker teal on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+        .gemini-explanation-box {
+            background-color: #F0F9FF; /* Light blueish background */
+            border: 1px solid #90CDF4; /* Light blue border */
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.95em;
+            color: #2C5282; /* Darker blue text */
+            display: none; /* Hidden by default */
+        }
+        .gemini-explanation-box strong {
+            color: #1A365D; /* Even darker blue for strong text */
+        }
+        .gemini-explanation-box .loading-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .gemini-explanation-box .loading-indicator::before {
+            content: '✨';
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-6">
@@ -200,26 +249,26 @@
                 <span>Hướng dẫn sử dụng</span>
                 <span id="userGuideToggleIcon" class="toggle-icon">&#9658;</span>
             </div>
-            <div id="userGuideContent" class="section-content">
+            <div id="userGuideContent" class="section-content hidden"> <!-- Added 'hidden' class here -->
                 <p class="text-gray-700 mb-4">Chào mừng bạn đến với chương trình demo Fee Engine. Dưới đây là hướng dẫn nhanh về cách sử dụng các chức năng chính:</p>
                 <ul class="list-disc list-inside text-sm text-gray-700 mb-4">
                     <li><strong>Chính sách gói phí:</strong> Nhập các thông tin về khách hàng và quan hệ với BIDV để nhận đề xuất gói phí. Nhấn "Tính toán và đề xuất phí" để xem kết quả.</li>
                     <li><strong>Fee Engine:</strong>
-                        <ul class="list-circle list-inside ml-4">
+                        <ul class="list-disc list-inside ml-4">
                             <li><strong>1. Quản lý danh mục sản phẩm, dịch vụ:</strong>
                                 <ul>
-                                    <li>**1.1 Khai báo sản phẩm, dịch vụ:** Nhập thông tin sản phẩm (tên, mô tả, thời gian hiệu lực, đối tượng KH, kênh, danh mục). Lưu ý, không có trường giá phí ở đây.</li>
-                                    <li>**1.2 Khai báo, đăng ký gói sản phẩm, dịch vụ:** Tạo các gói sản phẩm bằng cách chọn các sản phẩm đã khai báo.</li>
-                                    <li>**1.2.1 Đăng ký/Hủy đăng ký/Thay đổi sử dụng gói sản phẩm cho khách hàng:** Quản lý việc khách hàng đăng ký hoặc hủy gói.</li>
-                                    <li>**1.2.2 Kết nối gói với iBank và ứng dụng khác:** Mô phỏng việc đồng bộ gói sản phẩm với các hệ thống khác.</li>
-                                    <li>**1.3 Quản lý dữ liệu danh mục sản phẩm:** Xem lại danh sách sản phẩm và gói đã nhập.</li>
+                                    <li><strong>1.1 Khai báo sản phẩm, dịch vụ:</strong> Nhập thông tin sản phẩm (tên, mô tả, thời gian hiệu lực, đối tượng KH, kênh, danh mục). Lưu ý, không có trường giá phí ở đây.</li>
+                                    <li><strong>1.2 Khai báo, đăng ký gói sản phẩm, dịch vụ:</strong> Tạo các gói sản phẩm bằng cách chọn các sản phẩm đã khai báo.</li>
+                                    <li><strong>1.2.1 Đăng ký/Hủy đăng ký/Thay đổi sử dụng gói sản phẩm cho khách hàng:</strong> Quản lý việc khách hàng đăng ký hoặc hủy gói.</li>
+                                    <li><strong>1.2.2 Kết nối gói với iBank và ứng dụng khác:</strong> Mô phỏng việc đồng bộ gói sản phẩm với các hệ thống khác.</li>
+                                    <li><strong>1.3 Quản lý dữ liệu danh mục sản phẩm:</strong> Xem lại danh sách sản phẩm và gói đã nhập.</li>
                                 </ul>
                             </li>
                             <li><strong>2. Quản lý giá phí sản phẩm, dịch vụ:</strong>
                                 <ul>
-                                    <li>**2.1 Khai báo mã phí và cách thức tính phí:** Khai báo mã phí mới, gắn với danh mục SPDV và sản phẩm cụ thể. Chọn cách thức tính phí (Cố định, Phần trăm, Bậc, Linh hoạt, Kết hợp) và điền thông tin chi tiết tương ứng.</li>
-                                    <li>**2.2 Xây dựng các chính sách phí cho gói sản phẩm:** Định nghĩa các chính sách ưu đãi, miễn giảm phí dựa trên các tiêu chí khách hàng và gói sản phẩm.</li>
-                                    <li>**2.3 Chương trình ưu đãi miễn giảm phí cho khách hàng:** Áp dụng mức miễn giảm tổng thể cho khách hàng.</li>
+                                    <li><strong>2.1 Khai báo mã phí và cách thức tính phí:</strong> Khai báo mã phí mới, gắn với danh mục SPDV và sản phẩm cụ thể. Chọn cách thức tính phí (Cố định, Phần trăm, Bậc, Linh hoạt, Kết hợp) và điền thông tin chi tiết tương ứng.</li>
+                                    <li><strong>2.2 Xây dựng các chính sách phí cho gói sản phẩm:</strong> Định nghĩa các chính sách ưu đãi, miễn giảm phí dựa trên các tiêu chí khách hàng và gói sản phẩm.</li>
+                                    <li><strong>2.3 Chương trình ưu đãi miễn giảm phí cho khách hàng:</strong> Áp dụng mức miễn giảm tổng thể cho khách hàng.</li>
                                 </ul>
                             </li>
                             <li><strong>3. Thu phí và quản lý số phí sản phẩm, dịch vụ:</strong> Mô phỏng các chức năng thu phí tự động, thủ công, dự thu/dự chi và phân bổ phí.</li>
@@ -820,6 +869,9 @@
                                 <h5 class="font-medium">Danh sách chính sách phí đã thêm:</h5>
                                 <ul id="feePolicyList" class="list-disc list-inside text-sm text-gray-700"></ul>
                             </div>
+                            <div id="geminiPolicyExplanation" class="gemini-explanation-box">
+                                <div class="loading-indicator">Đang tạo giải thích chính sách phí...</div>
+                            </div>
                             <div class="mt-4">
                                 <h5 class="font-medium">Lịch sử thay đổi chính sách phí:</h5>
                                 <ul id="feePolicyHistory" class="list-disc list-inside text-sm text-gray-700"></ul>
@@ -894,9 +946,9 @@
                             <p class="text-sm text-gray-700">
                                 Hệ thống Fee Engine tích hợp với các chương trình đầu vào (cung cấp dữ liệu) và đầu ra (nhận dữ liệu phí).
                                 <br>
-                                **Đầu vào:** Chi tiết theo từng chức năng.
+                                <strong>Đầu vào:</strong> Chi tiết theo từng chức năng.
                                 <br>
-                                **Đầu ra:** MPA, Hóa đơn điện tử, MIS, ODS và các ứng dụng nhận số tiền phí (Core).
+                                <strong>Đầu ra:</strong> MPA, Hóa đơn điện tử, MIS, ODS và các ứng dụng nhận số tiền phí (Core).
                             </p>
                         </div>
                     </div>
@@ -924,7 +976,7 @@
                         </div>
                         <div id="dataManagementContent" class="nested-section-content hidden">
                             <h4 class="font-semibold mb-2">Lưu/Tải dữ liệu demo</h4>
-                            <button onclick="saveDataToLocalStorage()" class="btn-secondary mr-2">Lưu dữ liệu</button>
+                            <!-- Removed save button as auto-save is implemented -->
                             <button onclick="loadDataFromLocalStorage()" class="btn-secondary mr-2">Tải dữ liệu</button>
                             <button onclick="clearLocalStorage()" class="btn-secondary bg-red-500 hover:bg-red-700">Xóa dữ liệu</button>
                             <div id="localStorageMessage" class="message-box"></div>
@@ -934,6 +986,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Scroll to Top Button -->
+    <button onclick="scrollToTop()" id="scrollToTopBtn" title="Cuộn lên đầu trang">&#9650;</button> <!-- Up arrow character -->
 
     <script>
         // Global arrays to store products and packages for demo purposes
@@ -1340,9 +1395,10 @@
                 document.getElementById('productChannel').value = '';
                 document.getElementById('productCategory').value = '';
 
-                showMessage('productMessage', `Đã thêm sản phẩm: <strong>${productName}</strong> (Danh mục: ${productCategory}).`, 'success'); // Updated message
+                showMessage('productMessage', `Đã thêm sản phẩm: <strong>${productName}</strong> (Danh mục: ${productCategory}).`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
-                showMessage('productMessage', 'Vui lòng điền đầy đủ thông tin sản phẩm (Tên, Đối tượng KH, Kênh, Danh mục).', 'error'); // Updated message
+                showMessage('productMessage', 'Vui lòng điền đầy đủ thông tin sản phẩm (Tên, Đối tượng KH, Kênh, Danh mục).', 'error');
             }
         }
 
@@ -1415,6 +1471,7 @@
                 document.getElementById('packageEndDate').value = '';
                 document.getElementById('packageProducts').selectedIndex = -1; // Deselect all
                 showMessage('packageMessage', `Đã thêm gói sản phẩm: <strong>${packageName}</strong> với ${selectedProducts.length} sản phẩm.`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
                 showMessage('packageMessage', 'Vui lòng nhập tên gói, thời gian áp dụng và chọn ít nhất một sản phẩm.', 'error');
             }
@@ -1490,6 +1547,7 @@
             updateProductHistory();
             updateCustomerPackagesList();
             showMessage('packageCustomerMessage', `Đã đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> thành công!`, 'success');
+            saveAllDataToLocalStorage(); // Auto-save
         }
 
         function unregisterPackageForCustomer() {
@@ -1514,6 +1572,7 @@
                 updateProductHistory();
                 updateCustomerPackagesList();
                 showMessage('packageCustomerMessage', `Đã hủy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> thành công!`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
                 showMessage('packageCustomerMessage', `Không tìm thấy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong>.`, 'info');
             }
@@ -1544,6 +1603,7 @@
                 updateProductHistory();
                 updateCustomerPackagesList();
                 showMessage('packageCustomerMessage', `Đã thay đổi gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong>. Trạng thái mới: <strong>${registration.status}</strong>.`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
                 showMessage('packageCustomerMessage', `Không tìm thấy đăng ký gói <strong>${selectedPackage.name}</strong> cho khách hàng <strong>${customerCif}</strong> để thay đổi.`, 'info');
             }
@@ -1585,6 +1645,7 @@
 
             setTimeout(() => {
                 showMessage('syncMessage', `Đồng bộ gói <strong>${selectedPackage.name}</strong> với <strong>${targetApp}</strong> thành công!`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save after successful sync simulation
             }, 1500);
         }
 
@@ -1659,6 +1720,7 @@
             document.getElementById('maxThreshold').value = '';
             document.getElementById('tierFeeAmount').value = '10000';
             showMessage('feeCodeMessage', 'Đã thêm bậc phí.', 'info');
+            // Auto-save is handled by addFeeCode after all tiers are added.
         }
 
         // New: Update Tier List display
@@ -1678,6 +1740,7 @@
             currentTiers.splice(index, 1);
             updateTierList();
             showMessage('feeCodeMessage', 'Đã xóa bậc phí.', 'info');
+            // Auto-save is handled by addFeeCode. No need to save here.
         }
 
         // New: Add Flexible Rule
@@ -1698,6 +1761,7 @@
             document.getElementById('criteriaValue').value = '';
             document.getElementById('flexibleFeeAmount').value = '1000';
             showMessage('feeCodeMessage', 'Đã thêm quy tắc linh hoạt.', 'info');
+            // Auto-save is handled by addFeeCode.
         }
 
         // New: Update Flexible Rule List display
@@ -1717,6 +1781,7 @@
             currentFlexibleRules.splice(index, 1);
             updateFlexibleRuleList();
             showMessage('feeCodeMessage', 'Đã xóa quy tắc linh hoạt.', 'info');
+            // Auto-save is handled by addFeeCode.
         }
 
 
@@ -1833,6 +1898,7 @@
 
 
             showMessage('feeCodeMessage', `Đã thêm mã phí: <strong>${feeCodeName} (${feeCodeId})</strong> thành công!`, 'success');
+            saveAllDataToLocalStorage(); // Auto-save
         }
 
         function updateDefinedFeeCodesList() {
@@ -1962,6 +2028,7 @@
             document.getElementById('policyBusinessSector').value = '';
             document.getElementById('policyAvgBalance').value = '0';
             document.getElementById('policyServiceUsage').value = '';
+            saveAllDataToLocalStorage(); // Auto-save
         }
 
         function updateFeePolicyList() {
@@ -1973,11 +2040,14 @@
             }
             feePolicies.forEach(policy => {
                 const li = document.createElement('li');
-                li.innerHTML = `<strong>Gói: ${policy.packageName}</strong> (ID: ${policy.id})<br>
-                                <em>KH: ${policy.customerSegment} | Ngành nghề: ${policy.businessSector} | Số dư BQ >= ${policy.avgBalance.toLocaleString('vi-VN')} tỷ VND</em><br>
-                                <em>SPDV khác: ${policy.serviceUsage}</em><br>
-                                <em>Mức phí: ${policy.feeAmount.toLocaleString('vi-VN')} VND | Ưu đãi: ${policy.discountRate}%</em><br>
-                                <em>Hiệu lực: ${policy.startDate} đến ${policy.endDate}</em>`;
+                li.innerHTML = `
+                    <strong>Gói: ${policy.packageName}</strong> (ID: ${policy.id})<br>
+                    <em>KH: ${policy.customerSegment} | Ngành nghề: ${policy.businessSector} | Số dư BQ >= ${policy.avgBalance.toLocaleString('vi-VN')} tỷ VND</em><br>
+                    <em>SPDV khác: ${policy.serviceUsage}</em><br>
+                    <em>Mức phí: ${policy.feeAmount.toLocaleString('vi-VN')} VND | Ưu đãi: ${policy.discountRate}%</em><br>
+                    <em>Hiệu lực: ${policy.startDate} đến ${policy.endDate}</em>
+                    <button onclick="explainFeePolicy(${policy.id})" class="btn-secondary ml-2">Giải thích ✨</button>
+                `;
                 feePolicyListUl.appendChild(li);
             });
         }
@@ -1998,16 +2068,11 @@
             });
         }
 
-        function applyFeePolicy() {
-            // This function is now redundant as addFeePolicy handles the "application"
-            // Keeping it for consistency with previous structure, but its logic is now simple.
-            showMessage('feePolicyMessage', 'Sử dụng "Thêm chính sách phí" để định nghĩa chính sách mới.', 'info');
-        }
-
         function applyCustomerDiscount() {
             const customerDiscount = parseFloat(document.getElementById('customerDiscount').value);
             if (!isNaN(customerDiscount) && customerDiscount >= 0 && customerDiscount <= 100) {
                 showMessage('customerDiscountMessage', `Đã áp dụng mức miễn giảm <strong>${customerDiscount}%</strong> cho khách hàng.`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
                 showMessage('customerDiscountMessage', 'Vui lòng nhập mức miễn giảm hợp lệ (0-100%).', 'error');
             }
@@ -2019,6 +2084,7 @@
             collectedFee += feeAmount;
             document.getElementById('totalCollectedFee').textContent = collectedFee.toLocaleString('vi-VN') + ' VND';
             showMessage('autoCollectMessage', `Đã thu tự động ${feeAmount.toLocaleString('vi-VN')} VND.`, 'success');
+            saveAllDataToLocalStorage(); // Auto-save
         }
 
         function manualCollectFee() {
@@ -2027,6 +2093,7 @@
                 collectedFee += manualAmount;
                 document.getElementById('totalCollectedFee').textContent = collectedFee.toLocaleString('vi-VN') + ' VND';
                 showMessage('manualCollectMessage', `Đã thu thủ công ${manualAmount.toLocaleString('vi-VN')} VND.`, 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             } else {
                 showMessage('manualCollectMessage', 'Vui lòng nhập số tiền thu thủ công hợp lệ.', 'error');
             }
@@ -2036,6 +2103,7 @@
             showMessage('accrualMessage', 'Đang mô phỏng quá trình dự thu/dự chi và phân bổ phí...', 'info');
             setTimeout(() => {
                 showMessage('accrualMessage', 'Mô phỏng dự thu/dự chi hoàn tất. Dữ liệu đã được cập nhật.', 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             }, 1000);
         }
 
@@ -2043,6 +2111,7 @@
             showMessage('feeAllocationMessage', 'Đang mô phỏng quá trình phân bổ phí theo sản phẩm/gói sản phẩm...', 'info');
             setTimeout(() => {
                 showMessage('feeAllocationMessage', 'Mô phỏng phân bổ phí hoàn tất. Phí đã được phân bổ.', 'success');
+                saveAllDataToLocalStorage(); // Auto-save
             }, 1000);
         }
 
@@ -2062,19 +2131,20 @@
         }
 
         // 7. Quản lý dữ liệu (Local Storage)
-        function saveDataToLocalStorage() {
+        // New function to save all relevant data to Local Storage
+        function saveAllDataToLocalStorage() {
             try {
                 localStorage.setItem('feeEngineProducts', JSON.stringify(products));
                 localStorage.setItem('feeEnginePackages', JSON.stringify(packages));
                 localStorage.setItem('feeEngineCollectedFee', collectedFee.toString());
-                localStorage.setItem('feeEngineProductHistory', JSON.stringify(productHistoryLog)); // Save history
-                localStorage.setItem('feeEngineCustomerRegistrations', JSON.stringify(customerPackageRegistrations)); // Save customer registrations
-                localStorage.setItem('feeEngineFeePolicies', JSON.stringify(feePolicies)); // Save fee policies
-                localStorage.setItem('feeEngineDefinedFeeCodes', JSON.stringify(definedFeeCodes)); // Save defined fee codes
-                showMessage('localStorageMessage', 'Dữ liệu đã được lưu vào Local Storage thành công!', 'success');
+                localStorage.setItem('feeEngineProductHistory', JSON.stringify(productHistoryLog));
+                localStorage.setItem('feeEngineCustomerRegistrations', JSON.stringify(customerPackageRegistrations));
+                localStorage.setItem('feeEngineFeePolicies', JSON.stringify(feePolicies));
+                localStorage.setItem('feeEngineDefinedFeeCodes', JSON.stringify(definedFeeCodes));
+                // showMessage('localStorageMessage', 'Dữ liệu đã được tự động lưu vào Local Storage.', 'success'); // Optional: show a subtle message
             } catch (e) {
-                showMessage('localStorageMessage', `Lỗi khi lưu dữ liệu: ${e.message}`, 'error');
-                console.error("Error saving to local storage:", e);
+                console.error("Lỗi khi tự động lưu dữ liệu vào local storage:", e);
+                showMessage('localStorageMessage', `Lỗi khi tự động lưu dữ liệu: ${e.message}`, 'error');
             }
         }
 
@@ -2083,10 +2153,10 @@
                 const storedProducts = localStorage.getItem('feeEngineProducts');
                 const storedPackages = localStorage.getItem('feeEnginePackages');
                 const storedCollectedFee = localStorage.getItem('feeEngineCollectedFee');
-                const storedProductHistory = localStorage.getItem('feeEngineProductHistory'); // Load history
-                const storedCustomerRegistrations = localStorage.getItem('feeEngineCustomerRegistrations'); // Load customer registrations
-                const storedFeePolicies = localStorage.getItem('feeEngineFeePolicies'); // Load fee policies
-                const storedDefinedFeeCodes = localStorage.getItem('feeEngineDefinedFeeCodes'); // Load defined fee codes
+                const storedProductHistory = localStorage.getItem('feeEngineProductHistory');
+                const storedCustomerRegistrations = localStorage.getItem('feeEngineCustomerRegistrations');
+                const storedFeePolicies = localStorage.getItem('feeEngineFeePolicies');
+                const storedDefinedFeeCodes = localStorage.getItem('feeEngineDefinedFeeCodes');
 
                 if (storedProducts) {
                     products = JSON.parse(storedProducts);
@@ -2133,7 +2203,7 @@
 
                 if (storedDefinedFeeCodes) {
                     definedFeeCodes = JSON.parse(storedDefinedFeeCodes);
-                    updateDefinedFeeCodesList(); // Update the list of defined fee codes
+                    updateDefinedFeeCodesList();
                 } else {
                     definedFeeCodes = [];
                 }
@@ -2151,39 +2221,133 @@
         }
 
         function clearLocalStorage() {
-            if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu demo đã lưu trong Local Storage không?')) {
+            // Using a custom modal/message box instead of confirm()
+            const confirmation = window.confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu demo đã lưu trong Local Storage không?'); // Using window.confirm for simplicity in demo
+            if (confirmation) {
                 localStorage.removeItem('feeEngineProducts');
                 localStorage.removeItem('feeEnginePackages');
                 localStorage.removeItem('feeEngineCollectedFee');
-                localStorage.removeItem('feeEngineProductHistory'); // Clear history
-                localStorage.removeItem('feeEngineCustomerRegistrations'); // Clear customer registrations
-                localStorage.removeItem('feeEngineFeePolicies'); // Clear fee policies
-                localStorage.removeItem('feeEngineDefinedFeeCodes'); // Clear defined fee codes
+                localStorage.removeItem('feeEngineProductHistory');
+                localStorage.removeItem('feeEngineCustomerRegistrations');
+                localStorage.removeItem('feeEngineFeePolicies');
+                localStorage.removeItem('feeEngineDefinedFeeCodes');
                 products = [];
                 packages = [];
                 collectedFee = 0;
-                productHistoryLog = []; // Reset history
-                customerPackageRegistrations = []; // Reset customer registrations
-                feePolicies = []; // Reset fee policies
-                definedFeeCodes = []; // Reset defined fee codes
+                productHistoryLog = [];
+                customerPackageRegistrations = [];
+                feePolicies = [];
+                definedFeeCodes = [];
                 updateProductList();
                 updatePackageList();
-                updateProductHistory(); // Clear history display
-                updateCustomerPackagesList(); // Clear customer packages display
-                updateFeePolicyList(); // Clear fee policy display
-                updateDefinedFeeCodesList(); // Clear defined fee codes display
+                updateProductHistory();
+                updateCustomerPackagesList();
+                updateFeePolicyList();
+                updateDefinedFeeCodesList();
                 document.getElementById('totalCollectedFee').textContent = '0 VND';
                 showMessage('localStorageMessage', 'Dữ liệu đã được xóa khỏi Local Storage!', 'success');
             }
         }
+
+        // --- Scroll to Top Functionality ---
+        // Get the button
+        let mybutton = document.getElementById("scrollToTopBtn");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function() {scrollFunction()};
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        // When the user clicks on the button, scroll to the top of the document
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scroll
+        }
+
+        // --- Gemini API Integration for Fee Policy Explanation ---
+        async function explainFeePolicy(policyId) {
+            const policy = feePolicies.find(p => p.id === policyId);
+            const explanationBox = document.getElementById('geminiPolicyExplanation');
+            const loadingIndicator = explanationBox.querySelector('.loading-indicator');
+
+            if (!policy) {
+                explanationBox.innerHTML = 'Không tìm thấy chính sách phí này.';
+                explanationBox.style.display = 'block';
+                explanationBox.classList.add('error');
+                return;
+            }
+
+            // Show loading indicator
+            explanationBox.innerHTML = '<div class="loading-indicator">Đang tạo giải thích chính sách phí...</div>';
+            explanationBox.style.display = 'block';
+            explanationBox.classList.remove('error'); // Remove error class if previously set
+            explanationBox.classList.add('info');
+
+            const prompt = `Giải thích chính sách phí sau đây một cách đơn giản, dễ hiểu cho khách hàng. Tập trung vào các lợi ích và điều kiện chính.
+            Chính sách phí:
+            Gói: ${policy.packageName}
+            Phân khúc khách hàng: ${policy.customerSegment}
+            Ngành nghề kinh doanh: ${policy.businessSector || 'Tất cả'}
+            Số dư bình quân tối thiểu: ${policy.avgBalance.toLocaleString('vi-VN')} tỷ VND
+            Sử dụng SPDV khác: ${policy.serviceUsage}
+            Mức phí: ${policy.feeAmount.toLocaleString('vi-VN')} VND
+            Mức ưu đãi/miễn giảm: ${policy.discountRate}%
+            Thời gian hiệu lực: từ ${policy.startDate} đến ${policy.endDate}`;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    explanationBox.innerHTML = `<strong>Giải thích chính sách phí "${policy.packageName}" (ID: ${policy.id}):</strong><br>${text}`;
+                    explanationBox.classList.remove('info');
+                    explanationBox.classList.add('bg-green-100', 'text-green-800', 'border-green-300'); // Success style
+                } else {
+                    explanationBox.innerHTML = 'Không thể tạo giải thích. Vui lòng thử lại.';
+                    explanationBox.classList.remove('info');
+                    explanationBox.classList.add('error');
+                    console.error("Gemini API returned an unexpected structure or no content:", result);
+                }
+            } catch (error) {
+                explanationBox.innerHTML = `Lỗi khi gọi Gemini API: ${error.message}`;
+                explanationBox.classList.remove('info');
+                explanationBox.classList.add('error');
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                // Keep the explanation box visible for a longer time or until user closes it
+                // For now, let's keep it visible until another explanation is requested or page reloaded
+                // setTimeout(() => { explanationBox.style.display = 'none'; }, 15000); // Optional: hide after 15 seconds
+            }
+        }
+
 
         // Load data when the page loads
         window.onload = function() {
             populateDropdowns(); // Populate dropdowns first
             loadDataFromLocalStorage();
             // If no data was loaded from local storage, set some initial demo products
-            if (products.length === 0 && packages.length === 0 && feePolicies.length === 0 && definedFeeCodes.length === 0) { // Check all to avoid double-populating
+            if (products.length === 0 && packages.length === 0 && feePolicies.length === 0 && definedFeeCodes.length === 0) {
                 setDemoProductData();
+                saveAllDataToLocalStorage(); // Save initial demo data
             }
             // Set initial descriptions for fee methods and types
             updateFeeMethodFormVisibility(); // Call this to set initial form visibility and description
@@ -2308,16 +2472,16 @@
 
             // Đề xuất phí dựa trên điểm
             if (score >= 10) {
-                feeSuggestion = "Đề xuất gói phí **VIP Platinum** với các ưu đãi vượt trội cho toàn bộ SPDV, miễn/giảm phí giao dịch lớn, và chính sách chăm sóc đặc biệt.";
+                feeSuggestion = "Đề xuất gói phí <strong>VIP Platinum</strong> với các ưu đãi vượt trội cho toàn bộ SPDV, miễn/giảm phí giao dịch lớn, và chính sách chăm sóc đặc biệt.";
             } else if (score >= 7) {
-                feeSuggestion = "Đề xuất gói phí **Ưu đãi Doanh nghiệp Cao cấp**, áp dụng mức phí cạnh tranh cho các giao dịch tín dụng, TTTM và chuyển tiền, cùng các quyền lợi ưu tiên.";
+                feeSuggestion = "Đề xuất gói phí <strong>Ưu đãi Doanh nghiệp Cao cấp</strong>, áp dụng mức phí cạnh tranh cho các giao dịch tín dụng, TTTM và chuyển tiền, cùng các quyền lợi ưu tiên.";
             } else if (score >= 4) {
-                feeSuggestion = "Đề xuất gói phí **Tiêu chuẩn Doanh nghiệp**, với mức phí hợp lý cho các SPDV chính, có thể xem xét thêm ưu đãi nếu khách hàng sử dụng thêm SPDV tiềm năng.";
+                feeSuggestion = "Đề xuất gói phí <strong>Tiêu chuẩn Doanh nghiệp</strong>, với mức phí hợp lý cho các SPDV chính, có thể xem xét thêm ưu đãi nếu khách hàng sử dụng thêm SPDV tiềm năng.";
             } else {
-                feeSuggestion = "Đề xuất gói phí **Cơ bản**, khuyến khích khách hàng tăng cường sử dụng SPDV tại BIDV để đủ điều kiện nhận các ưu đãi phí cao hơn trong tương lai.";
+                feeSuggestion = "Đề xuất gói phí <strong>Cơ bản</strong>, khuyến khích khách hàng tăng cường sử dụng SPDV tại BIDV để đủ điều kiện nhận các ưu đãi phí cao hơn trong tương lai.";
             }
 
-            document.getElementById('feeSuggestion').textContent = feeSuggestion;
+            document.getElementById('feeSuggestion').innerHTML = feeSuggestion; // Changed to innerHTML to render bold tags
 
             // Hiển thị phần kết quả
             document.getElementById('results').classList.remove('hidden');
