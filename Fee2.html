@@ -211,6 +211,7 @@
                     <li><strong>Sản phẩm chuyển tiền (Payment Type):</strong> Ví dụ: Chuyển tiền nội bộ (IFT), Chuyển tiền trong nước đi (DRO).</li>
                     <li><strong>Giao dịch trong/ngoài hệ thống (On Us Transaction):</strong> Giao dịch giữa các tài khoản cùng ngân hàng hay khác ngân hàng.</li>
                     <li><strong>Ứng dụng thực hiện giao dịch (Channel ID):</strong> Kênh giao dịch như TPTL, WebCSR.</li>
+                    <li><strong>Loại phí (Fee Type)</strong> áp dụng cho 1 sản phẩm chuyển tiền (bao gồm: Phí thực hiện giao dịch, Phí thiết lập chuyển tiền định kỳ và Phí chi trả).</li>
                     <li><strong>Cấp độ áp dụng biểu phí (Level Type):</strong> Mức độ áp dụng phí (toàn hệ thống, theo chi nhánh, theo khách hàng, theo gói sản phẩm, theo tỉnh/thành phố).</li>
                     <li><strong>Chi tiết cấp độ áp dụng biểu phí (Level Detail):</strong> Đây là giá trị cụ thể của cấp độ áp dụng biểu phí.
                         <ul class="list-disc list-inside ml-6 mt-2">
@@ -239,6 +240,7 @@
                     <li><strong>Phí cố định (AMTFIX):</strong> Một số tiền cụ thể được áp dụng.</li>
                     <li><strong>Phí tỷ lệ (PERCENT):</strong> Một phần trăm của số tiền giao dịch.</li>
                     <li><strong>Giá trị tối thiểu (AMTMIN) và tối đa (AMTMAX):</strong> Giới hạn phí áp dụng khi tính theo tỷ lệ.</li>
+                    <li><strong>Lựa chọn tối thiểu (Minimum Option):</strong> Quy định cách xử lý khi phí tính toán nhỏ hơn mức tối thiểu.</li>
                 </ul>
 
                 <h4 class="font-semibold mt-4 mb-2">Ví dụ minh họa:</h4>
@@ -252,7 +254,8 @@
                 <p class="mb-2">Nếu bạn thực hiện giao dịch chuyển tiền nội bộ (IFT) với số tiền 10.000.000 VND:</p>
                 <ul class="list-disc list-inside ml-4 mb-3">
                     <li>Phí ban đầu: $10.000.000 \times 0.02\% = 2.000$ VND.</li>
-                    <li>Vì 2.000 VND nhỏ hơn mức tối thiểu 10.000 VND, phí áp dụng sẽ là <strong>10.000 VND</strong>.</li>
+                    <li>Nếu "Lựa chọn tối thiểu" là `0` (Increase to Minimum): Vì 2.000 VND nhỏ hơn mức tối thiểu 10.000 VND, phí áp dụng sẽ là <strong>10.000 VND</strong>.</li>
+                    <li>Nếu "Lựa chọn tối thiểu" là `1` (Reduce to Zero): Vì 2.000 VND nhỏ hơn mức tối thiểu 10.000 VND, phí áp dụng sẽ là <strong>0 VND</strong>.</li>
                 </ul>
                 <p class="mb-2">Nếu bạn thực hiện giao dịch với số tiền 5.000.000.000 VND:</p>
                 <ul class="list-disc list-inside ml-4 mb-3">
@@ -276,14 +279,10 @@
                             <li>Các Mã Mức Phí này sẽ được sử dụng trong phần khai báo Tham số Phí.</li>
                         </ul>
                     </li>
-                    <li><strong>Mục "2. Khách Hàng Demo":</strong>
-                        <ul class="list-disc list-inside ml-6">
-                            <li>Chọn một khách hàng demo từ danh sách để tự động điền các thông tin liên quan đến khách hàng vào các trường giao dịch tại Mục 3.</li>
-                            <li>Bạn cũng có thể tự chỉnh sửa các thông tin này sau khi tải.</li>
-                        </ul>
-                    </li>
                     <li><strong>Mục "3. Demo Chuyển Tiền":</strong>
                         <ul class="list-disc list-inside ml-6">
+                            <li>Chọn một khách hàng demo từ danh sách để tự động điền các thông tin liên quan đến khách hàng vào các trường giao dịch tại Mục này.</li>
+                            <li>Bạn cũng có thể tự chỉnh sửa các thông tin này sau khi tải.</li>
                             <li>Nhập "Số Tiền Chuyển Khoản" và các thông tin giao dịch khác.</li>
                             <li>Tất cả các tiêu chí để khớp phí sẽ được lấy trực tiếp từ các trường trong mục này.</li>
                             <li>Nhấn "Tính Phí" để xem kết quả "Tổng Phí" và "Số Tiền Khách Hàng Nhận Được", cùng với "Chi Tiết Tính Phí & Thuyết Minh Logic" đầy đủ.</li>
@@ -526,6 +525,14 @@
                         <label for="feeCode_amtmax" class="block text-sm font-medium text-gray-700 mb-1">Giá trị tối đa (AMTMAX)</label>
                         <input type="text" id="feeCode_amtmax" class="w-full text-right" placeholder="Để trống nếu không có">
                     </div>
+                    <!-- NEW FIELD: Minimum Option -->
+                    <div>
+                        <label for="feeCode_minimumOption" class="block text-sm font-medium text-gray-700 mb-1">Lựa chọn tối thiểu (Minimum Option)</label>
+                        <select id="feeCode_minimumOption" class="w-full">
+                            <option value="0">0 - Increase to Minimum when Calculated Amount is Less Than Minimum</option>
+                            <option value="1">1 - Reduce to Zero if Calculated Amount is Less Than Minimum</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
                     <button id="saveFeeCodeBtn" class="btn-primary px-8 py-3 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
@@ -553,6 +560,7 @@
                                 <th class="py-3 px-3 text-right">Tỷ lệ (%)</th>
                                 <th class="py-3 px-3 text-right">Min</th>
                                 <th class="py-3 px-3 text-right">Max</th>
+                                <th class="py-3 px-3 text-left">Lựa chọn tối thiểu</th>
                                 <th class="py-3 px-3 text-center">Thao tác</th>
                             </tr>
                         </thead>
@@ -566,10 +574,11 @@
 
         <div class="section-separator"></div>
 
-        <!-- Section 2: Demo Customer -->
-        <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">2. Khách Hàng Demo</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Section 3: Remittance Demo - Now self-contained for transaction inputs -->
+        <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">3. Demo Chuyển Tiền</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Moved Customer Demo fields -->
                 <div class="md:col-span-full lg:col-span-3">
                     <label for="customerSelect" class="block text-sm font-medium text-gray-700 mb-1">Chọn Khách Hàng Demo</label>
                     <select id="customerSelect" class="w-full">
@@ -580,16 +589,8 @@
                     <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Tên Khách Hàng</label>
                     <input type="text" id="customerName" value="Nguyễn Văn A" class="w-full">
                 </div>
-                <!-- Customer-specific fields are now moved to Section 3 for transaction context -->
-            </div>
-        </div>
+                <!-- End of Moved Customer Demo fields -->
 
-        <div class="section-separator"></div>
-
-        <!-- Section 3: Remittance Demo - Now self-contained for transaction inputs -->
-        <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">3. Demo Chuyển Tiền</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 <div>
                     <label for="transferAmount" class="block text-sm font-medium text-gray-700 mb-1">Số Tiền Chuyển Khoản (VND)</label>
                     <input type="text" id="transferAmount" value="1,000,000" class="w-full text-right">
@@ -793,8 +794,13 @@
             fundingOption_declaration: 'Nguồn tiền giao dịch (Funding Option) (Khai báo)',
             feeCodeHomeCurrency: 'Mã Mức phí VND (Fee Code – Home Currency)',
             feeCodeForeignCurrency: 'Mã Mức phí ngoại tệ (Fee Code – Foreign Currency)',
+            // New Fee Code Parameter
+            minimumOption_declaration: 'Lựa chọn tối thiểu (Minimum Option)',
+
 
             // Parameters for Transaction Demo (Section 3)
+            customerSelect: 'Chọn Khách Hàng Demo', // Moved
+            customerName: 'Tên Khách Hàng', // Moved
             transferAmount: 'Số tiền chuyển khoản',
             recipientBank: 'Ngân hàng thụ hưởng',
             recipientAccount: 'Số tài khoản thụ hưởng',
@@ -844,15 +850,14 @@
         const feeCode_percent_Input = document.getElementById('feeCode_percent');
         const feeCode_amtmin_Input = document.getElementById('feeCode_amtmin');
         const feeCode_amtmax_Input = document.getElementById('feeCode_amtmax');
+        const feeCode_minimumOption_Select = document.getElementById('feeCode_minimumOption'); // NEW
         const saveFeeCodeBtn = document.getElementById('saveFeeCodeBtn');
         const cancelFeeCodeEditBtn = document.getElementById('cancelFeeCodeEditBtn');
         const feeCodesTableBody = document.getElementById('feeCodesTableBody');
 
-        // Get references to DOM elements for Customer Demo (Section 2)
-        const customerSelect = document.getElementById('customerSelect');
-        const customerNameInput = document.getElementById('customerName');
-        
         // Get references to DOM elements for Transfer Demo (Section 3) - All transaction inputs
+        const customerSelect = document.getElementById('customerSelect'); // MOVED
+        const customerNameInput = document.getElementById('customerName'); // MOVED
         const transferAmountInput = document.getElementById('transferAmount');
         const recipientBankSelect = document.getElementById('recipientBank');
         const recipientAccountInput = document.getElementById('recipientAccount');
@@ -914,6 +919,7 @@
             feeCodeForeignCurrency: 'USD_0.01_2_100',
 
             // Section 3: Transaction Demo Defaults
+            customerName: 'Nguyễn Văn A', // Moved
             transferAmount: 1000000,
             recipientBank: 'BIDV',
             recipientAccount: '1234567890',
@@ -960,35 +966,35 @@
         const initialFeeCodesData = [
             {
                 id: 'fc1', code: 'VND_0.02_10000_500000', desc: 'Phí 0.02%, Min 10k, Max 500k VND', currency: 'VND',
-                amtfix: '', percent: 0.02, amtmin: 10000, amtmax: 500000
+                amtfix: '', percent: 0.02, amtmin: 10000, amtmax: 500000, minimumOption: '0'
             },
             {
                 id: 'fc2', code: 'USD_0.01_2_100', desc: 'Phí 0.01%, Min 2, Max 100 USD', currency: 'USD',
-                amtfix: '', percent: 0.01, amtmin: 2, amtmax: 100
+                amtfix: '', percent: 0.01, amtmin: 2, amtmax: 100, minimumOption: '0'
             },
             {
                 id: 'fc3', code: 'OTHERFEECODE', desc: 'Mã phí khác (không tính phí)', currency: '',
-                amtfix: '', percent: '', amtmin: '', amtmax: ''
+                amtfix: '', percent: '', amtmin: '', amtmax: '', minimumOption: '0'
             },
             {
                 id: 'fc4', code: 'VND_FIX_5000', desc: 'Phí cố định 5.000 VND', currency: 'VND',
-                amtfix: 5000, percent: '', amtmin: '', amtmax: ''
+                amtfix: 5000, percent: '', amtmin: '', amtmax: '', minimumOption: '0'
             },
             {
                 id: 'fc5', code: 'VND_0.01_15000_750000', desc: 'Phí 0.01%, Min 15k, Max 750k VND', currency: 'VND',
-                amtfix: '', percent: 0.01, amtmin: 15000, amtmax: 750000
+                amtfix: '', percent: 0.01, amtmin: 15000, amtmax: 750000, minimumOption: '0'
             },
             {
                 id: 'fc6', code: 'USD_0.01_5_100', desc: 'Phí 0.01%, Min 5, Max 100 USD', currency: 'USD',
-                amtfix: '', percent: 0.01, amtmin: 5, amtmax: 100
+                amtfix: '', percent: 0.01, amtmin: 5, amtmax: 100, minimumOption: '0'
             },
             {
                 id: 'fc7', code: 'VND_0.025_20000_1000000', desc: 'Phí 0.025%, Min 20k, Max 1M VND', currency: 'VND',
-                amtfix: '', percent: 0.025, amtmin: 20000, amtmax: 1000000
+                amtfix: '', percent: 0.025, amtmin: 20000, amtmax: 1000000, minimumOption: '0'
             },
             {
                 id: 'fc8', code: 'USD_0.025_5_50', desc: 'Phí 0.025%, Min 5, Max 50 USD', currency: 'USD',
-                amtfix: '', percent: 0.025, amtmin: 5, amtmax: 50
+                amtfix: '', percent: 0.025, amtmin: 5, amtmax: 50, minimumOption: '0'
             }
         ];
 
@@ -1163,6 +1169,8 @@
                 explanationHtml += '<p><strong>📍THÔNG TIN GIAO DỊCH:</strong></p><ul>';
                 
                 // Display transaction attributes from Section 3
+                explanationHtml += `<li><strong>${paramDisplayNames.customerSelect}:</strong> ${getSelectText(customerSelect, customerSelect.value)}</li>`; // Added
+                explanationHtml += `<li><strong>${paramDisplayNames.customerName}:</strong> ${customerNameInput.value}</li>`; // Added
                 explanationHtml += `<li><strong>${paramDisplayNames.transferAmount}:</strong> ${formatCurrency(transactionAttributes.transferAmount)}</li>`;
                 explanationHtml += `<li><strong>${paramDisplayNames.recipientBank}:</strong> ${getSelectText(recipientBankSelect, transactionAttributes.recipientBank)}</li>`;
                 explanationHtml += `<li><strong>${paramDisplayNames.recipientAccount}:</strong> ${transactionAttributes.recipientAccount}</li>`;
@@ -1256,13 +1264,21 @@
                                 explanationHtml += `<li><strong>Loại phí:</strong> Tỷ lệ (${homeFeeCode.percent}%).</li>`;
                                 explanationHtml += `<li><strong>Số tiền phí ban đầu (trước khi áp dụng Min/Max):</strong> ${formatCurrency(totalFee)}.</li>`;
 
-                                if (homeFeeCode.amtmin !== '' && totalFee < parseFloat(homeFeeCode.amtmin)) {
-                                    totalFee = parseFloat(homeFeeCode.amtmin);
-                                    explanationHtml += `<li><strong>Áp dụng mức tối thiểu:</strong> ${formatCurrency(homeFeeCode.amtmin)} (vì phí ban đầu nhỏ hơn Min).</li>`;
-                                } else if (homeFeeCode.amtmin === '') {
-                                    explanationHtml += `<li>Mức tối thiểu (Min): Không áp dụng.</li>`;
+                                if (homeFeeCode.amtmin !== '') {
+                                    const minAmount = parseFloat(homeFeeCode.amtmin);
+                                    if (totalFee < minAmount) {
+                                        if (homeFeeCode.minimumOption === '0') { // Increase to Minimum
+                                            totalFee = minAmount;
+                                            explanationHtml += `<li><strong>Áp dụng mức tối thiểu (Lựa chọn 0 - Tăng lên mức tối thiểu):</strong> ${formatCurrency(minAmount)} (vì phí ban đầu nhỏ hơn Min).</li>`;
+                                        } else if (homeFeeCode.minimumOption === '1') { // Reduce to Zero
+                                            totalFee = 0;
+                                            explanationHtml += `<li><strong>Áp dụng mức tối thiểu (Lựa chọn 1 - Giảm về 0):</strong> ${formatCurrency(0)} (vì phí ban đầu nhỏ hơn Min).</li>`;
+                                        }
+                                    } else {
+                                        explanationHtml += `<li>Mức tối thiểu (Min): ${formatCurrency(minAmount)} (Không áp dụng vì phí ban đầu lớn hơn hoặc bằng Min).</li>`;
+                                    }
                                 } else {
-                                    explanationHtml += `<li>Mức tối thiểu (Min): ${formatCurrency(homeFeeCode.amtmin)} (Không áp dụng vì phí ban đầu lớn hơn hoặc bằng Min).</li>`;
+                                    explanationHtml += `<li>Mức tối thiểu (Min): Không áp dụng.</li>`;
                                 }
 
                                 if (homeFeeCode.amtmax !== '' && totalFee > parseFloat(homeFeeCode.amtmax)) {
@@ -1716,7 +1732,7 @@
             feeCodesTableBody.innerHTML = ''; // Clear existing rows
             if (feeCodesData.length === 0) {
                 const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `<td colspan="8" class="py-3 px-6 text-center text-gray-500">Chưa có mã mức phí nào được khai báo.</td>`;
+                noDataRow.innerHTML = `<td colspan="9" class="py-3 px-6 text-center text-gray-500">Chưa có mã mức phí nào được khai báo.</td>`;
                 feeCodesTableBody.appendChild(noDataRow);
                 return;
             }
@@ -1732,6 +1748,7 @@
                     <td class="py-3 px-3 text-right">${code.percent !== '' ? code.percent + '%' : ''}</td>
                     <td class="py-3 px-3 text-right">${code.amtmin ? new Intl.NumberFormat('en-US').format(code.amtmin) : ''}</td>
                     <td class="py-3 px-3 text-right">${code.amtmax ? new Intl.NumberFormat('en-US').format(code.amtmax) : ''}</td>
+                    <td class="py-3 px-3 text-left">${getSelectText(feeCode_minimumOption_Select, code.minimumOption)}</td>
                     <td class="py-3 px-3 text-center whitespace-nowrap">
                         <button onclick="editFeeCode('${code.id}')" class="action-button edit-button rounded-md hover:bg-amber-600"><i class="fas fa-edit"></i> Chỉnh sửa</button>
                         <button onclick="deleteFeeCode('${code.id}')" class="action-button delete-button rounded-md hover:bg-red-600"><i class="fas fa-trash-alt"></i> Xóa</button>
@@ -1751,7 +1768,8 @@
                 amtfix: feeCode_amtfix_Input.value ? parseFormattedNumber(feeCode_amtfix_Input.value) : '',
                 percent: feeCode_percent_Input.value ? parseFloat(feeCode_percent_Input.value) : '',
                 amtmin: feeCode_amtmin_Input.value ? parseFormattedNumber(feeCode_amtmin_Input.value) : '',
-                amtmax: feeCode_amtmax_Input.value ? parseFormattedNumber(feeCode_amtmax_Input.value) : ''
+                amtmax: feeCode_amtmax_Input.value ? parseFormattedNumber(feeCode_amtmax_Input.value) : '',
+                minimumOption: feeCode_minimumOption_Select.value // NEW FIELD
             };
 
             // Basic validation
@@ -1788,6 +1806,7 @@
                 feeCode_percent_Input.value = codeToEdit.percent;
                 feeCode_amtmin_Input.value = codeToEdit.amtmin ? new Intl.NumberFormat('en-US').format(codeToEdit.amtmin) : '';
                 feeCode_amtmax_Input.value = codeToEdit.amtmax ? new Intl.NumberFormat('en-US').format(codeToEdit.amtmax) : '';
+                feeCode_minimumOption_Select.value = codeToEdit.minimumOption; // NEW FIELD
 
                 editingFeeCodeId = id;
                 saveFeeCodeBtn.innerHTML = '<i class="fas fa-pencil-alt"></i> Cập nhật Mã Mức Phí'; // Change button text and icon
@@ -1816,6 +1835,7 @@
             feeCode_percent_Input.value = '';
             feeCode_amtmin_Input.value = '';
             feeCode_amtmax_Input.value = '';
+            feeCode_minimumOption_Select.value = '0'; // NEW FIELD: Reset to default
         }
 
         function cancelEditFeeCode() {
@@ -1894,12 +1914,11 @@
             localStorage.setItem('feeCode_percent', feeCode_percent_Input.value);
             localStorage.setItem('feeCode_amtmin', feeCode_amtmin_Input.value);
             localStorage.setItem('feeCode_amtmax', feeCode_amtmax_Input.value);
-
-            // Save Customer Demo data (Section 2)
-            localStorage.setItem('customerName', customerNameInput.value);
-            localStorage.setItem('selectedCustomer', customerSelect.value);
+            localStorage.setItem('feeCode_minimumOption', feeCode_minimumOption_Select.value); // NEW FIELD
 
             // Save Transfer Demo data (Section 3) - All transaction inputs
+            localStorage.setItem('selectedCustomer', customerSelect.value); // MOVED
+            localStorage.setItem('customerName', customerNameInput.value); // MOVED
             localStorage.setItem('transferAmount', transferAmountInput.value);
             localStorage.setItem('recipientBank', recipientBankSelect.value);
             localStorage.setItem('recipientAccount', recipientAccountInput.value);
@@ -1946,11 +1965,11 @@
             feeCode_percent_Input.value = localStorage.getItem('feeCode_percent') || '';
             feeCode_amtmin_Input.value = localStorage.getItem('feeCode_amtmin') || '';
             feeCode_amtmax_Input.value = localStorage.getItem('feeCode_amtmax') || '';
+            feeCode_minimumOption_Select.value = localStorage.getItem('feeCode_minimumOption') || '0'; // NEW FIELD
 
-            // Load Customer Demo data (Section 2)
-            customerNameInput.value = localStorage.getItem('customerName') || defaultValues.customerName;
-            
             // Load Transfer Demo data (Section 3) - All transaction inputs
+            customerSelect.value = localStorage.getItem('selectedCustomer') || ''; // MOVED
+            customerNameInput.value = localStorage.getItem('customerName') || defaultValues.customerName; // MOVED
             transferAmountInput.value = localStorage.getItem('transferAmount') || new Intl.NumberFormat('en-US').format(defaultValues.transferAmount);
             recipientBankSelect.value = localStorage.getItem('recipientBank') || defaultValues.recipientBank;
             recipientAccountInput.value = localStorage.getItem('recipientAccount') || defaultValues.recipientAccount;
@@ -1983,7 +2002,6 @@
 
             // Populate customer dropdown and load selected customer data
             populateCustomerDropdown();
-            customerSelect.value = localStorage.getItem('selectedCustomer') || '';
             // No need to call loadSelectedCustomerData here, as all fields are loaded directly
 
             // Apply formatting to number inputs that are not handled by loadSelectedCustomerData
@@ -2044,12 +2062,11 @@
             feeCode_percent_Input.value = '';
             feeCode_amtmin_Input.value = '';
             feeCode_amtmax_Input.value = '';
-
-            // Reset Customer Demo data (Section 2)
-            customerNameInput.value = defaultValues.customerName;
-            customerSelect.value = ''; // Clear selected customer
+            feeCode_minimumOption_Select.value = '0'; // NEW FIELD
 
             // Reset Transfer Demo data (Section 3) - All transaction inputs
+            customerSelect.value = ''; // MOVED
+            customerNameInput.value = defaultValues.customerName; // MOVED
             transferAmountInput.value = new Intl.NumberFormat('en-US').format(defaultValues.transferAmount);
             recipientBankSelect.value = defaultValues.recipientBank;
             recipientAccountInput.value = defaultValues.recipientAccount;
@@ -2149,6 +2166,7 @@
         // Fee Code Form Event Listeners (Section 1.2.3)
         saveFeeCodeBtn.addEventListener('click', addOrUpdateFeeCode);
         cancelFeeCodeEditBtn.addEventListener('click', cancelEditFeeCode);
+        feeCode_minimumOption_Select.addEventListener('change', saveDataToLocalStorage); // NEW EVENT LISTENER
 
         // Input event listeners for auto-saving and formatting
         // Fee Parameters (Section 1)
@@ -2178,7 +2196,7 @@
         feeCode_amtmax_Input.addEventListener('input', () => formatNumberInput(feeCode_amtmax_Input));
         feeCode_amtmax_Input.addEventListener('blur', saveDataToLocalStorage);
 
-        // Customer Demo (Section 2)
+        // Customer Demo (Section 2) - Now part of Section 3
         customerSelect.addEventListener('change', loadSelectedCustomerData);
         customerNameInput.addEventListener('input', saveDataToLocalStorage);
         
