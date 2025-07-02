@@ -439,10 +439,27 @@
             <!-- Section 1.1: Fee Parameters Table -->
             <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">1.1. Danh sách Tham số Phí Đã Khai Báo</h2>
+                <div class="flex flex-col sm:flex-row justify-between mb-4 gap-2">
+                    <button id="deleteSelectedFeeParamsBtn" class="btn-primary px-4 py-2 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 bg-red-500 hover:bg-red-600">
+                        <i class="fas fa-trash-alt"></i> Xóa các bản ghi đã chọn
+                    </button>
+                    <div class="flex gap-2">
+                        <button id="exportFeeParamsBtn" class="btn-primary px-4 py-2 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 bg-green-500 hover:bg-green-600">
+                            <i class="fas fa-file-excel"></i> Xuất Excel (CSV)
+                        </button>
+                        <input type="file" id="importFeeParamsInput" accept=".csv" class="hidden">
+                        <button id="importFeeParamsBtn" class="btn-primary px-4 py-2 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 bg-blue-500 hover:bg-blue-600">
+                            <i class="fas fa-file-import"></i> Nhập Excel (CSV)
+                        </button>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-white rounded-lg shadow-md">
                         <thead>
                             <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-3 text-left">
+                                    <input type="checkbox" id="selectAllFeeParams">
+                                </th>
                                 <th class="py-3 px-3 text-left">Mã BP</th>
                                 <th class="py-3 px-3 text-left">Loại phí</th>
                                 <th class="py-3 px-3 text-left">Sản phẩm</th>
@@ -813,6 +830,11 @@
         const saveFeeParamBtn = document.getElementById('saveFeeParamBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const feeParametersTableBody = document.getElementById('feeParametersTableBody');
+        const selectAllFeeParamsCheckbox = document.getElementById('selectAllFeeParams'); // NEW
+        const deleteSelectedFeeParamsBtn = document.getElementById('deleteSelectedFeeParamsBtn'); // NEW
+        const exportFeeParamsBtn = document.getElementById('exportFeeParamsBtn'); // NEW
+        const importFeeParamsBtn = document.getElementById('importFeeParamsBtn'); // NEW
+        const importFeeParamsInput = document.getElementById('importFeeParamsInput'); // NEW
 
         // Get references to DOM elements for Fee Codes
         const feeCode_code_Input = document.getElementById('feeCode_code');
@@ -1367,9 +1389,11 @@
         // --- Fee Parameters Table Functions ---
         function renderFeeParametersTable() {
             feeParametersTableBody.innerHTML = ''; // Clear existing rows
+            selectAllFeeParamsCheckbox.checked = false; // Uncheck select all checkbox
+
             if (feeParametersData.length === 0) {
                 const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `<td colspan="16" class="py-3 px-6 text-center text-gray-500">Chưa có tham số phí nào được khai báo.</td>`;
+                noDataRow.innerHTML = `<td colspan="17" class="py-3 px-6 text-center text-gray-500">Chưa có tham số phí nào được khai báo.</td>`;
                 feeParametersTableBody.appendChild(noDataRow);
                 return;
             }
@@ -1378,6 +1402,9 @@
                 const row = document.createElement('tr');
                 row.className = 'border-b border-gray-200 hover:bg-gray-100';
                 row.innerHTML = `
+                    <td class="py-3 px-3 text-left">
+                        <input type="checkbox" class="fee-param-checkbox" data-id="${param.id}">
+                    </td>
                     <td class="py-3 px-3 text-left whitespace-nowrap">${param.feePlanCode}</td>
                     <td class="py-3 px-3 text-left">${getSelectText(feeTypeSelect, param.feeType)}</td>
                     <td class="py-3 px-3 text-left">${getSelectText(paymentTypeSelect, param.paymentType).split(' - ')[0]}</td>
@@ -1475,12 +1502,20 @@
             }
         }
 
-        function deleteFeeParameter(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa tham số phí này?')) {
-                feeParametersData = feeParametersData.filter(p => p.id !== id);
+        function deleteFeeParameter(ids) {
+            // Ensure `ids` is always an array
+            const idsToDelete = Array.isArray(ids) ? ids : [ids];
+
+            if (idsToDelete.length === 0) {
+                showMessageBox('Vui lòng chọn ít nhất một bản ghi để xóa.');
+                return;
+            }
+
+            if (confirm(`Bạn có chắc chắn muốn xóa ${idsToDelete.length} tham số phí này?`)) {
+                feeParametersData = feeParametersData.filter(p => !idsToDelete.includes(p.id));
                 renderFeeParametersTable();
-                showMessageBox('Tham số phí đã được xóa.');
-                if (editingFeeParamId === id) { // If the deleted item was being edited
+                showMessageBox(`${idsToDelete.length} tham số phí đã được xóa.`);
+                if (editingFeeParamId && idsToDelete.includes(editingFeeParamId)) { // If the deleted item was being edited
                     cancelEditFeeParam();
                 }
             }
@@ -1511,6 +1546,153 @@
             cancelEditBtn.classList.add('hidden');
             clearFeeParameterForm();
         }
+
+        // --- Multi-select Delete Functions ---
+        function toggleAllFeeParamsCheckboxes() {
+            const checkboxes = document.querySelectorAll('.fee-param-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllFeeParamsCheckbox.checked;
+            });
+        }
+
+        function deleteSelectedFeeParameters() {
+            const selectedIds = Array.from(document.querySelectorAll('.fee-param-checkbox:checked'))
+                                 .map(checkbox => checkbox.dataset.id);
+            deleteFeeParameter(selectedIds);
+        }
+
+        // --- Export/Import Functions ---
+        function convertToCsv(data) {
+            if (data.length === 0) return '';
+
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+
+            // Add header row
+            csvRows.push(headers.map(header => `"${header}"`).join(','));
+
+            // Add data rows
+            for (const row of data) {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    // Handle null/undefined, and escape double quotes
+                    return `"${value === null || value === undefined ? '' : String(value).replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            return csvRows.join('\n');
+        }
+
+        function exportFeeParametersToCsv() {
+            const csvContent = convertToCsv(feeParametersData);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'fee_parameters.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showMessageBox('Dữ liệu tham số phí đã được xuất ra file "fee_parameters.csv".');
+        }
+
+        function importFeeParametersFromCsv(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                showMessageBox('Vui lòng chọn một tệp CSV để nhập.');
+                return;
+            }
+
+            if (file.type !== 'text/csv') {
+                showMessageBox('Tệp được chọn không phải là định dạng CSV. Vui lòng chọn tệp CSV.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    const importedData = parseCsv(csvText);
+
+                    if (importedData.length === 0) {
+                        showMessageBox('Tệp CSV không chứa dữ liệu hoặc định dạng không hợp lệ.');
+                        return;
+                    }
+
+                    // Basic validation: Check if essential headers exist
+                    const requiredHeaders = ['id', 'feePlanCode', 'effectiveDateFrom', 'effectiveDateTo', 'levelDetail'];
+                    const hasRequiredHeaders = requiredHeaders.every(header => Object.keys(importedData[0]).includes(header));
+
+                    if (!hasRequiredHeaders) {
+                        showMessageBox('Tệp CSV có vẻ không đúng định dạng. Thiếu một số cột cần thiết (id, feePlanCode, effectiveDateFrom, effectiveDateTo, levelDetail).');
+                        return;
+                    }
+
+                    // Assign new IDs to imported data to avoid conflicts if IDs are not unique
+                    const processedData = importedData.map(item => ({
+                        ...item,
+                        id: item.id && feeParametersData.some(p => p.id === item.id) ? Date.now().toString() + Math.random().toString(36).substring(2, 8) : item.id || Date.now().toString() + Math.random().toString(36).substring(2, 8)
+                    }));
+
+
+                    feeParametersData = processedData; // Replace existing data
+                    renderFeeParametersTable();
+                    showMessageBox(`Đã nhập thành công ${importedData.length} tham số phí từ tệp CSV.`);
+                } catch (error) {
+                    console.error("Lỗi khi nhập tệp CSV:", error);
+                    showMessageBox(`Lỗi khi xử lý tệp CSV: ${error.message}. Vui lòng kiểm tra định dạng tệp.`);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCsv(csvString) {
+            const lines = csvString.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) return [];
+
+            const headers = lines[0].split(',').map(header => header.trim().replace(/^"|"$/g, ''));
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCsvLine(lines[i]);
+                if (values.length !== headers.length) {
+                    console.warn(`Dòng ${i + 1} có số cột không khớp với tiêu đề. Bỏ qua dòng này.`);
+                    continue;
+                }
+                const rowObject = {};
+                for (let j = 0; j < headers.length; j++) {
+                    rowObject[headers[j]] = values[j];
+                }
+                result.push(rowObject);
+            }
+            return result;
+        }
+
+        // Helper to parse a single CSV line, handling quoted fields
+        function parseCsvLine(line) {
+            const result = [];
+            let inQuote = false;
+            let currentField = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuote && i + 1 < line.length && line[i+1] === '"') {
+                        // Escaped double quote ""
+                        currentField += '"';
+                        i++; // Skip the next quote
+                    } else {
+                        inQuote = !inQuote;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    result.push(currentField.trim());
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            result.push(currentField.trim()); // Add the last field
+            return result.map(field => field.replace(/^"|"$/g, '')); // Remove surrounding quotes
+        }
+
 
         // --- Fee Codes Table Functions ---
         function populateFeeCodeDropdowns() {
@@ -1942,6 +2124,13 @@
 
         // Collapsible instruction section event listener
         instructionHeader.addEventListener('click', toggleInstructions);
+
+        // Multi-select and Export/Import Event Listeners
+        selectAllFeeParamsCheckbox.addEventListener('change', toggleAllFeeParamsCheckboxes);
+        deleteSelectedFeeParamsBtn.addEventListener('click', deleteSelectedFeeParameters);
+        exportFeeParamsBtn.addEventListener('click', exportFeeParametersToCsv);
+        importFeeParamsBtn.addEventListener('click', () => importFeeParamsInput.click()); // Trigger hidden file input click
+        importFeeParamsInput.addEventListener('change', importFeeParametersFromCsv);
 
 
         // Fee Parameter Form Event Listeners (Section 1)
