@@ -1757,9 +1757,9 @@
             renderFeeParametersTable();
             renderFeeCodesTable();
 
-            // Load instruction section state
+            // Load instruction section state, default to expanded
             const instructionsExpanded = localStorage.getItem('instructionsExpanded');
-            if (instructionsExpanded === 'true') {
+            if (instructionsExpanded === null || instructionsExpanded === 'true') { // MODIFIED LINE
                 instructionContent.classList.add('expanded');
                 instructionHeader.classList.add('expanded');
             } else {
@@ -1843,10 +1843,10 @@
             cancelEditFeeParam(); // Exit fee param edit mode
             cancelEditFeeCode(); // Exit fee code edit mode
             
-            // Reset instruction section to collapsed
-            instructionContent.classList.remove('expanded');
-            instructionHeader.classList.remove('expanded');
-            localStorage.setItem('instructionsExpanded', 'true');
+            // Reset instruction section to expanded (MODIFIED LINE)
+            instructionContent.classList.add('expanded');
+            instructionHeader.classList.add('expanded');
+            localStorage.setItem('instructionsExpanded', 'true'); // MODIFIED LINE
         }
 
 
