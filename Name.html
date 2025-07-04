@@ -401,7 +401,7 @@
                 analysisBox.querySelector('p.italic').style.display = 'none'; // Hide "Nhấn vào từng phần..."
                 deeperAnalysisContentDiv.innerHTML = ''; // Clear previous content
 
-                const prompt = `Bạn là chuyên gia phong thủy và đặt tên. Luận giải sâu hơn về ý nghĩa của tên 'Nguyễn Trung Khải' cho bé trai dự sinh 11/01/2026 (Ất Tỵ, mệnh Hỏa - Phú Đăng Hỏa), cha Nguyễn Trung Nghĩa, mẹ Nguyễn Thị Thu Trang. Phân tích sự hài hòa của tên với bản mệnh Hỏa, Ngũ hành tương sinh (Mộc, Thổ), và mối quan hệ Tam hợp (Tỵ, Dậu, Sửu). Đồng thời, giải thích ý nghĩa từng chữ trong tên và tổng hòa ý nghĩa của cả cái tên.`;
+                const prompt = `Bạn là chuyên gia phong thủy và đặt tên. Luận giải sâu hơn về ý nghĩa của tên 'Nguyễn Trung Khải' cho bé trai dự sinh 11/01/2026 (Ất Tỵ, mệnh Hỏa - Phú Đăng Hỏa), cha Nguyễn Trung Nghĩa, mẹ Nguyễn Thị Thu Trang. Phân tích sự hài hòa của tên với bản mệnh Hỏa, Ngũ hành tương sinh (Mộc, Thổ), và mối quan hệ Tam hợp (Tỵ, Dậu, Sửu). Đồng thời, giải thích ý nghĩa từng chữ trong tên và tổng hòa ý nghĩa của cả cái tên. Vui lòng định dạng câu trả lời bằng HTML, sử dụng các thẻ như <p>, <strong>, <em>, <ul>, <li> để trình bày rõ ràng.`;
 
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
@@ -420,7 +420,7 @@
                         result.candidates[0].content && result.candidates[0].content.parts &&
                         result.candidates[0].content.parts.length > 0) {
                         const text = result.candidates[0].content.parts[0].text;
-                        deeperAnalysisContentDiv.innerHTML = `<div class="mt-4 p-4 bg-amber-100 rounded-lg border border-amber-200">${text.replace(/\n/g, '<br>')}</div>`;
+                        deeperAnalysisContentDiv.innerHTML = `<div class="mt-4 p-4 bg-amber-100 rounded-lg border border-amber-200">${text}</div>`;
                     } else {
                         deeperAnalysisContentDiv.innerHTML = `<p class="text-red-500 mt-4">Không thể tạo luận giải sâu hơn. Vui lòng thử lại.</p>`;
                     }
