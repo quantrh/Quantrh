@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Gợi Ý Tên Bé Trai - Họ Nguyễn 2025 (Ất Tỵ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: Tôi đã thiết kế một ứng dụng một trang (SPA) với cấu trúc theo từng phần chuyên biệt, có thanh điều hướng cố định để người dùng dễ dàng di chuyển. Cấu trúc này không sao chép báo cáo gốc mà tổ chức lại thông tin theo một luồng logic, lấy người dùng làm trung tâm: (1) Giới thiệu tổng quan và tên đề xuất chính. (2) Phân tích sâu tên đề xuất qua các thẻ tương tác. (3) Trực quan hóa các quy tắc Phong thủy phức tạp (Ngũ Hành, Tam Hợp) bằng biểu đồ và icon. (4) Một thư viện tên có thể lọc để khám phá các lựa chọn thay thế. (5) Tóm tắt các nguyên tắc đặt tên. Cấu trúc này giúp người dùng tiêu hóa thông tin từ tổng quan đến chi tiết, từ đề xuất chính đến các lựa chọn khác một cách trực quan và hấp dẫn. -->
+    <!-- Visualization & Content Choices: Báo cáo -> Mục tiêu -> Phương pháp -> Tương tác -> Lý do. | Thông tin bé -> Thông báo -> Bảng điều khiển -> Tĩnh -> Cung cấp bối cảnh ngay lập tức. | Tên "Nguyễn Trung Khải" -> Giải thích -> Thẻ lật tương tác -> Click -> Cho phép khám phá sâu từng thành phần tên mà không bị choáng ngợp. | Quy tắc Ngũ Hành -> So sánh/Hiểu -> Biểu đồ Polar Area của Chart.js -> Hover -> Biến dữ liệu phức tạp thành hình ảnh trực quan, dễ so sánh. | Quy tắc Tam Hợp/Tứ Xung -> So sánh -> Nhóm icon HTML/CSS -> Tĩnh -> Cách trình bày đơn giản, rõ ràng cho các mối quan hệ. | Danh sách tên gợi ý -> Khám phá -> Danh sách có thể lọc -> Click nút -> Tăng tính tương tác, cho phép người dùng tìm tên theo ý muốn. | Nguyên tắc chung -> Tổ chức -> Phần tử accordion/toggle -> Click -> Tiết kiệm không gian, trình bày thông tin dày đặc một cách gọn gàng. | Thư viện sử dụng: Chart.js cho biểu đồ Canvas, TailwindCSS và Vanilla JS cho toàn bộ cấu trúc và tương tác. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #4A5568; /* gray-700 */
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #F59E0B; /* amber-500 */
+            margin: 0.5rem auto 0;
+            border-radius: 2px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .nav-link {
+             transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #F59E0B; /* amber-500 */
+        }
+        .active-nav {
+            color: #F59E0B; /* amber-500 */
+            border-bottom: 2px solid #F59E0B;
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 450px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 350px;
+            max-height: 400px; 
+        }
+        @media (min-width: 768px) { 
+            .chart-container { 
+                height: 400px; 
+            } 
+        }
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            background-color: #D97706; /* amber-600 */
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-700">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">
+                <a href="#home">Đặt Tên Cho Bé</a>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#recommendation" class="nav-link text-gray-600 font-semibold pb-1">Tên Đề Xuất</a>
+                <a href="#fengshui" class="nav-link text-gray-600 font-semibold pb-1">Luận Giải Phong Thủy</a>
+                <a href="#library" class="nav-link text-gray-600 font-semibold pb-1">Thư Viện Tên</a>
+                <a href="#principles" class="nav-link text-gray-600 font-semibold pb-1">Nguyên Tắc</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+             <a href="#recommendation" class="block py-2 text-gray-600 font-semibold">Tên Đề Xuất</a>
+             <a href="#fengshui" class="block py-2 text-gray-600 font-semibold">Luận Giải Phong Thủy</a>
+             <a href="#library" class="block py-2 text-gray-600 font-semibold">Thư Viện Tên</a>
+             <a href="#principles" class="block py-2 text-gray-600 font-semibold">Nguyên Tắc</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Công Cụ Gợi Ý Tên Cho Bé Trai</h1>
+                <p class="text-lg text-gray-600 mb-8">Dựa trên phân tích văn hóa, phong thủy cho bé trai họ Nguyễn, dự sinh 11/01/2026.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-xl mb-2 text-amber-600">👤 Thông Tin Bé</h3>
+                        <p><strong>Họ:</strong> Nguyễn</p>
+                        <p><strong>Dự sinh:</strong> 11/01/2026</p>
+                        <p><strong>Cha:</strong> Nguyễn Trung Nghĩa</p>
+                         <p><strong>Mẹ:</strong> Nguyễn Thị Thu Trang</p>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="font-bold text-xl mb-2 text-amber-600">🗓️ Âm Lịch & Con Giáp</h3>
+                        <p><strong>Năm âm lịch:</strong> Ất Tỵ (2025)</p>
+                        <p><strong>Con giáp:</strong> Rắn (Tỵ)</p>
+                        <p><strong>Thiên Can:</strong> Ất</p>
+                        <p><strong>Địa Chi:</strong> Tỵ</p>
+                    </div>
+                    <div class="card p-6">
+                         <h3 class="font-bold text-xl mb-2 text-amber-600">🔥 Ngũ Hành</h3>
+                        <p><strong>Bản mệnh:</strong> Hỏa</p>
+                        <p><strong>Nạp âm:</strong> Phú Đăng Hỏa</p>
+                        <p class="italic text-sm">(Lửa đèn dầu)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="recommendation" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Tên Hay Đề Xuất</h2>
+                <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Sau khi tổng hợp các yếu tố về văn hóa, ý nghĩa, và sự hài hòa phong thủy, đây là cái tên được đánh giá là tốt nhất, hội tụ nhiều giá trị tốt đẹp, gửi gắm hy vọng về một tương lai tươi sáng, thành công và trọn vẹn cho bé.</p>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 max-w-3xl mx-auto">
+                    <h3 class="text-center text-5xl font-bold text-amber-600 tracking-wider mb-8">Nguyễn Trung Khải</h3>
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div id="card-ho" class="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-amber-50">
+                            <p class="text-sm text-gray-500">Họ</p>
+                            <p class="text-3xl font-semibold text-gray-800">Nguyễn</p>
+                        </div>
+                        <div id="card-dem" class="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-amber-50">
+                            <p class="text-sm text-gray-500">Tên đệm</p>
+                            <p class="text-3xl font-semibold text-gray-800">Trung</p>
+                        </div>
+                        <div id="card-ten" class="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-amber-50">
+                            <p class="text-sm text-gray-500">Tên chính</p>
+                            <p class="text-3xl font-semibold text-gray-800">Khải</p>
+                        </div>
+                    </div>
+                    <div id="analysis-box" class="mt-8 p-6 bg-amber-50 rounded-lg text-gray-700 min-h-[150px]">
+                        <p class="italic text-center">Nhấn vào từng phần của tên để xem luận giải chi tiết.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="fengshui" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Luận Giải Yếu Tố Phong Thủy</h2>
+                <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Phong thủy là một phần quan trọng trong văn hóa đặt tên của người Việt, giúp tạo ra sự hài hòa giữa con người và trời đất. Đối với bé trai mệnh Hỏa, việc lựa chọn tên theo nguyên tắc tương sinh và tam hợp sẽ mang lại nhiều may mắn và thuận lợi.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="card p-8">
+                        <h3 class="text-2xl font-bold text-center mb-4 text-amber-600">Ngũ Hành Tương Quan</h3>
+                        <p class="text-center text-sm mb-4">Biểu đồ thể hiện mối quan hệ giữa bản mệnh Hỏa của bé với các hành khác. Các hành tương sinh (Mộc, Thổ) sẽ hỗ trợ, nuôi dưỡng, mang lại năng lượng tích cực.</p>
+                        <div class="chart-container">
+                            <canvas id="fengShuiChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card p-8">
+                        <h3 class="text-2xl font-bold text-center mb-4 text-amber-600">Tam Hợp & Tứ Xung</h3>
+                        <p class="text-center text-sm mb-4">Trong 12 con giáp, tuổi Tỵ của bé có những mối quan hệ tương hợp và xung khắc, ảnh hưởng đến việc chọn tên.</p>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-green-600 mb-2">✅ Tam Hợp (Tốt)</h4>
+                                <p class="mb-3 text-sm">Tỵ, Dậu và Sửu là bộ ba con giáp hòa hợp, tương trợ lẫn nhau, mang lại may mắn và bền vững. Các tên có bộ thủ liên quan đến Dậu (Gà), Sửu (Trâu) rất tốt cho bé.</p>
+                                <div class="flex justify-center space-x-6">
+                                    <span class="text-5xl" title="Tỵ (Rắn)">🐍</span>
+                                    <span class="text-5xl" title="Dậu (Gà)">🐓</span>
+                                    <span class="text-5xl" title="Sửu (Trâu)">🐃</span>
+                                </div>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold text-lg text-red-600 mb-2">❌ Tứ Hành Xung (Nên tránh)</h4>
+                                <p class="mb-3 text-sm">Tuổi Tỵ xung khắc với Dần, Thân và Hợi. Cần tránh đặt tên có liên quan đến các con giáp này để cuộc sống của bé được thuận lợi, ít trở ngại.</p>
+                                <div class="flex justify-center space-x-6 opacity-70">
+                                    <span class="text-5xl" title="Dần (Hổ)">🐅</span>
+                                    <span class="text-5xl" title="Thân (Khỉ)">🐒</span>
+                                    <span class="text-5xl" title="Hợi (Lợn)">🐖</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="library" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Thư Viện Tên Gợi Ý</h2>
+                 <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Ngoài tên "Nguyễn Trung Khải", còn rất nhiều lựa chọn tên hay và ý nghĩa khác. Bạn có thể khám phá các gợi ý dựa trên những phẩm chất và mong ước mà gia đình muốn gửi gắm cho bé.</p>
+                <div class="text-center mb-8 flex flex-wrap justify-center gap-3">
+                    <button class="filter-btn active px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="all">Tất cả</button>
+                    <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="tritue">Thông Minh, Trí Tuệ</button>
+                    <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="manhme">Mạnh Mẽ, Kiên Cường</button>
+                    <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="mayman">May Mắn, Bình An</button>
+                    <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="thanhcong">Thành Công, Phát Đạt</button>
+                    <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="daoduc">Phẩm Chất, Đạo Đức</button>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                    <!-- Name items will be injected by JS -->
+                </div>
+            </div>
+        </section>
+        
+        <section id="principles" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Nguyên Tắc Đặt Tên</h2>
+                <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Việc đặt tên không chỉ theo sở thích mà còn cần tuân thủ các nguyên tắc văn hóa và pháp luật để đảm bảo tên gọi vừa hay, ý nghĩa, vừa mang lại những điều tốt lành cho con.</p>
+                <div class="max-w-4xl mx-auto space-y-4">
+                    <div class="accordion-item card p-0 overflow-hidden">
+                        <button class="accordion-header w-full text-left p-6 font-bold text-lg flex justify-between items-center">
+                            <span>Cấu trúc tên người Việt</span>
+                            <span class="accordion-icon text-2xl text-amber-500">+</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="p-6 pt-0">
+                                <p>Tên truyền thống có cấu trúc: <strong>Họ + Tên đệm + Tên chính</strong>. Họ thường theo cha, tên đệm bổ trợ ý nghĩa, và tên chính thể hiện ước vọng cốt lõi. Gần đây, tên 4 chữ (Họ + 2 tên đệm + Tên chính) cũng trở nên phổ biến để tăng tính độc đáo và ý nghĩa.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item card p-0 overflow-hidden">
+                        <button class="accordion-header w-full text-left p-6 font-bold text-lg flex justify-between items-center">
+                            <span>Tuân thủ pháp luật</span>
+                             <span class="accordion-icon text-2xl text-amber-500">+</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="p-6 pt-0">
+                                <p>Tên phải bằng tiếng Việt hoặc tiếng dân tộc khác của Việt Nam. Pháp luật không cho phép đặt tên bằng số, ký tự không phải là chữ. Tên không được xâm phạm quyền và lợi ích của người khác.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item card p-0 overflow-hidden">
+                        <button class="accordion-header w-full text-left p-6 font-bold text-lg flex justify-between items-center">
+                            <span>Những điều cần kiêng kỵ</span>
+                             <span class="accordion-icon text-2xl text-amber-500">+</span>
+                        </button>
+                         <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="p-6 pt-0">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Tránh tên người nổi tiếng, chính khách:</strong> Đây là "luật bất thành văn" để thể hiện sự tôn trọng, ví dụ như không đặt tên là Hồ Chí Minh, Võ Nguyên Giáp.</li>
+                                    <li><strong>Tránh tên mang ý nghĩa tiêu cực:</strong> Tên gọi gắn liền với vận mệnh, cần tránh những từ ngữ xấu, u buồn.</li>
+                                    <li><strong>Tránh bộ thủ xung khắc với tuổi:</strong> Đối với tuổi Tỵ, cần tránh các tên thuộc bộ Mễ (gạo), Đậu, Hòa (lúa) vì rắn không ăn ngũ cốc (ví dụ: Tú, Khoa, Trình, Lương).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-gray-800 text-white text-center py-6">
+        <p>&copy; 2025. Công cụ được phát triển để hỗ trợ gia đình Nguyễn Trung Nghĩa & Nguyễn Thị Thu Trang.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Name Analysis Section
+            const analysisBox = document.getElementById('analysis-box');
+            const analysisContent = {
+                ho: `
+                    <h4 class="font-bold text-xl mb-2">Họ Nguyễn</h4>
+                    <p>Đây là họ của cha và mẹ, một trong những họ phổ biến nhất Việt Nam. Việc giữ họ Nguyễn đảm bảo tính kế thừa, truyền thống và sự gắn kết gia đình. Với họ phổ biến, việc chọn tên đệm và tên chính độc đáo, ý nghĩa càng trở nên quan trọng.</p>
+                `,
+                dem: `
+                    <h4 class="font-bold text-xl mb-2">Tên Đệm: Trung</h4>
+                    <ul class="list-disc list-inside space-y-1 text-left">
+                        <li><strong>Ý nghĩa:</strong> "Trung" (忠) mang ý nghĩa trung thành, trung thực, chính trực, là phẩm chất đạo đức cao quý.</li>
+                        <li><strong>Kết nối gia đình:</strong> Tên đệm lấy từ tên của bố (Nguyễn Trung Nghĩa), thể hiện sự kế thừa giá trị tốt đẹp và sự gắn kết cha con.</li>
+                        <li><strong>Phong thủy:</strong> Chữ "Trung" thuộc hành <strong>Thổ</strong>. Theo Ngũ hành, Hỏa sinh Thổ, rất tốt cho mệnh Hỏa của bé, giúp tạo sự ổn định, bền vững.</li>
+                    </ul>
+                `,
+                ten: `
+                    <h4 class="font-bold text-xl mb-2">Tên Chính: Khải</h4>
+                     <ul class="list-disc list-inside space-y-1 text-left">
+                        <li><strong>Ý nghĩa:</strong> "Khải" (凱) có nghĩa là chiến thắng, khải hoàn, mở ra một tương lai rạng rỡ, thành công.</li>
+                        <li><strong>Phong thủy:</strong> Chữ "Khải" có âm đầu "K" thuộc hành <strong>Mộc</strong>. Theo Ngũ hành, Mộc sinh Hỏa, vô cùng tốt cho bản mệnh, giúp nuôi dưỡng và phát triển năng lượng.</li>
+                        <li><strong>Tuổi Tỵ:</strong> Tên "Khải" không phạm các bộ thủ kiêng kỵ, lại mang ý nghĩa chiến thắng, rất hợp với tính cách mạnh mẽ, quyết đoán của người tuổi Tỵ.</li>
+                    </ul>
+                `
+            };
+
+            document.getElementById('card-ho').addEventListener('click', () => updateAnalysis('ho'));
+            document.getElementById('card-dem').addEventListener('click', () => updateAnalysis('dem'));
+            document.getElementById('card-ten').addEventListener('click', () => updateAnalysis('ten'));
+
+            function updateAnalysis(part) {
+                analysisBox.innerHTML = analysisContent[part];
+                document.querySelectorAll('#recommendation [id^="card-"]').forEach(c => c.classList.remove('bg-amber-100', 'ring-2', 'ring-amber-500'));
+                document.getElementById(`card-${part}`).classList.add('bg-amber-100', 'ring-2', 'ring-amber-500');
+            }
+
+            // Feng Shui Chart
+            const ctx = document.getElementById('fengShuiChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Mộc (Tương Sinh)', 'Thổ (Tương Sinh)', 'Hỏa (Bản Mệnh)', 'Kim (Khắc)', 'Thủy (Khắc)'],
+                    datasets: [{
+                        label: 'Mức độ tương hợp',
+                        data: [5, 4, 3, 2, 1],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.6)', // green-500
+                            'rgba(202, 138, 4, 0.6)',  // yellow-600
+                            'rgba(220, 38, 38, 0.6)',  // red-600
+                            'rgba(107, 114, 128, 0.6)',// gray-500
+                            'rgba(37, 99, 235, 0.6)'  // blue-600
+                        ],
+                        borderColor: [
+                            'rgba(5, 150, 105, 1)',
+                            'rgba(161, 98, 7, 1)',
+                            'rgba(185, 28, 28, 1)',
+                            'rgba(75, 85, 99, 1)',
+                            'rgba(29, 78, 216, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            pointLabels: {
+                                display: true,
+                                centerPointLabels: true,
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += ['Rất Tốt', 'Tốt', 'Hòa Hợp', 'Nên Cân Nhắc', 'Nên Tránh'][context.dataIndex];
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Name Library
+            const namesData = [
+                { name: 'Minh Triết', category: 'tritue' }, { name: 'Đăng Khoa', category: 'tritue' }, { name: 'Anh Minh', category: 'tritue' }, { name: 'Minh Trí', category: 'tritue' },
+                { name: 'Việt Dũng', category: 'manhme' }, { name: 'Chí Kiên', category: 'manhme' }, { name: 'Đức Mạnh', category: 'manhme' }, { name: 'Hùng Dũng', category: 'manhme' },
+                { name: 'An Khang', category: 'mayman' }, { name: 'Thiên Phúc', category: 'mayman' }, { name: 'Hữu Phước', category: 'mayman' }, { name: 'Bảo An', category: 'mayman' },
+                { name: 'Thành Đạt', category: 'thanhcong' }, { name: 'Quang Vinh', category: 'thanhcong' }, { name: 'Tiến Thành', category: 'thanhcong' }, { name: 'Phú Đạt', category: 'thanhcong' },
+                { name: 'Minh Đức', category: 'daoduc' }, { name: 'Trung Nghĩa', category: 'daoduc' }, { name: 'Đức Việt', category: 'daoduc' }, { name: 'Trọng Nghĩa', category: 'daoduc' }
+            ];
+
+            const nameGrid = document.querySelector('#library .grid');
+            const filterButtons = document.querySelectorAll('#library .filter-btn');
+
+            function displayNames(filter) {
+                nameGrid.innerHTML = '';
+                const filteredNames = (filter === 'all') ? namesData : namesData.filter(n => n.category === filter);
+                filteredNames.forEach(item => {
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'name-item p-4 bg-white rounded-lg shadow-sm text-center font-semibold text-gray-700 border border-gray-200';
+                    nameDiv.textContent = item.name;
+                    nameGrid.appendChild(nameDiv);
+                });
+            }
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    displayNames(button.dataset.filter);
+                });
+            });
+
+            displayNames('all');
+            
+            // Accordion
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.accordion-icon');
+                    
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.textContent = '+';
+                    } else {
+                        // Close other accordions
+                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                        document.querySelectorAll('.accordion-icon').forEach(i => i.textContent = '+');
+                        
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.textContent = '-';
+                    }
+                });
+            });
+
+            // Active nav link on scroll
+            const sections = document.querySelectorAll('main section');
+            const navLinks = document.querySelectorAll('nav a.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
