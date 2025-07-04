@@ -76,6 +76,19 @@
             color: white;
             transform: scale(1.05);
         }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #F59E0B;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-700">
@@ -159,7 +172,12 @@
                     </div>
                     <div id="analysis-box" class="mt-8 p-6 bg-amber-50 rounded-lg text-gray-700 min-h-[150px]">
                         <p class="italic text-center">Nhấn vào từng phần của tên để xem luận giải chi tiết.</p>
+                        <div id="deeper-analysis-content"></div>
                     </div>
+                    <button id="deeper-analysis-btn" class="mt-6 w-full py-3 px-4 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center">
+                        <span class="mr-2">✨ Luận giải sâu hơn</span>
+                        <div id="deeper-analysis-spinner" class="hidden loading-spinner w-5 h-5"></div>
+                    </button>
                 </div>
             </div>
         </section>
@@ -217,8 +235,21 @@
                     <button class="filter-btn px-4 py-2 bg-white border border-amber-500 text-amber-600 font-semibold rounded-full" data-filter="daoduc">Phẩm Chất, Đạo Đức</button>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" id="name-grid">
                     <!-- Name items will be injected by JS -->
+                </div>
+
+                <div class="card p-6 mt-12 max-w-3xl mx-auto">
+                    <h3 class="font-bold text-xl mb-4 text-amber-600 text-center">✨ Gợi Ý Tên Mới Từ AI</h3>
+                    <p class="text-sm text-gray-600 mb-4 text-center">Nhập các phẩm chất hoặc ý nghĩa bạn mong muốn cho tên bé (ví dụ: "thông minh, tài giỏi, may mắn"):</p>
+                    <textarea id="ai-name-input" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 mb-4" rows="3" placeholder="Ví dụ: thông minh, mạnh mẽ, bình an..."></textarea>
+                    <button id="generate-ai-names-btn" class="w-full py-3 px-4 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center">
+                        <span class="mr-2">✨ Gợi ý tên mới</span>
+                        <div id="ai-names-spinner" class="hidden loading-spinner w-5 h-5"></div>
+                    </button>
+                    <div id="ai-generated-names" class="mt-6 space-y-4">
+                        <!-- AI generated names will be displayed here -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -285,6 +316,10 @@
             
             // Name Analysis Section
             const analysisBox = document.getElementById('analysis-box');
+            const deeperAnalysisContentDiv = document.getElementById('deeper-analysis-content');
+            const deeperAnalysisBtn = document.getElementById('deeper-analysis-btn');
+            const deeperAnalysisSpinner = document.getElementById('deeper-analysis-spinner');
+
             const analysisContent = {
                 ho: `
                     <h4 class="font-bold text-xl mb-2">Họ Nguyễn</h4>
@@ -313,10 +348,52 @@
             document.getElementById('card-ten').addEventListener('click', () => updateAnalysis('ten'));
 
             function updateAnalysis(part) {
-                analysisBox.innerHTML = analysisContent[part];
+                deeperAnalysisContentDiv.innerHTML = ''; // Clear deeper analysis when clicking static cards
+                analysisBox.querySelector('p.italic').style.display = 'block'; // Show "Nhấn vào từng phần..."
+                analysisBox.innerHTML = analysisContent[part] + '<div id="deeper-analysis-content"></div>'; // Re-add deeper analysis div
                 document.querySelectorAll('#recommendation [id^="card-"]').forEach(c => c.classList.remove('bg-amber-100', 'ring-2', 'ring-amber-500'));
                 document.getElementById(`card-${part}`).classList.add('bg-amber-100', 'ring-2', 'ring-amber-500');
             }
+
+            // Gemini API Integration - Deeper Name Analysis
+            deeperAnalysisBtn.addEventListener('click', async () => {
+                deeperAnalysisSpinner.classList.remove('hidden');
+                deeperAnalysisBtn.disabled = true;
+                analysisBox.querySelector('p.italic').style.display = 'none'; // Hide "Nhấn vào từng phần..."
+                deeperAnalysisContentDiv.innerHTML = ''; // Clear previous content
+
+                const prompt = `Bạn là chuyên gia phong thủy và đặt tên. Luận giải sâu hơn về ý nghĩa của tên 'Nguyễn Trung Khải' cho bé trai dự sinh 11/01/2026 (Ất Tỵ, mệnh Hỏa - Phú Đăng Hỏa), cha Nguyễn Trung Nghĩa, mẹ Nguyễn Thị Thu Trang. Phân tích sự hài hòa của tên với bản mệnh Hỏa, Ngũ hành tương sinh (Mộc, Thổ), và mối quan hệ Tam hợp (Tỵ, Dậu, Sửu). Đồng thời, giải thích ý nghĩa từng chữ trong tên và tổng hòa ý nghĩa của cả cái tên.`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // Leave this as-is. Canvas will provide the API key.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        deeperAnalysisContentDiv.innerHTML = `<div class="mt-4 p-4 bg-amber-100 rounded-lg border border-amber-200">${text.replace(/\n/g, '<br>')}</div>`;
+                    } else {
+                        deeperAnalysisContentDiv.innerHTML = `<p class="text-red-500 mt-4">Không thể tạo luận giải sâu hơn. Vui lòng thử lại.</p>`;
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API for deeper analysis:', error);
+                    deeperAnalysisContentDiv.innerHTML = `<p class="text-red-500 mt-4">Đã xảy ra lỗi khi kết nối AI. Vui lòng thử lại.</p>`;
+                } finally {
+                    deeperAnalysisSpinner.classList.add('hidden');
+                    deeperAnalysisBtn.disabled = false;
+                }
+            });
+
 
             // Feng Shui Chart
             const ctx = document.getElementById('fengShuiChart').getContext('2d');
@@ -382,7 +459,7 @@
                 }
             });
 
-            // Name Library
+            // Name Library - Static Names
             const namesData = [
                 { name: 'Minh Triết', category: 'tritue' }, { name: 'Đăng Khoa', category: 'tritue' }, { name: 'Anh Minh', category: 'tritue' }, { name: 'Minh Trí', category: 'tritue' },
                 { name: 'Việt Dũng', category: 'manhme' }, { name: 'Chí Kiên', category: 'manhme' }, { name: 'Đức Mạnh', category: 'manhme' }, { name: 'Hùng Dũng', category: 'manhme' },
@@ -391,8 +468,12 @@
                 { name: 'Minh Đức', category: 'daoduc' }, { name: 'Trung Nghĩa', category: 'daoduc' }, { name: 'Đức Việt', category: 'daoduc' }, { name: 'Trọng Nghĩa', category: 'daoduc' }
             ];
 
-            const nameGrid = document.querySelector('#library .grid');
+            const nameGrid = document.getElementById('name-grid');
             const filterButtons = document.querySelectorAll('#library .filter-btn');
+            const aiNameInput = document.getElementById('ai-name-input');
+            const generateAiNamesBtn = document.getElementById('generate-ai-names-btn');
+            const aiNamesSpinner = document.getElementById('ai-names-spinner');
+            const aiGeneratedNamesDiv = document.getElementById('ai-generated-names');
 
             function displayNames(filter) {
                 nameGrid.innerHTML = '';
@@ -415,6 +496,89 @@
 
             displayNames('all');
             
+            // Gemini API Integration - Generate New Names
+            generateAiNamesBtn.addEventListener('click', async () => {
+                const traits = aiNameInput.value.trim();
+                if (!traits) {
+                    aiGeneratedNamesDiv.innerHTML = `<p class="text-red-500">Vui lòng nhập các phẩm chất mong muốn.</p>`;
+                    return;
+                }
+
+                aiNamesSpinner.classList.remove('hidden');
+                generateAiNamesBtn.disabled = true;
+                aiGeneratedNamesDiv.innerHTML = '';
+
+                const prompt = `Bạn là chuyên gia đặt tên tiếng Việt. Hãy gợi ý 3 tên bé trai họ Nguyễn, dự sinh 11/01/2026 (Ất Tỵ, mệnh Hỏa - Phú Đăng Hỏa), có tên đệm là 'Trung' hoặc 'Khải', và mang ý nghĩa về ${traits}. Đảm bảo tên hợp phong thủy Ngũ hành (Mộc sinh Hỏa, Hỏa sinh Thổ), tránh tứ hành xung (Dần, Thân, Hợi) và các bộ thủ kiêng kỵ (Mễ, Đậu, Hòa).
+Trả lời dưới dạng JSON ARRAY, mỗi phần tử là một OBJECT có các thuộc tính:
+- \`name\`: Tên đầy đủ (ví dụ: Nguyễn Trung An)
+- \`meaning\`: Ý nghĩa ngắn gọn của tên
+- \`fengshui_notes\`: Ghi chú về sự hài hòa phong thủy (ví dụ: Hợp mệnh Hỏa, Mộc sinh Hỏa)
+`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "name": { "type": "STRING" },
+                                    "meaning": { "type": "STRING" },
+                                    "fengshui_notes": { "type": "STRING" }
+                                },
+                                "propertyOrdering": ["name", "meaning", "fengshui_notes"]
+                            }
+                        }
+                    }
+                };
+                const apiKey = ""; // Leave this as-is. Canvas will provide the API key.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const json = result.candidates[0].content.parts[0].text;
+                        const parsedJson = JSON.parse(json);
+                        
+                        if (parsedJson.length > 0) {
+                            parsedJson.forEach(item => {
+                                const nameCard = document.createElement('div');
+                                nameCard.className = 'card p-4 border border-amber-200 bg-amber-50';
+                                nameCard.innerHTML = `
+                                    <p class="text-lg font-bold text-amber-700">${item.name}</p>
+                                    <p class="text-sm text-gray-600 mt-1">Ý nghĩa: ${item.meaning}</p>
+                                    <p class="text-xs text-gray-500 mt-1">Phong thủy: ${item.fengshui_notes}</p>
+                                `;
+                                aiGeneratedNamesDiv.appendChild(nameCard);
+                            });
+                        } else {
+                            aiGeneratedNamesDiv.innerHTML = `<p class="text-gray-600">Không tìm thấy gợi ý tên nào phù hợp.</p>`;
+                        }
+
+                    } else {
+                        aiGeneratedNamesDiv.innerHTML = `<p class="text-red-500">Không thể tạo gợi ý tên. Vui lòng thử lại.</p>`;
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API for new names:', error);
+                    aiGeneratedNamesDiv.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi khi kết nối AI. Vui lòng thử lại.</p>`;
+                } finally {
+                    aiNamesSpinner.classList.add('hidden');
+                    generateAiNamesBtn.disabled = false;
+                }
+            });
+
+
             // Accordion
             const accordionHeaders = document.querySelectorAll('.accordion-header');
             accordionHeaders.forEach(header => {
