@@ -29,7 +29,7 @@
         }
         .section {
             flex: 1;
-            min-height: 400px;
+            min-height: 400px; /* Kept for overall section structure, not for details tag */
             overflow-y: auto;
             padding: 1rem;
             border: 1px solid #e0e0e0;
@@ -44,6 +44,17 @@
             padding-bottom: 0.75rem;
             margin-bottom: 1.5rem;
         }
+        /* Specific style for summary to remove default arrow and ensure clean collapse */
+        details > summary {
+            list-style: none; /* Remove default marker */
+        }
+        details > summary::-webkit-details-marker {
+            display: none; /* Remove default marker for Webkit browsers */
+        }
+        .details-content {
+            padding-top: 1rem; /* Add padding only when content is visible */
+        }
+
         .form-group {
             margin-bottom: 1rem;
         }
@@ -191,6 +202,45 @@
 </head>
 <body>
     <div class="container">
+        <!-- User Guide Section -->
+        <div class="section">
+            <details> <!-- Default to closed -->
+                <summary class="section-title cursor-pointer">Hướng dẫn sử dụng (Click để mở/đóng)</summary>
+                <div class="details-content p-4 text-gray-700">
+                    <h4 class="font-semibold text-lg mb-2">Tổng quan</h4>
+                    <p class="mb-2">Ứng dụng này mô phỏng quy trình cấu hình và tính toán phí giao dịch tiền gửi dựa trên hai bước chính:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li><strong class="text-blue-600">Bước 1: Cấu hình Service Fee Plan</strong> - Định nghĩa các biểu phí chung và gắn các quy tắc phí cụ thể (phí cố định hoặc phần trăm) cho từng Mã Giao Dịch.</li>
+                        <li><strong class="text-blue-600">Bước 2: Cấu hình Location Based Fee</strong> - Định nghĩa các phí bổ sung dựa trên điều kiện địa điểm (Inter-City/Intra-City), chi nhánh, loại khách hàng, mã giao dịch và loại tiền tệ.</li>
+                    </ul>
+                    <p class="mb-4">Tổng phí cuối cùng sẽ là tổng của phí tính được từ Bước 1 và phí tính được từ Bước 2.</p>
+
+                    <h4 class="font-semibold text-lg mb-2">Cách sử dụng</h4>
+                    <ol class="list-decimal list-inside mb-4">
+                        <li class="mb-1"><strong>Bước 1: Cấu hình Service Fee Plan</strong>
+                            <ul class="list-disc list-inside ml-4">
+                                <li>Vào tab "Service Fee Plan" để tạo/cập nhật các biểu phí chính. Sau khi tạo, nhấn nút "Sửa" bên cạnh mỗi SFP để có thể gắn Transaction Code vào SFP đó.</li>
+                                <li>Vào tab "Gắn Phí vào SFP" để định nghĩa các quy tắc tính phí (phí cố định hoặc phần trăm) cho từng Mã Giao Dịch cụ thể trong một Service Fee Plan đã chọn.</li>
+                            </ul>
+                        </li>
+                        <li class="mb-1"><strong>Bước 2: Cấu hình Location Based Fee</strong>
+                            <ul class="list-disc list-inside ml-4">
+                                <li>Vào tab "Location Based Fee" để tạo/cập nhật các quy tắc phí bổ sung dựa trên các tiêu chí địa điểm và giao dịch.</li>
+                            </ul>
+                        </li>
+                        <li class="mb-1"><strong>Mô phỏng Giao dịch & Tính Phí</strong>
+                            <ul class="list-disc list-inside ml-4">
+                                <li>Ở phần "Mô phỏng Giao dịch & Tính Phí", nhập các thông tin giao dịch cần thiết (Mã Giao Dịch, Số tiền, Loại tiền tệ, Loại khách hàng).</li>
+                                <li>Chọn "Mã Chi Nhánh (Mô phỏng)" để mô phỏng giao dịch liên quan đến địa điểm, bao gồm cả thông tin Inter-City/Intra-City.</li>
+                                <li>Nhấn nút "Tính Phí" để xem kết quả tính toán chi tiết từ cả hai bước.</li>
+                            </ul>
+                        </li>
+                        <li class="mb-1"><strong>Lưu ý:</strong> Dữ liệu được lưu trữ trong Local Storage của trình duyệt. Bạn có thể nhấn "Xóa toàn bộ dữ liệu" để reset ứng dụng.</li>
+                    </ol>
+                </div>
+            </details>
+        </div>
+
         <!-- Section 1: Khai báo tham số phí -->
         <div class="section">
             <h2 class="section-title">1. Khai báo Tham số Phí</h2>
@@ -199,7 +249,6 @@
             <h3 class="text-xl font-bold mb-4 text-gray-800">Bước 1: Cấu hình Service Fee Plan</h3>
             <div class="tab-nav" id="sfpConfigTabNav">
                 <button class="tab-button active" onclick="showTab('sfpTab', this, 'sfpConfigTabNav')">Service Fee Plan</button>
-                <button class="tab-button" onclick="showTab('fsTab', this, 'sfpConfigTabNav')">Fee Schedule</button>
                 <button class="tab-button" onclick="showTab('assignFeeTab', this, 'sfpConfigTabNav')">Gắn Phí vào SFP</button>
             </div>
 
@@ -304,57 +353,6 @@
                     </div>
                 </div>
 
-                <!-- Form Fee Schedule -->
-                <div id="fsTab" class="tab-pane mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Fee Schedule</h3>
-                    <div class="form-group">
-                        <label for="fsId">Mã Fee Schedule:</label>
-                        <input type="text" id="fsId" placeholder="Ví dụ: FS_NOP_TIEN_TIER">
-                    </div>
-                    <div class="form-group">
-                        <label for="fsName">Tên báo cáo:</label>
-                        <input type="text" id="fsName" placeholder="Ví dụ: Phí Nộp Tiền Theo Mức">
-                    </div>
-                    <div class="form-group">
-                        <label for="fsTypeOfSchedule">Loại Schedule:</label>
-                        <select id="fsTypeOfSchedule">
-                            <option value="Cumulative">0 - Cumulative (Cộng dồn)</option>
-                            <option value="Incremental">1 - Incremental (Phân tầng)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="fsTypeOfTier">Loại Tier:</label>
-                        <select id="fsTypeOfTier">
-                            <option value="Percent of Transaction Amount">2 - Percent of Transaction Amount (Phần trăm số tiền GD)</option>
-                            <option value="Account Balance">0 - Account Balance (Theo số dư TK)</option>
-                            <option value="Transaction or Per Item Count">1 - Transaction or Per Item Count (Theo số lần GD)</option>
-                        </select>
-                    </div>
-                    <h4 class="text-lg font-medium mt-4 mb-2 text-gray-600">Cấu hình phân tầng (Tiers)</h4>
-                    <div id="tiersContainer" class="border p-4 rounded-md bg-white">
-                        <!-- Tier rows will be added here -->
-                    </div>
-                    <button class="btn btn-secondary mt-2" onclick="addTierRow()">Thêm Tier</button>
-                    <button class="btn btn-primary mt-4" onclick="addFeeSchedule()">Thêm/Cập nhật Fee Schedule</button>
-                    <button class="btn btn-secondary ml-2 mt-4" onclick="loadFeeSchedules()">Tải lại danh sách</button>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Mã</th>
-                                    <th>Tên</th>
-                                    <th>Loại Tier</th>
-                                    <th>Tiers</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody id="fsTableBody">
-                                <!-- Data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Form Gắn phí vào Service Fee Plan -->
                 <div id="assignFeeTab" class="tab-pane mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Gắn Phí vào Service Fee Plan</h3>
@@ -376,12 +374,7 @@
                         <label for="assignFixedAmount">Phí cố định:</label>
                         <input type="number" id="assignFixedAmount" placeholder="0" step="0.01">
                     </div>
-                    <div class="form-group">
-                        <label for="assignFsId">Chọn Fee Schedule:</label>
-                        <select id="assignFsId">
-                            <option value="">-- Không chọn --</option>
-                        </select>
-                    </div>
+                    <!-- Removed Fee Schedule dropdown -->
                     <div class="form-group">
                         <label for="assignFeePercent">Phần trăm phí:</label>
                         <input type="number" id="assignFeePercent" placeholder="0" step="0.001">
@@ -405,7 +398,6 @@
                                     <th>Mã GD</th>
                                     <th>Loại phí</th>
                                     <th>Phí Cố định</th>
-                                    <th>FS</th>
                                     <th>% Phí</th>
                                     <th>Min/Max</th>
                                     <th>Hành động</th>
@@ -536,15 +528,9 @@
                 </div>
                 <div class="form-group">
                     <label for="simBranchCode">Mã Chi Nhánh (Mô phỏng):</label>
-                    <input type="text" id="simBranchCode" placeholder="Ví dụ: HO, CN001">
-                </div>
-                <div class="form-group">
-                    <label for="simInterCityIntraCity">Loại Giao Dịch (Mô phỏng):</label>
-                    <select id="simInterCityIntraCity">
-                        <option value="">-- Không chọn --</option>
-                        <option value="Inter-City">Inter-City (Khác chi nhánh, cùng địa bàn)</option>
-                        <option value="Intra-City">Intra-City (Khác địa bàn)</option>
-                        <option value="N">N (Giao dịch khác địa bàn)</option>
+                    <select id="simBranchCode">
+                        <option value="">-- Chọn Chi Nhánh --</option>
+                        <!-- Options will be populated by JS -->
                     </select>
                 </div>
                 <button class="btn btn-primary" onclick="calculateSimulatedFee()">Tính Phí</button>
@@ -560,13 +546,12 @@
     <script>
         // --- Dữ liệu giả lập và lưu trữ Local Storage ---
         let serviceFeePlans = [];
-        let feeSchedules = [];
-        let locationBasedFees = []; // New array for Location Based Fees
+        let locationBasedFees = []; // Fee Schedules removed
 
         // Variable to hold the ID of the currently selected Service Fee Plan for editing linked TCs
         let currentSelectedSfpId = null;
 
-        const LOCAL_STORAGE_KEY = 'feeManagementApp_data_v2'; // Updated key for new data structure
+        const LOCAL_STORAGE_KEY = 'feeManagementApp_data_v4'; // Updated key for new data structure
 
         // Function to format numbers with thousands separator
         function formatNumber(num) {
@@ -600,7 +585,6 @@
                 const data = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
                 if (data) {
                     serviceFeePlans = data.serviceFeePlans || [];
-                    feeSchedules = data.feeSchedules || [];
                     locationBasedFees = data.locationBasedFees || []; // Load new data
                 }
             } catch (e) {
@@ -612,7 +596,6 @@
         function saveDataToLocalStorage() {
             const data = {
                 serviceFeePlans,
-                feeSchedules,
                 locationBasedFees // Save new data
             };
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
@@ -622,7 +605,6 @@
             if (confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.")) {
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
                 serviceFeePlans = [];
-                feeSchedules = [];
                 locationBasedFees = [];
                 currentSelectedSfpId = null; // Reset selected SFP
                 document.getElementById('currentSfpIdDisplay').textContent = 'Chưa chọn SFP';
@@ -705,8 +687,8 @@
 
         function populateAllSelects() {
             populateSelect('assignSfpId', serviceFeePlans, 'id', 'description');
-            populateSelect('assignFsId', feeSchedules, 'id', 'name', true);
-            
+            // populateSelect('assignFsId', feeSchedules, 'id', 'name', true); // Removed fee schedule
+
             // Populate simTranCode from all linked transaction codes across all SFPs AND Location Based Fees
             const allTransactionCodes = new Set();
             serviceFeePlans.forEach(sfp => {
@@ -732,6 +714,30 @@
                 });
             });
             populateSelect('assignTcId', uniqueTransactionCodesForAssignFee, 'id', 'description');
+
+            // Populate simBranchCode dropdown
+            const branchOptions = new Set();
+            // Add branches from locationBasedFees demo data
+            locationBasedFees.forEach(lbf => {
+                if (lbf.branchCode && lbf.interCityIntraCity) {
+                    let typeDisplay = '';
+                    if (lbf.interCityIntraCity === 'Inter-City') typeDisplay = ' (Giao dịch khác chi nhánh, cùng địa bàn)';
+                    else if (lbf.interCityIntraCity === 'Intra-City') typeDisplay = ' (Giao dịch khác địa bàn)';
+                    else if (lbf.interCityIntraCity === 'N') typeDisplay = ' (Giao dịch khác địa bàn)';
+                    branchOptions.add(`${lbf.branchCode}_${lbf.interCityIntraCity}|${lbf.branchCode}${typeDisplay}`);
+                }
+            });
+            // Add some generic branches for demonstration if not already present
+            if (!branchOptions.has('HO_Inter-City|HO (Giao dịch khác chi nhánh, cùng địa bàn)')) branchOptions.add('HO_Inter-City|HO (Giao dịch khác chi nhánh, cùng địa bàn)');
+            if (!branchOptions.has('CN001_Intra-City|CN001 (Giao dịch khác địa bàn)')) branchOptions.add('CN001_Intra-City|CN001 (Giao dịch khác địa bàn)');
+            if (!branchOptions.has('CN002_N|CN002 (Giao dịch khác địa bàn)')) branchOptions.add('CN002_N|CN002 (Giao dịch khác địa bàn)');
+
+
+            const simBranchCodeData = Array.from(branchOptions).map(item => {
+                const [value, text] = item.split('|');
+                return { value: value, text: text };
+            });
+            populateSelect('simBranchCode', simBranchCodeData, 'value', 'text', true);
         }
 
         // --- Các hàm CRUD cho từng loại tham số phí ---
@@ -801,98 +807,6 @@
 
         function loadServiceFeePlans() {
             renderTable(serviceFeePlans, 'sfpTableBody', ['id', 'description', 'type', 'baseCurrency', 'convertAmountFields', 'exchangeRate'], { delete: deleteServiceFeePlan, edit: editServiceFeePlan });
-        }
-
-        // Fee Schedule
-        function addTierRow(tier = {}) {
-            const tiersContainer = document.getElementById('tiersContainer');
-            const newRow = document.createElement('div');
-            newRow.className = 'flex flex-wrap items-end gap-2 mb-2 p-2 border rounded-md bg-gray-50';
-            newRow.innerHTML = `
-                <div class="flex-1 min-w-[120px] form-group mb-0">
-                    <label class="text-sm">Tier Value:</label>
-                    <input type="number" class="tier-value" value="${tier.tierValue !== undefined ? tier.tierValue : ''}" step="0.01">
-                </div>
-                <div class="flex-1 min-w-[120px] form-group mb-0">
-                    <label class="text-sm">Tier Fee / %:</label>
-                    <input type="number" class="tier-fee-percent" value="${tier.tierFeePercent !== undefined ? tier.tierFeePercent : ''}" step="0.00001">
-                </div>
-                <div class="flex-1 min-w-[120px] form-group mb-0">
-                    <label class="text-sm">Base Fee:</label>
-                    <input type="number" class="base-fee" value="${tier.baseFee !== undefined ? tier.baseFee : ''}" step="0.01">
-                </div>
-                <button class="btn btn-danger btn-sm" onclick="this.parentNode.remove()">Xóa</button>
-            `;
-            tiersContainer.appendChild(newRow);
-        }
-
-        function addFeeSchedule() {
-            const id = document.getElementById('fsId').value.trim();
-            const name = document.getElementById('fsName').value.trim();
-            const typeOfSchedule = document.getElementById('fsTypeOfSchedule').value;
-            const typeOfTier = document.getElementById('fsTypeOfTier').value;
-
-            if (!id || !name) {
-                displayMessage("Vui lòng điền đầy đủ Mã Fee Schedule và Tên báo cáo.", "error", "fsTableBody");
-                return;
-            }
-
-            const tiers = [];
-            document.querySelectorAll('#tiersContainer > div').forEach(row => {
-                const tierValue = parseFloat(row.querySelector('.tier-value').value);
-                const tierFeePercent = parseFloat(row.querySelector('.tier-fee-percent').value);
-                const baseFee = parseFloat(row.querySelector('.base-fee').value);
-                if (!isNaN(tierValue) && (!isNaN(tierFeePercent) || !isNaN(baseFee))) {
-                    tiers.push({ tierValue, tierFeePercent: isNaN(tierFeePercent) ? 0 : tierFeePercent, baseFee: isNaN(baseFee) ? 0 : baseFee });
-                }
-            });
-
-            if (tiers.length === 0) {
-                displayMessage("Vui lòng thêm ít nhất một Tier cho Fee Schedule.", "error", "fsTableBody");
-                return;
-            }
-
-            // Sort tiers by tierValue
-            tiers.sort((a, b) => a.tierValue - b.tierValue);
-
-            const existingIndex = feeSchedules.findIndex(fs => fs.id === id);
-            const newFs = { id, name, typeOfSchedule, typeOfTier, tiers };
-
-            if (existingIndex > -1) {
-                feeSchedules[existingIndex] = newFs;
-                displayMessage("Cập nhật Fee Schedule thành công!", "success", "fsTableBody");
-            } else {
-                feeSchedules.push(newFs);
-                displayMessage("Thêm Fee Schedule thành công!", "success", "fsTableBody");
-            }
-            saveDataToLocalStorage();
-            loadFeeSchedules();
-            populateAllSelects();
-        }
-
-        function deleteFeeSchedule(index) {
-            const fsId = feeSchedules[index].id;
-            serviceFeePlans.forEach(sfp => {
-                sfp.fees.forEach(fee => {
-                    if (fee.feeScheduleId === fsId) fee.feeScheduleId = ''; // Clear direct assignment
-                });
-            });
-
-            feeSchedules.splice(index, 1);
-            saveDataToLocalStorage();
-            loadFeeSchedules();
-            populateAllSelects();
-            displayMessage("Đã xóa Fee Schedule và các liên kết liên quan.", "success", "fsTableBody");
-        }
-
-        function loadFeeSchedules() {
-            const formattedData = feeSchedules.map(fs => ({
-                id: fs.id,
-                name: fs.name,
-                typeOfTier: fs.typeOfTier,
-                tiers: fs.tiers.map(t => `[${formatNumber(t.tierValue)}: ${formatNumber(t.tierFeePercent)}% / ${formatNumber(t.baseFee)}]`).join(', ')
-            }));
-            renderTable(formattedData, 'fsTableBody', ['id', 'name', 'typeOfTier', 'tiers'], { delete: deleteFeeSchedule });
         }
 
         // --- Linked Transaction Code management within SFP ---
@@ -986,7 +900,7 @@
             const tcId = document.getElementById('assignTcId').value;
             const chargeOption = document.getElementById('assignChargeOption').value;
             const fixedAmount = parseFloat(document.getElementById('assignFixedAmount').value) || 0;
-            const feeScheduleId = document.getElementById('assignFsId').value;
+            // const feeScheduleId = document.getElementById('assignFsId').value; // Removed fee schedule
             const feePercent = parseFloat(document.getElementById('assignFeePercent').value) || 0;
             const minimumAmountAtFee = parseFloat(document.getElementById('assignMinFee').value) || 0;
             const maximumAmountAtFee = parseFloat(document.getElementById('assignMaxFee').value) || 0;
@@ -1013,7 +927,7 @@
                 transactionCodeId: tcId, // Direct transaction code
                 chargeOption,
                 fixedAmount,
-                feeScheduleId,
+                // feeScheduleId, // Removed fee schedule
                 feePercent,
                 minimumAmountAtFee,
                 maximumAmountAtFee
@@ -1046,14 +960,14 @@
             const formattedData = [];
             serviceFeePlans.forEach(sfp => {
                 sfp.fees.forEach((fee, feeIndex) => {
-                    const fs = feeSchedules.find(f => f.id === fee.feeScheduleId);
+                    // const fs = feeSchedules.find(f => f.id === fee.feeScheduleId); // Removed fee schedule
                     
                     formattedData.push({
                         sfpId: sfp.id,
                         tcId: fee.transactionCodeId, // Display transaction code
                         chargeOption: fee.chargeOption,
                         fixedAmount: fee.fixedAmount,
-                        feeSchedule: fs ? fs.id : 'N/A',
+                        // feeSchedule: fs ? fs.id : 'N/A', // Removed fee schedule
                         feePercent: fee.feePercent,
                         minMaxFee: `${formatNumber(fee.minimumAmountAtFee)}/${formatNumber(fee.maximumAmountAtFee)}`,
                         _sfpId: sfp.id, // For delete action
@@ -1063,7 +977,7 @@
             });
 
             renderTable(formattedData, 'assignedFeesTableBody',
-                ['sfpId', 'tcId', 'chargeOption', 'fixedAmount', 'feeSchedule', 'feePercent', 'minMaxFee'],
+                ['sfpId', 'tcId', 'chargeOption', 'fixedAmount', 'feePercent', 'minMaxFee'], // Updated columns
                 { delete: (index) => deleteAssignedFee(formattedData[index]._sfpId, formattedData[index]._feeIndex) }
             );
         }
@@ -1149,8 +1063,16 @@
             const simAmount = parseFormattedNumber(document.getElementById('simAmount').value);
             const simCurrency = document.getElementById('simCurrency').value;
             const simCustomerType = document.getElementById('simCustomerType').value;
-            const simBranchCode = document.getElementById('simBranchCode').value.trim();
-            const simInterCityIntraCity = document.getElementById('simInterCityIntraCity').value;
+            
+            const simBranchCodeRaw = document.getElementById('simBranchCode').value;
+            let simBranchCode = '';
+            let simInterCityIntraCity = '';
+
+            if (simBranchCodeRaw) {
+                const parts = simBranchCodeRaw.split('_');
+                simBranchCode = parts[0];
+                simInterCityIntraCity = parts[1];
+            }
 
             if (!simTranCode || isNaN(simAmount) || simAmount < 0) {
                 displayMessage("Vui lòng chọn Mã Giao Dịch và nhập Số tiền Giao Dịch hợp lệ.", "error");
@@ -1197,30 +1119,11 @@
                     if (feeRule.fixedAmount > 0) {
                         currentSfpRuleFee = feeRule.fixedAmount;
                         sfpFeeDetail.push(`  - Phí cố định: ${formatNumber(currentSfpRuleFee)} VND.`);
-                    } else if (feeRule.feeScheduleId) {
-                        const fs = feeSchedules.find(f => f.id === feeRule.feeScheduleId);
-                        if (fs) {
-                            const { fee: calculatedFsFee, tierInfo } = calculateFeeFromSchedule(simAmount, fs);
-                            currentSfpRuleFee = calculatedFsFee;
-                            sfpFeeDetail.push(`  - Áp dụng Fee Schedule "${fs.name}" (${fs.id}).`);
-                            if (tierInfo) {
-                                sfpFeeDetail.push(`    - Số tiền giao dịch ${formatNumber(simAmount)} VND nằm trong mức (tier) có giá trị từ ${formatNumber(tierInfo.tierValue)}.`);
-                                if (tierInfo.tierFeePercent > 0) {
-                                    sfpFeeDetail.push(`    - Tính phí phần trăm: ${formatNumber(simAmount)} VND * ${(tierInfo.tierFeePercent * 100).toFixed(3)}% = ${formatNumber(simAmount * tierInfo.tierFeePercent)} VND.`);
-                                }
-                                if (tierInfo.baseFee > 0) {
-                                    sfpFeeDetail.push(`    - Cộng thêm phí cơ sở (Base Fee): ${formatNumber(tierInfo.baseFee)} VND.`);
-                                }
-                            }
-                            sfpFeeDetail.push(`  - Tổng phí từ Fee Schedule: ${formatNumber(currentSfpRuleFee)} VND.`);
-                        } else {
-                            sfpFeeDetail.push(`  - Lỗi: Không tìm thấy Fee Schedule với ID "${feeRule.feeScheduleId}".`);
-                        }
-                    } else if (feeRule.feePercent > 0) {
+                    } else if (feeRule.feePercent > 0) { // Only direct percentage now
                         currentSfpRuleFee = simAmount * feeRule.feePercent;
                         sfpFeeDetail.push(`  - Phí phần trăm: ${formatNumber(simAmount)} VND * ${(feeRule.feePercent * 100).toFixed(3)}% = ${formatNumber(currentSfpRuleFee)} VND.`);
                     } else {
-                        sfpFeeDetail.push(`  - Không có loại phí cố định, theo Fee Schedule, hoặc phần trăm phí nào được cấu hình trực tiếp cho quy tắc này.`);
+                        sfpFeeDetail.push(`  - Không có loại phí cố định hoặc phần trăm phí nào được cấu hình trực tiếp cho quy tắc này.`);
                     }
 
                     // Apply min/max for SFP fee
@@ -1327,31 +1230,7 @@
             `, "success");
         }
 
-        function calculateFeeFromSchedule(amount, feeSchedule) {
-            let fee = 0;
-            let appliedTier = null;
-
-            if (!feeSchedule || !feeSchedule.tiers || feeSchedule.tiers.length === 0) {
-                return { fee: 0, tierInfo: null };
-            }
-
-            // Tiers are assumed to be sorted by tierValue
-            for (let i = 0; i < feeSchedule.tiers.length; i++) {
-                const currentTier = feeSchedule.tiers[i];
-                const nextTier = feeSchedule.tiers[i + 1];
-
-                if (feeSchedule.typeOfTier === "Percent of Transaction Amount") {
-                    if (amount >= currentTier.tierValue && (!nextTier || amount < nextTier.tierValue)) {
-                        fee = (amount * currentTier.tierFeePercent) + currentTier.baseFee;
-                        appliedTier = currentTier;
-                        break;
-                    }
-                }
-                // Add logic for other Type of Tier if needed (e.g., "Transaction or Per Item Count", "Account Balance")
-                // For this demo, we only implement "Percent of Transaction Amount"
-            }
-            return { fee: fee, tierInfo: appliedTier };
-        }
+        // Removed Fee Schedule related function: calculateFeeFromSchedule
 
         // --- Tab functionality ---
         function showTab(tabId, clickedButton, tabNavId) {
@@ -1381,7 +1260,7 @@
             populateAllSelects();
 
             // Pre-populate demo data if local storage is empty
-            if (serviceFeePlans.length === 0 && feeSchedules.length === 0 && locationBasedFees.length === 0) {
+            if (serviceFeePlans.length === 0 && locationBasedFees.length === 0) { // Removed feeSchedules check
                 // Service Fee Plan
                 serviceFeePlans.push({
                     id: 'PHI_NOP_TIEN_KHCN',
@@ -1404,38 +1283,6 @@
                     linkedTransactionCodes: []
                 });
 
-                // Fee Schedule
-                feeSchedules.push({
-                    id: 'FS_NOP_TIEN_TIER',
-                    name: 'Phí Nộp Tiền Theo Mức',
-                    typeOfSchedule: 'Cumulative',
-                    typeOfTier: 'Percent of Transaction Amount',
-                    tiers: [
-                        { tierValue: 0.00, tierFeePercent: 0.00, baseFee: 5000.00 }, // < 100tr: 5000 VND fixed
-                        { tierValue: 100000000.00, tierFeePercent: 0.00005, baseFee: 0.00 } // >= 100tr: 0.005%
-                    ]
-                });
-                feeSchedules.push({
-                    id: 'FS_RUT_TIEN_USD_TIER',
-                    name: 'Phí Rút Tiền USD Theo Mức',
-                    typeOfSchedule: 'Cumulative',
-                    typeOfTier: 'Percent of Transaction Amount',
-                    tiers: [
-                        { tierValue: 0.00, tierFeePercent: 0.00, baseFee: 2.00 }, // < 1000 USD: 2 USD fixed
-                        { tierValue: 1000.00, tierFeePercent: 0.001, baseFee: 0.00 }, // >= 1000 USD: 0.1%
-                        { tierValue: 10000.00, tierFeePercent: 0.0005, baseFee: 5.00 } // >= 10000 USD: 0.05% + 5 USD base
-                    ]
-                });
-                feeSchedules.push({
-                    id: 'FS_RUT_TIEN_CO_DINH',
-                    name: 'Phí Rút Tiền Cố Định',
-                    typeOfSchedule: 'Cumulative',
-                    typeOfTier: 'Percent of Transaction Amount', // Type doesn't matter for fixed, but needs to be one
-                    tiers: [
-                        { tierValue: 0.00, tierFeePercent: 0.00, baseFee: 10000.00 } // Fixed 10,000 VND
-                    ]
-                });
-
                 // --- Demo Data for Linked Transaction Codes and Fees (Service Fee Plan) ---
                 const sfpDeposit = serviceFeePlans.find(s => s.id === 'PHI_NOP_TIEN_KHCN');
                 if (sfpDeposit) {
@@ -1448,8 +1295,7 @@
                     sfpDeposit.fees.push({
                         transactionCodeId: 'ZDDC',
                         chargeOption: 'Direct Charge at Time of Service',
-                        fixedAmount: 0,
-                        feeScheduleId: 'FS_NOP_TIEN_TIER',
+                        fixedAmount: 5000, // Example fixed fee
                         feePercent: 0,
                         minimumAmountAtFee: 0,
                         maximumAmountAtFee: 500000.00
@@ -1468,9 +1314,8 @@
                         transactionCodeId: 'ZDWC',
                         chargeOption: 'Direct Charge at Time of Service',
                         fixedAmount: 0,
-                        feeScheduleId: 'FS_RUT_TIEN_USD_TIER',
-                        feePercent: 0,
-                        minimumAmountAtFee: 0,
+                        feePercent: 0.001, // Example 0.1% fee
+                        minimumAmountAtFee: 2,
                         maximumAmountAtFee: 75.00
                     });
                 }
@@ -1490,24 +1335,46 @@
                 locationBasedFees.push({
                     interCityIntraCity: 'Intra-City',
                     branchCode: 'CN001',
-                    customerSubType: '', // Applies to all customer types
-                    transactionCode: 'ZDWC',
-                    currencyCode: 'USD',
-                    fixedAmount: 0,
-                    feePercentage: 0.0002, // 0.02%
-                    minFee: 1,
-                    maxFee: 10
+                    customerSubType: '02', // Matches '02 - Hộ gia đình'
+                    transactionCode: 'ZDDC', // Matches 'ZDDC'
+                    currencyCode: 'VND', // Matches 'VND'
+                    fixedAmount: 3000, // Example fixed fee
+                    feePercentage: 0,
+                    minFee: 0,
+                    maxFee: 0
                 });
                 locationBasedFees.push({
                     interCityIntraCity: 'N',
-                    branchCode: '', // Applies to all branches
+                    branchCode: 'CN002',
                     customerSubType: '03',
-                    transactionCode: 'ZDDC',
+                    transactionCode: 'ZDWC',
                     currencyCode: 'VND',
                     fixedAmount: 0,
                     feePercentage: 0.0001, // 0.01%
                     minFee: 500,
                     maxFee: 5000
+                });
+                locationBasedFees.push({
+                    interCityIntraCity: 'Inter-City',
+                    branchCode: 'CN003',
+                    customerSubType: '02',
+                    transactionCode: 'ZDWC',
+                    currencyCode: 'VND',
+                    fixedAmount: 1500,
+                    feePercentage: 0,
+                    minFee: 0,
+                    maxFee: 0
+                });
+                locationBasedFees.push({
+                    interCityIntraCity: 'Intra-City',
+                    branchCode: 'HO',
+                    customerSubType: '03',
+                    transactionCode: 'ZDWC',
+                    currencyCode: 'VND',
+                    fixedAmount: 0,
+                    feePercentage: 0.0003,
+                    minFee: 0,
+                    maxFee: 20000
                 });
 
 
@@ -1530,7 +1397,7 @@
 
         function renderAllTables() {
             loadServiceFeePlans();
-            loadFeeSchedules();
+            // loadFeeSchedules(); // Removed
             loadAssignedFees();
             loadLinkedTransactionCodesForSFP(); // Ensure this is called to update the linked TC table
             loadLocationBasedFees(); // Load new Location Based Fees table
