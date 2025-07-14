@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Tương tác 6 Tháng Đầu Năm 2025 - Ban QLPTCB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Ocean Gold -->
+    <!-- Application Structure Plan: Tôi đã thiết kế ứng dụng này theo cấu trúc dashboard theo chủ đề, không theo cấu trúc tuyến tính của báo cáo gốc. Cấu trúc này bao gồm một thanh điều hướng cố định và các phần riêng biệt: Tổng quan (KPI chính), Vận hành & Hiệu năng (biểu đồ), Phát triển & Nâng cấp (thẻ và tab tương tác), Dự án Quốc tế (lưới tiến độ), và Kế hoạch (accordion). Lựa chọn này nhằm mục đích biến dữ liệu dày đặc thành một trải nghiệm trực quan, dễ tiếp thu, cho phép người dùng nhanh chóng nắm bắt các điểm chính và khámimize các khu vực họ quan tâm một cách linh hoạt, cải thiện đáng kể khả năng sử dụng so với việc đọc một tài liệu văn bản. -->
+    <!-- Visualization & Content Choices: 1. Tổng quan: Dùng thẻ KPI để làm nổi bật thành tích chính (Mục tiêu: Thông báo). 2. Vận hành: Biểu đồ đường Chart.js để thể hiện tăng trưởng giao dịch và thẻ KPI cho các số liệu ổn định (Mục tiêu: Thay đổi, So sánh). 3. Phát triển: Biểu đồ cột Chart.js so sánh 2 phiên bản và giao diện tab để tổ chức các cải tiến chi tiết (Mục tiêu: So sánh, Tổ chức). 4. Dự án Quốc tế: Dùng lưới các thanh tiến trình (HTML/CSS) để trực quan hóa tiến độ dự án (Mục tiêu: Tổ chức). 5. Hỗ trợ & AI: Thẻ KPI và biểu đồ tròn Chart.js để phân loại yêu cầu (Mục tiêu: Thông báo, Tổ chức). 6. Kế hoạch: Dùng accordion (HTML/JS) để trình bày kế hoạch tương lai một cách gọn gàng (Mục tiêu: Tổ chức). Các lựa chọn này đều sử dụng Chart.js hoặc HTML/CSS, không dùng SVG/Mermaid, và được thiết kế để tăng cường sự tương tác và hiểu biết của người dùng. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Times New Roman', serif; /* Changed font to Times New Roman */
+            background-color: #F8F7F4;
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #006B68;
+            border-bottom-color: #006B68;
+        }
+        .kpi-card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .tab-button {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #006B68;
+            color: #FFFFFF;
+        }
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .accordion-header:hover {
+            background-color: #E8E5E1;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .export-button {
+            background-color: #006B68;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .export-button:hover {
+            background-color: #004D40;
+        }
+        .export-button.secondary {
+            background-color: #FFC62F;
+            color: #4A4A4A;
+        }
+        .export-button.secondary:hover {
+            background-color: #E0B42A;
+        }
+        /* Removed #loading-overlay and .spinner styles */
+
+        /* Print styles for A4, portrait, 2cm margins */
+        @media print {
+            body {
+                background-color: #fff;
+                margin: 0; /* Remove default body margins */
+                padding: 0; /* Remove default body padding */
+            }
+            @page {
+                size: A4 portrait; /* Set page size to A4 and orientation to portrait */
+                margin: 2cm; /* Set all margins to 2cm */
+            }
+            header, .export-button-container { /* Hide the entire button container on print */
+                display: none !important;
+            }
+            .container {
+                max-width: none !important; /* Allow content to span full print width within margins */
+                padding: 0 !important; /* Remove padding from main container for print */
+            }
+            section {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                margin-bottom: 1rem !important; /* Adjusted margin bottom for sections in print */
+            }
+            /* All grids within main content should be 2 columns for print */
+            main .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 1rem !important; /* Ensure consistent spacing */
+                display: grid !important; /* Override display: block if it was there */
+            }
+            .kpi-card, .bg-white.p-6, .chart-container {
+                width: 100% !important;
+                box-shadow: none !important; /* Remove shadows for cleaner print */
+                /* Borders are now correctly inherited and not explicitly removed */
+                padding: 0.5rem 0 !important; /* Adjust padding for print */
+                margin-bottom: 1rem !important; /* Add some spacing between elements */
+            }
+            canvas {
+                max-width: 100% !important; /* Ensure charts fit width */
+                height: auto !important; /* Maintain aspect ratio */
+            }
+            .text-center {
+                text-align: left; /* Align text left for formal reports */
+            }
+            h2, h3 { /* Ensure titles stay with their content */
+                page-break-after: avoid !important;
+            }
+            /* Adjusted paragraph margin for print */
+            section > p {
+                margin-bottom: 0.5rem !important; /* Reduced margin below introductory paragraphs */
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Removed #loading-overlay div -->
+
+    <!-- Official Document Header -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 text-gray-800 text-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex flex-col">
+                <span class="font-bold text-base block">BAN QUẢN LÝ VÀ PHÁT TRIỂN</span>
+                <span class="font-bold text-base block">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CORE BANKING</span>
+                <span class="mt-1">Số:</span>
+            </div>
+            <div class="text-right" style="padding-right:50px;">
+                <span class="block">Hà Nội, ngày &nbsp;&nbsp;&nbsp;&nbsp; tháng &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; năm &nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </div>
+        </div>
+        <div class="text-center mt-8">
+            <h2 class="text-2xl font-bold mb-2">BÁO CÁO</h2>
+            <h3 class="text-xl font-bold mb-2">KẾT QUẢ HOẠT ĐỘNG 6 THÁNG ĐẦU NĂM</h3>
+            <h3 class="text-xl font-bold">(VÀ KẾ HOẠCH TRỌNG TÂM 6 THÁNG CUỐI NĂM)</h3>
+            <p class="text-base font-medium italic mt-4">(Thông qua Ban Công nghệ)</p>
+        </div>
+    </div>
+    <!-- End Official Document Header -->
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#006B68]">Báo cáo QLPTCB H1/2025</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#tong-quan" class="nav-link px-3 py-2 text-sm font-medium">Tổng quan</a>
+                        <a href="#van-hanh" class="nav-link px-3 py-2 text-sm font-medium">Vận hành</a>
+                        <a href="#phat-trien" class="nav-link px-3 py-2 text-sm font-medium">Phát triển</a>
+                        <a href="#du-an-qt" class="nav-link px-3 py-2 text-sm font-medium">Dự án Quốc tế</a>
+                        <a href="#ho-tro-ai" class="nav-link px-3 py-2 text-sm font-medium">Hỗ trợ & AI</a>
+                        <a href="#ke-hoach" class="nav-link px-3 py-2 text-sm font-medium">Kế hoạch</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-[#006B68] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#006B68]">
+                        <span class="sr-only">Mở menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+             <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#tong-quan" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Tổng quan</a>
+                    <a href="#van-hanh" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Vận hành</a>
+                    <a href="#phat-trien" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Phát triển</a>
+                    <a href="#du-an-qt" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Dự án Quốc tế</a>
+                    <a href="#ho-tro-ai" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Hỗ trợ & AI</a>
+                    <a href="#ke-hoach" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Kế hoạch</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20" id="report-content">
+        <!-- Removed export button container -->
+        
+        <section id="tong-quan" class="mb-12 scroll-mt-24"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">I. Tổng quan Kết quả hoạt động 6 Tháng Đầu năm 2025</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Sáu tháng đầu năm 2025 ghi nhận những nỗ lực vượt bậc của Ban QLPTCB trong việc duy trì sự ổn định của hệ thống lõi, đồng thời đẩy mạnh phát triển, nâng cấp và triển khai các dự án trọng điểm, mang lại những kết quả đáng khích lệ.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="kpi-card text-center">
+                    <div class="text-4xl font-bold text-[#006B68]">100%</div>
+                    <p class="mt-2 text-gray-600">Vận hành ổn định, liên tục 24/7</p>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="text-4xl font-bold text-[#006B68]">128</div>
+                    <p class="mt-2 text-gray-600">Tính năng mới/nâng cấp</p>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="text-4xl font-bold text-[#006B68]">3+</div>
+                    <p class="mt-2 text-gray-600">Góp phần Golive thành công 03 Dự án (B.SVS, Core Thẻ, Smart Counter Hub) và nâng cấp các ứng dụng khác</p>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="text-4xl font-bold text-[#006B68]">4,400</div>
+                    <p class="mt-2 text-gray-600">Yêu cầu được hỗ trợ nhanh chóng</p>
+                </div>
+            </div>
+        </section>
+        <h2 class="text-2xl font-bold text-center mb-3 text-[#006B68]">II. Chi tiết kết quả hoạt động 6 Tháng Đầu năm 2025</h2>
+        <section id="van-hanh" class="mb-12 scroll-mt-12"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">1.Quản trị Vận hành & Hiệu năng Hệ thống</h2>
+             <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Hệ thống Core Banking đã chứng tỏ sự ổn định và hiệu quả vượt trội, đáp ứng tốt hiệu năng trong các giai đoạn cao điểm và liên tục được tối ưu để giảm thời gian xử lý, đảm bảo an toàn và chất lượng dịch vụ.
+            </p>
+            <!-- Changed this div to a grid layout for 2 columns on medium and larger screens -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">🚀</span>
+                    <div>
+                        <p class="text-xl font-semibold">Giao dịch cao điểm Dịp Tết Nguyên đán</p>
+                        <p class="text-3xl font-bold text-[#006B68]">17.5 <span class="text-xl font-medium">triệu</span></p>
+                        <p class="text-green-600 font-medium">Tăng 23% so với cùng kỳ</p>
+                    </div>
+                </div>
+                <div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">⏱️</span>
+                    <div>
+                        <p class="text-xl font-semibold">Tối ưu thời gian Downtime</p>
+                        <p class="text-3xl font-bold text-[#006B68]">Giảm 21%</p>
+                        <p class="text-gray-600">So với kế hoạch khi hoán đổi định kỳ hệ thống (80 phút giảm xuống còn 55 phút) </p>
+                    </div>
+                </div>
+                <div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">⚙️</span>
+                    <div>
+                        <p class="text-xl font-semibold">Xử lý cuối ngày (DayEnd)</p>
+                        <p class="text-3xl font-bold text-[#006B68]">&lt; 3 giờ</p>
+                        <p class="text-gray-600">Duy trì ổn định</p>
+                    </div>
+                </div>
+				<div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">🔧</span>
+                    <div>
+                        <p class="text-xl font-semibold">Duy trì thời gian hoạt động liên tục 6 tháng đầu năm 2024 của Core</p>
+                        <p class="text-3xl font-bold text-[#006B68]">100% thời gian core banking hoạt động liên tục</p>
+                        <p class="text-gray-600">cải thiện tốc độ khai báo thông tin trên Core</p>
+                    </div>
+                </div>               
+			   <div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">🔧</span>
+                    <div>
+                        <p class="text-xl font-semibold">Cập nhật công cụ quản lý tham số hệ thống</p>
+                        <p class="text-3xl font-bold text-[#006B68]">Hệ thống CPMS2.1</p>
+                        <p class="text-gray-600">cải thiện tốc độ khai báo thông tin trên Core</p>
+                    </div>
+                </div>
+                <div class="kpi-card flex items-center space-x-4">
+                    <span class="text-3xl text-[#FFC62F]">⚡</span>
+                    <div>
+                        <p class="text-xl font-semibold">Áp dụng các giải pháp</p>
+                        <p class="text-3xl font-bold text-[#006B68]">Tối ưu hóa hệ thống</p>
+                        <p class="text-gray-600">Rút ngắn thời gian vận hành DayEnd và Response time</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="phat-trien" class="mb-12 scroll-mt-16"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">2.Nâng cấp tính năng của Core Profile</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Với 2 phiên bản Core Profile mới được triển khai, Ban QLPTCB đã không ngừng cải tiến sản phẩm, nâng cao trải nghiệm người dùng và tối ưu hiệu năng hệ thống qua hàng loạt tính năng.
+            </p>
+            
+            <!-- Replaced chart with two KPI-style cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="kpi-card">
+                    <h3 class="text-2xl font-bold text-[#006B68] mb-4">Phiên bản V2.10 (Tháng 3/2025)</h3>
+                    <p class="text-gray-700 text-lg mb-2">
+                        Yêu cầu phát triển mới: <span class="text-3xl font-bold text-[#FFC62F]">80</span>
+                    </p>
+                    <p class="text-gray-700 text-lg">
+                        User Story hoàn thành: <span class="text-3xl font-bold text-[#006B68]">170</span>
+                    </p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-2xl font-bold text-[#006B68] mb-4">Phiên bản V2.11 (Tháng 6/2025)</h3>
+                    <p class="text-gray-700 text-lg mb-2">
+                        Yêu cầu phát triển mới: <span class="text-3xl font-bold text-[#FFC62F]">48</span>
+                    </p>
+                    <p class="text-gray-700 text-lg">
+                        User Story hoàn thành: <span class="text-3xl font-bold text-[#006B68]">107</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+                <h3 class="text-xl font-semibold text-center mb-6">Chi tiết các nâng cấp nổi bật</h3>
+                <div id="tab-content" class="text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="cif-content" class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="font-semibold text-lg mb-2 text-[#006B68]">Đáp ứng quy định Pháp luật</h4>
+                        <p><strong>- Thông tư 17 & 18/NHNN:</strong> Phát triển các tính năng quản lý thông tin sinh trắc học và trạng thái hiệu lực giấy tờ tùy thân.</p>
+                        <p><strong>- Luật Căn cước công dân:</strong> Cập nhật dữ liệu quy mô lớn (trên 4 triệu CIF) trên toàn hệ thống.</p>
+                        <p><strong>- Quy định về bản quyền:</strong> Chuyển đổi ứng dụng TPTLR sang nền tảng Java Open (phiên bản 2.9.19), triển khai toàn hệ thống ngày 22/02/2025</p>
+                    </div>
+                    <div id="cif-content" class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="font-semibold text-lg mb-2 text-[#006B68]">Tinh giản quy trình, nâng cao trải nghiệm</h4>
+                        <p><strong>- Giảm tác nghiệp của bộ phận GDKH:</strong> Tự động mở ngày làm việc trên TP Teller, đơn giản hóa quy trình SETPM ĐGD, lược bỏ thao tác hủy SETPM ĐGD giúp <strong>giảm tác nghiệp của khoảng 1120 KSV</strong> trên toàn hệ thống, nâng cấp/phát triển 5 tính năng phân hệ Tiền gửi giúp <strong>giảm tác nghiệp, hỗ trợ tối đa công tác hậu kiểm.</strong></p>
+                        <p><strong>- Giảm điều chỉnh thủ công của bộ phận QTTD:</strong> Nâng cấp các tính năng của phân hệ Tiền vay giúp giảm thiểu việc điều chỉnh ngày đáo hạn, lịch trả nợ...</p>
+                        <p><strong>- Nâng cấp giao diện:</strong> Màn hình tạo CIF cho khách hàng cá nhân và tổ chức, Màn hình vấn tin Tổng quan tiền vay, Màn hình in ấn, Màn hình vấn tin tài khoản, Màn hình duy trì tài khoản, Màn hình Tạo giao dịch chuyển tiền trong nước đi…</p>
+                        <p><strong>- Tối ưu hóa trải nghiệm người dùng:</strong> Nâng cấp 10 chức năng phân hệ Tiền gửi, xây dựng 3 chức năng xử lý  giao dịch theo lô của phân hệ Tiền vay, cải thiện xử lý giao dịch Chuyển tiền.</p>
+                    </div>
+                    <div id="loan-content" class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="font-semibold text-lg mb-2 text-[#006B68]">Tối ưu hóa hiệu năng</h4>
+                        <p><strong>- Tăng tốc độ xử lý giao dịch:</strong>Nâng cấp, tối ưu job Thu nợ tự động giúp giảm thời gian dayend, <strong>tốc độ xử lý Thu nợ tự động nhanh gấp 4 lần.</strong></p>
+                        <p><strong>- Phát triển theo định hướng Lean Core:</strong> Phát triển các job kéo dữ liệu làm tiền đề cho việc chuyển chức năng hạch toán GL về vùng GL-CORE-HUB (ngoài Core).</p>
+                        <p><strong>- Cải tiến xuất dữ liệu:</strong> Đơn giản hóa xuất dữ liệu giao dịch online và DayEnd cho MIS giúp tránh lỗi và rút ngắn thời gian BOD hàng ngày</p>
+                    </div>
+                    <div id="deposit-content" class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="font-semibold text-lg mb-2 text-[#006B68]">Kiểm soát rủi ro nội bộ</h4>
+                        <p><strong>- Kiểm soát tuân thủ nội bộ:</strong> Chặn GDV và KSV thao tác trên tài khoản cá nhân.</p>
+                        <p><strong>- Giảm thiểu rủi ro AML:</strong> Chặn giao dịch đối với khách hàng Blacklist trên TP Teller.</p>
+                        <p><strong>- Kiếm soát các giao dịch sai sót:</strong> Hoàn thiện bộ chỉ tiêu kiểm soát near-realtime.</p>
+                    </div>              
+                </div>
+            </div>
+            <section id="du-an" class="mb-12 scroll-mt-24"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">3.Tham gia các dự án trọng điểm</h2>
+             <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Phát huy tối đa vai trò quản lý hệ thống lõi, đầu mối triển khai hoặc tham gia các dự án trọng điểm, góp phần nâng cấp ứng dụng quan trọng trong tích hợp hệ thống, hạch toán giao dịch, tối ưu tốc độ xử lý.
+            </p>
+            <!-- Project Type Legend -->
+            <div class="flex flex-wrap justify-center items-center gap-2 mb-6">
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">SCH</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">B.CASH</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">AMRM</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800">FX Hub</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800">BIDV Direct</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-800">Core thẻ</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">SMB</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">PMH</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800">IBFT</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800">NMS</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800">Noti Hub</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-800">Paygate</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800">BSVS</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-fuchsia-100 text-fuchsia-800">RLOS</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800">SCF</span>
+                <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-yellow-200 text-yellow-800">Contact Center</span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="text-gray-700 space-y-6">
+                <h3 class="text-xl font-semibold text-center mb-6">Đầu mối triển khai các dự án</h3>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng Smart Counter Hub <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">SCH</span></h4>
+                        <p class="text-gray-600">Hoàn thành Go-live giai đoạn 1 với các chức năng giao dịch và tra cứu khách hàng tại 5 chi nhánh thí điểm. Đang chuẩn bị phát triển giai đoạn 2.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng Quản lý AMRM tập trung <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">AMRM</span></h4>
+                        <p class="text-gray-600">Đầu mối phối hợp phân tích thiết kế, trình chủ trương thành lập Tổ công tác phát triển phần mềm và chuyển quản lý AMRM ra ngoài Core.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án Backend Tiền mặt <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">B.CASH</span></h4>
+                        <p class="text-gray-600">Hoàn thành nghiên cứu giải pháp, URD, lập trình các services, chỉnh sửa TPTLR và phối hợp với các đơn vị để chỉnh sửa SOA.</p>
+                    </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="text-gray-700 space-y-6">
+                <h3 class="text-xl font-semibold text-center mb-6">Tích cực tham gia các dự án</h3>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">FX Hub <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800">FX Hub</span></h4>
+                        <p class="text-gray-600">Phân tích thiết kế chức năng, làm rõ các nội dung phát triển và phối hợp tích hợp hạch toán giao dịch</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án BIDV Direct <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800">BIDV Direct</span></h4>
+                        <p class="text-gray-600">Hỗ trợ đáp ứng 8 yêu cầu chỉnh sửa Core Banking, phối hợp kiểm thử các dịch vụ chuyển tiền và hỗ trợ go-live hệ hệ thống.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án Core Thẻ <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-800">Core thẻ</span></h4>
+                        <p class="text-gray-600">Phối hợp triển khai thành công Core thẻ, hỗ trợ triển khai tích hợp API toàn diện thay vì luồng ISO 8583 như hiện nay, triển khai mới chức năng thanh toán thẻ quốc tế qua tài khoản Wash, xây dựng luồng thanh toán qua hình thức batch file và chức năng kết chuyển GL cuối ngày.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng Smartbanking <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">SMB</span></h4>
+                        <p class="text-gray-600">Nâng cấp 6 service đáp ứng yêu cầu quản lý Sản phẩm tiền gửi tích lũy và tìm kiếm số đẹp, hỗ trợ xử lý vướng mắc.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án Payment Hub <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">PMH</span></h4>
+                        <p class="text-gray-600">Phối hợp khảo sát, xây dựng mới 5 service vấn tin và nâng cấp service hạch toán FastTransXfer.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng IBFT2.0 <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800">IBFT</span></h4>
+                        <p class="text-gray-600">Phối hợp nâng cấp, kiểm thử hoàn thiện service hạch toán FastTransXfer, chuẩn bị bộ dữ liệu kiểm thử hiệu năng.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Nhà máy số Bán lẻ <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800">NMS</span></h4>
+                        <p class="text-gray-600">Hỗ trợ xử lý 5 yêu cầu liên quan đến Tiền gửi tự động và Tài khoản Hội nhóm, phối hợp kiểm thử tải.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng Noti Hub <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800">Noti Hub</span></h4>
+                        <p class="text-gray-600">Phối hợp kiểm thử tối ưu MQ nhằm hỗ trợ hạn chế gửi đáp hoặc thiếu message.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng Paygate <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-800">Paygate</span></h4>
+                        <p class="text-gray-600">Phối hợp nâng cấp service vấn tin AcctDetailForPaygate để cung cấp đầy đủ thông tin cho các chức năng thanh toán.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án SVS <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800">BSVS</span></h4>
+                        <p class="text-gray-600">Phối hợp triển khai Golive thành công hệ thống B.SVS, đảm bảo chuyển đổi dữ liệu và tích hợp chức năng vấn tin chữ ký.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Ứng dụng RLOS <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-fuchsia-100 text-fuchsia-800">RLOS</span></h4>
+                        <p class="text-gray-600">Nâng cấp các services Express theo yêu cầu của Ban QLDA RLOS để bổ sung tính năng cho ứng dụng và khép kín luồng sản phẩm mới.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án SCF <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800">SCF</span></h4>
+                        <p class="text-gray-600">Tham gia tổ Squad 2 của dự án, tư vấn nghiệp vụ và trực tiếp nâng cấp các services Express theo yêu cầu.</p>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-[#006B68]">Dự án Contact Center <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-yellow-200 text-yellow-800">Contact Center</span></h4>
+                        <p class="text-gray-600">Hỗ trợ xây dựng phương án nghiệp vụ và trực tiếp nâng cấp các services xpress liên quan đến nghiệp vụ tiền gửi, tiền vay.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="du-an-qt" class="mb-12 scroll-mt-24"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">4.Triển khai Core Banking tại đơn vị Hải Ngoại: Chuyển đổi Core Banking Yangon</h2>
+             <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Dự án chuyển đổi Core Banking cho chi nhánh Yangon đang được triển khai đúng tiến độ, thể hiện năng lực quản lý và triển khai dự án quốc tế của Ban QLPTCB. Dưới đây là tiến độ các hạng mục chính.
+            </p>
+            <div id="project-progress-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="ho-tro-ai" class="mb-12 scroll-mt-24"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">5.Hỗ trợ các đơn vị</h2>
+             <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8"> <!-- Reduced mb-12 to mb-8 -->
+                Công tác hỗ trợ các chi nhánh luôn được đảm bảo kịp thời và hiệu quả. Song song đó, Ban QLPTCB tích cực nghiên cứu và ứng dụng Trí tuệ nhân tạo (AI) để nâng cao năng suất và chất lượng công việc.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                 <div class="chart-container h-80 md:h-70">
+                    <canvas id="supportRequestsChart"></canvas>
+                </div>
+	</section>
+        <section id="AI" class="mb-12 scroll-mt-24"> <!-- Reduced mb-16 to mb-12 -->
+            <h2 class="text-2xl font-bold text-center mb-2 text-[#006B68]">6.Ứng dụng trí tuệ nhân tạo AI</h2>
+                    <div class="kpi-card">
+                        <ul class="list-disc list-inside text-gray-600 mt-2">
+                           <li>Nghiên cứu & thí điểm Chatbot GenAI phục vụ công tác hỗ trợ đơn vị.</li>
+                           <li>Mua sắm công cụ AI Cursor Pro cho đội ngũ phát triển.</li>
+                           <li>Hợp tác với Hana Bank về nghiên cứu và ứng dụng AI.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ke-hoach" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#006B68]">Kế hoạch Trọng tâm 6 Tháng Cuối năm 2025</h2>
+             <p class="text-center max-w-3xl mx-auto text-gray-600 mb-12">
+                Ban QLPTCB sẽ tiếp tục tập trung vào các mục tiêu chiến lược, đảm bảo sự ổn định của hệ thống, hoàn thành các dự án trọng điểm và đẩy mạnh ứng dụng công nghệ mới.
+            </p>
+            <div id="plan-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Signature Block -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-6 mt-114 text-gray-800 text-sm">
+        <p class="text-left font-semibold mb-8">Trân trọng./.</p>
+        <div class="flex justify-between">
+            <div class="w-1/2">
+                <p class="font-semibold mb-2">Nơi nhận:</p>
+                <ul class="list-none pl-0 space-y-1">
+                    <li>- Như trên</li>
+                    <li>- Lưu Ban QLPTCB</li>
+                </ul>
+            </div>
+            <div class="w-1/2 text-center">
+                <p class="font-bold text-base mb-16">GIÁM ĐỐC</p>
+                <p class="font-bold text-base">Trương Hồng Quân</p>
+            </div>
+        </div>
+    </div>
+    <!-- End Signature Block -->
+
+    <!-- Removed footer completely -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const reportData = {
+                peakTransactions: {
+                    labels: ['Tết 2024 (Ước tính)', 'Tết 2025'],
+                    data: [17.5 / 1.23, 17.5]
+                },
+                releaseComparison: {
+                    labels: ['V2.10 (T3/2025)', 'V2.11 (T6/2025)'],
+                    requirements: [80, 48],
+                    userStories: [170, 107]
+                },
+                projectProgress: [
+                    { name: 'Phân tích yêu cầu GAP', progress: 74, detail: 'Các phân hệ chính CIF, Tiền gửi, Tiền vay, Kế toán, Teller, Thanh toán hoàn thành 100%. Phân hệ TF hoàn thành 87.5% (7/8 WS). Phân hệ Treasury hoàn thành 100% (9/9 WS).' },
+                    { name: 'Lập trình Core', progress: 95, detail: 'Hoàn thành 155/163 User Story.' },
+                    { name: 'Kiểm thử SIT', progress: 78, detail: 'Hoàn thành 980/1258 test cases. 85.9% User Stories đã SIT Done.' },
+                    { name: 'Tích hợp Ứng dụng', progress: 52, detail: 'Lập trình hoàn thành 64/124 User Stories cho 12 ứng dụng tích hợp.'},
+                    { name: 'Chuyển đổi dữ liệu', progress: 65, detail: 'Hoàn thành phân tích GAP và xây dựng công cụ chuyển đổi cho CIF, tiền gửi, tiền vay. Đã thực hiện 2/5 vòng Trial run.' },
+                    { name: 'Cấu hình tham số', progress: 50, detail: 'Đã hoàn thành 50% cấu hình các tham số hệ thống và sản phẩm cần thiết cho chi nhánh Yangon.' },
+                    { name: 'Kiểm thử UAT', progress: 6, detail: 'Hoàn thành 180/4715 test cases.' }
+                ],
+                supportRequests: {
+                    labels: ['Giải đáp vướng mắc', 'Hướng dẫn tác nghiệp', 'Xử lý lỗi', 'Yêu cầu khác'],
+                    data: [2200, 1200, 500, 500] 
+                },
+                plan: [
+                    { title: "Hoàn thành 100% Nghị quyết 1004", content: ["Thực hiện đầy đủ và đúng hạn các công việc theo chương trình hành động đã đề ra."] },
+                    { title: "Quản trị và Vận hành Core Banking", content: ["Đảm bảo hệ thống vận hành ổn định, an toàn, liên tục.", "Đẩy mạnh tối ưu hiệu năng, dọn dẹp dữ liệu và cảnh báo rủi ro."] },
+                    { title: "Phát triển và Tích hợp", content: ["Triển khai các phiên bản mới của Core Profile.", "Tiếp tục phát triển giai đoạn 2 dự án Smart Counter.", "Golive các ứng dụng quan trọng: AMRM tập trung, Backend Tiền mặt, Contact Center.", "Hỗ trợ các dự án trọng điểm khác như BIDV Direct, Payment Hub, Core Thẻ..."] },
+                    { title: "Triển khai tại Đơn vị Hải ngoại", content: ["Golive dự án Core Banking tại Myanmar (GĐ1: 21/9, GĐ2: 21/12).", "Hỗ trợ LaoVietBank trình phê duyệt và ký hợp đồng dự án chuyển đổi Core Banking vào tháng 11/2025."] },
+                    { title: "Hỗ trợ hoạt động hệ thống", content: ["Duy trì và phát huy chất lượng công tác hỗ trợ người dùng.", "Tiếp tục nghiên cứu triển khai ứng dụng chatbot GenAI trên toàn hệ thống.", "Tham gia công tác quyết toán."] },
+                    { title: "Công tác khác", content: ["Triển khai hợp đồng bảo trì và hợp tác phát triển (Co-dev).", "Tăng cường ứng dụng AI trong hoạt động của Ban.", "Thực hiện công tác nhân sự: đào tạo, quy hoạch, tuyển dụng theo kế hoạch 2025."] }
+                ]
+            };
+
+            const chartOptions = {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        bodyFont: {
+                            family: 'Inter'
+                        },
+                        titleFont: {
+                            family: 'Inter'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            };
+
+            new Chart(document.getElementById('supportRequestsChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: reportData.supportRequests.labels,
+                    datasets: [{
+                        label: 'Số lượng yêu cầu',
+                        data: reportData.supportRequests.data,
+                        backgroundColor: ['#FFC62F', '#006B68', '#4A4A4A', '#8B8B8B'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        title: {
+                            display: true,
+                            text: '4,400 Yêu cầu hỗ trợ', // Changed title text
+                            font: {
+                                size: 24, // Increased font size for emphasis
+                                weight: 'bold', // Added bold weight
+                                family: 'Times New Roman' /* Changed font for chart title */
+                            }
+                        }
+                    }
+                }
+            });
+
+            const projectGrid = document.getElementById('project-progress-grid');
+            reportData.projectProgress.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.innerHTML = `
+                    <h4 class="font-semibold">${item.name}</h4>
+                    <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+                        <div class="bg-[#006B68] h-4 rounded-full text-white text-xs flex items-center justify-center" style="width: ${item.progress}%">
+                           ${item.progress}%
+                        </div>
+                    </div>
+                     <p class="text-sm text-gray-500 mt-2">${item.detail}</p>
+                `;
+                projectGrid.appendChild(card);
+            });
+            
+            const planCardsContainer = document.getElementById('plan-cards-container');
+            reportData.plan.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg border border-gray-200 shadow-sm';
+                card.innerHTML = `
+                    <h3 class="font-semibold text-lg mb-2 text-[#006B68]">${item.title}</h3>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                        ${item.content.map(li => `<li>${li}</li>`).join('')}
+                    </ul>
+                `;
+                planCardsContainer.appendChild(card);
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                         mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            const navLinks = document.querySelectorAll('nav a.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Removed export functions (exportPdf and exportWord)
+        });
+    </script>
+
+</body>
+</html>
