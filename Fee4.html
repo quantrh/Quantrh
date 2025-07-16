@@ -182,6 +182,20 @@
                     { maPhi: 'DN5F', mucPhi: 'Thanh toán hoá đơn', cachTinhPhi: '0.05% (Min 2.000 VND/hóa đơn)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Thu hộ học phí: Min 5.000 VND.' },
                     { maPhi: 'DN11F', mucPhi: 'Phí quản lý Tài khoản Định danh', cachTinhPhi: '2.000 VND/tài khoản/tháng', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
                 ],
+                'Chính sách miễn giảm': {
+                    'theoPhanHang': [
+                        { stt: 1, phanKhuc: 'Khách hàng doanh nghiệp VVIP', gdChiNhanh: '100%', gdBanQLKH: '-' },
+                        { stt: 2, phanKhuc: 'Khách hàng doanh nghiệp VIP và tiềm năng', gdChiNhanh: '75%', gdBanQLKH: '100%' },
+                        { stt: 3, phanKhuc: 'Khách hàng doanh nghiệp thông thường', gdChiNhanh: '50%', gdBanQLKH: '100%' },
+                        { stt: 4, phanKhuc: 'Khách hàng doanh nghiệp mới', gdChiNhanh: '100%', gdBanQLKH: '-' },
+                        { stt: 5, phanKhuc: 'Khách hàng doanh nghiệp siêu nhỏ', ghiChu: 'Chỉ áp dụng chính sách ưu đãi theo các chương trình chung của hệ thống, không áp dụng chính sách miễn giảm theo khách hàng.' }
+                    ],
+                    'theoMucPhi': [
+                        { stt: 1, mucPhi: 'Các mục phí thuộc dòng phí Bảo lãnh', gdChiNhanh: '50%', gdBanQLKH: '100%' },
+                        { stt: 2, mucPhi: 'Phí Quản lý tài khoản, Phí phát hành nhanh thẻ dành cho KHDN, Phí thường niên thẻ năm đầu tiên dành cho KHDN', gdChiNhanh: '100%', gdBanQLKH: '-' },
+                        { stt: 3, mucPhi: 'Phí dịch vụ thẻ khác ngoài nội dung nêu tại mục 2', gdChiNhanh: '0%', gdBanQLKH: '100%' }
+                    ]
+                }
             },
             'Cá nhân': {
                 'Tổng quan': [],
@@ -314,6 +328,10 @@
                     { maPhi: 'CN962', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ MasterCard phát hành tại Việt Nam)', cachTinhPhi: '4.5% số tiện GD tối thiểu 60.000 VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
                     { maPhi: 'CN963', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ MasterCard phát hành tại nước ngoài)', cachTinhPhi: '4.5% sở hến GD tối thiểu 60.000 VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
                 ]
+                ,
+                'Chính sách miễn giảm': {
+                    'ghiChu': 'Thông tin chính sách miễn giảm phí cho khách hàng cá nhân sẽ được cập nhật sau. Vui lòng tham khảo các chính sách ưu đãi chung của BIDV.'
+                }
             }
         };
 
@@ -417,13 +435,16 @@
 
             if (currentCategory === 'Tổng quan') {
                 renderOverview(contentEl);
-            } else {
+            } else if (currentCategory === 'Chính sách miễn giảm') {
+                renderExemptionPolicy(contentEl);
+            }
+            else {
                 renderTable(contentEl);
             }
         }
 
         function renderOverview(container) {
-            const categories = Object.keys(feeData[currentSegment]).filter(k => k !== 'Tổng quan');
+            const categories = Object.keys(feeData[currentSegment]).filter(k => k !== 'Tổng quan' && k !== 'Chính sách miễn giảm');
             const dataCounts = categories.map(cat => feeData[currentSegment][cat].length);
             const totalFees = dataCounts.reduce((acc, count) => acc + count, 0);
 
@@ -594,6 +615,88 @@
                 (item.maPhi && item.maPhi.toLowerCase().includes(searchTerm))
             );
             populateTable(filteredData);
+        }
+
+        function renderExemptionPolicy(container) {
+            const policyData = feeData[currentSegment]['Chính sách miễn giảm'];
+            let htmlContent = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Chính sách miễn giảm phí (${currentSegment})</h2>
+                    <p class="text-slate-600 mb-6">Thông tin chi tiết về phân cấp thẩm quyền và chính sách miễn giảm phí áp dụng cho khách hàng ${currentSegment}.</p>
+            `;
+
+            if (currentSegment === 'Doanh nghiệp') {
+                // Render policy by customer segment
+                htmlContent += `
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">1. Phân cấp thẩm quyền theo phân hạng khách hàng</h3>
+                    <div class="table-responsive mb-8">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">STT</th>
+                                    <th scope="col" class="px-6 py-3">Phân khúc, phân hạng</th>
+                                    <th scope="col" class="px-6 py-3">Giám đốc Chi nhánh</th>
+                                    <th scope="col" class="px-6 py-3">Giám đốc Ban QLKH</th>
+                                    <th scope="col" class="px-6 py-3">Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                policyData.theoPhanHang.forEach(item => {
+                    htmlContent += `
+                                <tr class="bg-white border-b hover:bg-slate-50">
+                                    <td class="px-6 py-4">${item.stt || 'N/A'}</td>
+                                    <td class="px-6 py-4 font-semibold text-slate-900">${item.phanKhuc}</td>
+                                    <td class="px-6 py-4">${item.gdChiNhanh || 'N/A'}</td>
+                                    <td class="px-6 py-4">${item.gdBanQLKH || 'N/A'}</td>
+                                    <td class="px-6 py-4">${item.ghiChu || 'N/A'}</td>
+                                </tr>
+                    `;
+                });
+                htmlContent += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                // Render policy by specific fee item
+                htmlContent += `
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">2. Phân cấp thẩm quyền theo một số mục phí cụ thể</h3>
+                    <div class="table-responsive">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">STT</th>
+                                    <th scope="col" class="px-6 py-3">Mục phí</th>
+                                    <th scope="col" class="px-6 py-3">Giám đốc Chi nhánh</th>
+                                    <th scope="col" class="px-6 py-3">Giám đốc Ban QLKH</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                policyData.theoMucPhi.forEach(item => {
+                    htmlContent += `
+                                <tr class="bg-white border-b hover:bg-slate-50">
+                                    <td class="px-6 py-4">${item.stt || 'N/A'}</td>
+                                    <td class="px-6 py-4 font-semibold text-slate-900">${item.mucPhi}</td>
+                                    <td class="px-6 py-4">${item.gdChiNhanh || 'N/A'}</td>
+                                    <td class="px-6 py-4">${item.gdBanQLKH || 'N/A'}</td>
+                                </tr>
+                    `;
+                });
+                htmlContent += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (currentSegment === 'Cá nhân') {
+                htmlContent += `
+                    <p class="text-slate-700">${policyData.ghiChu}</p>
+                `;
+            }
+
+            htmlContent += `</div>`; // Close bg-white div
+            container.innerHTML = htmlContent;
         }
 
     </script>
