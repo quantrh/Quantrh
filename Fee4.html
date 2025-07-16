@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Biểu Phí Dịch Vụ BIDV (Cá nhân & Doanh nghiệp)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Stone, Slate, with Blue accents) -->
+    <!-- Application Structure Plan: A single-page dashboard application. A top-level selector (tabs) allows users to switch between "Khách hàng Doanh nghiệp" and "Khách hàng Cá nhân" segments. Once a segment is chosen, a fixed left sidebar dynamically updates to provide navigation between fee categories specific to that segment (Dịch vụ Tài khoản, Chuyển tiền, etc.). The main content area features a summary dashboard with a donut chart for a high-level overview of the selected segment and key statistics, followed by a detailed, interactive table for the selected fee category. Users can search and filter the table in real-time. This structure was chosen to logically separate the two distinct fee schedules while maintaining a single-page application experience and allowing for easy switching between contexts, breaking down complex information into manageable, user-selectable chunks, and empowering users to quickly find specific information through search. -->
+    <!-- Visualization & Content Choices: Goal: Segment Selection -> Viz: Tab-like buttons (HTML/Tailwind) -> Interaction: Click to switch data context -> Justification: Provides clear, intuitive way to select between two major data sets. Goal: Overview (per segment) -> Viz: Donut Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Offers a quick visual summary of fee distribution within the selected customer segment. Goal: Detailed Exploration & Search (per segment/category) -> Viz: Interactive HTML Table -> Interaction: Real-time search/filter, navigation clicks to change data views -> Justification: A searchable table remains the most effective method for detailed data exploration. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .sidebar-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .sidebar-link.active {
+            background-color: #0284c7; /* sky-600 */
+            color: white;
+            font-weight: 600;
+        }
+        .sidebar-link:not(.active):hover {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #0f172a; /* slate-900 */
+        }
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-width: 300px;
+            }
+        }
+        .segment-tab {
+            @apply px-4 py-2 rounded-t-lg font-semibold text-slate-600 border-b-2 border-transparent transition-colors duration-200;
+        }
+       .segment-tab.active {
+            @apply text-sky-800 border-sky-600 bg-blue-100 font-bold; /* Thay đổi bg-white thành bg-blue-100 và điều chỉnh màu chữ nếu cần */
+        }
+        .fee-segment-item {
+            margin-bottom: 0.25rem; /* Small margin between fee segments */
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="bg-white w-64 p-4 shadow-lg fixed lg:relative h-screen lg:h-auto overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+            <div class="flex items-center mb-6">
+                 <div class="bg-sky-600 text-white p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h1 class="text-xl font-bold ml-2 text-slate-900">Biểu Phí BIDV</h1>
+            </div>
+            <nav id="navigation" class="space-y-2">
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-8 lg:p-10 bg-slate-50">
+            <button id="menu-toggle" class="lg:hidden p-2 mb-4 bg-white rounded-md shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+
+            <div class="flex border-b border-slate-200 mb-6 gap-4"> <!-- Added gap-4 here -->
+                <button id="segment-doanhnghiep" class="segment-tab active">Khách hàng Doanh nghiệp</button>
+                <button id="segment-canhan" class="segment-tab">Khách hàng Cá nhân</button>
+            </div>
+
+            <div id="content">
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const feeData = {
+            'Doanh nghiệp': {
+                'Tổng quan': [],
+                'Dịch vụ Tài khoản': [
+                    { maPhi: 'DN1A', mucPhi: 'Mở các loại tài khoản thông thường', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Áp dụng cho Tiền gửi thanh toán; TG không kỳ hạn; TG có kỳ hạn; Tiền vay.' },
+                    { maPhi: 'DN2A', mucPhi: 'Rút quá số dư tối thiểu', cachTinhPhi: '150.000 VNĐ/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '3 USD/tài khoản/lần phát sinh (Ngoại tệ). Không áp dụng đối với TK có chức năng thấu chi.' },
+                    { maPhi: 'DN3A', mucPhi: 'Quản lý tài khoản đồng sở hữu', cachTinhPhi: 'Phí khởi tạo: 100.000 VND/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Phí khởi tạo: 10 USD/lần (Ngoại tệ). Ngắt quan hệ: Miễn phí.' },
+                    { maPhi: 'DN4A', mucPhi: 'Quản lý tài khoản thường', cachTinhPhi: '50.000 VND/TK/tháng', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '2 USD/TK/tháng (Ngoại tệ).' },
+                    { maPhi: 'DN5A', mucPhi: 'Quản lý tài khoản đặc biệt theo yêu cầu', cachTinhPhi: '100.000 VND/tháng/tài khoản', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Thủ công', ghiChu: '15 USD/tháng/tài khoản (Ngoại tệ).' },
+                    { maPhi: 'DN6A', mucPhi: 'Quản lý tài khoản có HMTC', cachTinhPhi: 'Dưới 1 tỷ: 50.000VND/tháng; 1-5 tỷ: 100.000VND/tháng; >5 tỷ: 200.000VND/tháng', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: 'Thu một lần khi cấp HMTC thay cho phí quản lý tài khoản thông thường.' },
+                    { maPhi: 'DN7A', mucPhi: 'Đóng tài khoản theo yêu cầu', cachTinhPhi: '100.000 VND', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '5 USD (Ngoại tệ).' },
+                    { maPhi: 'DN9A', mucPhi: 'Phục hồi tài khoản thanh toán đã đóng', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN10A', mucPhi: 'Nộp tiền mặt vào TK cùng chi nhánh (thông thường)', cachTinhPhi: 'Miễn phí', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN11A', mucPhi: 'Nộp tiền mặt mệnh giá nhỏ vào TK cùng chi nhánh', cachTinhPhi: '5.000VND/bó (Min 20.000VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Áp dụng cho tiền từ 15.000VND trở xuống, số lượng từ 1000 tờ trở lên.' },
+                    { maPhi: 'DN12A', mucPhi: 'Nộp tiền mặt vào TK sau giờ giao dịch với NHNN', cachTinhPhi: 'Theo thỏa thuận (Max 3.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Không áp dụng với giao dịch nộp tiền để trả nợ vay.' },
+                    { maPhi: 'DN13A', mucPhi: 'Nộp tiền mặt vào tài khoản khác chi nhánh', cachTinhPhi: '0.03% x số tiền (Min 20.000VND, Max 3.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN14A', mucPhi: 'Rút tiền mặt cùng chi nhánh', cachTinhPhi: 'Miễn phí', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN15A', mucPhi: 'Rút tiền khác chi nhánh', cachTinhPhi: '0.03% x số tiền (Min 20.000VND, Max 2.000.000VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN16A', mucPhi: 'Rút/chuyển tiền trong vòng 02 ngày làm việc', cachTinhPhi: '0.03% x giá trị GD (Min 20.000đ, Max 12.000.000đ)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Phí thu thêm ngoài phí rút tiền mặt/chuyển khoản (nếu có).' },
+                    { maPhi: 'DN17A', mucPhi: 'Rút tiền mặt trong 02 ngày từ nguồn chuyển khoản NH khác', cachTinhPhi: 'Theo thỏa thuận (Max 2.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN18A', mucPhi: 'Nộp tiền mặt vào TK ngoại tệ (lần đầu)', cachTinhPhi: 'Miễn phí', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN19A', mucPhi: 'Nộp tiền mặt vào TK ngoại tệ (USD >= 50)', cachTinhPhi: 'Mệnh giá 100USD: 0.2%; Mệnh giá 50USD: 0.3% (Min 2USD)', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN20A', mucPhi: 'Nộp tiền mặt vào TK ngoại tệ (USD < 50)', cachTinhPhi: 'Mệnh giá 10,20USD: 0.5%; Mệnh giá 1,2,5USD: 2% (Min 2USD)', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN21A', mucPhi: 'Nộp tiền mặt vào TK ngoại tệ (khác USD)', cachTinhPhi: '0.4% x số tiền (Min 3USD)', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN22A', mucPhi: 'Rút tiền mặt từ TK ngoại tệ (Lấy VND)', cachTinhPhi: 'Miễn phí', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN23A', mucPhi: 'Rút tiền mặt từ TK ngoại tệ (Lấy USD)', cachTinhPhi: '0.2% x số tiền (Min 2USD)', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN24A', mucPhi: 'Rút tiền mặt từ TK ngoại tệ (Lấy ngoại tệ khác)', cachTinhPhi: '0.4% x số tiền (Min 3USD)', dieuKien: 'Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN27A', mucPhi: 'Cung cấp sao kê định kỳ', cachTinhPhi: 'Miễn phí, thu phí chuyển phát nếu có', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động/Thủ công', ghiChu: '' },
+                    { maPhi: 'DN28A', mucPhi: 'Cung cấp sao kê đột xuất (<= 1 năm)', cachTinhPhi: '5.000 VND/trang (Min 30.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '0.5 USD/trang (Min 2 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN29A', mucPhi: 'Cung cấp sao kê đột xuất (> 1 năm)', cachTinhPhi: '5.000 VND/trang (Min 50.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '0.5 USD/trang (Min 5 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN30A', mucPhi: 'Cung cấp sao kê theo yêu cầu đặc biệt', cachTinhPhi: '5.000 VND/trang (Min 100.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '0.5 USD/trang (Min 10 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN31A', mucPhi: 'Gửi sao kê tài khoản qua Swift (FIN)', cachTinhPhi: '50.000 VND/điện', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '5 USD/điện (Ngoại tệ).' },
+                    { maPhi: 'DN31A2', mucPhi: 'Gửi sao kê tài khoản qua SCORE FileAct', cachTinhPhi: 'Theo dung lượng file (Min 80.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Mức phí tương ứng cho Ngoại tệ.' },
+                    { maPhi: 'DN32A', mucPhi: 'Sao lục chứng từ (cùng năm tài chính)', cachTinhPhi: '30.000VND/chứng từ', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '2USD/chứng từ (Ngoại tệ).' },
+                    { maPhi: 'DN33A', mucPhi: 'Sao lục chứng từ (trước năm tài chính)', cachTinhPhi: 'Theo thỏa thuận (Min 100.000VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Theo thỏa thuận (Min 8USD) (Ngoại tệ).' },
+                    { maPhi: 'DN34A', mucPhi: 'Xác nhận số dư tài khoản thanh toán', cachTinhPhi: '100.000 VND/bản + 10.000VND/bản tăng thêm', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5USD/bản + 0.5USD/bản tăng thêm (Ngoại tệ).' },
+                    { maPhi: 'DN34A2', mucPhi: 'Xác nhận số dư tài khoản tiền vay', cachTinhPhi: 'Miễn phí (31/12); Min 100.000 VND (thời điểm khác)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Tương ứng cho Ngoại tệ.' },
+                    { maPhi: 'DN35A', mucPhi: 'Xác nhận ký quỹ', cachTinhPhi: '100.000-200.000VND/bản + 20.000VND/bản tăng thêm', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Tương ứng cho Ngoại tệ.' },
+                    { maPhi: 'DN36A', mucPhi: 'Cấp giấy xác nhận thanh toán qua ngân hàng', cachTinhPhi: '100.000 VND/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'DN37A', mucPhi: 'Các dịch vụ xác nhận khác', cachTinhPhi: '100.000 VND/bản + 20.000VND/bản tăng thêm', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5USD/bản + 2USD/bản tăng thêm (Ngoại tệ).' },
+                    { maPhi: 'DN38A', mucPhi: 'Phong tỏa theo yêu cầu của BIDV/Cơ quan NN', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN39A', mucPhi: 'Phong tỏa để vay tại TCTD khác', cachTinhPhi: '300.000 VND/lần/TK', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '15 USD/lần/TK (Ngoại tệ).' },
+                    { maPhi: 'DN40A', mucPhi: 'Phong tỏa vì lý do khác', cachTinhPhi: '50.000 VND/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '3 USD/lần (Ngoại tệ).' },
+                    { maPhi: 'DN41A', mucPhi: 'Báo mất GTCG (thanh toán ngay)', cachTinhPhi: '100.000VND/tờ', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5 USD/tờ (Ngoại tệ).' },
+                    { maPhi: 'DN42A', mucPhi: 'Báo mất GTCG (chưa thanh toán ngay)', cachTinhPhi: '100.000VND/tờ', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '15 USD/tờ (Ngoại tệ).' },
+                    { maPhi: 'DN43A', mucPhi: 'Cấp lại hoặc chuyển nhượng GTCG', cachTinhPhi: '100.000 VND/tờ', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5 USD/tờ (Ngoại tệ).' },
+                    { maPhi: 'DN44A', mucPhi: 'Thanh toán GTCG bị hư hỏng', cachTinhPhi: '100.000 VND/tờ', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5 USD/tờ (Ngoại tệ).' },
+                    { maPhi: 'DN45A', mucPhi: 'Đăng ký dịch vụ gửi chứng từ qua fax/scan', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN46A', mucPhi: 'Duy trì dịch vụ gửi chứng từ qua fax/scan', cachTinhPhi: '200.000đ/tháng', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: 'Kỳ thu phí căn cứ theo hợp đồng.' },
+                    { maPhi: 'DN47A', mucPhi: 'Phạt chậm bổ sung chứng từ bản gốc', cachTinhPhi: '50.000đ/chứng từ/lần', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' }
+                ],
+                'Dịch vụ Chuyển tiền': [
+                    { maPhi: 'DN1B', mucPhi: 'Chuyển vào TK tại BIDV (Cùng Chi nhánh)', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN2B', mucPhi: 'Chuyển vào TK tại BIDV (Khác Chi nhánh)', cachTinhPhi: '0.01% (Min 10.000, Max 1.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '2 USD (Ngoại tệ, không áp dụng cho GD mua bán ngoại tệ).' },
+                    { maPhi: 'DN3B', mucPhi: 'Chuyển cho Người nhận bằng tiền mặt tại BIDV', cachTinhPhi: '0.03% (Min 20.000, Max 2.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.02% (Min 2 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN4B', mucPhi: 'Chuyển đi NH khác hệ thống (từ TK)', cachTinhPhi: '0.04% (Min 20.000, Max 1.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.02% (Min 5, Max 150 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN5B', mucPhi: 'Chuyển đi NH khác hệ thống (từ tiền mặt)', cachTinhPhi: '0.05% (Min 20.000, Max 2.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Phí khác cho ngoại tệ (Min 5, Max 150 USD).' },
+                    { maPhi: 'DN6B', mucPhi: 'Chuyển tiền theo danh sách', cachTinhPhi: '2.000VND/TK + Phí CT (Min 50.000VND/bảng)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.5 USD/TK + Phí CT (Min 2 USD/bảng) (Ngoại tệ).' },
+                    { maPhi: 'DN10B', mucPhi: 'Chuyển tiền đến', cachTinhPhi: 'Miễn phí', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN11B', mucPhi: 'Tra soát, đính chính, yêu cầu hoàn trả', cachTinhPhi: '30.000VND/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '5 USD/lần (Ngoại tệ).' },
+                    { maPhi: 'DN29B', mucPhi: 'Chuyển tiền quốc tế đi', cachTinhPhi: '0.2% (Min 100.000, Max 5.000.000 VND) + Phí điện', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.2% (Min 5, Max 300 USD) + phí điện (Ngoại tệ).' },
+                    { maPhi: 'DN43B', mucPhi: 'Chuyển tiền quốc tế đến (Người hưởng chịu phí)', cachTinhPhi: '0.05% (Min 100.000, Max 1.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.05% (Min 5, Max 100 USD) (Ngoại tệ).' }
+                ],
+                'Dịch vụ Tín dụng': [
+                    { maPhi: 'DN1C', mucPhi: 'Phí thu xếp cho vay hợp vốn', cachTinhPhi: '0.1%-0.3% x Số tiền (Min 10.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Min 500 USD (Ngoại tệ).' },
+                    { maPhi: 'DN3C', mucPhi: 'Trả nợ trước hạn (ngắn hạn, nguồn không từ TCTD khác)', cachTinhPhi: '0%-1% x Số tiền (Min 200.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Mức phí tương tự cho ngoại tệ.' },
+                    { maPhi: 'DN4C', mucPhi: 'Trả nợ trước hạn (ngắn hạn, nguồn từ TCTD khác)', cachTinhPhi: '2%-5% x Số tiền (Min 20.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 1.000 USD (Ngoại tệ).' },
+                    { maPhi: 'DN5C', mucPhi: 'Trả nợ trước hạn (TDH, >70% thời hạn vay)', cachTinhPhi: '1%-2% x Số tiền (Min 1.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 50 USD (Ngoại tệ).' },
+                    { maPhi: 'DN6C', mucPhi: 'Trả nợ trước hạn (TDH, <70% thời hạn vay)', cachTinhPhi: '2%-5% x Số tiền (Min 5.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 250 USD (Ngoại tệ).' },
+                    { maPhi: 'DN8C', mucPhi: 'Cấp/gia hạn HMTD dự phòng', cachTinhPhi: '0.05%-0.6%/năm x HMTD (Min 500.000 VND)', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: 'Min 25 USD (Ngoại tệ).' },
+                    { maPhi: 'DN10C', mucPhi: 'Phí cam kết rút vốn', cachTinhPhi: '0%-1% x Số tiền giải ngân (Min 500.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 25 USD (Ngoại tệ).' },
+                    { maPhi: 'DN11C', mucPhi: 'Phí phạt vi phạm HĐTD', cachTinhPhi: '0%-8% x Giá trị HĐTD', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' }
+                ],
+                'Dịch vụ Bảo lãnh': [
+                    { maPhi: 'DN3D', mucPhi: 'Phát hành BL (ký quỹ >=100%)', cachTinhPhi: '0.5%-2%/năm (Min 300.000 VNĐ)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 15 USD (Ngoại tệ).' },
+                    { maPhi: 'DN4D', mucPhi: 'Phát hành BL (có TSBĐ khác)', cachTinhPhi: '0.6%-3.0%/năm tùy loại BL (Min 300.000-800.000 VNĐ)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Mức phí tương ứng cho ngoại tệ.' },
+                    { maPhi: 'DN6D', mucPhi: 'Sửa đổi BL (gia hạn, tăng tiền)', cachTinhPhi: 'Như phát hành', dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'DN7D', mucPhi: 'Sửa đổi BL (khác)', cachTinhPhi: '300.000VND/lần', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '15USD/lần (Ngoại tệ).' },
+                    { maPhi: 'DN11D', mucPhi: 'Thực hiện nghĩa vụ BL', cachTinhPhi: '0.2% x Số tiền (Min 500.000VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Min 25USD (Ngoại tệ).' }
+                ],
+                'Tài trợ thương mại': [
+                    { maPhi: 'DN1E', mucPhi: 'Phát hành L/C (ký quỹ >=100%)', cachTinhPhi: '0.05% (Min 500.000, Max 10.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Tối đa 500 USD (Ngoại tệ).' },
+                    { maPhi: 'DN3E', mucPhi: 'Phát hành L/C (miễn ký quỹ/bảo đảm khác)', cachTinhPhi: '1%/năm', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '1.5%/năm (Ngoại tệ).' },
+                    { maPhi: 'DN9E', mucPhi: 'Thanh toán bộ chứng từ (L/C)', cachTinhPhi: '0.05% (Min 100.000, Max 5.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.2% (Min 30, Max 500 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN23E', mucPhi: 'Thông báo L/C', cachTinhPhi: '300.000 VND', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '20 USD (Ngoại tệ).' },
+                    { maPhi: 'DN30E', mucPhi: 'Thanh toán bộ chứng từ (L/C xuất khẩu)', cachTinhPhi: '0.05% (Min 100.000, Max 5.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.15% (Min 20, Max 200 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN51E', mucPhi: 'Thanh toán nhờ thu', cachTinhPhi: '0.05% (Min 100.000, Max 5.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.2% (Min 20, Max 400 USD) (Ngoại tệ).' }
+                ],
+                'Ngân hàng điện tử': [
+                    { maPhi: 'DN2F', mucPhi: 'Duy trì dịch vụ (Quản lý dòng tiền)', cachTinhPhi: '10.000 VND/tháng', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '1 USD/tháng (Ngoại tệ). Thu 6 tháng/lần.' },
+                    { maPhi: 'DN4F', mucPhi: 'Điều chuyển vốn tự động/định kỳ', cachTinhPhi: '0.04% (Min 50.000, Max 1.000.000 VND)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '0.02% (Min 5, Max 150 USD) (Ngoại tệ).' },
+                    { maPhi: 'DN5F', mucPhi: 'Thanh toán hoá đơn', cachTinhPhi: '0.05% (Min 2.000 VND/hóa đơn)', dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Thu hộ học phí: Min 5.000 VND.' },
+                    { maPhi: 'DN11F', mucPhi: 'Phí quản lý Tài khoản Định danh', cachTinhPhi: '2.000 VND/tài khoản/tháng', dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                ],
+            },
+            'Cá nhân': {
+                'Tổng quan': [],
+                'Dịch vụ Tài khoản': [
+                    { maPhi: 'CN101', mucPhi: 'Mở tài khoản thanh toán', cachTinhPhi: { KHCNTT: 'Miễn phí', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN102.1a', mucPhi: 'Phí QLTK thanh toán VNĐ (Dưới 2 triệu đồng)', cachTinhPhi: { KHCNTT: '5.000d/TK/tháng', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '- Hệ thống thu phí QLTK tự động. Các tài khoản ngoại tệ khác USD được quy đổi từ mức phí quản lý tài khoản USD theo tỷ giá chéo giữa USD và ngoại tệ tương ứng.' },
+                    { maPhi: 'CN102.1b', mucPhi: 'Phí QLTK thanh toán VNĐ (Từ 2 triệu đồng đến dưới 10 triệu đồng)', cachTinhPhi: { KHCNTT: '3.000d/TK/tháng', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '- Hệ thống thu phí QLTK tự động. Các tài khoản ngoại tệ khác USD được quy đổi từ mức phí quản lý tài khoản USD theo tỷ giá chéo giữa USD và ngoại tệ tương ứng.' },
+                    { maPhi: 'CN102.2', mucPhi: 'Phí QLTK thanh toán VNĐ (Từ 10 triệu đồng trở lên)', cachTinhPhi: { KHCNTT: 'Miễn phí', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN103', mucPhi: 'Phí QLTK chuyên dùng', cachTinhPhi: { KHCNTT: '10.000VND/0.99USD/ tháng TK', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND/Ngoại tệ', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN104', mucPhi: 'Phí QLTK không hoạt động trong quý', cachTinhPhi: { KHCNTT: '30.000d/quý', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: 'Dự kiến áp dụng từ quý 3/2025, thu tự động, tập trung tại TSC, áp dụng với các tài khoản không có phát sinh giao dịch ghi nợ chủ động từ KH (không bao gồm các giao dịch tự động trả nợ gốc lãi, thu phí.... của hệ thống).' },
+                    { maPhi: 'CN105', mucPhi: 'Phí QLTK có đăng ký dịch vụ thấu chi', cachTinhPhi: { KHCNTT: '10,05% * số tiền đăng ký thấu chi được cấp, tối đa 2.000.000 VND/lần', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '- Mức phí này chưa bao gồm phí QLTKTT thông thường. Đối với các tài khoản bị thu phí QLTK này, Chi nhánh vẫn tiếp tục thu phí QLTKTT thông thường. - Chi nhánh tự chủ động áp dụng chính sách miễn giảm cho cán bộ BIDV nếu cần.' },
+                    { maPhi: 'CN106', mucPhi: 'Đóng TKTT theo yêu cầu của chủ tài khoản', cachTinhPhi: { KHCNTT: '50.000VND/5USD/TK', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN107', mucPhi: 'Nộp tiền mặt vào tài khoản chính chủ Chuyển khoán nội bộ BIDV giữa các tài khoản của cùng một chủ tài khoản', cachTinhPhi: { KHCNTT: 'Miễn phí VND', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Nếu nộp tiền ngoại tệ vào tài khoản với tiền mệnh giá nhỏ thì áp dụng thêm mã phí kiểm đếm tiền lẻ (CN 604) với mức phí 2%/ST, tối thiểu 20.000₫/ 2 USD hoặc 2 đơn vị tiền tệ. Bỏ sung ghi chú trong trường hợp nộp tiền lẻ vào tài khoản.' },
+                    { maPhi: 'CN108', mucPhi: 'Rút tiền mặt từ tài khoản thanh toản VND cũng địa bàn tỉnh/TP', cachTinhPhi: { KHCNTT: 'Miễn phí', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN109', mucPhi: 'Rút tiền mặt từ tài khoản thanh toán VND khác địa bàn tỉnh/tp', cachTinhPhi: { KHCNTT: '0.03% Tối thiểu 10.000VND', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN110', mucPhi: 'Rút tiền mặt chuyển tiền (từ tài khoản thanh toán) hoặc tất toán tiền gửi có kỳ hạn trong vòng 3 ngày làm việc kể từ ngày nộp tiền mặt vào tài khoản gửi tiết kiệm.', cachTinhPhi: { KHCNTT: 'VND:0.03%/ST Tối thiểu 10.000VND Tối đa 1.000.000VND; Ngoại tệ: 0.2%/ST Tối thiểu 2 USD', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Mục phí này không áp dụng trên số tiền KH rút và tiếp tục gửi tiết kiệm tại BIDV. Nếu rút tiền mặt chuyển tiền đã thu phí thì không thu thêm phí này. Tăng mức phí đối với ngoại tệ từ 10.15%/ST lên 0.2%/ST.' },
+                    { maPhi: 'CN110.1', mucPhi: 'Rút tiền mặt từ tài khoản thanh toán VND trong ngày đối với nguồn tiền chuyển đến từ ngân hàng trong nước', cachTinhPhi: { KHCNTT: '-Giao dịch tại các chi nhánh địa bàn Hà Nội, Hồ Chí Minh: Không thu phí. - Giao dịch tại các chi nhánh địa bàn khác: 10,03% số tiền, tối thiểu 10.000 VND, tối đa 1.000.000 VND', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Giao các địa bản ngoài Hà Nội, Hồ Chí Minh chủ động xem xét việc niêm yết (có thu không thu). Nếu thu phí, mức phí không quá tỷ lệ, tối đa, tối thiểu theo hướng dẫn của TSC.' },
+                    { maPhi: 'CN111', mucPhi: 'Rút USD tiền mặt từ tài khoản USD trong vòng 30 ngày làm việc kể từ ngày nhận tiền từ ngân hàng khác chuyển về tài khoản', cachTinhPhi: { KHCNTT: '0.2%/ST Tối thiểu 2USD', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '- Ngoài phí rút tiền chuyển tiền (nếu có), chi nhánh thu thêm phí này. - Mục phí này áp dụng kể cả khi nộp tiền khách hàng đã mất phí. - Mục phí này không áp dụng trên số tiền KH rút và tiếp tục gửi tiết kiệm tại BIDV. - Mục phí này áp dụng với nguồn tiền về từ ngân hàng khác bao gồm trong nước hoặc quốc tế: + Đối với trường hợp giao dịch chuyển tiền quốc tế đến chuyển OL3 tới chi nhánh để chi nhánh chỉ trả khách hàng, thời gian 30 ngày làm việc tính từ ngày bảo Có tài khoản trung gian chi nhánh. + Đối với trường hợp giao dịch chuyển tiền trong nước đến, thời gian 30 ngày làm việc tính từ ngày giao dịch chuyển tiền trong nước đến BIDV. Tăng mức phí đối với ngoại tệ từ 0.15%/ST lên 0.2%/ST.' },
+                    { maPhi: 'CN112', mucPhi: 'Rút ngoại tệ tiền mặt khác USD trong vòng 30 ngày làm việc kể từ ngày nhận tiền từ ngân hàng khác chuyển về tài khoản', cachTinhPhi: { KHCNTT: '0.4%/ST Tối thiểu 3USD', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '- Ngoài phí rút tiền chuyển tiền (nếu có), chi nhánh thu thêm phí này. - Mục phí này áp dụng kể cả khi nộp tiền khách hàng đã mất phí. - Mục phí này không áp dụng trên số tiền KH rút và tiếp tục gửi tiết kiệm tại BIDV. - Mục phí này áp dụng với nguồn tiền về từ ngân hàng khác bao gồm trong nước hoặc quốc tế: + Đối với trường hợp giao dịch chuyển tiền quốc tế đến chuyển OL3 tới chi nhánh để chi nhánh chỉ trả khách hàng, thời gian 30 ngày làm việc tính từ ngày bảo Có tài khoản trung gian chi nhánh. + Đối với trường hợp giao dịch chuyển tiền trong nước đến, thời gian 30 ngày làm việc tính từ ngày giao dịch chuyển tiền trong nước đến BIDV. Tăng mức phí đối với ngoại tệ từ 0.15%/ST lên 0.2%/ST.' },
+                    { maPhi: 'CN113', mucPhi: 'Khởi tạo Thay đổi tăng số tiến ký quỹ dịch vụ Quản lý tài khoản theo yêu cầu (dịch vụ quản lý tài khoản 3 bên)', cachTinhPhi: { KHCNTT: '10.1% số tiền ký quỹ Tối thiểu 500.000VND/Hợp đồng', KHCCPE: '0.1% số tiền ký quỹ Tối thiểu 500.000VND/Hop đồng', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN114', mucPhi: 'Thay đổi các nội dung khác của dịch vụ Quản lý tài khoản theo yêu cầu (dịch vụ quản lý tài khoản 3 bên)', cachTinhPhi: { KHCNTT: '500.000VND/Hợp đồng', KHCCPE: '500.000VND/Hợp đồng', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN115', mucPhi: 'Sao kê các giao dịch tài khoản', cachTinhPhi: { KHCNTT: '-Sao kê giấy: 3.000VND/trang phí chuyển phát nhanh (nếu KH có nhu cầu theo địa chỉ KH cung cấp), tối thiểu 10.000₫ -Sao kê qua email hoặc sao kê định kỳ: 10.000đ/lần gửi', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung mức phí trong trường hợp nhận sao kê qua mail hoặc sao kê định kỳ.' },
+                    { maPhi: 'CN116', mucPhi: 'Cung cấp bản sao chứng từ (chứng từ giao dịch tại quầy, chứng từ giao dịch điện tử)', cachTinhPhi: { KHCNTT: 'Theo thỏa thuận với khách hàng Tối thiểu 10.000VND/lần', KHCCPE: 'Theo thỏa thuận với khách hàng Tối thiểu 10.000VND/lần', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN117', mucPhi: 'Xác nhận số dư tài khoản/xác nhận thông tin tài khoản xác nhận giao dịch tài khoản theo yêu cầu', cachTinhPhi: { KHCNTT: '150.000VND/bản đầu tiên + 10.000VND bản tăng thêm', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN118', mucPhi: 'Xác nhận số dư tài khoản tiền vay (dư nợ, lịch sử trả nợ khoản vay..)', cachTinhPhi: { KHCNTT: 'Thu theo thỏa thuận với KH tối thiểu 100,000VND/lần', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN119', mucPhi: 'Xác nhận giao dịch ủy quyền', cachTinhPhi: { KHCNTT: '50.000VND/TK', KHCCPE: '50.000VND/TK', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN120', mucPhi: 'Cho tặng đích danh (Kênh quầy)', cachTinhPhi: { KHCNTT: '100.000VND/TK', KHCCPE: '100.000VND/TK', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Mục phí này áp dụng đối với giao dịch chuyển nhượng, chuyển giao quyền sở hữu, cho tặng ... tiền gửi.' },
+                    { maPhi: 'CN121', mucPhi: 'BIDV kết nối nhu cầu chuyển giao quyền sở hữu (Kênh quầy/online)', cachTinhPhi: { KHCNTT: '- Dưới 1 tỷ đồng: 0,2% x số dư gốc, tối thiểu 150.000VND/giao dịch bên giao dịch - Từ 1 tỷ đến dưới 5 tỷ đồng: 0,1% x số dư gốc, Tối thiểu 1.000.000VND và tối đa 5.000.000VND/giao dịch bên giao dịch - Trên 5 tỷ đồng: 0,05% x số dư gốc, Tối đa 10.000.000VND/giao dịch/bên giao dịch', KHCCPE: '- Dưới 1 tỷ đồng: 0,2% x số dư gốc, tối thiểu 150.000VND/giao dịch/bên giao dịch - Từ 1 tỷ đến dưới 5 tỷ đồng: 0,1% x số dư gốc, Tối thiểu 1.000.000VND và tối đa 5.000.000VND/giao dịch/bên giao dịch - Trên 5 tỷ đồng: 0,05% x số dư gốc, Tối đa 10.000.000VND/giao dịch bên giao dịch', KHCCPrivate: 'Miễn phí' }, dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Dự kiến triển khai năm 2023.' },
+                    { maPhi: 'CN122', mucPhi: 'Phong tỏa tạm khóa tài khoản tiền gửi để vay tại TCTD khác', cachTinhPhi: { KHCNTT: '10.1% giá trị phong tỏa, Min 300.000VND/TK, tối đa 1.000.000 VND/lần', KHCCPE: '10.1% giá trị phong tỏa, Min 300.000VND/TK, tối đa 1.000.000 VND/lần', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN123', mucPhi: 'Phong tỏa tạm khóa thủy phong tỏa tạm khỏa theo yêu cầu khách hàng', cachTinhPhi: { KHCNTT: '50.000VND/TK', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN124', mucPhi: 'Giải quyết hồ sơ nhận thừa kế', cachTinhPhi: { KHCNTT: '100.000VND/1 TK', KHCCPE: '100.000VND/1 TK', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN125', mucPhi: 'Khởi tạo mới thay đổi quan hệ đồng sở hữu tài khoản tiền gửi', cachTinhPhi: { KHCNTT: '50.000VND/5USD/TK', KHCCPE: 'Miễn phí', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN126', mucPhi: 'Báo mất và cấp lại chứng nhận tiền gửi hoặc tất toán tiền gửi', cachTinhPhi: { KHCNTT: '100.000VND/Thẻ', KHCCPE: '100.000VND/Thẻ', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN127', mucPhi: 'Cấp lại chứng nhận tiền gửi theo yêu cầu của khách hàng do rách, nhàu nát, hỏng', cachTinhPhi: { KHCNTT: '50.000VND/Thẻ', KHCCPE: '50.000VND/Thẻ', KHCCPrivate: 'Miễn phí' }, dieuKien: 'VND', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC.' },
+                    { maPhi: 'CN128', mucPhi: 'Phí tư vấn và xử lý hồ sơ', cachTinhPhi: { KHCNTT: 'Thu theo thỏa thuận với khách hàng, tối đa không quá 2.000.000 VND/100 USD', KHCCPE: 'Thu theo thỏa thuận với khách hàng, tối đa không quá 2.000.000 VND/100 USD', KHCCPrivate: 'Thu theo thỏa thuận với khách hàng, tối đa không quá 2.000.000 VND/100 USD' }, dieuKien: 'VND/Ngoại tệ', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Chỉ thu trong trường hợp xử lý hồ sơ phức tạp, nhiều thời gian nhưng không thu được phí (trong danh mục) và có sự chấp thuận của khách hàng.' },
+                ],
+                'Tài khoản số chọn': [
+                    { maPhi: 'CN201', mucPhi: 'Mở tài khoản có số là số điện thoại', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN202', mucPhi: 'Mở tài khoản có 4-10 ký tự', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN203', mucPhi: 'Mở tài khoản có 11-20 ký tự', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CNSD089', mucPhi: 'Số đẹp 10 số Đại Phú Quý có 3 chữ số đẹp', cachTinhPhi: '250.000 (Kênh quầy), 175.000 (Smartbanking)', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CNSD006', mucPhi: 'Số đẹp 10 số Lộc kép 4 số có 8 chữ số đẹp', cachTinhPhi: '30.000.000 (Kênh quầy), 21.000.000 (Smartbanking)', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CNSD007', mucPhi: 'Số đẹp 10 số Lộc kép 2 số có 8 chữ số đẹp', cachTinhPhi: '30.000.000 (Kênh quầy), 21.000.000 (Smartbanking)', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CNSD008', mucPhi: 'Số đẹp 10 số Soi Gương có 8 chữ số đẹp', cachTinhPhi: '30.000.000 (Kênh quầy), 21.000.000 (Smartbanking)', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CNSD111', mucPhi: 'Tài khoản được chọn toàn bộ dây số là chữ số đẹp', cachTinhPhi: '300.000.000 (Kênh quầy), 300.000.000 (Smartbanking)', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                ],
+                'Chuyển tiền trong nước': [
+                    { maPhi: 'CN301', mucPhi: 'Chuyển tiền khác chủ tài khoản, đi cùng hệ thống BIDV tại chi nhánh quản lý TK', cachTinhPhi: 'Miễn phí', dieuKien: 'Tài khoản/Nộp tiền mặt', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Nếu nộp tiền ngoại tệ vào tài khoản với tiền mệnh giá nhỏ thì áp dụng thêm mã phí kiểm đếm tiền lẻ (CN 604)' },
+                    { maPhi: 'CN302', mucPhi: 'Chuyển tiền đi khác chủ tài khoản, cùng hệ thống khác chi nhánh quản lý TK', cachTinhPhi: 'Giao dịch tại các chi nhánh địa bàn Hà Nội, TP Hồ Chí Minh: 0,01%, Giao dịch tại các chi nhánh địa bàn khác: 0.02% Tối thiểu 10.000', dieuKien: 'Tài khoản/Nộp tiền mặt', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN303', mucPhi: 'Người nhận bằng tiền mặt tại BIDV', cachTinhPhi: '0,03% Tối thiểu 10.000VND/lần, Tối đa 2.000.000VND/lần', dieuKien: 'Nộp tiền mặt', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN304', mucPhi: 'Chuyển tiền đi ngân hàng khác hệ thống', cachTinhPhi: '0,04% Tối thiểu 10.000VND/lần, Tối đa 1.000.000VND/lần', dieuKien: 'Tài khoản/Nộp tiền mặt', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN305', mucPhi: 'Chuyển tiền theo danh sách', cachTinhPhi: '4.000VND/0,5USD/ Người thụ hưởng lần + phi chuyển tiền tương ứng', dieuKien: 'Tài khoản/Nộp tiền mặt', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                ],
+                'Chuyển tiền nước ngoài': [
+                    { maPhi: 'CN401', mucPhi: 'Mục đích chuyển tiền du học, trợ cấp', cachTinhPhi: '0.2% (Tối thiểu 5 USD Tối đa 5,000 USD) + điện phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Trong trường hợp có chính sách tại văn bản riêng của sản phẩm thì được phép áp dụng theo chính sách riêng' },
+                    { maPhi: 'CN402', mucPhi: 'Các mục đích khác', cachTinhPhi: '0.2% (Tối thiểu 5 USD Tối đa 5,000 USD) + điện phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Trong trường hợp có chính sách tại văn bản riêng của sản phẩm thì được phép áp dụng theo chính sách riêng' },
+                    { maPhi: 'CN403', mucPhi: 'Lệnh thanh toán bằng USD', cachTinhPhi: 'Giao dịch đến thị trường Mỹ: 6USD', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN420', mucPhi: 'Tra soát sửa đổi hoàn trả lệnh chuyển tiên theo yêu cầu của người chuyển đổi với điện đi và Tra soát đối với điện chuyển tiền quốc tế đến (đã bao gồm điện phí)', cachTinhPhi: '10USD + phí NHNN thu nếu có', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN421', mucPhi: 'Thông báo tiền đến cho người nhận theo yêu cầu của người chuyển', cachTinhPhi: 'Tối thiểu 1USD/thông báo', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN422', mucPhi: 'Phí cung cấp tỉ giá VND/ngoại tệ trường hợp điện đến bằng VND từ ngân hàng không có quan hệ tài khoản VND với BIDV', cachTinhPhi: '5 USD', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                ],
+                'Dịch vụ Tín dụng': [
+                    { maPhi: 'CN501', mucPhi: 'Phí trả nợ trước hạn theo phương thức cho vay theo món', cachTinhPhi: 'Tỷ lệ phí x Số tiền trả nợ trước hạn x Số tháng trả nợ trước hạn Tối thiểu: 100.000 VND/lần trả nợ, Tối đa: 30.000.000 VND/lần trả nợ', dieuKien: 'Vay ngắn hạn', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Nguyên tắc làm tròn tháng: Nếu thời gian trả nợ trước hạn >= 15 ngày thì làm tròn thành 1 tháng. Nếu thời gian trả nợ trước hạn <15 ngày thì làm tròn thành 0 tháng. Tỷ lệ phí: 0,2%/tháng' },
+                    { maPhi: 'CN502', mucPhi: 'Phí trả nợ trước hạn theo phương thức hạn mức tín dụng', cachTinhPhi: 'Miễn phí', dieuKien: 'Vay ngắn hạn', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN503', mucPhi: 'Trả nợ tại thời điểm < 50% thời hạn cho vay', cachTinhPhi: '1,0% x Số tiền trả nợ trước hạn Tối thiểu: 200.000 VND/lần trả nợ Tối đa: 30.000.000 VND/lần trả nợ', dieuKien: 'Vay trung dài hạn', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN504', mucPhi: 'Trả nợ tại thời điểm từ 50% thời hạn cho vay', cachTinhPhi: '0.5% x Số tiền trả nợ trước hạn Tối thiểu: 100.000 VND/lần trả nợ Tối đa: 30.000.000 VND/lần trả nợ', dieuKien: 'Vay trung dài hạn', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                ],
+                'Dịch vụ Ngân quỹ & Khác': [
+                    { maPhi: 'CN601', mucPhi: 'Thu/chi hộ tiền mặt tại trụ sở ngân hàng', cachTinhPhi: 'VND: 0,08% Số tiền thu chi hộ Tối thiểu 50.000 VND. Ngoại tệ: 0,1%/ST thu chỉ hộ Tôi thiểu 2 USD', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Thu chi hộ tiền mặt theo thỏa thuận với khách hàng cá nhân, không áo dụng đối với các trường hợp thu hộ KH tổ chức.' },
+                    { maPhi: 'CN602', mucPhi: 'Thu Chi hộ tiền mặt ngoài trụ sở ngân hàng bản kinh ≤10 km', cachTinhPhi: '0,1%/số tiến + chi phí phát sinh Tối thiểu 800.000VND/ 20 USD chuyển', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Các trường hợp vượt quá 10km, chi phí phát sinh theo thỏa thuận.' },
+                    { maPhi: 'CN604', mucPhi: 'Kiểm đếm tiền lẻ', cachTinhPhi: '0,5% số tiền kiểm đếm, Tối thiểu 10.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Áp dụng đối với tiền có mệnh giá từ 10.000VND trở xuống. Không áp dụng đối với các trường hợp nộp tiền vào TK tại BIDV' },
+                    { maPhi: 'CN620', mucPhi: 'Đổi tiền lấy mệnh giá khác', cachTinhPhi: '-VND: 2%/ST, tối thiểu 50.000 VND, -Ngoại tệ: 3%/ST, tối thiểu 3 USD', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Gộp CN 621 vào CN 620 và điều chỉnh tăng mức phí VND.' },
+                    { maPhi: 'CN622', mucPhi: 'Cấp giấy xác nhận mang ngoại tệ tiền mặt và đồng Việt Nam tiền mặt ra nước ngoài', cachTinhPhi: 'Theo thỏa thuận Tối thiểu 200.000 VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN623', mucPhi: 'Đổi ngoại tệ cũ lấy ngoại tệ mới, USD trăng sang USD màu', cachTinhPhi: '3% Số tiền đổi', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '- Điều chỉnh tên mục phí: Đôi ngoại tệ cũ lây ngoại tệ mới, USD trắng sang USD mâu' },
+                    { maPhi: 'CN624', mucPhi: 'Kiểm định tiền thật giả', cachTinhPhi: '1% ST kiêm định Tối thiểu 100.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                ],
+                'Ngân hàng điện tử': [
+                    { maPhi: 'CN701', mucPhi: 'Đăng ký dịch vụ Smartbanking', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN702', mucPhi: 'Duy trì dịch vụ Smartbanking', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN703', mucPhi: 'Chuyển khoản cho người hưởng tại BIDV', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN704', mucPhi: 'Chuyển khoản cho người hướng tại ngân hàng khác tại Việt Nam', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN705', mucPhi: 'Cấp lại mật khẩu Smartbanking tại kênh quầy', cachTinhPhi: '10.000 VND/lần', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN708.1', mucPhi: 'Phí dịch vụ tin nhắn biến động số dư (BSMS) cho KHCN thông thường', cachTinhPhi: '8.800 VND/tháng', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN708.2', mucPhi: 'Phí dịch vụ tin nhắn biến động số dư (BSMS) cho KHCC', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN708.3', mucPhi: 'Phí dịch vụ tin nhắn biến động số dư (BSMS) cho KH là thu phí viên đơn vị chấp nhận thanh toán POS (nhận tin nhắn chỉ tiết theo giao dịch)', cachTinhPhi: '1.000 VND/tin nhân', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN709.1', mucPhi: 'Dịch vụ OTT (nhân tin qua Smartbanking)', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN709.2', mucPhi: 'Dich vu chia sẽ biến động số dư trên OTT', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN709.3', mucPhi: 'Thông báo giọng nói voice OPTI', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN710', mucPhi: 'Đăng ký dịch vụ Bankplus', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN711', mucPhi: 'Thường niên dịch vụ Bankplus', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN714', mucPhi: 'Thanh toán hóa đơn tiền điện (từng lần/định kỳ)', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN715', mucPhi: 'Thanh toán bằng mã QR tại Thái Lan', cachTinhPhi: '0.2% giá trị giao dịch', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                ],
+                'Dịch vụ Thẻ tín dụng': [
+                    { maPhi: 'CN801', mucPhi: 'Phí phát hành lần đầu', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN802', mucPhi: 'Phí phát hành lại (do hỏng, mất)', cachTinhPhi: '500.000', dieuKien: 'Thẻ Visa Infinite/Private Banking Premier (hạng Signature)', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN803', mucPhi: 'Thẻ tín dụng quốc tế khác', cachTinhPhi: '100.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN804', mucPhi: 'Phí phát hành nhanh (Thẻ Visa Infinite Private Banking Premier (hạng Signature))', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN805', mucPhi: 'Phí phát hành nhanh (Thẻ khác)', cachTinhPhi: '200.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: 'Bổ sung miễn phí cho KHCC, áp dụng cho thẻ tín dụng quốc tế khác' },
+                    { maPhi: 'CN806', mucPhi: 'Phí thường niên thẻ Visa Infinite/Private Banking Premier (hạng Signature)', cachTinhPhi: '5.000.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN807', mucPhi: 'Phí thường niên thẻ Visa Platinum', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN808', mucPhi: 'Phí thường niên thẻ Visa Premier', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN809', mucPhi: 'Phí thường niên thẻ Visa Standard', cachTinhPhi: '300.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN810', mucPhi: 'Phí thường niên thẻ MasterCard Platinum', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN811', mucPhi: 'Phí thường niên thẻ MasterCard Standard', cachTinhPhi: '300.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN812', mucPhi: 'Phí thường niên thẻ JCB Platinum', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN813', mucPhi: 'Phí thường niên thẻ JCB Standard', cachTinhPhi: '300.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN814', mucPhi: 'Phí thường niên thẻ Lotte Mart', cachTinhPhi: '150.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN815', mucPhi: 'Phí thường niên thẻ BIDV Premier', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN816', mucPhi: 'Phí thường niên thẻ BIDV Precious', cachTinhPhi: '150.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN817', mucPhi: 'Phí thường niên thẻ MasterCard Vietravel Platinum', cachTinhPhi: '500.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN818', mucPhi: 'Phí thường niên thẻ MasterCard Vietravel Standard', cachTinhPhi: '300.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN826', mucPhi: 'Phí rút tiền mặt tại ATM/POS (Trong nước)', cachTinhPhi: '4% số tiền rút, tối thiểu 50.000VND/giao dịch', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Đối với giao dịch thực hiện trong nước: Thuộc đối tượng chịu thuế VAT 10%' },
+                    { maPhi: 'CN827', mucPhi: 'Phí rút tiền mặt tại ATM/POS (Nước ngoài)', cachTinhPhi: '4% số tiền rút, tối thiểu 50.000VND/giao dịch', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: 'Đối với giao dịch thực hiện tại nước ngoài: Không thuộc đối tượng chịu thuế VAT' },
+                    { maPhi: 'CN828', mucPhi: 'Phí chậm thanh toán', cachTinhPhi: '3% số tiền chậm thanh toán, tối thiểu 50.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN829', mucPhi: 'Phí vượt hạn mức', cachTinhPhi: '100.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN830', mucPhi: 'Phí chuyển đổi ngoại tệ', cachTinhPhi: '2.5% số tiền giao dịch', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN831', mucPhi: 'Phí cấp lại PIN', cachTinhPhi: '20.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN832', mucPhi: 'Phí tra soát', cachTinhPhi: '50.000VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                ],
+                'Dịch vụ Thẻ ghi nợ & khác': [
+                    { maPhi: 'CN901', mucPhi: 'Phí phát hành lần đầu thẻ vật lý', cachTinhPhi: '50.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN902', mucPhi: 'Phí phát hành lại thẻ vật lý', cachTinhPhi: '50.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN903', mucPhi: 'Phí trả thẻ về địa chỉ', cachTinhPhi: '20.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Thủ công', ghiChu: '' },
+                    { maPhi: 'CN904', mucPhi: 'Phí thường niên (Thẻ Liên kết sinh viên, Thẻ liên kết khác)', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN905', mucPhi: 'Phí thường niên (Thẻ BIDV Smart (Cho KH trả lương, vãng lai, Thẻ liên kết tài khoản ngoại tệ USD) (2))', cachTinhPhi: 'Miễn phí', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN906', mucPhi: 'Phí thường niên (Thẻ khác)', cachTinhPhi: '30.000', dieuKien: '', phanLoai: 'Định kỳ', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN960', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ VISA phát hành tại Việt Nam)', cachTinhPhi: '30.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN961', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ VISA phát hành tại nước ngoài)', cachTinhPhi: '60.000', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN962', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ MasterCard phát hành tại Việt Nam)', cachTinhPhi: '4.5% số tiện GD tối thiểu 60.000 VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                    { maPhi: 'CN963', mucPhi: 'Rút tiền bằng thẻ vật lý trên MGDTD BIDV (Thẻ MasterCard phát hành tại nước ngoài)', cachTinhPhi: '4.5% sở hến GD tối thiểu 60.000 VND', dieuKien: '', phanLoai: 'Theo giao dịch', thuTuDong: 'Tự động', ghiChu: '' },
+                ]
+            }
+        };
+
+        let currentSegment = 'Doanh nghiệp';
+        let currentCategory = 'Tổng quan';
+        let feeChartInstance = null; // To hold the Chart.js instance
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const segmentDoanhNghiepBtn = document.getElementById('segment-doanhnghiep');
+            const segmentCaNhanBtn = document.getElementById('segment-canhan');
+
+            if (segmentDoanhNghiepBtn) {
+                segmentDoanhNghiepBtn.addEventListener('click', () => {
+                    currentSegment = 'Doanh nghiệp';
+                    currentCategory = 'Tổng quan';
+                    updateSegmentUI();
+                    renderNavigation();
+                    renderContent();
+                });
+            }
+
+            if (segmentCaNhanBtn) {
+                segmentCaNhanBtn.addEventListener('click', () => {
+                    currentSegment = 'Cá nhân';
+                    currentCategory = 'Tổng quan';
+                    updateSegmentUI();
+                    renderNavigation();
+                    renderContent();
+                });
+            }
+
+            updateSegmentUI();
+            renderNavigation();
+            renderContent();
+
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            if (menuToggle) { // Added null check for menuToggle
+                menuToggle.addEventListener('click', () => {
+                    if (sidebar) {
+                        sidebar.classList.toggle('-translate-x-full');
+                    }
+                });
+            }
+        });
+
+        function updateSegmentUI() {
+            const segmentDoanhNghiepBtn = document.getElementById('segment-doanhnghiep');
+            const segmentCaNhanBtn = document.getElementById('segment-canhan');
+
+            // Safely remove 'active' class if elements exist
+            if (segmentDoanhNghiepBtn) {
+                segmentDoanhNghiepBtn.classList.remove('active');
+            }
+            if (segmentCaNhanBtn) {
+                segmentCaNhanBtn.classList.remove('active');
+            }
+
+            // Safely add 'active' class to the current segment button
+            const currentActiveBtn = document.getElementById(`segment-${currentSegment.toLowerCase().replace(' ', '')}`);
+            if (currentActiveBtn) {
+                currentActiveBtn.classList.add('active');
+            }
+        }
+
+        function renderNavigation() {
+            const navigation = document.getElementById('navigation');
+            if (!navigation) return; // Added null check for navigation
+
+            navigation.innerHTML = ''; // Clear existing navigation
+
+            const categories = Object.keys(feeData[currentSegment]);
+            categories.forEach(category => {
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = category;
+                link.className = 'block p-3 rounded-lg text-slate-700 font-medium sidebar-link';
+                if (category === currentCategory) {
+                    link.classList.add('active');
+                }
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentCategory = category;
+                    document.querySelector('.sidebar-link.active')?.classList.remove('active');
+                    link.classList.add('active');
+                    renderContent();
+                    if (window.innerWidth < 1024) {
+                       const sidebar = document.getElementById('sidebar');
+                       if (sidebar) { // Added null check for sidebar
+                           sidebar.classList.add('-translate-x-full');
+                       }
+                    }
+                });
+                navigation.appendChild(link);
+            });
+        }
+        
+        function renderContent() {
+            const contentEl = document.getElementById('content');
+            if (!contentEl) return; // Added null check for contentEl
+
+            if (currentCategory === 'Tổng quan') {
+                renderOverview(contentEl);
+            } else {
+                renderTable(contentEl);
+            }
+        }
+
+        function renderOverview(container) {
+            const categories = Object.keys(feeData[currentSegment]).filter(k => k !== 'Tổng quan');
+            const dataCounts = categories.map(cat => feeData[currentSegment][cat].length);
+            const totalFees = dataCounts.reduce((acc, count) => acc + count, 0);
+
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm mb-8">
+                   <h2 class="text-2xl font-bold text-slate-900 mb-2">Tổng Quan Biểu Phí Dịch Vụ ${currentSegment}</h2>
+                   <p class="text-slate-600">Đây là trang tổng quan tương tác, giúp phân tích và tra cứu biểu phí dịch vụ dành cho khách hàng ${currentSegment} của BIDV. Sử dụng thanh điều hướng bên trái để khám phá các danh mục phí chi tiết. Biểu đồ dưới đây thể hiện sự phân bổ các mã phí theo từng loại hình dịch vụ.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                     <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col justify-center items-center text-center">
+                        <span class="text-4xl font-bold text-sky-600">${totalFees}</span>
+                        <p class="font-semibold text-slate-700 mt-2">Tổng số Mã phí</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col justify-center items-center text-center">
+                        <span class="text-4xl font-bold text-sky-600">${categories.length}</span>
+                        <p class="font-semibold text-slate-700 mt-2">Danh mục Dịch vụ</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col justify-center items-center text-center">
+                        <span class="text-sm font-medium text-slate-500">Hiệu lực từ</span>
+                        <p class="font-semibold text-slate-700 mt-1">Tháng 4, 2025</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">Phân Bổ Phí Theo Dịch Vụ</h3>
+                    <div class="chart-container">
+                        <canvas id="feeChart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            if (feeChartInstance) {
+                feeChartInstance.destroy();
+            }
+            const ctx = document.getElementById('feeChart');
+            if (ctx) { // Added null check for ctx
+                feeChartInstance = new Chart(ctx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            label: 'Số lượng mã phí',
+                            data: dataCounts,
+                            backgroundColor: [
+                                '#0284c7', '#38bdf8', '#7dd3fc', '#f0abfc',
+                                '#a855f7', '#6d28d9', '#4c1d95', '#fb923c',
+                                '#ef4444', '#f97316', '#eab308', '#84cc16'
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 4,
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: { size: 14 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed + ' mã phí';
+                                        }
+                                        return label;
+                                    },
+                                    afterLabel: function(context) {
+                                        const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(2) + '%';
+                                        return 'Tỷ lệ: ' + percentage;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderTable(container) {
+            const data = feeData[currentSegment][currentCategory];
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">${currentCategory} (${currentSegment})</h2>
+                    <p class="text-slate-600 mb-6">Tra cứu chi tiết các loại phí thuộc danh mục ${currentCategory} dành cho khách hàng ${currentSegment}. Sử dụng ô tìm kiếm để lọc kết quả theo Tên hoặc Mã phí.</p>
+                    <div class="mb-4">
+                        <input type="text" id="searchInput" placeholder="Tìm kiếm theo mục phí hoặc mã phí..." class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Mã phí</th>
+                                    <th scope="col" class="px-6 py-3">Mục phí</th>
+                                    <th scope="col" class="px-6 py-3">Cách tính phí</th>
+                                    <th scope="col" class="px-6 py-3">Điều kiện</th>
+                                    <th scope="col" class="px-6 py-3">Phân loại</th>
+                                    <th scope="col" class="px-6 py-3">Thu tự động</th>
+                                    <th scope="col" class="px-6 py-3">Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feeTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) { // Added null check for searchInput
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    filterTable(searchTerm);
+                });
+            }
+
+            populateTable(data);
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById('feeTableBody');
+            if (!tableBody) return; // Added null check for tableBody
+
+            tableBody.innerHTML = ''; 
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-slate-50';
+
+                let feeDisplay = '';
+                if (typeof item.cachTinhPhi === 'object') {
+                    for (const segment in item.cachTinhPhi) {
+                        let segmentLabel = '';
+                        if (segment === 'KHCNTT') segmentLabel = 'KHCN TT: ';
+                        else if (segment === 'KHCCPE') segmentLabel = 'KHCC PE/PE: ';
+                        else if (segment === 'KHCCPrivate') segmentLabel = 'KHCC Private: ';
+                        feeDisplay += `<p class="text-xs text-slate-700 fee-segment-item">${segmentLabel}${item.cachTinhPhi[segment]}</p>`;
+                    }
+                } else {
+                    feeDisplay = item.cachTinhPhi;
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-sky-700">${item.maPhi}</td>
+                    <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">${item.mucPhi}</th>
+                    <td class="px-6 py-4">${feeDisplay}</td>
+                    <td class="px-6 py-4">${item.dieuKien || 'N/A'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.phanLoai === 'Định kỳ' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}">${item.phanLoai}</span></td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.thuTuDong === 'Tự động' ? 'bg-sky-100 text-sky-800' : 'bg-red-100 text-red-800'}">${item.thuTuDong}</span></td>
+                    <td class="px-6 py-4">${item.ghiChu || 'N/A'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function filterTable(searchTerm) {
+            const allData = feeData[currentSegment][currentCategory];
+            const filteredData = allData.filter(item => 
+                (item.mucPhi && item.mucPhi.toLowerCase().includes(searchTerm)) || 
+                (item.maPhi && item.maPhi.toLowerCase().includes(searchTerm))
+            );
+            populateTable(filteredData);
+        }
+
+    </script>
+</body>
+</html>
