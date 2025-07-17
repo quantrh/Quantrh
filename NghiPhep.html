@@ -635,6 +635,20 @@
             return null;
         }
 
+        // Function to calculate working days between two dates (inclusive)
+        function getWorkingDays(startDate, endDate) {
+            let count = 0;
+            const currentDate = new Date(startDate.getTime());
+            while (currentDate <= endDate) {
+                const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sunday (0) and Saturday (6)
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return count;
+        }
+
         // Function to update leave statistics
         function updateLeaveStatistics() {
             let totalPaidDaysOverall = 0;
@@ -661,8 +675,8 @@
                 }
 
                 if (startDate && endDate && requester && requester !== 'N/A') {
-                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    // Calculate working days only
+                    const workingDays = getWorkingDays(startDate, endDate);
 
                     const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
                     const year = startDate.getFullYear(); 
@@ -675,12 +689,12 @@
                     }
 
                     if (leaveTypeLower.includes('không lương')) {
-                        perPersonYearStats[requester][year].unpaidLeave += diffDays;
+                        perPersonYearStats[requester][year].unpaidLeave += workingDays;
                     } else if (leaveTypeLower.includes('đi công tác')) {
-                        perPersonYearStats[requester][year].businessTrip += diffDays;
+                        perPersonYearStats[requester][year].businessTrip += workingDays;
                     } else {
                         // All other types are considered "other paid leave"
-                        perPersonYearStats[requester][year].otherPaidLeave += diffDays;
+                        perPersonYearStats[requester][year].otherPaidLeave += workingDays;
                     }
                 }
             });
@@ -699,15 +713,15 @@
                 }
 
                 if (startDate && endDate) {
-                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    // Calculate working days only for overall totals
+                    const workingDays = getWorkingDays(startDate, endDate);
                     const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
 
                     if (leaveTypeLower.includes('không lương')) {
-                        totalUnpaidDaysOverall += diffDays;
+                        totalUnpaidDaysOverall += workingDays;
                     } else {
                         // All other types (including business trip and other paid leave) contribute to total paid
-                        totalPaidDaysOverall += diffDays;
+                        totalPaidDaysOverall += workingDays;
                     }
                 }
             });
@@ -1029,8 +1043,9 @@
                 }
 
                 if (startDate && endDate && requester && requester !== 'N/A') {
-                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    // Calculate working days only
+                    const workingDays = getWorkingDays(startDate, endDate);
+
                     const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
                     const year = startDate.getFullYear();
 
@@ -1042,21 +1057,21 @@
                     }
 
                     if (leaveTypeLower.includes('không lương')) {
-                        currentPerPersonYearStats[requester][year].unpaidLeave += diffDays;
+                        currentPerPersonYearStats[requester][year].unpaidLeave += workingDays;
                     } else if (leaveTypeLower.includes('đi công tác')) {
-                        currentPerPersonYearStats[requester][year].businessTrip += diffDays;
+                        currentPerPersonYearStats[requester][year].businessTrip += workingDays;
                     } else {
-                        currentPerPersonYearStats[requester][year].otherPaidLeave += diffDays;
+                        currentPerPersonYearStats[requester][year].otherPaidLeave += workingDays;
                     }
 
                     // Aggregate reasons
                     if (reason) {
-                        leaveReasons[reason] = (leaveReasons[reason] || 0) + diffDays;
+                        leaveReasons[reason] = (leaveReasons[reason] || 0) + workingDays; // Count working days for reasons too
                     }
                 }
             });
 
-            let statsSummary = "Dữ liệu thống kê nghỉ phép theo cán bộ và năm:\n";
+            let statsSummary = "Dữ liệu thống kê nghỉ phép theo cán bộ và năm (chỉ tính ngày làm việc):\n";
             const sortedRequestersForPrompt = Object.keys(currentPerPersonYearStats).sort();
             if (sortedRequestersForPrompt.length > 0) {
                 sortedRequestersForPrompt.forEach(requester => {
@@ -1071,7 +1086,7 @@
                 statsSummary += "Không có dữ liệu thống kê để phân tích.\n";
             }
 
-            statsSummary += "\nThống kê lý do nghỉ phép (tổng số ngày):\n";
+            statsSummary += "\nThống kê lý do nghỉ phép (tổng số ngày làm việc):\n";
             const sortedReasons = Object.keys(leaveReasons).sort((a, b) => leaveReasons[b] - leaveReasons[a]); // Sort by most frequent reasons
             if (sortedReasons.length > 0) {
                 sortedReasons.forEach(reason => {
@@ -1083,6 +1098,7 @@
 
 
             const prompt = `Bạn là một chuyên gia phân tích dữ liệu nhân sự. Dựa vào dữ liệu thống kê nghỉ phép và lý do nghỉ phép sau, hãy đưa ra nhận xét về tình hình nghỉ phép của công ty và các khuyến nghị để cải thiện hoặc quản lý hiệu quả hơn.
+            Lưu ý: Các số liệu đã được tính toán chỉ dựa trên ngày làm việc (không bao gồm Thứ Bảy và Chủ Nhật).
             Vui lòng định dạng câu trả lời bằng HTML, sử dụng các thẻ <p> cho mỗi đoạn văn, và các thẻ <ul>, <li> nếu cần cho danh sách.
 
             Dữ liệu:
