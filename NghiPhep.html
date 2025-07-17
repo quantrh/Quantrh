@@ -60,9 +60,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        /* New style for Business Trip events */
+        /* New style for Business Trip and Study events */
         .event-item.business-trip {
-            background-color: #e0f2fe; /* Light blue for business trips */
+            background-color: #e0f2fe; /* Light blue for business trips and study trips */
             color: #007bff; /* Darker blue text */
         }
 
@@ -475,8 +475,8 @@
                     eventItem.classList.add('event-item');
                     eventItem.textContent = event.requester && event.requester !== 'N/A' ? event.requester : 'Nghỉ phép';
                     
-                    // Apply specific class for "đi công tác"
-                    if (event.leaveType && event.leaveType.toLowerCase().includes('đi công tác')) {
+                    // Apply specific class for "đi công tác" and "đi học"
+                    if (event.leaveType && (event.leaveType.toLowerCase().includes('đi công tác') || event.leaveType.toLowerCase().includes('đi học'))) {
                         eventItem.classList.add('business-trip');
                     } else if (event.status) {
                         const statusClass = event.status.toLowerCase().replace(/[^a-z0-9àáạảãăằắẳẵặâầấẩẫậèéẹẻẽêềếểễệđìíịỉĩòóọỏõôồốổỗộơờớởỡợùúụủũưừứửữựỳýỵỷỹ]+/g, '-').replace(/^-*|-*$/g, '');
@@ -710,7 +710,7 @@
             let totalUnpaidDaysOverall = 0;
             const selectedEmployee = employeeFilterDropdown.value;
 
-            // { requester: { year: { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 } } }
+            // { requester: { year: { unpaidLeave: 0, businessTripStudy: 0, otherPaidLeave: 0 } } }
             const perPersonYearStats = {}; 
 
             let dataToProcessForStats = leaveData;
@@ -740,13 +740,13 @@
                         perPersonYearStats[requester] = {};
                     }
                     if (!perPersonYearStats[requester][year]) {
-                        perPersonYearStats[requester][year] = { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 };
+                        perPersonYearStats[requester][year] = { unpaidLeave: 0, businessTripStudy: 0, otherPaidLeave: 0 };
                     }
 
                     if (leaveTypeLower.includes('không lương')) {
                         perPersonYearStats[requester][year].unpaidLeave += workingDays;
-                    } else if (leaveTypeLower.includes('đi công tác')) {
-                        perPersonYearStats[requester][year].businessTrip += workingDays;
+                    } else if (leaveTypeLower.includes('đi công tác') || leaveTypeLower.includes('đi học')) { // Combined "đi công tác" and "đi học"
+                        perPersonYearStats[requester][year].businessTripStudy += workingDays;
                     } else {
                         // All other types are considered "other paid leave"
                         perPersonYearStats[requester][year].otherPaidLeave += workingDays;
@@ -775,7 +775,7 @@
                     if (leaveTypeLower.includes('không lương')) {
                         totalUnpaidDaysOverall += workingDays;
                     } else {
-                        // All other types (including business trip and other paid leave) contribute to total paid
+                        // All other types (including business trip, study and other paid leave) contribute to total paid
                         totalPaidDaysOverall += workingDays;
                     }
                 }
@@ -799,7 +799,7 @@
                         content += `
                             <p class="text-sm text-blue-700 mt-2"><strong>Năm ${year}:</strong></p>
                             <p class="text-xs text-blue-600 ml-2">Nghỉ phép không lương: <span class="font-semibold">${stats.unpaidLeave} ngày</span></p>
-                            <p class="text-xs text-blue-600 ml-2">Đi công tác: <span class="font-semibold">${stats.businessTrip} ngày</span></p>
+                            <p class="text-xs text-blue-600 ml-2">Đi công tác, đi học: <span class="font-semibold">${stats.businessTripStudy} ngày</span></p>
                             <p class="text-xs text-blue-600 ml-2">Nghỉ phép khác: <span class="font-semibold">${stats.otherPaidLeave} ngày</span></p>
                         `;
                     });
@@ -1051,7 +1051,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1124,13 +1124,13 @@
                         currentPerPersonYearStats[requester] = {};
                     }
                     if (!currentPerPersonYearStats[requester][year]) {
-                        currentPerPersonYearStats[requester][year] = { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 };
+                        currentPerPersonYearStats[requester][year] = { unpaidLeave: 0, businessTripStudy: 0, otherPaidLeave: 0 };
                     }
 
                     if (leaveTypeLower.includes('không lương')) {
                         currentPerPersonYearStats[requester][year].unpaidLeave += workingDays;
-                    } else if (leaveTypeLower.includes('đi công tác')) {
-                        currentPerPersonYearStats[requester][year].businessTrip += workingDays;
+                    } else if (leaveTypeLower.includes('đi công tác') || leaveTypeLower.includes('đi học')) {
+                        currentPerPersonYearStats[requester][year].businessTripStudy += workingDays;
                     } else {
                         currentPerPersonYearStats[requester][year].otherPaidLeave += workingDays;
                     }
@@ -1150,7 +1150,7 @@
                     const sortedYearsForPrompt = Object.keys(currentPerPersonYearStats[requester]).sort();
                     sortedYearsForPrompt.forEach(year => {
                         const stats = currentPerPersonYearStats[requester][year];
-                        statsSummary += `  Năm ${year}: Nghỉ không lương: ${stats.unpaidLeave} ngày, Đi công tác: ${stats.businessTrip} ngày, Nghỉ phép khác: ${stats.otherPaidLeave} ngày.\n`;
+                        statsSummary += `  Năm ${year}: Nghỉ không lương: ${stats.unpaidLeave} ngày, Đi công tác, đi học: ${stats.businessTripStudy} ngày, Nghỉ phép khác: ${stats.otherPaidLeave} ngày.\n`;
                     });
                 });
             } else {
@@ -1180,7 +1180,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1324,7 +1324,7 @@
             } else if (chartType === 'monthly') {
                 const monthlyCounts = {}; // { 'YYYY-MM': Set<requester_name> }
 
-                leaveData.forEach(event => {
+                dataSubset.forEach(event => { // Use filtered data here
                     const startDate = parseDate(event.startDate);
                     const endDate = parseDate(event.endDate);
                     const requester = event.requester;
