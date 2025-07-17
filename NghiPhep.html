@@ -283,6 +283,23 @@
                 </div>
             </div>
         </div>
+
+        <!-- Gemini API Section: Leave Policy Q&A -->
+        <div class="gemini-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">✨ Hỏi đáp chính sách nghỉ phép ✨</h2>
+            <div class="mb-4">
+                <label for="policyQuestionInput" class="block text-lg font-medium text-gray-700 mb-2">Nhập câu hỏi của bạn về chính sách nghỉ phép:</label>
+                <textarea id="policyQuestionInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Ví dụ: Tôi có bao nhiêu ngày nghỉ phép hưởng lương?"></textarea>
+            </div>
+            <button id="askPolicyButton" class="px-6 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition duration-300">
+                Hỏi Gemini
+            </button>
+            <div id="policyAnswerOutput" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200 text-gray-800 min-h-[50px]">
+                <!-- Gemini's answer will appear here -->
+                <p class="text-gray-500">Câu trả lời sẽ hiển thị ở đây...</p>
+            </div>
+        </div>
+
     </div>
 
     <!-- Event Details Modal -->
@@ -336,6 +353,11 @@
         const employeeSuggestions = document.getElementById('employeeSuggestions');
         const employeeFilterDropdown = document.getElementById('employeeFilterDropdown'); // New dropdown element
         const clearFilterBtn = document.getElementById('clearFilterButton');
+
+        // Gemini API elements
+        const policyQuestionInput = document.getElementById('policyQuestionInput');
+        const askPolicyButton = document.getElementById('askPolicyButton');
+        const policyAnswerOutput = document.getElementById('policyAnswerOutput');
 
 
         // Function to render the calendar
@@ -895,6 +917,72 @@
                 uploadStatus.textContent = 'Vui lòng chọn một file để tải lên.';
             }
         });
+
+        // Gemini API Integration
+        async function askGeminiAboutPolicy() {
+            const question = policyQuestionInput.value.trim();
+            if (!question) {
+                policyAnswerOutput.innerHTML = '<p class="text-red-500">Vui lòng nhập câu hỏi của bạn.</p>';
+                return;
+            }
+
+            policyAnswerOutput.innerHTML = '<p class="text-gray-500">Đang hỏi Gemini... <span class="animate-pulse">...</span></p>';
+            askPolicyButton.disabled = true;
+
+            // Mock policy text for the LLM to refer to
+            const policyText = `
+                Chính sách nghỉ phép của công ty quy định:
+                - Mỗi nhân viên có 12 ngày nghỉ phép hưởng lương mỗi năm.
+                - Nghỉ ốm có hưởng lương tối đa 5 ngày/năm, cần có giấy xác nhận của bác sĩ.
+                - Nghỉ không lương không giới hạn số ngày nhưng phải được sự đồng ý của quản lý trực tiếp.
+                - Nghỉ đi công tác không tính vào ngày nghỉ phép hưởng lương.
+                - Nghỉ cưới được 3 ngày hưởng lương.
+                - Nghỉ tang (người thân trực hệ) được 5 ngày hưởng lương.
+                - Các loại nghỉ phép khác không được đề cập cụ thể trong chính sách này sẽ không được tính là nghỉ hưởng lương.
+            `;
+
+            const prompt = `Bạn là một trợ lý nhân sự chuyên về chính sách nghỉ phép. Dựa trên chính sách sau, hãy trả lời câu hỏi của người dùng. Nếu thông tin không có trong chính sách, hãy nói rằng bạn không có thông tin đó.
+
+            Chính sách:
+            ${policyText}
+
+            Câu hỏi của người dùng: "${question}"
+
+            Trả lời:`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    policyAnswerOutput.innerHTML = `<p>${text}</p>`;
+                } else {
+                    policyAnswerOutput.innerHTML = '<p class="text-red-500">Không thể nhận được câu trả lời từ Gemini. Vui lòng thử lại.</p>';
+                    console.error("Unexpected Gemini API response structure:", result);
+                }
+            } catch (error) {
+                policyAnswerOutput.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi khi gọi Gemini API: ${error.message}</p>`;
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                askPolicyButton.disabled = false;
+            }
+        }
+
+        askPolicyButton.addEventListener('click', askGeminiAboutPolicy);
+
 
         // Initial render
         renderCalendar();
