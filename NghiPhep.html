@@ -601,7 +601,8 @@
             let totalUnpaidDaysOverall = 0;
             const selectedEmployee = employeeFilterDropdown.value;
 
-            const perPersonYearStats = {}; // { requester: { year: { paid: 0, unpaid: 0 } } }
+            // { requester: { year: { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 } } }
+            const perPersonYearStats = {}; 
 
             let dataToProcessForStats = leaveData;
             if (selectedEmployee !== 'all') {
@@ -618,33 +619,27 @@
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
                     const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
-                    const year = startDate.getFullYear(); // Use start year for simplicity in yearly stats
+                    const year = startDate.getFullYear(); 
 
                     if (!perPersonYearStats[requester]) {
                         perPersonYearStats[requester] = {};
                     }
                     if (!perPersonYearStats[requester][year]) {
-                        perPersonYearStats[requester][year] = { paid: 0, unpaid: 0 };
+                        perPersonYearStats[requester][year] = { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 };
                     }
 
-                    if (leaveTypeLower.includes('nghỉ phép') || 
-                        (leaveTypeLower.includes('nghỉ ốm') && !leaveTypeLower.includes('không lương')) || 
-                        leaveTypeLower.includes('nghỉ cưới') || 
-                        leaveTypeLower.includes('nghỉ tang') ||
-                        leaveTypeLower.includes('thai sản')) { 
-                        perPersonYearStats[requester][year].paid += diffDays;
-                    } else if (leaveTypeLower.includes('không lương') || 
-                               (leaveTypeLower.includes('nghỉ ốm') && leaveTypeLower.includes('không lương'))) {
-                        perPersonYearStats[requester][year].unpaid += diffDays;
+                    if (leaveTypeLower.includes('không lương')) {
+                        perPersonYearStats[requester][year].unpaidLeave += diffDays;
+                    } else if (leaveTypeLower.includes('đi công tác')) {
+                        perPersonYearStats[requester][year].businessTrip += diffDays;
                     } else {
-                        perPersonYearStats[requester][year].unpaid += diffDays;
+                        // All other types are considered "other paid leave"
+                        perPersonYearStats[requester][year].otherPaidLeave += diffDays;
                     }
                 }
             });
 
             // Calculate overall totals based on the *filtered* data
-            // This total should always reflect all data, regardless of per-person filter
-            // Re-calculate totalPaidDaysOverall and totalUnpaidDaysOverall based on the currently filtered data (dataToProcessForStats)
             totalPaidDaysOverall = 0;
             totalUnpaidDaysOverall = 0;
             dataToProcessForStats.forEach(event => {
@@ -655,17 +650,11 @@
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                     const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
 
-                    if (leaveTypeLower.includes('nghỉ phép') || 
-                        (leaveTypeLower.includes('nghỉ ốm') && !leaveTypeLower.includes('không lương')) || 
-                        leaveTypeLower.includes('nghỉ cưới') || 
-                        leaveTypeLower.includes('nghỉ tang') ||
-                        leaveTypeLower.includes('thai sản')) { 
-                        totalPaidDaysOverall += diffDays;
-                    } else if (leaveTypeLower.includes('không lương') || 
-                               (leaveTypeLower.includes('nghỉ ốm') && leaveTypeLower.includes('không lương'))) {
+                    if (leaveTypeLower.includes('không lương')) {
                         totalUnpaidDaysOverall += diffDays;
                     } else {
-                        totalUnpaidDaysOverall += diffDays;
+                        // All other types (including business trip and other paid leave) contribute to total paid
+                        totalPaidDaysOverall += diffDays;
                     }
                 }
             });
@@ -679,7 +668,7 @@
                 sortedRequesters.forEach(requester => {
                     const requesterStats = perPersonYearStats[requester];
                     const personDiv = document.createElement('div');
-                    personDiv.classList.add('bg-blue-50', 'p-4', 'rounded-lg', 'shadow-sm', 'col-span-1'); // Adjusted col-span for better layout
+                    personDiv.classList.add('bg-blue-50', 'p-4', 'rounded-lg', 'shadow-sm', 'col-span-1'); 
                     
                     let content = `<h3 class="font-bold text-blue-800 mb-2">${requester}</h3>`;
                     const sortedYears = Object.keys(requesterStats).sort();
@@ -687,8 +676,9 @@
                         const stats = requesterStats[year];
                         content += `
                             <p class="text-sm text-blue-700 mt-2"><strong>Năm ${year}:</strong></p>
-                            <p class="text-xs text-blue-600 ml-2">Hưởng lương: <span class="font-semibold">${stats.paid} ngày</span></p>
-                            <p class="text-xs text-blue-600 ml-2">Không lương: <span class="font-semibold">${stats.unpaid} ngày</span></p>
+                            <p class="text-xs text-blue-600 ml-2">Nghỉ phép không lương: <span class="font-semibold">${stats.unpaidLeave} ngày</span></p>
+                            <p class="text-xs text-blue-600 ml-2">Đi công tác: <span class="font-semibold">${stats.businessTrip} ngày</span></p>
+                            <p class="text-xs text-blue-600 ml-2">Nghỉ phép khác: <span class="font-semibold">${stats.otherPaidLeave} ngày</span></p>
                         `;
                     });
                     personDiv.innerHTML = content;
