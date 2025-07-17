@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <!-- SheetJS library for Excel parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- D3.js library for charting -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif; /* Use Inter, with sans-serif fallback */
@@ -297,20 +299,50 @@
             </div>
         </div>
 
-        <!-- Statistics Section -->
-        <div class="statistics-section bg-white p-6 rounded-lg shadow-md mt-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Thống kê ngày nghỉ phép</h2>
-            <div id="perPersonStatistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Per-person statistics will be dynamically generated here -->
+        <!-- New Section: Leave Trend Chart -->
+        <div class="gemini-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">📈 Thống kê theo thời gian nghỉ ✨</h2>
+            <div class="mb-4 flex flex-col sm:flex-row items-center gap-4">
+                <label for="chartTypeSelect" class="text-lg font-medium text-gray-700">Hiển thị biểu đồ theo:</label>
+                <select id="chartTypeSelect" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="daily">Ngày trong tháng</option>
+                    <option value="monthly">Tháng</option>
+                </select>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-                <div class="bg-green-50 p-4 rounded-lg flex items-center justify-between">
-                    <span class="font-medium text-green-800">Tổng số ngày nghỉ hưởng lương (Tổng):</span>
-                    <span id="totalPaidLeaveDays" class="text-xl font-bold text-green-700">0 ngày</span>
+            <div id="dailyChartControls" class="mb-4 flex flex-col sm:flex-row items-center gap-4">
+                <label for="chartMonthSelect" class="text-lg font-medium text-gray-700">Chọn tháng:</label>
+                <select id="chartMonthSelect" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Months populated by JS -->
+                </select>
+                <label for="chartYearSelect" class="text-lg font-medium text-gray-700">Chọn năm:</label>
+                <select id="chartYearSelect" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Years populated by JS -->
+                </select>
+            </div>
+            <div id="leaveTrendChart" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200 text-gray-800 min-h-[200px] flex items-center justify-center">
+                <p class="text-gray-500">Biểu đồ sẽ hiển thị ở đây sau khi bạn tải dữ liệu.</p>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statisticsSection" class="statistics-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 id="statisticsHeader" class="text-2xl font-semibold text-gray-800 mb-4 flex items-center justify-between cursor-pointer">
+                Thống kê ngày nghỉ phép
+                <span id="statisticsToggleIcon" class="transform transition-transform duration-300 rotate-0">▼</span>
+            </h2>
+            <div id="statisticsContent" class="hidden"> <!-- This div will be toggled -->
+                <div id="perPersonStatistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Per-person statistics will be dynamically generated here -->
                 </div>
-                <div class="bg-red-50 p-4 rounded-lg flex items-center justify-between">
-                    <span class="font-medium text-red-800">Tổng số ngày nghỉ không hưởng lương (Tổng):</span>
-                    <span id="totalUnpaidLeaveDays" class="text-xl font-bold text-red-700">0 ngày</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                    <div class="bg-green-50 p-4 rounded-lg flex items-center justify-between">
+                        <span class="font-medium text-green-800">Tổng số ngày nghỉ hưởng lương (Tổng):</span>
+                        <span id="totalPaidLeaveDays" class="text-xl font-bold text-green-700">0 ngày</span>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg flex items-center justify-between">
+                        <span class="font-medium text-red-800">Tổng số ngày nghỉ không hưởng lương (Tổng):</span>
+                        <span id="totalUnpaidLeaveDays" class="text-xl font-bold text-red-700">0 ngày</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -376,6 +408,29 @@
 
         const analyzeLeaveButton = document.getElementById('analyzeLeaveButton'); // New analysis button
         const analysisOutput = document.getElementById('analysisOutput'); // New analysis output div
+
+        // Chart elements
+        const leaveTrendChartDiv = document.getElementById('leaveTrendChart');
+        const chartTypeSelect = document.getElementById('chartTypeSelect');
+        const dailyChartControls = document.getElementById('dailyChartControls');
+        const chartMonthSelect = document.getElementById('chartMonthSelect');
+        const chartYearSelect = document.getElementById('chartYearSelect');
+
+        // Statistics section toggle elements
+        const statisticsSection = document.getElementById('statisticsSection');
+        const statisticsHeader = document.getElementById('statisticsHeader');
+        const statisticsContent = document.getElementById('statisticsContent');
+        const statisticsToggleIcon = document.getElementById('statisticsToggleIcon');
+
+        // Initial state for statistics section: collapsed
+        statisticsContent.classList.add('hidden');
+        statisticsToggleIcon.classList.add('rotate-0'); // Pointing down
+
+        // Toggle function for statistics section
+        statisticsHeader.addEventListener('click', () => {
+            statisticsContent.classList.toggle('hidden');
+            statisticsToggleIcon.classList.toggle('rotate-180'); // Rotate 180 degrees
+        });
 
 
         // Function to render the calendar
@@ -660,7 +715,7 @@
 
             let dataToProcessForStats = leaveData;
             if (selectedEmployee !== 'all') {
-                dataToProcessForStats = leaveData.filter(event => event.requester === selectedEmployee);
+                dataToProcessForStats = dataToProcessForStats.filter(event => event.requester === selectedEmployee);
             }
 
             dataToProcessForStats.forEach(event => {
@@ -761,6 +816,9 @@
             // Update overall totals
             totalPaidLeaveDaysElement.textContent = `${totalPaidDaysOverall} ngày`;
             totalUnpaidLeaveDaysElement.textContent = `${totalUnpaidDaysOverall} ngày`;
+
+            // Update the leave trend chart
+            updateLeaveTrendChart();
         }
 
         // Function to handle search input and display suggestions
@@ -849,7 +907,7 @@
                 currentYear--;
             }
             renderCalendar();
-            updateLeaveStatistics(); // Update statistics on month change
+            updateLeaveStatistics(); // Update statistics on month change (which now includes chart)
         });
 
         nextMonthBtn.addEventListener('click', () => {
@@ -859,7 +917,7 @@
                 currentYear++;
             }
             renderCalendar();
-            updateLeaveStatistics(); // Update statistics on month change
+            updateLeaveStatistics(); // Update statistics on month change (which now includes chart)
         });
 
         // Event Listener for search input
@@ -885,7 +943,7 @@
                 }
                 employeeSuggestions.innerHTML = ''; // Hide suggestions on Enter
                 renderCalendar();
-                updateLeaveStatistics();
+                updateLeaveStatistics(); // Update statistics and chart
             }
         });
 
@@ -894,7 +952,7 @@
             employeeSearchInput.value = employeeFilterDropdown.value === 'all' ? '' : employeeFilterDropdown.value; // Sync search input
             employeeSuggestions.innerHTML = ''; // Clear suggestions
             renderCalendar();
-            updateLeaveStatistics();
+            updateLeaveStatistics(); // Update statistics and chart
         });
 
 
@@ -904,7 +962,7 @@
             employeeSuggestions.innerHTML = ''; // Clear suggestions
             employeeFilterDropdown.value = 'all'; // Reset dropdown
             renderCalendar();
-            updateLeaveStatistics();
+            updateLeaveStatistics(); // Update statistics and chart
         });
 
         // Event Listener for file upload
@@ -930,8 +988,15 @@
                         }
                     }
 
+                    // Populate chart month/year selectors based on loaded data
+                    populateChartMonthYearSelectors();
+                    // Set default chart month/year to current calendar month/year
+                    chartMonthSelect.value = currentMonth;
+                    chartYearSelect.value = currentYear;
+
+
                     renderCalendar();
-                    updateLeaveStatistics(); // Call statistics update after data is loaded and calendar rendered
+                    updateLeaveStatistics(); // Call statistics update after data is loaded and calendar rendered (includes chart)
 
                     if (leaveData.length > 0 && leaveData.every(event => event.requester === 'N/A')) {
                         uploadStatus.textContent = 'Đã tải lên và cập nhật lịch thành công! Tuy nhiên, không tìm thấy cột "Họ và tên" hoặc dữ liệu tên trong file Excel.';
@@ -986,7 +1051,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1109,7 +1174,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1139,9 +1204,259 @@
 
         analyzeLeaveButton.addEventListener('click', analyzeLeaveData);
 
+        // Function to populate month and year dropdowns for chart
+        function populateChartMonthYearSelectors() {
+            chartMonthSelect.innerHTML = '';
+            chartYearSelect.innerHTML = '';
+
+            const months = [
+                "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+                "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+            ];
+
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index; // 0-indexed month
+                option.textContent = month;
+                chartMonthSelect.appendChild(option);
+            });
+
+            const currentYearChart = new Date().getFullYear();
+            // Populate years, e.g., current year +/- 5 years, or based on data range
+            const yearsInLeaveData = new Set();
+            leaveData.forEach(event => {
+                const startDate = parseDate(event.startDate);
+                const endDate = parseDate(event.endDate);
+                if (startDate) yearsInLeaveData.add(startDate.getFullYear());
+                if (endDate) yearsInLeaveData.add(endDate.getFullYear());
+            });
+
+            let startYear = currentYearChart - 5;
+            let endYear = currentYearChart + 5;
+
+            if (yearsInLeaveData.size > 0) {
+                startYear = Math.min(...Array.from(yearsInLeaveData), currentYearChart - 1);
+                endYear = Math.max(...Array.from(yearsInLeaveData), currentYearChart + 1);
+            }
+
+            for (let year = startYear; year <= endYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                chartYearSelect.appendChild(option);
+            }
+
+            // Set default selected values
+            chartMonthSelect.value = currentMonth;
+            chartYearSelect.value = currentYear;
+        }
+
+
+        // Function to get leave counts based on chart type
+        function getLeaveCountsForChart(chartType, dataSubset, selectedMonth, selectedYear) {
+            if (chartType === 'daily') {
+                const dailyCounts = {}; // { 'YYYY-MM-DD': Set<requester_name> }
+                const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+                // Initialize dailyCounts for all working days in the selected month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(selectedYear, selectedMonth, day);
+                    const dayOfWeek = date.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sunday (0) and Saturday (6)
+                        const dateString = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        dailyCounts[dateString] = new Set();
+                    }
+                }
+
+                dataSubset.forEach(event => {
+                    const startDate = parseDate(event.startDate);
+                    const endDate = parseDate(event.endDate);
+                    const requester = event.requester;
+                    const statusLower = event.status ? event.status.toLowerCase() : '';
+
+                    if (statusLower === 'bị từ chối') {
+                        return; // Skip rejected leaves
+                    }
+
+                    if (startDate && endDate && requester && requester !== 'N/A') {
+                        let currentDate = new Date(startDate.getTime());
+                        while (currentDate <= endDate) {
+                            const dayOfWeek = currentDate.getDay();
+                            // Only count if it's a working day and within the selected calendar month and year
+                            if (dayOfWeek !== 0 && dayOfWeek !== 6 &&
+                                currentDate.getMonth() === selectedMonth &&
+                                currentDate.getFullYear() === selectedYear) {
+                                
+                                const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+                                if (dailyCounts[dateString]) { // Ensure it's a working day in our initialized map
+                                    dailyCounts[dateString].add(requester);
+                                }
+                            }
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                    }
+                });
+
+                // Convert Sets to counts and prepare data for D3
+                const chartData = [];
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(selectedYear, selectedMonth, day);
+                    const dayOfWeek = date.getDay();
+                    const dateString = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    
+                    // Only include working days in the chart data
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        chartData.push({
+                            date: date,
+                            label: day, // Use day for x-axis label
+                            count: dailyCounts[dateString] ? dailyCounts[dateString].size : 0
+                        });
+                    }
+                }
+                return chartData;
+
+            } else if (chartType === 'monthly') {
+                const monthlyCounts = {}; // { 'YYYY-MM': Set<requester_name> }
+
+                leaveData.forEach(event => {
+                    const startDate = parseDate(event.startDate);
+                    const endDate = parseDate(event.endDate);
+                    const requester = event.requester;
+                    const statusLower = event.status ? event.status.toLowerCase() : '';
+
+                    if (statusLower === 'bị từ chối') {
+                        return; // Skip rejected leaves
+                    }
+
+                    if (startDate && endDate && requester && requester !== 'N/A') {
+                        let currentDate = new Date(startDate.getTime());
+                        while (currentDate <= endDate) {
+                            const dayOfWeek = currentDate.getDay();
+                            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Only count working days
+                                const monthYearString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+                                if (!monthlyCounts[monthYearString]) {
+                                    monthlyCounts[monthYearString] = new Set();
+                                }
+                                monthlyCounts[monthYearString].add(requester);
+                            }
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                    }
+                });
+
+                const chartData = Object.keys(monthlyCounts).map(monthYearStr => {
+                    const [year, month] = monthYearStr.split('-').map(Number);
+                    return {
+                        date: new Date(year, month - 1, 1), // First day of the month for sorting
+                        label: `T${month}/${year}`, // Label for x-axis
+                        count: monthlyCounts[monthYearStr].size
+                    };
+                }).sort((a, b) => a.date - b.date); // Sort chronologically
+
+                return chartData;
+            }
+            return []; // Should not happen
+        }
+
+        // Function to draw the leave trend chart using D3.js
+        function drawLeaveTrendChart(data, chartType) {
+            const chartContainer = document.getElementById('leaveTrendChart');
+            chartContainer.innerHTML = ''; // Clear previous chart content
+
+            if (data.length === 0 || data.every(d => d.count === 0)) {
+                chartContainer.innerHTML = '<p class="text-gray-500">Không có dữ liệu nghỉ phép hợp lệ để hiển thị biểu đồ trong tháng/khoảng thời gian này.</p>';
+                return;
+            }
+
+            const margin = { top: 20, right: 30, bottom: 60, left: 50 }; // Increased bottom margin for labels
+            const width = chartContainer.clientWidth - margin.left - margin.right;
+            const height = 300 - margin.top - margin.bottom;
+
+            const svg = d3.select("#leaveTrendChart")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X scale
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.label)) // Use 'label' for domain
+                .range([0, width])
+                .padding(0.1);
+
+            // Y scale (number of people)
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.count) + 1]) // +1 for a little padding above max
+                .range([height, 0]);
+
+            // Add X axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "translate(-10,0)rotate(-45)")
+                .style("text-anchor", "end");
+
+            // Add Y axis
+            svg.append("g")
+                .call(d3.axisLeft(y).tickFormat(d3.format("d"))); // Ensure integer ticks for count of people
+
+            // Add Y axis label
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Số người nghỉ");
+
+            // Add bars
+            svg.selectAll(".bar")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.label)) // Use 'label' for x position
+                .attr("y", d => y(d.count))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.count))
+                .attr("fill", "#006B68"); // BIDV Green
+        }
+
+        // Function to update the leave trend chart based on current selections
+        function updateLeaveTrendChart() {
+            const selectedChartType = chartTypeSelect.value;
+            const selectedEmployee = employeeFilterDropdown.value;
+
+            let dataToProcessForChart = leaveData;
+            if (selectedEmployee !== 'all') {
+                dataToProcessForChart = dataToProcessForChart.filter(event => event.requester === selectedEmployee);
+            }
+
+            let chartData;
+            if (selectedChartType === 'daily') {
+                dailyChartControls.style.display = 'flex'; // Show month/year selectors
+                const selectedMonth = parseInt(chartMonthSelect.value, 10);
+                const selectedYear = parseInt(chartYearSelect.value, 10);
+                chartData = getLeaveCountsForChart('daily', dataToProcessForChart, selectedMonth, selectedYear);
+            } else { // monthly
+                dailyChartControls.style.display = 'none'; // Hide month/year selectors
+                chartData = getLeaveCountsForChart('monthly', dataToProcessForChart);
+            }
+            drawLeaveTrendChart(chartData, selectedChartType);
+        }
+
+        // Event listeners for chart controls
+        chartTypeSelect.addEventListener('change', updateLeaveTrendChart);
+        chartMonthSelect.addEventListener('change', updateLeaveTrendChart);
+        chartYearSelect.addEventListener('change', updateLeaveTrendChart);
+
+
         // Initial render
+        populateChartMonthYearSelectors(); // Populate selectors on initial load
         renderCalendar();
-        updateLeaveStatistics(); // Initial call for statistics
+        updateLeaveStatistics(); // Initial call for statistics (includes chart)
     </script>
 </body>
 </html>
