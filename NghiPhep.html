@@ -1051,7 +1051,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = ""; 
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1091,12 +1091,18 @@
             analysisOutput.innerHTML = '<p class="text-gray-500">Đang phân tích dữ liệu nghỉ phép... <span class="animate-pulse">...</span></p>';
             analyzeLeaveButton.disabled = true;
 
-            // Recalculate perPersonYearStats to ensure it's up-to-date and includes all data
+            const selectedEmployee = employeeFilterDropdown.value;
+            let dataToProcessForAnalysis = leaveData;
+            if (selectedEmployee !== 'all') {
+                dataToProcessForAnalysis = dataToProcessForAnalysis.filter(event => event.requester === selectedEmployee);
+            }
+
+            // Recalculate perPersonYearStats to ensure it's up-to-date and includes only filtered data
             const currentPerPersonYearStats = {};
             // Also gather reasons for analysis
             const leaveReasons = {}; // { reason: count }
 
-            leaveData.forEach(event => {
+            dataToProcessForAnalysis.forEach(event => { // Use filtered data here
                 const startDate = parseDate(event.startDate);
                 const endDate = parseDate(event.endDate);
                 const requester = event.requester;
@@ -1174,7 +1180,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = ""; 
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
