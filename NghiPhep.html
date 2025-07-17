@@ -300,6 +300,21 @@
             </div>
         </div>
 
+        <!-- Gemini API Section: Leave Data Analysis -->
+        <div class="gemini-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">📊 Phân tích tình hình nghỉ phép và Khuyến nghị ✨</h2>
+            <div class="mb-4">
+                <p class="text-lg font-medium text-gray-700 mb-2">Nhấn nút bên dưới để nhận phân tích và khuyến nghị về tình hình nghỉ phép dựa trên dữ liệu đã tải lên:</p>
+            </div>
+            <button id="analyzeLeaveButton" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-300">
+                Phân tích và đưa ra khuyến nghị
+            </button>
+            <div id="analysisOutput" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200 text-gray-800 min-h-[50px]">
+                <!-- Analysis results will appear here -->
+                <p class="text-gray-500">Nhận xét và khuyến nghị sẽ hiển thị ở đây...</p>
+            </div>
+        </div>
+
     </div>
 
     <!-- Event Details Modal -->
@@ -358,6 +373,9 @@
         const policyQuestionInput = document.getElementById('policyQuestionInput');
         const askPolicyButton = document.getElementById('askPolicyButton');
         const policyAnswerOutput = document.getElementById('policyAnswerOutput');
+
+        const analyzeLeaveButton = document.getElementById('analyzeLeaveButton'); // New analysis button
+        const analysisOutput = document.getElementById('analysisOutput'); // New analysis output div
 
 
         // Function to render the calendar
@@ -918,7 +936,7 @@
             }
         });
 
-        // Gemini API Integration
+        // Gemini API Integration - Policy Q&A
         async function askGeminiAboutPolicy() {
             const question = policyQuestionInput.value.trim();
             if (!question) {
@@ -953,7 +971,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -983,6 +1001,104 @@
 
         askPolicyButton.addEventListener('click', askGeminiAboutPolicy);
 
+        // Gemini API Integration - Leave Data Analysis
+        async function analyzeLeaveData() {
+            if (leaveData.length === 0) {
+                analysisOutput.innerHTML = '<p class="text-red-500">Vui lòng tải lên file dữ liệu nghỉ phép trước khi phân tích.</p>';
+                return;
+            }
+
+            analysisOutput.innerHTML = '<p class="text-gray-500">Đang phân tích dữ liệu nghỉ phép... <span class="animate-pulse">...</span></p>';
+            analyzeLeaveButton.disabled = true;
+
+            // Recalculate perPersonYearStats to ensure it's up-to-date and includes all data
+            const currentPerPersonYearStats = {};
+            leaveData.forEach(event => {
+                const startDate = parseDate(event.startDate);
+                const endDate = parseDate(event.endDate);
+                const requester = event.requester;
+                const statusLower = event.status ? event.status.toLowerCase() : '';
+
+                if (statusLower === 'bị từ chối') {
+                    return; // Skip rejected events
+                }
+
+                if (startDate && endDate && requester && requester !== 'N/A') {
+                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
+                    const year = startDate.getFullYear();
+
+                    if (!currentPerPersonYearStats[requester]) {
+                        currentPerPersonYearStats[requester] = {};
+                    }
+                    if (!currentPerPersonYearStats[requester][year]) {
+                        currentPerPersonYearStats[requester][year] = { unpaidLeave: 0, businessTrip: 0, otherPaidLeave: 0 };
+                    }
+
+                    if (leaveTypeLower.includes('không lương')) {
+                        currentPerPersonYearStats[requester][year].unpaidLeave += diffDays;
+                    } else if (leaveTypeLower.includes('đi công tác')) {
+                        currentPerPersonYearStats[requester][year].businessTrip += diffDays;
+                    } else {
+                        currentPerPersonYearStats[requester][year].otherPaidLeave += diffDays;
+                    }
+                }
+            });
+
+            let statsSummary = "Dữ liệu thống kê nghỉ phép theo cán bộ và năm:\n";
+            const sortedRequestersForPrompt = Object.keys(currentPerPersonYearStats).sort();
+            if (sortedRequestersForPrompt.length > 0) {
+                sortedRequestersForPrompt.forEach(requester => {
+                    statsSummary += `- Cán bộ: ${requester}\n`;
+                    const sortedYearsForPrompt = Object.keys(currentPerPersonYearStats[requester]).sort();
+                    sortedYearsForPrompt.forEach(year => {
+                        const stats = currentPerPersonYearStats[requester][year];
+                        statsSummary += `  Năm ${year}: Nghỉ không lương: ${stats.unpaidLeave} ngày, Đi công tác: ${stats.businessTrip} ngày, Nghỉ phép khác: ${stats.otherPaidLeave} ngày.\n`;
+                    });
+                });
+            } else {
+                statsSummary += "Không có dữ liệu thống kê để phân tích.";
+            }
+
+            const prompt = `Bạn là một chuyên gia phân tích dữ liệu nhân sự. Dựa vào dữ liệu thống kê nghỉ phép sau, hãy đưa ra nhận xét về tình hình nghỉ phép của công ty và các khuyến nghị để cải thiện hoặc quản lý hiệu quả hơn.
+
+            ${statsSummary}
+
+            Hãy đưa ra nhận xét và khuyến nghị chi tiết, có cấu trúc.`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    analysisOutput.innerHTML = `<p>${text}</p>`;
+                } else {
+                    analysisOutput.innerHTML = '<p class="text-red-500">Không thể nhận được phân tích từ Gemini. Vui lòng thử lại.</p>';
+                    console.error("Unexpected Gemini API response structure:", result);
+                }
+            } catch (error) {
+                analysisOutput.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi khi gọi Gemini API: ${error.message}</p>`;
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                analyzeLeaveButton.disabled = false;
+            }
+        }
+
+        analyzeLeaveButton.addEventListener('click', analyzeLeaveData);
 
         // Initial render
         renderCalendar();
