@@ -1428,6 +1428,19 @@
                 .attr("width", x.bandwidth())
                 .attr("height", d => height - y(d.count))
                 .attr("fill", "#006B68"); // BIDV Green
+
+            // Add value labels on top of bars
+            svg.selectAll(".bar-label")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class", "bar-label")
+                .attr("x", d => x(d.label) + x.bandwidth() / 2) // Center the text horizontally
+                .attr("y", d => y(d.count) - 5) // Position slightly above the bar
+                .attr("text-anchor", "middle") // Center the text
+                .attr("fill", "#333") // Dark text color
+                .style("font-size", "12px")
+                .text(d => d.count > 0 ? d.count : ""); // Only show label if count > 0
         }
 
         // Function to update the leave trend chart based on current selections
