@@ -266,24 +266,6 @@
             <!-- Calendar days will be dynamically generated here -->
         </div>
 
-        <!-- Statistics Section -->
-        <div class="statistics-section bg-white p-6 rounded-lg shadow-md mt-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Thống kê ngày nghỉ phép</h2>
-            <div id="perPersonStatistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Per-person statistics will be dynamically generated here -->
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-                <div class="bg-green-50 p-4 rounded-lg flex items-center justify-between">
-                    <span class="font-medium text-green-800">Tổng số ngày nghỉ hưởng lương (Tổng):</span>
-                    <span id="totalPaidLeaveDays" class="text-xl font-bold text-green-700">0 ngày</span>
-                </div>
-                <div class="bg-red-50 p-4 rounded-lg flex items-center justify-between">
-                    <span class="font-medium text-red-800">Tổng số ngày nghỉ không hưởng lương (Tổng):</span>
-                    <span id="totalUnpaidLeaveDays" class="text-xl font-bold text-red-700">0 ngày</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Gemini API Section: Leave Policy Q&A -->
         <div class="gemini-section bg-white p-6 rounded-lg shadow-md mt-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-4">✨ Hỏi đáp chính sách nghỉ phép ✨</h2>
@@ -312,6 +294,24 @@
             <div id="analysisOutput" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200 text-gray-800 min-h-[50px]">
                 <!-- Analysis results will appear here -->
                 <p class="text-gray-500">Nhận xét và khuyến nghị sẽ hiển thị ở đây...</p>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="statistics-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Thống kê ngày nghỉ phép</h2>
+            <div id="perPersonStatistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Per-person statistics will be dynamically generated here -->
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                <div class="bg-green-50 p-4 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-green-800">Tổng số ngày nghỉ hưởng lương (Tổng):</span>
+                    <span id="totalPaidLeaveDays" class="text-xl font-bold text-green-700">0 ngày</span>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-red-800">Tổng số ngày nghỉ không hưởng lương (Tổng):</span>
+                    <span id="totalUnpaidLeaveDays" class="text-xl font-bold text-red-700">0 ngày</span>
+                </div>
             </div>
         </div>
 
@@ -960,18 +960,19 @@
             `;
 
             const prompt = `Bạn là một trợ lý nhân sự chuyên về chính sách nghỉ phép. Dựa trên chính sách sau, hãy trả lời câu hỏi của người dùng. Nếu thông tin không có trong chính sách, hãy nói rằng bạn không có thông tin đó.
+            Vui lòng định dạng câu trả lời bằng HTML, sử dụng các thẻ <p> cho mỗi đoạn văn.
 
             Chính sách:
             ${policyText}
 
             Câu hỏi của người dùng: "${question}"
 
-            Trả lời:`;
+            Trả lời (định dạng HTML):`;
 
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -986,7 +987,7 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     const text = result.candidates[0].content.parts[0].text;
-                    policyAnswerOutput.innerHTML = `<p>${text}</p>`;
+                    policyAnswerOutput.innerHTML = text; // Directly set HTML
                 } else {
                     policyAnswerOutput.innerHTML = '<p class="text-red-500">Không thể nhận được câu trả lời từ Gemini. Vui lòng thử lại.</p>';
                     console.error("Unexpected Gemini API response structure:", result);
@@ -1013,11 +1014,15 @@
 
             // Recalculate perPersonYearStats to ensure it's up-to-date and includes all data
             const currentPerPersonYearStats = {};
+            // Also gather reasons for analysis
+            const leaveReasons = {}; // { reason: count }
+
             leaveData.forEach(event => {
                 const startDate = parseDate(event.startDate);
                 const endDate = parseDate(event.endDate);
                 const requester = event.requester;
                 const statusLower = event.status ? event.status.toLowerCase() : '';
+                const reason = event.reason ? event.reason.trim() : 'Không có lý do cụ thể';
 
                 if (statusLower === 'bị từ chối') {
                     return; // Skip rejected events
@@ -1043,6 +1048,11 @@
                     } else {
                         currentPerPersonYearStats[requester][year].otherPaidLeave += diffDays;
                     }
+
+                    // Aggregate reasons
+                    if (reason) {
+                        leaveReasons[reason] = (leaveReasons[reason] || 0) + diffDays;
+                    }
                 }
             });
 
@@ -1058,11 +1068,24 @@
                     });
                 });
             } else {
-                statsSummary += "Không có dữ liệu thống kê để phân tích.";
+                statsSummary += "Không có dữ liệu thống kê để phân tích.\n";
             }
 
-            const prompt = `Bạn là một chuyên gia phân tích dữ liệu nhân sự. Dựa vào dữ liệu thống kê nghỉ phép sau, hãy đưa ra nhận xét về tình hình nghỉ phép của công ty và các khuyến nghị để cải thiện hoặc quản lý hiệu quả hơn.
+            statsSummary += "\nThống kê lý do nghỉ phép (tổng số ngày):\n";
+            const sortedReasons = Object.keys(leaveReasons).sort((a, b) => leaveReasons[b] - leaveReasons[a]); // Sort by most frequent reasons
+            if (sortedReasons.length > 0) {
+                sortedReasons.forEach(reason => {
+                    statsSummary += `- ${reason}: ${leaveReasons[reason]} ngày\n`;
+                });
+            } else {
+                statsSummary += "Không có dữ liệu lý do nghỉ phép để phân tích.";
+            }
 
+
+            const prompt = `Bạn là một chuyên gia phân tích dữ liệu nhân sự. Dựa vào dữ liệu thống kê nghỉ phép và lý do nghỉ phép sau, hãy đưa ra nhận xét về tình hình nghỉ phép của công ty và các khuyến nghị để cải thiện hoặc quản lý hiệu quả hơn.
+            Vui lòng định dạng câu trả lời bằng HTML, sử dụng các thẻ <p> cho mỗi đoạn văn, và các thẻ <ul>, <li> nếu cần cho danh sách.
+
+            Dữ liệu:
             ${statsSummary}
 
             Hãy đưa ra nhận xét và khuyến nghị chi tiết, có cấu trúc.`;
@@ -1070,7 +1093,7 @@
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyBaLi7TzZJ9SwmHilU24SRcV2i7lU6gqdQ"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1085,7 +1108,7 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     const text = result.candidates[0].content.parts[0].text;
-                    analysisOutput.innerHTML = `<p>${text}</p>`;
+                    analysisOutput.innerHTML = text; // Directly set HTML
                 } else {
                     analysisOutput.innerHTML = '<p class="text-red-500">Không thể nhận được phân tích từ Gemini. Vui lòng thử lại.</p>';
                     console.error("Unexpected Gemini API response structure:", result);
