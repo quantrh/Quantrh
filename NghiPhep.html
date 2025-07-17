@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Nghỉ Phép Công Ty</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for Vietnamese support -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <!-- SheetJS library for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter, with sans-serif fallback */
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-day {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .calendar-day.inactive {
+            background-color: #f9fafb;
+            color: #ccc;
+        }
+        .day-number {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .event-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto; /* Enable scrolling for events */
+        }
+        /* BIDV Brand Colors */
+        .event-item {
+            background-color: #FFC62F; /* BIDV Yellow for events */
+            color: #006B68; /* BIDV Green for text */
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 0.85em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* New style for Business Trip events */
+        .event-item.business-trip {
+            background-color: #e0f2fe; /* Light blue for business trips */
+            color: #007bff; /* Darker blue text */
+        }
+
+        /* Keep standard colors for status for clarity */
+        .event-item.approved {
+            background-color: #d4edda; /* Light green for approved */
+            color: #155724;
+        }
+        .event-item.pending {
+            background-color: #fff3cd; /* Light yellow for pending */
+            color: #856404;
+        }
+        .event-item.rejected, .event-item.cancelled, .event-item.bị-từ-chối, .event-item.đã-hủy {
+            background-color: #f8d7da; /* Light red for rejected/cancelled */
+            color: #721c24;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+        .weekday-item {
+            padding: 8px;
+            background-color: #e2e8f0; /* Neutral background, can be light green if desired */
+            border-radius: 8px;
+        }
+        .month-year-header {
+            font-size: 2em;
+            font-weight: bold;
+            color: #006B68; /* BIDV Green for header */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .navigation-buttons button {
+            background-color: #006B68; /* BIDV Green */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        .navigation-buttons button:hover {
+            background-color: #005654; /* Slightly darker BIDV Green on hover */
+        }
+        .file-upload-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .file-upload-section input[type="file"] {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .file-upload-section button {
+            background-color: #006B68; /* BIDV Green */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .file-upload-section button:hover {
+            background-color: #005654; /* Slightly darker BIDV Green on hover */
+        }
+        .event-details-modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #006B68; /* BIDV Green for modal title */
+        }
+        .modal-body p {
+            margin-bottom: 8px;
+        }
+        .modal-body strong {
+            color: #34495e;
+        }
+        /* Styles for search suggestions */
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            position: absolute; /* Position relative to filter-section */
+            width: calc(100% - 32px); /* Adjust width to match input */
+            z-index: 10; /* Ensure it's above other content */
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .suggestions-list li {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestions-list li:last-child {
+            border-bottom: none;
+        }
+        .suggestions-list li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto max-w-7xl p-6">
+        <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-8">LỊCH NGHỈ PHÉP CÔNG TY</h1>
+
+        <!-- File Upload Section -->
+        <div class="file-upload-section">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Tải lên file dữ liệu nghỉ phép</h2>
+            <!-- Updated accept attribute for Excel files -->
+            <input type="file" id="leaveFile" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+            <button id="uploadButton" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-300">Tải lên và Cập nhật Lịch</button>
+            <p id="uploadStatus" class="mt-2 text-sm text-gray-600"></p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section bg-white p-6 rounded-lg shadow-md mb-8 relative"> <!-- Added relative positioning for suggestions -->
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Lọc theo cán bộ</h2>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <label for="employeeSearchInput" class="text-lg font-medium text-gray-700">Tìm kiếm cán bộ:</label>
+                <input type="text" id="employeeSearchInput" placeholder="Nhập tên cán bộ..." class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <ul id="employeeSuggestions" class="suggestions-list">
+                    <!-- Search suggestions will be dynamically generated here -->
+                </ul>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-4 mt-4">
+                <label for="employeeFilterDropdown" class="text-lg font-medium text-gray-700">Chọn cán bộ:</label>
+                <select id="employeeFilterDropdown" class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">Tất cả cán bộ</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+                <button id="clearFilterButton" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300">Xóa lọc</button>
+            </div>
+        </div>
+
+        <!-- Calendar Header -->
+        <div class="flex justify-between items-center mb-6">
+            <button id="prevMonth" class="navigation-buttons px-4 py-2 rounded-lg shadow-md">&lt; Tháng trước</button>
+            <div id="monthYear" class="month-year-header"></div>
+            <button id="nextMonth" class="navigation-buttons px-4 py-2 rounded-lg shadow-md">Tháng sau &gt;</button>
+        </div>
+
+        <!-- Weekday Headers -->
+        <div class="weekdays">
+            <div class="weekday-item">CN</div>
+            <div class="weekday-item">T2</div>
+            <div class="weekday-item">T3</div>
+            <div class="weekday-item">T4</div>
+            <div class="weekday-item">T5</div>
+            <div class="weekday-item">T6</div>
+            <div class="weekday-item">T7</div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div id="calendarGrid" class="calendar-grid">
+            <!-- Calendar days will be dynamically generated here -->
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="statistics-section bg-white p-6 rounded-lg shadow-md mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Thống kê ngày nghỉ phép</h2>
+            <div id="perPersonStatistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Per-person statistics will be dynamically generated here -->
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                <div class="bg-green-50 p-4 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-green-800">Tổng số ngày nghỉ hưởng lương (Tổng):</span>
+                    <span id="totalPaidLeaveDays" class="text-xl font-bold text-green-700">0 ngày</span>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-red-800">Tổng số ngày nghỉ không hưởng lương (Tổng):</span>
+                    <span id="totalUnpaidLeaveDays" class="text-xl font-bold text-red-700">0 ngày</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="event-details-modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 class="modal-title">Chi tiết sự kiện</h3>
+            <div class="modal-body">
+                <p><strong>Loại nghỉ:</strong> <span id="modalLeaveType"></span></p>
+                <p><strong>Ngày bắt đầu:</strong> <span id="modalStartDate"></span></p>
+                <p><strong>Ngày kết thúc:</strong> <span id="modalEndDate"></span></p>
+                <p><strong>Trạng thái:</strong> <span id="modalStatus"></span></p>
+                <p><strong>Người đăng ký:</strong> <span id="modalRequester"></span></p>
+                <p><strong>Người duyệt:</strong> <span id="modalApprover"></span></p>
+                <p><strong>Lý do:</strong> <span id="modalReason"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for calendar
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let leaveData = []; // Stores parsed leave data
+
+        const monthYearDisplay = document.getElementById('monthYear');
+        const calendarGrid = document.getElementById('calendarGrid');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const uploadFileBtn = document.getElementById('uploadButton');
+        const leaveFileInput = document.getElementById('leaveFile');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        const eventDetailsModal = document.getElementById('eventDetailsModal');
+        const closeModalBtn = document.querySelector('.close-button');
+        const modalLeaveType = document.getElementById('modalLeaveType');
+        const modalStartDate = document.getElementById('modalStartDate');
+        const modalEndDate = document.getElementById('modalEndDate');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalRequester = document.getElementById('modalRequester');
+        const modalApprover = document.getElementById('modalApprover');
+        const modalReason = document.getElementById('modalReason');
+
+        // Statistics elements
+        const totalPaidLeaveDaysElement = document.getElementById('totalPaidLeaveDays');
+        const totalUnpaidLeaveDaysElement = document.getElementById('totalUnpaidLeaveDays');
+        const perPersonStatisticsElement = document.getElementById('perPersonStatistics'); // New element for per-person stats
+
+        // Filter elements
+        const employeeSearchInput = document.getElementById('employeeSearchInput');
+        const employeeSuggestions = document.getElementById('employeeSuggestions');
+        const employeeFilterDropdown = document.getElementById('employeeFilterDropdown'); // New dropdown element
+        const clearFilterBtn = document.getElementById('clearFilterButton');
+
+
+        // Function to render the calendar
+        function renderCalendar() {
+            calendarGrid.innerHTML = ''; // Clear previous days
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // 0 for Sunday, 1 for Monday, etc.
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            monthYearDisplay.textContent = `Tháng ${currentMonth + 1}, ${currentYear}`;
+
+            // Get the currently selected employee for filtering from dropdown
+            const selectedEmployee = employeeFilterDropdown.value;
+
+            // Add empty cells for days before the 1st (adjusting for Monday start if needed)
+            const startDayOffset = firstDayOfMonth;
+
+            for (let i = 0; i < startDayOffset; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'inactive');
+                calendarGrid.appendChild(emptyDay);
+            }
+
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.innerHTML = `<div class="day-number">${day}</div><ul class="event-list"></ul>`;
+                calendarGrid.appendChild(dayElement);
+
+                const currentDay = new Date(currentYear, currentMonth, day);
+                let eventsForDay = getEventsForDate(currentDay);
+
+                // Filter events based on selected employee from dropdown
+                if (selectedEmployee !== 'all') {
+                    eventsForDay = eventsForDay.filter(event => event.requester === selectedEmployee);
+                }
+                
+                const eventList = dayElement.querySelector('.event-list');
+
+                eventsForDay.forEach(event => {
+                    const eventItem = document.createElement('li');
+                    eventItem.classList.add('event-item');
+                    eventItem.textContent = event.requester && event.requester !== 'N/A' ? event.requester : 'Nghỉ phép';
+                    
+                    // Apply specific class for "đi công tác"
+                    if (event.leaveType && event.leaveType.toLowerCase().includes('đi công tác')) {
+                        eventItem.classList.add('business-trip');
+                    } else if (event.status) {
+                        const statusClass = event.status.toLowerCase().replace(/[^a-z0-9àáạảãăằắẳẵặâầấẩẫậèéẹẻẽêềếểễệđìíịỉĩòóọỏõôồốổỗộơờớởỡợùúụủũưừứửữựỳýỵỷỹ]+/g, '-').replace(/^-*|-*$/g, '');
+                        eventItem.classList.add(statusClass);
+                    }
+                    eventItem.title = `${event.leaveType || 'Nghỉ phép'}: ${event.requester || 'Không rõ'} - ${event.reason || 'Không có lý do'}`;
+                    eventItem.addEventListener('click', () => showEventDetails(event));
+                    eventList.appendChild(eventItem);
+                });
+            }
+        }
+
+        // Function to parse the uploaded Excel file content
+        async function parseLeaveData(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        // Use cellDates: true to let SheetJS parse dates into Date objects
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+
+                        const parsedData = [];
+                        let actualExcelHeaders = [];
+
+                        // Define column indices (0-based) for direct cell access
+                        const COL_INDEX_NAME = 2; // Column C
+                        const COL_INDEX_LEAVE_TYPE = 4; // Column E
+                        const COL_INDEX_START_DATE = 5; // Column F
+                        const COL_INDEX_END_DATE = 6; // Column G
+                        const COL_INDEX_STATUS = 7; // Column H
+                        const COL_INDEX_REASON = 8; // Column I
+                        const COL_INDEX_APPROVER = 11; // Column L
+
+                        // Get headers from Excel row 2 (0-indexed row 1)
+                        const headerRowIndex = 1;
+                        if (worksheet['!ref']) {
+                            const range = XLSX.utils.decode_range(worksheet['!ref']);
+                            for (let C = range.s.c; C <= range.e.c; ++C) {
+                                const cell_address = { c: C, r: headerRowIndex };
+                                const cell_ref = XLSX.utils.encode_cell(cell_address);
+                                const cell = worksheet[cell_ref];
+                                actualExcelHeaders.push(cell && cell.v !== undefined ? String(cell.v).trim() : '');
+                            }
+                        }
+                        console.log("Tiêu đề cột thực tế từ Excel (hàng 2):", actualExcelHeaders);
+
+                        // Iterate over data rows, starting from Excel row 4 (0-indexed row 3)
+                        const startDataRowIndex = 3;
+                        if (worksheet['!ref']) {
+                            const range = XLSX.utils.decode_range(worksheet['!ref']);
+                            for (let R = startDataRowIndex; R <= range.e.r; ++R) {
+                                // Get cell values directly
+                                const getCellValue = (colIndex) => {
+                                    const cell_address = { c: colIndex, r: R };
+                                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                                    const cell = worksheet[cell_ref];
+                                    return cell ? cell.v : null; // Return null for empty cells
+                                };
+
+                                const requester = getCellValue(COL_INDEX_NAME);
+                                const leaveType = getCellValue(COL_INDEX_LEAVE_TYPE);
+                                const startDateRaw = getCellValue(COL_INDEX_START_DATE);
+                                const endDateRaw = getCellValue(COL_INDEX_END_DATE);
+                                const status = getCellValue(COL_INDEX_STATUS);
+                                const reason = getCellValue(COL_INDEX_REASON);
+                                const approver = getCellValue(COL_INDEX_APPROVER);
+
+                                // Check if the row is completely empty or just the key fields are empty
+                                // If all key fields are null/empty, skip the row
+                                const isKeyFieldsEmpty = [requester, leaveType, startDateRaw, endDateRaw, status].every(val => val === null || (typeof val === 'string' && val.trim() === ''));
+                                if (isKeyFieldsEmpty) {
+                                    console.log(`Dòng ${R + 1} (Excel) trống hoặc không có dữ liệu hợp lệ (các trường chính trống), bỏ qua.`);
+                                    continue;
+                                }
+
+                                const parsedRequester = requester ? String(requester).trim() : 'N/A';
+                                const parsedLeaveType = leaveType ? String(leaveType).trim() : '';
+                                const parsedStatus = status ? String(status).trim() : '';
+                                const parsedReason = reason ? String(reason).trim() : 'Không có lý do';
+                                const parsedApprover = approver ? String(approver).trim() : 'N/A';
+
+                                // formatDate should now receive Date objects directly from SheetJS
+                                const startDate = formatDate(startDateRaw);
+                                const endDate = formatDate(endDateRaw);
+
+                                console.log(`Dòng dữ liệu ${R + 1} (Excel):`, {
+                                    rawRequester: requester,
+                                    rawLeaveType: leaveType,
+                                    rawStartDate: startDateRaw,
+                                    rawEndDate: endDateRaw,
+                                    rawStatus: status,
+                                    rawReason: reason,
+                                    rawApprover: approver,
+                                    parsedStartDate: startDate,
+                                    parsedEndDate: endDate
+                                });
+
+                                // Ensure all critical fields are present and valid
+                                if (parsedLeaveType && startDate !== 'N/A' && endDate !== 'N/A' && parsedStatus && parsedRequester !== 'N/A') {
+                                    parsedData.push({
+                                        leaveType: parsedLeaveType,
+                                        startDate: startDate,
+                                        endDate: endDate,
+                                        status: parsedStatus,
+                                        requester: parsedRequester,
+                                        approver: parsedApprover,
+                                        reason: parsedReason
+                                    });
+                                } else {
+                                    console.log(`Dòng ${R + 1} (Excel) không đủ dữ liệu hợp lệ để thêm vào lịch, bỏ qua.`);
+                                    console.log("Thiếu dữ liệu:", { parsedLeaveType, startDate, endDate, parsedStatus, parsedRequester });
+                                }
+                            }
+                        } else {
+                            console.log("File Excel trống hoặc không có dữ liệu.");
+                        }
+
+                        console.log("Dữ liệu đã phân tích (parsedData cuối cùng):", parsedData);
+                        resolve({ parsedData, actualExcelHeaders: actualExcelHeaders });
+                    } catch (error) {
+                        console.error("Lỗi khi phân tích file Excel:", error);
+                        reject("Lỗi khi đọc file Excel. Vui lòng kiểm tra định dạng file và cấu trúc cột.");
+                    }
+                };
+                reader.onerror = (error) => {
+                    reject("Lỗi khi đọc file.");
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Helper to format date from Excel (which might be a Date object) to DD/MM/YYYY
+        function formatDate(dateValue) {
+            if (dateValue instanceof Date) {
+                const day = String(dateValue.getDate()).padStart(2, '0');
+                const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+                const year = dateValue.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            // If it's already a string in DD/MM/YYYY format, return it as is
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                return dateValue;
+            }
+            // This case should ideally not be hit if cellDates: true works
+            if (typeof dateValue === 'number') {
+                const excelEpoch = new Date(1899, 11, 30);
+                const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            return 'N/A';
+        }
+
+        // Function to get events for a specific date
+        function getEventsForDate(date) {
+            const eventsOnDate = [];
+            // Format targetDate to YYYYMMDD for reliable comparison
+            const targetNum = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+
+            leaveData.forEach(event => {
+                const startDate = parseDate(event.startDate);
+                const endDate = parseDate(event.endDate);
+
+                console.log(`Kiểm tra sự kiện: ${event.requester}, Từ: ${event.startDate}, Đến: ${event.endDate}`);
+                console.log(`  Parsed Start Date: ${startDate}, Parsed End Date: ${endDate}`);
+                console.log(`  Target Date: ${date.toLocaleDateString('vi-VN')}, Target Num: ${targetNum}`);
+
+
+                if (startDate && endDate) {
+                    // Convert dates to YYYYMMDD for reliable comparison
+                    const startNum = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
+                    const endNum = endDate.getFullYear() * 10000 + (endDate.getMonth() + 1) * 100 + endDate.getDate();
+
+                    console.log(`  Start Num: ${startNum}, End Num: ${endNum}`);
+
+                    if (targetNum >= startNum && targetNum <= endNum) {
+                        eventsOnDate.push(event);
+                        console.log(`  Sự kiện ${event.requester} được thêm vào ngày ${date.toLocaleDateString('vi-VN')}`);
+                    } else {
+                        console.log(`  Sự kiện ${event.requester} KHÔNG nằm trong ngày ${date.toLocaleDateString('vi-VN')}`);
+                    }
+                } else {
+                    console.log(`  Ngày bắt đầu hoặc ngày kết thúc không hợp lệ cho sự kiện: ${event.requester}`);
+                }
+            });
+            return eventsOnDate;
+        }
+
+        // Helper to parse date string (DD/MM/YYYY) to Date object
+        function parseDate(dateString) {
+            const parts = String(dateString).split('/'); // Ensure dateString is string
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+                const year = parseInt(parts[2], 10);
+                const date = new Date(year, month, day);
+                // Check for invalid date (e.g., new Date('invalid string') results in Invalid Date)
+                if (isNaN(date.getTime())) {
+                    console.error(`Lỗi: Không thể phân tích ngày "${dateString}". Trả về null.`);
+                    return null;
+                }
+                return date;
+            }
+            console.error(`Lỗi: Định dạng ngày không hợp lệ "${dateString}". Trả về null.`);
+            return null;
+        }
+
+        // Function to update leave statistics
+        function updateLeaveStatistics() {
+            let totalPaidDaysOverall = 0;
+            let totalUnpaidDaysOverall = 0;
+            const selectedEmployee = employeeFilterDropdown.value;
+
+            const perPersonYearStats = {}; // { requester: { year: { paid: 0, unpaid: 0 } } }
+
+            let dataToProcessForStats = leaveData;
+            if (selectedEmployee !== 'all') {
+                dataToProcessForStats = leaveData.filter(event => event.requester === selectedEmployee);
+            }
+
+            dataToProcessForStats.forEach(event => {
+                const startDate = parseDate(event.startDate);
+                const endDate = parseDate(event.endDate);
+                const requester = event.requester;
+
+                if (startDate && endDate && requester && requester !== 'N/A') {
+                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                    const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
+                    const year = startDate.getFullYear(); // Use start year for simplicity in yearly stats
+
+                    if (!perPersonYearStats[requester]) {
+                        perPersonYearStats[requester] = {};
+                    }
+                    if (!perPersonYearStats[requester][year]) {
+                        perPersonYearStats[requester][year] = { paid: 0, unpaid: 0 };
+                    }
+
+                    if (leaveTypeLower.includes('nghỉ phép') || 
+                        (leaveTypeLower.includes('nghỉ ốm') && !leaveTypeLower.includes('không lương')) || 
+                        leaveTypeLower.includes('nghỉ cưới') || 
+                        leaveTypeLower.includes('nghỉ tang') ||
+                        leaveTypeLower.includes('thai sản')) { 
+                        perPersonYearStats[requester][year].paid += diffDays;
+                    } else if (leaveTypeLower.includes('không lương') || 
+                               (leaveTypeLower.includes('nghỉ ốm') && leaveTypeLower.includes('không lương'))) {
+                        perPersonYearStats[requester][year].unpaid += diffDays;
+                    } else {
+                        perPersonYearStats[requester][year].unpaid += diffDays;
+                    }
+                }
+            });
+
+            // Calculate overall totals based on the *filtered* data
+            // This total should always reflect all data, regardless of per-person filter
+            // Re-calculate totalPaidDaysOverall and totalUnpaidDaysOverall based on the currently filtered data (dataToProcessForStats)
+            totalPaidDaysOverall = 0;
+            totalUnpaidDaysOverall = 0;
+            dataToProcessForStats.forEach(event => {
+                const startDate = parseDate(event.startDate);
+                const endDate = parseDate(event.endDate);
+                if (startDate && endDate) {
+                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    const leaveTypeLower = event.leaveType ? event.leaveType.toLowerCase() : '';
+
+                    if (leaveTypeLower.includes('nghỉ phép') || 
+                        (leaveTypeLower.includes('nghỉ ốm') && !leaveTypeLower.includes('không lương')) || 
+                        leaveTypeLower.includes('nghỉ cưới') || 
+                        leaveTypeLower.includes('nghỉ tang') ||
+                        leaveTypeLower.includes('thai sản')) { 
+                        totalPaidDaysOverall += diffDays;
+                    } else if (leaveTypeLower.includes('không lương') || 
+                               (leaveTypeLower.includes('nghỉ ốm') && leaveTypeLower.includes('không lương'))) {
+                        totalUnpaidDaysOverall += diffDays;
+                    } else {
+                        totalUnpaidDaysOverall += diffDays;
+                    }
+                }
+            });
+
+            // Clear previous per-person statistics
+            perPersonStatisticsElement.innerHTML = '';
+
+            // Display per-person and per-year statistics
+            const sortedRequesters = Object.keys(perPersonYearStats).sort();
+            if (sortedRequesters.length > 0) {
+                sortedRequesters.forEach(requester => {
+                    const requesterStats = perPersonYearStats[requester];
+                    const personDiv = document.createElement('div');
+                    personDiv.classList.add('bg-blue-50', 'p-4', 'rounded-lg', 'shadow-sm', 'col-span-1'); // Adjusted col-span for better layout
+                    
+                    let content = `<h3 class="font-bold text-blue-800 mb-2">${requester}</h3>`;
+                    const sortedYears = Object.keys(requesterStats).sort();
+                    sortedYears.forEach(year => {
+                        const stats = requesterStats[year];
+                        content += `
+                            <p class="text-sm text-blue-700 mt-2"><strong>Năm ${year}:</strong></p>
+                            <p class="text-xs text-blue-600 ml-2">Hưởng lương: <span class="font-semibold">${stats.paid} ngày</span></p>
+                            <p class="text-xs text-blue-600 ml-2">Không lương: <span class="font-semibold">${stats.unpaid} ngày</span></p>
+                        `;
+                    });
+                    personDiv.innerHTML = content;
+                    perPersonStatisticsElement.appendChild(personDiv);
+                });
+            } else {
+                const noDataMessage = document.createElement('p');
+                noDataMessage.classList.add('text-gray-500', 'col-span-full');
+                noDataMessage.textContent = 'Không có dữ liệu nghỉ phép để thống kê cho lựa chọn này.';
+                perPersonStatisticsElement.appendChild(noDataMessage);
+            }
+
+            // Update overall totals
+            totalPaidLeaveDaysElement.textContent = `${totalPaidDaysOverall} ngày`;
+            totalUnpaidLeaveDaysElement.textContent = `${totalUnpaidDaysOverall} ngày`;
+        }
+
+        // Function to handle search input and display suggestions
+        function handleEmployeeSearch() {
+            const searchTerm = employeeSearchInput.value.trim().toLowerCase();
+            employeeSuggestions.innerHTML = ''; // Clear previous suggestions
+
+            if (searchTerm.length > 0) {
+                const uniqueRequesters = new Set();
+                leaveData.forEach(event => {
+                    if (event.requester && String(event.requester).toLowerCase().includes(searchTerm)) {
+                        uniqueRequesters.add(event.requester);
+                    }
+                });
+
+                const sortedRequesters = Array.from(uniqueRequesters).sort();
+
+                sortedRequesters.forEach(requester => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = requester;
+                    listItem.addEventListener('click', () => {
+                        employeeSearchInput.value = requester;
+                        employeeFilterDropdown.value = requester; // Set dropdown value
+                        employeeSuggestions.innerHTML = ''; // Hide suggestions
+                        renderCalendar();
+                        updateLeaveStatistics();
+                    });
+                    employeeSuggestions.appendChild(listItem);
+                });
+            }
+        }
+
+        // New function to populate the employee filter dropdown
+        function populateEmployeeFilterDropdown() {
+            employeeFilterDropdown.innerHTML = '<option value="all">Tất cả cán bộ</option>'; // Default option
+
+            const uniqueRequesters = new Set();
+            leaveData.forEach(event => {
+                if (event.requester && event.requester !== 'N/A') {
+                    uniqueRequesters.add(event.requester);
+                }
+            });
+
+            const sortedRequesters = Array.from(uniqueRequesters).sort();
+
+            sortedRequesters.forEach(requester => {
+                const option = document.createElement('option');
+                option.value = requester;
+                option.textContent = requester;
+                employeeFilterDropdown.appendChild(option);
+            });
+        }
+
+
+        // Show event details in modal
+        function showEventDetails(event) {
+            modalLeaveType.textContent = event.leaveType || 'N/A';
+            modalStartDate.textContent = event.startDate || 'N/A';
+            modalEndDate.textContent = event.endDate || 'N/A';
+            modalStatus.textContent = event.status || 'N/A';
+            modalRequester.textContent = event.requester || 'N/A';
+            modalApprover.textContent = event.approver || 'N/A';
+            modalReason.textContent = event.reason || 'N/A';
+            eventDetailsModal.style.display = 'flex'; // Show modal
+        }
+
+        // Close modal
+        closeModalBtn.addEventListener('click', () => {
+            eventDetailsModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target == eventDetailsModal) {
+                employeeSuggestions.innerHTML = ''; // Hide suggestions when clicking outside
+                eventDetailsModal.style.display = 'none';
+            }
+        });
+
+
+        // Event Listeners for navigation
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            updateLeaveStatistics(); // Update statistics on month change
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+            updateLeaveStatistics(); // Update statistics on month change
+        });
+
+        // Event Listener for search input
+        employeeSearchInput.addEventListener('input', handleEmployeeSearch);
+        employeeSearchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                // If there's only one suggestion, select it
+                if (employeeSuggestions.children.length === 1) {
+                    employeeSearchInput.value = employeeSuggestions.children[0].textContent;
+                    employeeFilterDropdown.value = employeeSuggestions.children[0].textContent;
+                } else if (employeeSearchInput.value.trim() !== '') {
+                    // If no suggestions or multiple, but user typed something, try to match exactly
+                    const exactMatch = Array.from(employeeFilterDropdown.options).find(option => 
+                        option.value.toLowerCase() === employeeSearchInput.value.trim().toLowerCase()
+                    );
+                    if (exactMatch) {
+                        employeeFilterDropdown.value = exactMatch.value;
+                    } else {
+                        employeeFilterDropdown.value = 'all'; // Reset if no exact match
+                    }
+                } else {
+                    employeeFilterDropdown.value = 'all'; // If input is empty, clear filter
+                }
+                employeeSuggestions.innerHTML = ''; // Hide suggestions on Enter
+                renderCalendar();
+                updateLeaveStatistics();
+            }
+        });
+
+        // Event Listener for dropdown change
+        employeeFilterDropdown.addEventListener('change', () => {
+            employeeSearchInput.value = employeeFilterDropdown.value === 'all' ? '' : employeeFilterDropdown.value; // Sync search input
+            employeeSuggestions.innerHTML = ''; // Clear suggestions
+            renderCalendar();
+            updateLeaveStatistics();
+        });
+
+
+        // Event listener for "Clear Filter" button
+        clearFilterBtn.addEventListener('click', () => {
+            employeeSearchInput.value = ''; // Clear search input
+            employeeSuggestions.innerHTML = ''; // Clear suggestions
+            employeeFilterDropdown.value = 'all'; // Reset dropdown
+            renderCalendar();
+            updateLeaveStatistics();
+        });
+
+        // Event Listener for file upload
+        uploadFileBtn.addEventListener('click', async () => {
+            const file = leaveFileInput.files[0];
+            if (file) {
+                uploadStatus.textContent = 'Đang xử lý file...';
+                try {
+                    const { parsedData, actualExcelHeaders } = await parseLeaveData(file);
+                    leaveData = parsedData; // Assign the parsed data to the global leaveData
+
+                    // Clear search input and suggestions after new data load
+                    employeeSearchInput.value = '';
+                    employeeSuggestions.innerHTML = '';
+                    populateEmployeeFilterDropdown(); // Repopulate dropdown after data load
+
+                    // Automatically navigate to the month of the first event if data exists
+                    if (leaveData.length > 0) {
+                        const firstEventStartDate = parseDate(leaveData[0].startDate);
+                        if (firstEventStartDate) {
+                            currentMonth = firstEventStartDate.getMonth();
+                            currentYear = firstEventStartDate.getFullYear();
+                        }
+                    }
+
+                    renderCalendar();
+                    updateLeaveStatistics(); // Call statistics update after data is loaded and calendar rendered
+
+                    if (leaveData.length > 0 && leaveData.every(event => event.requester === 'N/A')) {
+                        uploadStatus.textContent = 'Đã tải lên và cập nhật lịch thành công! Tuy nhiên, không tìm thấy cột "Họ và tên" hoặc dữ liệu tên trong file Excel.';
+                    } else if (leaveData.length === 0) {
+                        uploadStatus.textContent = 'Đã tải lên file nhưng không tìm thấy dữ liệu nghỉ phép hợp lệ.';
+                    }
+                    else {
+                        uploadStatus.textContent = 'Đã tải lên và cập nhật lịch thành công!';
+                    }
+                } catch (error) {
+                    uploadStatus.textContent = `Lỗi: ${error}`;
+                    console.error(error);
+                }
+            } else {
+                uploadStatus.textContent = 'Vui lòng chọn một file để tải lên.';
+            }
+        });
+
+        // Initial render
+        renderCalendar();
+        updateLeaveStatistics(); // Initial call for statistics
+    </script>
+</body>
+</html>
