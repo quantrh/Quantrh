@@ -613,6 +613,12 @@
                 const startDate = parseDate(event.startDate);
                 const endDate = parseDate(event.endDate);
                 const requester = event.requester;
+                const statusLower = event.status ? event.status.toLowerCase() : '';
+
+                // Only count if status is NOT "Bị từ chối"
+                if (statusLower === 'bị từ chối') {
+                    return; // Skip this event
+                }
 
                 if (startDate && endDate && requester && requester !== 'N/A') {
                     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
@@ -645,6 +651,13 @@
             dataToProcessForStats.forEach(event => {
                 const startDate = parseDate(event.startDate);
                 const endDate = parseDate(event.endDate);
+                const statusLower = event.status ? event.status.toLowerCase() : '';
+
+                // Only count if status is NOT "Bị từ chối"
+                if (statusLower === 'bị từ chối') {
+                    return; // Skip this event
+                }
+
                 if (startDate && endDate) {
                     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
