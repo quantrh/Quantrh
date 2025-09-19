@@ -154,6 +154,10 @@
                 <button id="quick-report-btn" class="gemini-btn">✨ Tạo Báo cáo Nhanh</button>
             </div>
         </div>
+        
+        <!-- Banner Image -->
+        <div class="w-full h-48 md:h-64 bg-cover bg-center rounded-lg shadow-lg mb-8" style="background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop');">
+        </div>
 
         <!-- Progress Bar -->
         <div class="mb-8">
@@ -349,6 +353,7 @@
             taskBoard.innerHTML = '';
             let totalTasks = 0;
             let completedTasks = 0;
+            let taskCounter = 1;
 
             for (const day in tasksByDay) {
                 const dayColumn = document.createElement('div');
@@ -371,7 +376,7 @@
                     taskCard.setAttribute('data-task-id', task.id);
                     const status = statusConfig[task.status];
                     let specialClass = task.type || '';
-                    taskCard.className = `task-card p-4 rounded-lg ${status.bg} ${specialClass}`;
+                    taskCard.className = `task-card relative p-4 rounded-lg ${status.bg} ${specialClass}`;
                     let geminiButtonHTML = '';
                     if (task.status === 'blocked') {
                         geminiButtonHTML = `<button data-id="${task.id}" data-day="${day}" class="risk-analysis-btn mt-3 w-full text-sm font-semibold text-rose-700 hover:text-rose-900">✨ Phân tích Rủi ro</button>`;
@@ -387,7 +392,15 @@
                     if (taskText.includes('GO-LIVE')) {
                         taskText = taskText.replace('GO-LIVE', `<strong class="${highlightClass}">GO-LIVE</strong>`);
                     }
+                    
+                    const taskNumberHTML = `
+                        <div class="absolute -top-3 -left-3 flex items-center justify-center w-7 h-7 rounded-full bg-[#006B68] text-[#FFC62F] font-bold text-sm shadow-md">
+                            ${taskCounter}
+                        </div>
+                    `;
+
                     taskCard.innerHTML = `
+                        ${taskNumberHTML}
                         <div class="flex justify-between items-start">
                             <p class="text-sm font-semibold ${status.text_color} opacity-80">${task.time}</p>
                              <select data-id="${task.id}" data-day="${day}" class="status-select text-xs font-medium rounded border-gray-300 focus:ring-[#006B68] focus:border-[#006B68]">
@@ -404,6 +417,7 @@
                         </div>
                         ${geminiButtonHTML}`;
                     tasksContainer.appendChild(taskCard);
+                    taskCounter++;
                 });
                 dayColumn.appendChild(tasksContainer);
                 taskBoard.appendChild(dayColumn);
