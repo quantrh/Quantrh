@@ -290,7 +290,7 @@
             }
         };
 
-        const defaultStatuses = { 101: 'done', 102: 'done', 103: 'done', 104: 'done', 105: 'done', 106: 'done', 1: 'inprogress', 2: 'inprogress', 3: 'pending', 4: 'pending', 5: 'pending', 6: 'pending', 7: 'pending', 8: 'pending', 9: 'pending', 10: 'pending', 11: 'pending', 12: 'pending', 13: 'pending', 14: 'pending', 15: 'pending' };
+        const defaultStatuses = { 101: 'pending', 102: 'pending', 103: 'pending', 104: 'pending', 105: 'pending', 106: 'pending', 1: 'pending', 2: 'pending', 3: 'pending', 4: 'pending', 5: 'pending', 6: 'pending', 7: 'pending', 8: 'pending', 9: 'pending', 10: 'pending', 11: 'pending', 12: 'pending', 13: 'pending', 14: 'pending', 15: 'pending' };
 
         function getInitialStatuses() {
             try {
@@ -409,6 +409,13 @@
         function renderAllUI() {
             document.documentElement.lang = currentLang;
             const T = translations[currentLang];
+            if (!T) { // Add this check to prevent error
+                console.error(`Language '${currentLang}' not found, defaulting to 'vi'.`);
+                currentLang = 'vi';
+                localStorage.setItem(LANG_STORAGE_KEY, currentLang);
+                renderAllUI();
+                return;
+            }
 
             // Update static text
             document.getElementById('header-title').textContent = T.header_title;
@@ -437,7 +444,7 @@
                 taskStructure[dayKey].forEach(taskInfo => {
                     const taskId = taskInfo.id;
                     const taskStatusKey = taskStatuses[taskId];
-                    const status = statusConfig[taskStatusKey];
+                    const status = statusConfig[taskStatusKey] || statusConfig.pending; // Fallback for safety
                     const taskData = T.tasks[taskId];
 
                     totalTasks++;
@@ -578,5 +585,4 @@
     </script>
 </body>
 </html>
-
 
