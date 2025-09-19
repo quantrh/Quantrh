@@ -290,7 +290,7 @@
             }
         };
 
-        const defaultStatuses = { 101: 'pending', 102: 'pending', 103: 'pending', 104: 'pending', 105: 'pending', 106: 'pending', 1: 'pending', 2: 'pending', 3: 'pending', 4: 'pending', 5: 'pending', 6: 'pending', 7: 'pending', 8: 'pending', 9: 'pending', 10: 'pending', 11: 'pending', 12: 'pending', 13: 'pending', 14: 'pending', 15: 'pending' };
+        const defaultStatuses = { 101: 'done', 102: 'done', 103: 'done', 104: 'done', 105: 'done', 106: 'done', 1: 'inprogress', 2: 'inprogress', 3: 'pending', 4: 'pending', 5: 'pending', 6: 'pending', 7: 'pending', 8: 'pending', 9: 'pending', 10: 'pending', 11: 'pending', 12: 'pending', 13: 'pending', 14: 'pending', 15: 'pending' };
 
         function getInitialStatuses() {
             try {
@@ -323,7 +323,7 @@
         const modalBody = document.getElementById('modal-body');
         const closeBtn = document.querySelector('.close-btn');
 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`; // Add your key here
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC-BYUh_rmNRc3TaYOszqe4VGupDk82KVM`; // Add your key here
 
         async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
             try {
@@ -585,4 +585,5 @@
     </script>
 </body>
 </html>
+
 
