@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Chi tiết Go-live Core Banking Myanmar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .task-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .task-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        .status-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.25em;
+            padding-right: 2rem;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .checkpoint {
+            border-left: 4px solid #FFC62F; /* BIDV Yellow */
+        }
+        .golive-event {
+             border-left: 4px solid #16a34a; /* Green 600 */
+        }
+        .timeline-container {
+            position: relative;
+        }
+        #current-time-indicator-vertical {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #ef4444; /* Red 500 */
+            z-index: 10;
+        }
+        #current-time-label-vertical {
+            position: absolute;
+            top: -10px;
+            transform: translateX(-50%);
+            background-color: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        #current-time-indicator-horizontal {
+            position: relative;
+            height: 2px;
+            background-color: #ef4444;
+            margin: 1rem 0;
+            width: 100%;
+        }
+        #current-time-label-horizontal {
+             position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .gemini-btn {
+            background-color: #006B68; /* BIDV Green */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .gemini-btn:hover {
+            background-color: #004a48; /* Darker BIDV Green */
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 24px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 640px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+        }
+         /* Spinner */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #006B68; /* BIDV Green */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-screen-xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#006B68]">Dashboard Kế hoạch Go-live</h1>
+            <div class="flex items-center justify-center gap-4 mt-2">
+                <p class="text-lg text-gray-600">Dự án Chuyển đổi Core Banking BIDV tại Myanmar</p>
+                <button id="quick-report-btn" class="gemini-btn">✨ Tạo Báo cáo Nhanh</button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between mb-1">
+                <span class="text-base font-medium text-[#006B68]">Tiến độ tổng thể</span>
+                <span class="text-sm font-medium text-[#006B68]" id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-[#006B68] h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Task Columns -->
+        <div class="timeline-container">
+             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6" id="task-board">
+                <!-- Columns will be generated by JavaScript -->
+            </div>
+            <div id="current-time-indicator-vertical" style="display: none;">
+                <div id="current-time-label-vertical">Hiện tại</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Gemini Response -->
+    <div id="gemini-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2 id="modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+        <div id="modal-body">
+            <!-- Content will be injected here -->
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+        const STORAGE_KEY = 'goLiveTaskStatus';
+        
+        const defaultTasksByDay = {
+            "Thứ 5, 18/09/2025 (Chuẩn bị)": [
+                { id: 101, time: 'Deadline 16/09', task: 'Cài đặt và trình phê duyệt bộ tham số triển khai lên môi trường Production.', assignee: 'Ban QLDA CBM', status: 'done' },
+                { id: 102, time: 'Deadline 16/09', task: 'Hoàn thiện và bàn giao hồ sơ triển khai các ứng dụng ngoài tới TTCNTT.', assignee: 'Ban QLDA CBM', status: 'done' },
+                { id: 103, time: 'Deadline 18/09', task: 'Đăng ký user, IP máy tính để vận hành hệ thống mới theo quy định.', assignee: 'Ban QLDA CBM, CN Yangon, Ban QLPTCB, TTCNTT', status: 'done' },
+                { id: 104, time: 'Deadline 18/09', task: 'Trình Ban Lãnh đạo phê duyệt các văn bản hướng dẫn triển khai hệ thống mới.', assignee: 'Chi nhánh Yangon', status: 'done' },
+                { id: 105, time: 'Deadline 19/09', task: 'Thông báo tới khách hàng về thời gian gián đoạn dịch vụ.', assignee: 'Ban QLDA CBM, Chi nhánh Yangon', status: 'inprogress' },
+                { id: 106, time: 'Deadline 19/09', task: 'Thiết kế ấn phẩm và thực hiện truyền thông nội bộ.', assignee: 'Ban QLDA CBM', status: 'inprogress' },
+            ],
+            "Thứ 6, 19/09/2025 (Chuyển đổi)": [
+                { id: 1, time: '18:00 - 23:00 MMT', task: 'Cập nhật/nâng cấp các hệ thống ứng dụng tích hợp (ERP, BSMS, iBank, SWIFT GPI, CCS...).', assignee: 'Ban QLDA CBM, Ban QLPTCB, TTCNTT, TT PTNHS', status: 'pending' },
+                { id: 2, time: '19:00 - 23:00 MMT', task: 'Chuyển đổi dữ liệu (thông tin KH, TK tiền gửi, tiền vay, TTTM) từ Intellect sang Profile.', assignee: 'Ban QLDA CBM', status: 'pending' },
+                { id: 3, time: '23:30 MMT', task: 'CHECKPOINT #1: Đối chiếu, xác nhận dữ liệu chuyển đổi thành công. Ra quyết định Go/No-Go thực hiện bước tiếp theo.', assignee: 'Ban Chỉ đạo, Ban QLDA CBM', status: 'pending', type: 'checkpoint' },
+            ],
+            "Thứ 7, 20/09/2025 (Kiểm thử & Quyết định)": [
+                { id: 4, time: '07:00 - 14:00', task: 'Thực hiện Smoke test các tính năng nghiệp vụ, kỹ thuật trên Core Profile.', assignee: 'Ban QLDA CBM', status: 'pending' },
+                { id: 5, time: '07:00 - 14:00', task: 'Kiểm tra tính năng tích hợp, kết nối giữa các ứng dụng và Profile.', assignee: 'Ban QLDA CBM', status: 'pending' },
+                { id: 6, time: '14:00 MMT', task: 'CHECKPOINT #2: Xác nhận kết quả smoke test tính năng Core Banking Profile.', assignee: 'Ban Chỉ đạo, Ban QLDA CBM', status: 'pending', type: 'checkpoint' },
+                { id: 7, time: '14:00 MMT', task: 'CHECKPOINT #3: Xác nhận kết quả smoke test các ứng dụng tích hợp.', assignee: 'Ban Chỉ đạo, Ban QLDA СВМ', status: 'pending', type: 'checkpoint' },
+                { id: 8, time: 'Trước 15:00 MMT', task: 'QUYẾT ĐỊNH GO/NO-GO TOÀN BỘ HỆ THỐNG.', assignee: 'Ban Chỉ đạo, Ban QLDA CBM', status: 'pending', type: 'checkpoint' },
+                { id: 9, time: '15:00 MMT', task: 'Mở dịch vụ Online iBank, BSMS cho khách hàng.', assignee: 'Ban QLDA CBM', status: 'pending' },
+                { id: 10, time: 'Sau 15:00', task: 'Thực hiện các công việc sau Golive (Đóng hệ thống Intellect, chuyển sang chế độ chỉ vấn tin).', assignee: 'Ban QLDA CBM, CN Yangon', status: 'pending' },
+                { id: 11, time: '23:49 MMT', task: 'Chạy xử lý cuối ngày (EOD) ngày đầu tiên trên hệ thống mới.', assignee: 'Ban QLDA CBM', status: 'pending' },
+            ],
+            "Chủ nhật, 21/09/2025 (Vận hành T+1)": [
+                { id: 12, time: 'Sau EOD', task: 'Kiểm tra toàn bộ hệ thống sau EOD ngày T+1.', assignee: 'Ban QLDA CBM', status: 'pending' },
+                { id: 13, time: 'Cả ngày', task: 'Vận hành, kiểm tra và chấm dữ liệu ngày T+1 (Báo cáo MIS, GL-Core-Hub, SVS, iBank).', assignee: 'Chi nhánh Yangon', status: 'pending' },
+                { id: 14, time: 'Cuối ngày', task: 'Chạy xử lý cuối ngày (EOD) ngày thứ 2.', assignee: 'Ban QLDA CBM', status: 'pending' },
+            ],
+            "Thứ 2, 22/09/2025 (GO-LIVE)": [
+                 { id: 15, time: '08:00 MMT', task: 'GO-LIVE: Hệ thống Core Banking Profile chính thức hoạt động tại kênh quầy (Branch Open).', assignee: 'CN Yangon, Ban QLDA CBM, Ban QLPTCB, TTCNTT, TT PTNHS & các TT liên quan', status: 'pending', type: 'golive' },
+            ]
+        };
+        
+        function getInitialTasks() {
+            try {
+                const savedTasks = localStorage.getItem(STORAGE_KEY);
+                if (savedTasks) {
+                    const parsedTasks = JSON.parse(savedTasks);
+                    if (parsedTasks["Thứ 5, 18/09/2025 (Chuẩn bị)"]) {
+                        return parsedTasks;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load or parse tasks from localStorage", e);
+                localStorage.removeItem(STORAGE_KEY);
+            }
+            return defaultTasksByDay;
+        }
+
+        let tasksByDay = getInitialTasks();
+
+        const statusConfig = {
+            pending:    { text: 'Chưa bắt đầu',   bg: 'bg-slate-100', text_color: 'text-slate-600' },
+            inprogress: { text: 'Đang thực hiện',  bg: 'bg-amber-100', text_color: 'text-amber-800' },
+            done:       { text: 'Hoàn thành',       bg: 'bg-teal-100', text_color: 'text-[#006B68]' },
+            blocked:    { text: 'Bị chặn',         bg: 'bg-rose-100', text_color: 'text-rose-700' }
+        };
+
+        const dayIcons = {
+            'Chuẩn bị': 'fa-solid fa-clipboard-list',
+            'Chuyển đổi': 'fa-solid fa-right-left',
+            'Kiểm thử': 'fa-solid fa-magnifying-glass',
+            'Vận hành': 'fa-solid fa-gears',
+            'GO-LIVE': 'fa-solid fa-rocket'
+        };
+
+        const taskBoard = document.getElementById('task-board');
+        const modal = document.getElementById('gemini-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const closeBtn = document.querySelector('.close-btn');
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`;
+
+        async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
+            try {
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    return candidate.content.parts[0].text.replace(/\n/g, '<br>');
+                } else {
+                    throw new Error("Invalid response structure from API");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                 if (retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return callGeminiAPI(prompt, retries - 1, delay * 2);
+                }
+                return "Đã xảy ra lỗi khi kết nối với Gemini API. Vui lòng thử lại sau.";
+            }
+        }
+
+        function showModal(title, content) {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = content;
+            modal.style.display = 'block';
+        }
+
+        function showLoading() {
+            showModal("Đang xử lý...", '<div class="loader"></div><p class="text-center">Vui lòng chờ trong giây lát...</p>');
+        }
+        
+        closeBtn.onclick = () => modal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        async function handleRiskAnalysis(taskId, day) {
+            const task = tasksByDay[day].find(t => t.id === taskId);
+            if (!task) return;
+            showLoading();
+            const prompt = `Bạn là một chuyên gia quản lý dự án cho một dự án chuyển đổi hệ thống Core Banking trọng điểm. 
+            Một công việc quan trọng đã bị chặn.
+            - Tên công việc: "${task.task}"
+            - Đơn vị phụ trách: "${task.assignee}"
+            - Giai đoạn: "${day}"
+            Hãy phân tích các tác động dây chuyền tiềm tàng đến lịch trình Go-live tổng thể và đề xuất 3 chiến lược giảm thiểu rủi ro cụ thể, có thể hành động ngay. Trình bày rõ ràng, chuyên nghiệp.`;
+            const analysis = await callGeminiAPI(prompt);
+            showModal("✨ Phân tích Rủi ro & Đề xuất", analysis);
+        }
+
+        document.getElementById('quick-report-btn').addEventListener('click', async () => {
+            showLoading();
+            let reportData = "Dưới đây là trạng thái hiện tại của các công việc trong dự án Go-live Core Banking Myanmar:\n\n";
+            for (const day in tasksByDay) {
+                reportData += `**${day}**\n`;
+                tasksByDay[day].forEach(task => {
+                    reportData += `- ${task.task} (Trạng thái: ${statusConfig[task.status].text}, Phụ trách: ${task.assignee})\n`;
+                });
+                reportData += "\n";
+            }
+            const prompt = `Bạn là trợ lý quản lý dự án. Dựa trên báo cáo trạng thái công việc sau đây cho dự án Go-Live Core Banking, hãy cung cấp một bản tóm tắt ngắn gọn cho cuộc họp giao ban buổi sáng. 
+            Cấu trúc tóm tắt của bạn thành ba phần: 
+            1.  **Đã hoàn thành:** Các công việc đã xong.
+            2.  **Đang thực hiện:** Các công việc đang tiến hành.
+            3.  **Rủi ro & Trở ngại:** Các công việc bị chặn và cần chú ý ngay.
+            Hãy viết một cách chuyên nghiệp và súc tích.
+            Dữ liệu báo cáo: \n${reportData}`;
+            const summary = await callGeminiAPI(prompt);
+            showModal("✨ Báo cáo Nhanh Trạng thái Dự án", summary);
+        });
+
+        function renderTasks() {
+            taskBoard.innerHTML = '';
+            let totalTasks = 0;
+            let completedTasks = 0;
+
+            for (const day in tasksByDay) {
+                const dayColumn = document.createElement('div');
+                dayColumn.className = 'bg-white/60 backdrop-blur-sm p-4 rounded-lg shadow-sm';
+                let dayTitleColor = day.includes("GO-LIVE") ? "text-[#006B68] font-bold" : "text-gray-700";
+                let iconHTML = '';
+                for (const key in dayIcons) {
+                    if (day.includes(key)) {
+                        iconHTML = `<i class="${dayIcons[key]} mr-2 text-[#006B68] opacity-80"></i>`;
+                        break;
+                    }
+                }
+                dayColumn.innerHTML = `<h2 class="text-xl font-semibold mb-4 pb-2 border-b ${dayTitleColor} flex items-center">${iconHTML}${day}</h2>`;
+                const tasksContainer = document.createElement('div');
+                tasksContainer.className = 'space-y-4';
+                tasksByDay[day].forEach(task => {
+                    totalTasks++;
+                    if (task.status === 'done') completedTasks++;
+                    const taskCard = document.createElement('div');
+                    taskCard.setAttribute('data-task-id', task.id);
+                    const status = statusConfig[task.status];
+                    let specialClass = task.type || '';
+                    taskCard.className = `task-card p-4 rounded-lg ${status.bg} ${specialClass}`;
+                    let geminiButtonHTML = '';
+                    if (task.status === 'blocked') {
+                        geminiButtonHTML = `<button data-id="${task.id}" data-day="${day}" class="risk-analysis-btn mt-3 w-full text-sm font-semibold text-rose-700 hover:text-rose-900">✨ Phân tích Rủi ro</button>`;
+                    }
+                    let taskText = task.task;
+                    const highlightClass = 'font-bold text-green-600';
+                    if (taskText.includes('CHECKPOINT')) {
+                        taskText = taskText.replace(/CHECKPOINT/g, `<strong class="${highlightClass}">CHECKPOINT</strong>`);
+                    }
+                    if (taskText.includes('QUYẾT ĐỊNH GO/NO-GO TOÀN BỘ HỆ THỐNG')) {
+                        taskText = taskText.replace('QUYẾT ĐỊNH GO/NO-GO TOÀN BỘ HỆ THỐNG', `<strong class="${highlightClass}">QUYẾT ĐỊNH GO/NO-GO TOÀN BỘ HỆ THỐNG</strong>`);
+                    }
+                    if (taskText.includes('GO-LIVE')) {
+                        taskText = taskText.replace('GO-LIVE', `<strong class="${highlightClass}">GO-LIVE</strong>`);
+                    }
+                    taskCard.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <p class="text-sm font-semibold ${status.text_color} opacity-80">${task.time}</p>
+                             <select data-id="${task.id}" data-day="${day}" class="status-select text-xs font-medium rounded border-gray-300 focus:ring-[#006B68] focus:border-[#006B68]">
+                                <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Chưa bắt đầu</option>
+                                <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>Đang thực hiện</option>
+                                <option value="done" ${task.status === 'done' ? 'selected' : ''}>Hoàn thành</option>
+                                <option value="blocked" ${task.status === 'blocked' ? 'selected' : ''}>Bị chặn</option>
+                            </select>
+                        </div>
+                        <p class="font-medium ${status.text_color} my-2">${taskText}</p>
+                        <div class="flex items-center mt-2 ${status.text_color} opacity-90">
+                             <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+                            <p class="text-sm" title="${task.assignee}">${task.assignee}</p>
+                        </div>
+                        ${geminiButtonHTML}`;
+                    tasksContainer.appendChild(taskCard);
+                });
+                dayColumn.appendChild(tasksContainer);
+                taskBoard.appendChild(dayColumn);
+            }
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').innerText = `${progress}%`;
+        }
+        
+        function parseTaskTime(task, dayString) {
+            const dateMatch = dayString.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (!dateMatch) return null;
+            const [, day, month, year] = dateMatch;
+            const dateStr = `${year}-${month}-${day}`;
+            let timeStr = '00:00:00';
+            const timeMatch = task.time.match(/(\d{2}):(\d{2})/);
+            if (timeMatch) {
+                timeStr = `${timeMatch[1]}:${timeMatch[2]}:00`;
+            }
+            return new Date(`${dateStr}T${timeStr}+07:00`);
+        }
+
+        function updateCurrentTimeIndicator() {
+            const verticalIndicator = document.getElementById('current-time-indicator-vertical');
+            verticalIndicator.style.display = 'none'; 
+            const oldHorizontal = document.getElementById('current-time-indicator-horizontal');
+            if (oldHorizontal) oldHorizontal.remove();
+            const now = new Date('2025-09-19T08:45:00+07:00'); 
+            const mdBreakpoint = 768;
+            if (window.innerWidth >= mdBreakpoint) {
+                const timelineStart = new Date('2025-09-18T00:00:00+07:00');
+                const timelineEnd = new Date('2025-09-22T23:59:59+07:00');
+                const totalDuration = timelineEnd.getTime() - timelineStart.getTime();
+                const elapsedDuration = now.getTime() - timelineStart.getTime();
+                if (elapsedDuration >= 0 && elapsedDuration <= totalDuration) {
+                    const positionPercent = (elapsedDuration / totalDuration) * 100;
+                    verticalIndicator.style.left = `${positionPercent}%`;
+                    verticalIndicator.style.display = 'block';
+                }
+            } else {
+                let lastTaskBeforeNowEl = null;
+                for (const day in tasksByDay) {
+                    for (const task of tasksByDay[day]) {
+                        const taskDate = parseTaskTime(task, day);
+                        if (taskDate && taskDate < now) {
+                            lastTaskBeforeNowEl = document.querySelector(`[data-task-id="${task.id}"]`);
+                        }
+                    }
+                }
+                const horizontalIndicator = document.createElement('div');
+                horizontalIndicator.id = 'current-time-indicator-horizontal';
+                horizontalIndicator.innerHTML = '<div id="current-time-label-horizontal">Hiện tại</div>';
+                if (lastTaskBeforeNowEl) {
+                    lastTaskBeforeNowEl.after(horizontalIndicator);
+                } else {
+                    const firstTaskContainer = taskBoard.querySelector('.space-y-4');
+                    if (firstTaskContainer) {
+                       firstTaskContainer.prepend(horizontalIndicator);
+                    }
+                }
+            }
+        }
+
+        taskBoard.addEventListener('change', (e) => {
+            if (e.target.classList.contains('status-select')) {
+                const taskId = parseInt(e.target.dataset.id);
+                const day = e.target.dataset.day;
+                const newStatus = e.target.value;
+                const task = tasksByDay[day].find(t => t.id === taskId);
+                if (task) task.status = newStatus;
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasksByDay));
+                } catch (err) {
+                    console.error("Failed to save tasks to localStorage:", err);
+                }
+                renderTasks();
+                updateCurrentTimeIndicator();
+            }
+        });
+        
+        taskBoard.addEventListener('click', (e) => {
+            if (e.target.classList.contains('risk-analysis-btn')) {
+                const taskId = parseInt(e.target.dataset.id);
+                const day = e.target.dataset.day;
+                handleRiskAnalysis(taskId, day);
+            }
+        });
+
+        window.addEventListener('resize', updateCurrentTimeIndicator);
+        renderTasks();
+        updateCurrentTimeIndicator();
+    </script>
+</body>
+</html>
+
