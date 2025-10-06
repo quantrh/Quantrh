@@ -43,6 +43,28 @@
             background-color: #fee2e2 !important; /* red-100 */
             border-color: #ef4444 !important; /* red-500 */
         }
+        /* Custom styles for explanation boxes */
+        .explanation-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .explanation-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .explanation-right {
+            background-color: #ecfdf5; /* Green-50 */
+            border-left: 4px solid #10b981; /* Green-500 */
+        }
+        .explanation-wrong {
+            background-color: #fef2f2; /* Red-50 */
+            border-left: 4px solid #ef4444; /* Red-500 */
+        }
+        .explanation-question {
+            background-color: #f0f9ff; /* Blue-50 */
+            border-left: 4px solid #3b82f6; /* Blue-500 */
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -229,11 +251,14 @@ document.addEventListener('DOMContentLoaded', () => {
         async loadQuestions() {
             try {
                 // Fetch data from local JSON file
+                // Tên file đã được sửa thành Dauthaujson.json theo yêu cầu
                 const response = await fetch('./Dauthaujson.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                
+                // Đảm bảo dữ liệu đọc được là một mảng và có trường 'question'
                 this.allQuestions = data.filter(q => q.question && q.answer);
                 
                 if (this.allQuestions.length > 0) {
@@ -425,6 +450,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
+                // --- LOGIC CẬP NHẬT TRƯỜNG GIẢI THÍCH MỚI ---
+                let explanationHtml = '';
+                
+                // 1. Giải thích đáp án đúng (explanation_right)
+                if (q.explanation_right) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-right">
+                            <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+
+                // 2. Giải thích đáp án sai (explanation_wrong)
+                if (q.explanation_wrong) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-wrong">
+                            <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
+                            <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+                
+                // 3. Bóc phốt đề (explanation_question)
+                if (q.explanation_question) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-question">
+                            <p class="explanation-title text-blue-700">Bóc phốt đề (Phân tích cách ra đề):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+                // --- KẾT THÚC LOGIC CẬP NHẬT ---
+
                 card.innerHTML = `
                     <p class="font-semibold">Câu ${index + 1}: ${q.question}</p>
                     <p class="text-sm text-gray-700 mt-2">
@@ -432,9 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         Đáp án đúng: <strong class="text-green-700">${q.answer}</strong>
                     </p>
                     <div class="mt-3">${optionsHtml}</div>
-                    <div class="mt-4 p-3 bg-gray-100 rounded-md">
-                        <p class="font-semibold text-sm">Giải thích:</p>
-                        <p class="text-sm text-gray-600">${q.explanation.replace(/\n/g, '<br>')}</p>
+                    <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                        <p class="font-semibold text-sm mb-2">Phân tích chuyên sâu:</p>
+                        ${explanationHtml}
                     </div>
                 `;
                 this.displays.resultDetails.appendChild(card);
@@ -565,5 +624,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-
