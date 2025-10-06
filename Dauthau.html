@@ -98,6 +98,7 @@
                         <div>
                             <label for="num-questions" class="block text-sm font-medium text-gray-700 mb-1">Số câu hỏi:</label>
                             <select id="num-questions" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="70">70 câu (Tiêu chuẩn)</option>
                                 <option value="10">10 câu</option>
                                 <option value="20">20 câu</option>
                                 <option value="30">30 câu</option>
@@ -108,6 +109,7 @@
                         <div>
                             <label for="time-per-question" class="block text-sm font-medium text-gray-700 mb-1">Thời gian mỗi câu (giây):</label>
                             <select id="time-per-question" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="51">51 giây (cho 70 câu)</option>
                                 <option value="30">30 giây</option>
                                 <option value="60">60 giây</option>
                                 <option value="90">90 giây</option>
@@ -115,6 +117,16 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- New row for quiz order -->
+                    <div>
+                        <label for="quiz-order" class="block text-sm font-medium text-gray-700 mb-1">Thứ tự câu hỏi:</label>
+                        <select id="quiz-order" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="random">Ngẫu nhiên (Đề thi thử)</option>
+                            <option value="sequential">Theo thứ tự ID (Để xem lại)</option>
+                        </select>
+                    </div>
+
                      <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
                     <button id="start-btn" class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
@@ -197,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentName: document.getElementById('student-name'),
             numQuestions: document.getElementById('num-questions'),
             timePerQuestion: document.getElementById('time-per-question'),
+            quizOrder: document.getElementById('quiz-order'), // Thêm trường mới
         },
         displays: {
             dataStatus: document.getElementById('data-status'),
@@ -281,8 +294,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Shuffle and select questions
-            let selectedQuestions = [...this.allQuestions].sort(() => 0.5 - Math.random());
+            // Determine question pool
+            let selectedQuestions = [...this.allQuestions];
+            
+            // 2) Tùy chọn ra bộ đề gồm các câu hỏi theo thứ tự câu hỏi từ nhỏ đến lớn hoặc ngẫu nhiên
+            const order = this.inputs.quizOrder.value;
+            
+            if (order === 'sequential') {
+                // Sắp xếp theo ID (từ nhỏ đến lớn)
+                selectedQuestions.sort((a, b) => {
+                    const idA = parseInt(a.id);
+                    const idB = parseInt(b.id);
+                    if (!isNaN(idA) && !isNaN(idB)) {
+                        return idA - idB;
+                    }
+                    // Nếu ID không phải số, giữ nguyên thứ tự tương đối
+                    return 0; 
+                });
+            } else {
+                // Ngẫu nhiên (default)
+                selectedQuestions.sort(() => 0.5 - Math.random());
+            }
+
+            // Select number of questions
             const num = parseInt(this.inputs.numQuestions.value);
             if (num > 0 && num < selectedQuestions.length) {
                 this.quizQuestions = selectedQuestions.slice(0, num);
@@ -290,9 +324,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.quizQuestions = selectedQuestions;
             }
 
+            // 1) Cấu hình thời gian làm bài
+            this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+            
             this.userAnswers = new Array(this.quizQuestions.length).fill(null);
             this.currentQuestionIndex = 0;
-            this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
             
             this.displays.totalQNum.textContent = this.quizQuestions.length;
             
