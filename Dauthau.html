@@ -139,6 +139,19 @@
         #quiz-screen #submit-btn {
             @apply bg-bidv-green hover:opacity-90;
         }
+        /* Style for help content from help.html */
+        .help-content h2 {
+            border-bottom: 2px solid var(--color-bidv-yellow);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        .help-content .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .help-content .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 107, 104, 0.1);
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -266,7 +279,103 @@
 
 
                      <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
-                    <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
+                    <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed">Bắt đầu làm bài</button>
+                    
+                    <!-- KHỐI NỘI DUNG HƯỚNG DẪN MỚI -->
+                    <div class="mt-8 pt-4 border-t border-gray-200">
+                        <button id="toggle-help-btn" class="w-full py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                            Hiển thị Hướng dẫn sử dụng
+                        </button>
+                        <div id="help-content-container" class="mt-4 p-6 border border-gray-100 rounded-xl shadow-inner bg-white help-content" style="display: none;">
+                            <!-- NỘI DUNG TỪ HELP.HTML ĐƯỢC CHÈN VÀO ĐÂY VÀ CHUYỂN SANG HTML THUẦN -->
+                            
+                            <h2 class="text-2xl font-bold text-bidv-green mb-4">I. TÓM TẮT TÍNH NĂNG NỔI TRỘI</h2>
+                            <p class="mb-6 text-gray-700">Ứng dụng được thiết kế nhằm mô phỏng sát nhất kỳ thi thực tế, đồng thời cung cấp các công cụ phân tích sâu sắc giúp thí sinh dễ dàng ôn tập và cải thiện kiến thức một cách hiệu quả.</p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Card 1: Chế độ thi linh hoạt -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">1. Mô phỏng Thi thực tế</h3>
+                                    <p class="text-sm text-gray-700">Tùy chỉnh số lượng câu hỏi, thời gian và chế độ tính giờ (Tổng thời gian hoặc Tính giờ mỗi câu) để làm quen với áp lực phòng thi.</p>
+                                </div>
+
+                                <!-- Card 2: Phân tích chuyên sâu (Đã Sửa: Bóc phốt đề-soi cách ra đề) -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">2. Phân tích &amp; Giải thích chi tiết</h3>
+                                    <p class="text-sm text-gray-700">Sau khi nộp bài, xem lại đáp án đúng, câu trả lời của bạn, và nhận <strong>Giải thích chuyên sâu</strong> bao gồm <strong>Phân tích đáp án đúng/sai</strong> và <strong>Bóc phốt đề-soi cách ra đề</strong>.</p>
+                                </div>
+
+                                <!-- Card 3: Theo dõi tiến độ -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">3. Thống kê Lịch sử</h3>
+                                    <p class="text-sm text-gray-700">Lưu lại toàn bộ lịch sử làm bài. Đặc biệt là chức năng <strong>Thống kê các câu hay sai</strong> giúp bạn tập trung ôn luyện các điểm yếu.</p>
+                                </div>
+                            </div>
+
+                            <!-- Dấu phân cách -->
+                            <div class="my-8 h-px bg-gray-200"></div>
+
+                            <!-- Phần II: Hướng Dẫn Chi Tiết Chức Năng -->
+                            <h2 class="text-2xl font-bold text-bidv-green mb-4">II. HƯỚNG DẪN CHI TIẾT CHỨC NĂNG</h2>
+                            
+                            <!-- 1. Màn hình Cấu hình Bài thi (Start Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">1. Màn hình Trang chủ (Cấu hình Bài thi)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Tên của bạn:</strong> Bắt buộc nhập để lưu lịch sử làm bài.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Số câu hỏi:</strong> Chọn số lượng câu muốn làm (Mặc định <strong>70 câu</strong> là tiêu chuẩn). Chọn <strong>"Tất cả"</strong> để làm hết bộ đề.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thời gian mỗi câu (giây):</strong> Dùng để tính <strong>Tổng thời gian làm bài</strong>. Mặc định <strong>51 giây</strong> (tương đương 60 phút cho 70 câu).</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thứ tự câu hỏi:</strong> 
+                                    <ul class="list-disc list-inside ml-6">
+                                        <li><strong>Ngẫu nhiên:</strong> Đề thi thử, câu hỏi được xáo trộn.</li>
+                                        <li><strong>Theo thứ tự ID:</strong> Dùng khi bạn muốn ôn tập theo tài liệu gốc hoặc dễ dàng tìm lại câu hỏi.</li>
+                                    </ul>
+                                </p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Chế độ tính giờ:</strong> 
+                                    <ul class="list-disc list-inside ml-6">
+                                        <li><strong>Tổng thời gian (Mặc định):</strong> Đồng hồ đếm ngược tổng thời gian. Hết giờ là tự động nộp bài.</li>
+                                        <li><strong>Tính giờ mỗi câu hỏi:</strong> Nếu hết thời gian quy định của một câu, hệ thống tự động chuyển sang câu tiếp theo (<strong>Lưu ý:</strong> Chế độ này không khuyến khích vì làm bài thi thật không có tính năng này).</li>
+                                    </ul>
+                                </p>
+                                <p class="bg-gray-50 p-3 rounded-md border-l-4 border-bidv-yellow">Sau khi cấu hình, nút <strong>"Bắt đầu làm bài"</strong> sẽ được kích hoạt.</p>
+                            </div>
+
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 2. Màn hình làm bài (Quiz Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">2. Màn hình Làm bài (Quiz Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Cấu trúc:</strong> Màn hình chia làm hai cột. Cột trái là <strong>Câu hỏi</strong> và <strong>Đáp án</strong>; Cột phải là <strong>Danh sách câu hỏi</strong> (Navigation).</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Trả lời:</strong> Chỉ cần <strong>chọn (click) vào ô đáp án</strong> (Label). Hệ thống sẽ tự động lưu lại câu trả lời của bạn.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Điều hướng:</strong> Sử dụng nút <strong>"Câu trước"</strong>, <strong>"Câu tiếp"</strong> hoặc <strong>click vào số câu hỏi</strong> ở cột bên phải để chuyển câu.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Nộp bài:</strong> Nút <strong>"Nộp bài"</strong> sẽ xuất hiện khi bạn ở câu hỏi cuối cùng.</p>
+                                
+                                <p class="bg-bidv-green/10 p-3 rounded-md border-l-4 border-bidv-green"><strong>Lưu ý quan trọng:</strong> Khi đang làm bài, nếu bạn click vào số câu hỏi ở cột điều hướng, hệ thống sẽ hỏi bạn có muốn <strong>xem đáp án và giải thích</strong> ngay lập tức không. Việc này giúp bạn học tập linh hoạt, nhưng sẽ tạm dừng bộ đếm giờ của bạn.</p>
+                            </div>
+
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 3. Màn hình Kết quả (Result Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">3. Màn hình Kết quả (Result Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Tóm tắt:</strong> Hiển thị điểm số, tổng số câu, phần trăm đúng/sai và thời gian làm bài.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Chi tiết:</strong> Liệt kê từng câu hỏi, kèm theo <strong>Giải thích chuyên sâu</strong> đã được đề cập ở mục I, giúp bạn hiểu rõ lý do tại sao câu trả lời của bạn đúng hoặc sai.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Lưu trữ:</strong> Kết quả này được tự động lưu vào <strong>Lịch sử làm bài</strong>.</p>
+                            </div>
+                            
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 4. Màn hình Lịch sử (History Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">4. Màn hình Lịch sử (History Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Xem lại:</strong> Click nút <strong>"Xem lại"</strong> để hiển thị màn hình kết quả chi tiết của lần thi đó.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thống kê lỗi sai:</strong> Màn hình này sẽ tổng hợp và liệt kê <strong>5 câu hỏi</strong> mà bạn đã trả lời sai nhiều lần nhất trong lịch sử, giúp bạn tập trung ôn tập hiệu quả nhất.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Xóa lịch sử:</strong> Nút <strong>"Xóa tất cả lịch sử thi"</strong> sẽ xóa toàn bộ dữ liệu làm bài đã lưu trữ trên trình duyệt của bạn.</p>
+                            </div>
+
+                            <!-- KẾT THÚC NỘI DUNG TỪ HELP.HTML -->
+                        </div>
+                    </div>
+                    <!-- KẾT THÚC KHỐI NỘI DUNG HƯỚNG DẪN MỚI -->
                 </div>
             </div>
 
@@ -399,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submit: document.getElementById('submit-btn'),
             backToHome: document.getElementById('back-to-home-btn'),
             clearHistory: document.getElementById('clear-history-btn'), // Thêm nút xóa lịch sử
+            toggleHelp: document.getElementById('toggle-help-btn'), // Thêm nút ẩn/hiện hướng dẫn
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -424,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
+            helpContentContainer: document.getElementById('help-content-container'), // Thêm container nội dung hướng dẫn
         },
 
         // State
@@ -458,6 +569,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
             this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); // Lắng nghe sự kiện xóa lịch sử
             
+            // Lắng nghe sự kiện ẩn/hiện hướng dẫn
+            this.buttons.toggleHelp.addEventListener('click', () => this.toggleHelpContent());
+            
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
@@ -469,6 +583,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.closeModal();
                 }
             });
+        },
+        
+        // Hàm xử lý ẩn/hiện nội dung hướng dẫn
+        toggleHelpContent() {
+            const container = this.displays.helpContentContainer;
+            const button = this.buttons.toggleHelp;
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                button.textContent = 'Ẩn Hướng dẫn sử dụng';
+            } else {
+                container.style.display = 'none';
+                button.textContent = 'Hiển thị Hướng dẫn sử dụng';
+            }
         },
 
         calculateTotalTime() {
@@ -508,7 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
-                    this.buttons.start.disabled = false;
+                    // Kích hoạt nút sau khi tải xong (đã xóa thuộc tính disabled khỏi nút trong HTML)
+                    // this.buttons.start.disabled = false;
                     this.calculateTotalTime(); 
                 } else {
                     throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
@@ -523,7 +651,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startQuiz() {
             if (this.inputs.studentName.value.trim() === '') {
-                alert('Vui lòng nhập tên của bạn.');
+                // Thay alert bằng thông báo nội bộ
+                alert('Vui lòng nhập tên của bạn.'); 
                 return;
             }
             
@@ -532,6 +661,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Determine question pool
             let selectedQuestions = [...this.allQuestions];
+            
+            if (selectedQuestions.length === 0) {
+                 alert('Không có câu hỏi nào để bắt đầu bài thi.');
+                 return;
+            }
             
             // Tùy chọn sắp xếp
             const order = this.inputs.quizOrder.value;
@@ -586,8 +720,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.setAttribute('data-index', index);
 
                 btn.addEventListener('click', () => {
-                    // Lưu câu trả lời hiện tại trước khi chuyển hoặc mở modal
+                    // Lưu câu trả lời hiện tại trước khi chuyển
                     this.saveAnswer(); 
+                    // Yêu cầu xác nhận cho chế độ xem đáp án linh hoạt trong khi làm bài
                     if (confirm('Bạn có muốn xem đáp án và giải thích cho câu hỏi này không? (Việc này sẽ không ảnh hưởng đến điểm số của bạn, nhưng bạn sẽ thấy đáp án)')) {
                          this.showExplanationModal(index);
                     } else {
