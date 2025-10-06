@@ -8,10 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS/xlsx library for reading Excel files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- JS libraries for DOCX export -->
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
-    
     <style>
         /* Custom Tailwind Configuration (BIDV Colors) */
         :root {
@@ -143,23 +139,6 @@
         #quiz-screen #submit-btn {
             @apply bg-bidv-green hover:opacity-90;
         }
-        /* Style for Collapsible Content */
-        .collapsible-content {
-            /* Sử dụng auto để max-height tính toán theo nội dung */
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            /* Tăng thời gian transition để mượt mà hơn */
-            transition: max-height 0.5s ease-out, opacity 0.5s ease-out, padding 0.5s ease-out;
-            padding: 0 1rem; /* Bắt đầu với padding 0 */
-        }
-        .collapsible-content.expanded {
-            /* Giá trị lớn hơn đủ để chứa nội dung */
-            max-height: 4000px; 
-            opacity: 1;
-            transition: max-height 0.7s ease-in, opacity 0.5s ease-in, padding 0.5s ease-in;
-            padding: 1rem; /* Padding khi mở ra */
-        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -224,8 +203,6 @@
             <div id="start-screen" class="screen active">
                 <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
                 <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
-                
-                <!-- Configuration Section -->
                 <div class="space-y-6">
                     <div>
                         <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">Nhập tên của bạn:</label>
@@ -291,40 +268,6 @@
                      <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
                     <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
-                <!-- End Configuration Section -->
-
-
-                <!-- Instruction Section (New separate section) -->
-                <div class="mt-8">
-                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
-                        Hướng dẫn sử dụng (Mở rộng)
-                    </button>
-                    
-                    <!-- Sửa lỗi: Đặt padding 0 ban đầu cho collapsible-content và đặt lại khi expanded -->
-                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50"> 
-                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
-                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
-                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
-                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
-                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
-                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
-                        </ul>
-                        
-                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
-                        <ul class="text-gray-700 space-y-2 ml-4">
-                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
-                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
-                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
-                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
-                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
-                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
-                        </ul>
-                    </div>
-                </div>
-                <!-- End Instruction Section -->
-
-
             </div>
 
             <!-- Quiz Screen - New Layout -->
@@ -340,7 +283,6 @@
                              </div>
                              <div class="text-right">
                                 <span class="text-xs font-medium text-gray-600">Tổng thời gian:</span>
-                                <!-- Chú ý: total-timer sẽ hiển thị tổng thời gian còn lại (khi total mode) hoặc thời gian đã làm (khi per_question mode) -->
                                 <p id="total-timer" class="text-xl font-bold text-bidv-green">00:00</p>
                              </div>
                         </div>
@@ -393,12 +335,6 @@
                 <div id="result-summary" class="text-center bg-gray-50 p-6 rounded-lg mb-6">
                     <!-- Summary here -->
                 </div>
-                <div class="text-center mb-6">
-                    <!-- Export Button -->
-                    <button id="export-result-btn" class="py-2 px-6 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90">
-                        Xuất kết quả (.docx)
-                    </button>
-                </div>
                 <h3 class="text-xl font-semibold mb-4">Xem lại chi tiết:</h3>
                 <div id="result-details" class="space-y-6">
                     <!-- Detailed results here -->
@@ -412,7 +348,7 @@
             <div id="history-screen" class="screen">
                 <h2 class="text-2xl font-semibold mb-4 text-bidv-green">Lịch sử làm bài</h2>
                 
-                <!-- Nút xóa tất cả lịch sử thi -->
+                <!-- Nút xóa lịch sử thi -->
                 <div class="text-right mb-4">
                     <button id="clear-history-btn" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">Xóa tất cả lịch sử thi</button>
                 </div>
@@ -445,9 +381,6 @@
     </div>
 
 <script>
-// DOCX module needs to be accessed globally for the export function
-const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ShadingType, BorderStyle } = docx;
-
 document.addEventListener('DOMContentLoaded', () => {
     const quizApp = {
         // DOM Elements
@@ -465,9 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             next: document.getElementById('next-btn'),
             submit: document.getElementById('submit-btn'),
             backToHome: document.getElementById('back-to-home-btn'),
-            clearHistory: document.getElementById('clear-history-btn'), 
-            exportResult: document.getElementById('export-result-btn'), 
-            toggleGuide: document.getElementById('toggle-guide-btn'), // Thêm nút hướng dẫn
+            clearHistory: document.getElementById('clear-history-btn'), // Thêm nút xóa lịch sử
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -493,7 +424,6 @@ document.addEventListener('DOMContentLoaded', () => {
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
-            guideSection: document.getElementById('guide-section'), // Thêm section hướng dẫn
         },
 
         // State
@@ -503,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestionIndex: 0,
         timePerQuestion: 60,
         timingMode: 'total', // Mặc định là tính tổng thời gian
-        currentResult: null, // Lưu kết quả hiện tại để export
         timers: {
             total: null,
             question: null,
@@ -516,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.addEventListeners();
             this.loadQuestions();
             this.showScreen('start');
+            this.calculateTotalTime(); // Tính toán thời gian ban đầu
         },
 
         addEventListeners() {
@@ -526,9 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.prev.addEventListener('click', () => this.navigateQuestion(-1));
             this.buttons.submit.addEventListener('click', () => this.confirmSubmit());
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
-            this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); 
-            this.buttons.exportResult.addEventListener('click', () => this.exportResultDocx()); 
-            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); 
+            this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); // Lắng nghe sự kiện xóa lịch sử
             
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
@@ -542,32 +470,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         },
-        
-        toggleGuideSection() {
-            const section = this.displays.guideSection;
-            const btn = this.buttons.toggleGuide;
-            
-            const isExpanded = section.classList.toggle('expanded');
-            
-            if (isExpanded) {
-                btn.textContent = 'Hướng dẫn sử dụng (Thu hẹp)';
-            } else {
-                btn.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
-            }
-        },
 
         calculateTotalTime() {
             let numQuestions = parseInt(this.inputs.numQuestions.value);
             const timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
 
+            // Xử lý trường hợp "Tất cả" (value=0)
             if (numQuestions === 0) {
-                numQuestions = this.allQuestions.length; 
+                numQuestions = this.allQuestions.length;
             }
 
             if (numQuestions > 0 && !isNaN(timePerQuestion)) {
                 const totalSeconds = numQuestions * timePerQuestion;
-                const totalMinutes = Math.ceil(totalSeconds / 60); 
-                this.displays.totalQuizTime.textContent = `${totalMinutes} phút (${totalSeconds} giây)`;
+                const totalMinutes = Math.ceil(totalSeconds / 60);
+                this.displays.totalQuizTime.textContent = `${totalMinutes} phút`;
             } else {
                  this.displays.totalQuizTime.textContent = `-- phút`;
             }
@@ -578,62 +494,50 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.screens[screenId]) {
                 this.screens[screenId].classList.add('active');
             }
-            // Đảm bảo phần hướng dẫn thu hẹp lại khi chuyển sang màn hình khác
-            if (screenId !== 'start') {
-                this.displays.guideSection.classList.remove('expanded');
-                this.buttons.toggleGuide.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
-            }
         },
 
         async loadQuestions() {
             try {
-                const url = 'Dauthaujson.json';
-                
-                // Bắt buộc tải dữ liệu từ file JSON
-                const response = await fetch(url); 
+                const response = await fetch('./Dauthaujson.json');
                 if (!response.ok) {
-                    // Nếu lỗi HTTP (404, 500, etc.), ném lỗi để xử lý
-                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}).`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 const data = await response.json();
                 
                 this.allQuestions = data.filter(q => q.question && q.answer);
                 
                 if (this.allQuestions.length > 0) {
-                    this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi từ Dauthaujson.json.`;
+                    this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.buttons.start.disabled = false;
                     this.calculateTotalTime(); 
                 } else {
-                    // Nếu file tải được nhưng không có câu hỏi hợp lệ
-                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ hoặc rỗng (thiếu trường 'question' hoặc 'answer').");
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
                 }
 
             } catch (error) {
-                // Xử lý lỗi khi tải file thất bại
-                console.error("Lỗi tải dữ liệu câu hỏi:", error);
-                this.displays.dataStatus.innerHTML = `<span class="text-red-600 font-semibold">LỖI NẶNG:</span> Không thể tải dữ liệu từ Dauthaujson.json. Vui lòng kiểm tra file. Chi tiết: ${error.message}`;
-                this.buttons.start.disabled = true; // Vô hiệu hóa nút Bắt đầu
+                console.error("Lỗi tải tệp JSON câu hỏi:", error);
+                this.displays.dataStatus.textContent = 'Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng làm mới trang.';
                 this.allQuestions = [];
             }
         },
 
         startQuiz() {
             if (this.inputs.studentName.value.trim() === '') {
-                const nameInput = this.inputs.studentName;
-                nameInput.focus();
-                nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
-                setTimeout(() => {
-                    nameInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
-                }, 1500);
+                alert('Vui lòng nhập tên của bạn.');
                 return;
             }
             
+            // 1. Cấu hình chế độ tính giờ
             this.timingMode = this.inputs.timingMode.value;
+
+            // Determine question pool
             let selectedQuestions = [...this.allQuestions];
+            
+            // Tùy chọn sắp xếp
             const order = this.inputs.quizOrder.value;
             
             if (order === 'sequential') {
+                // Sắp xếp theo ID (từ nhỏ đến lớn)
                 selectedQuestions.sort((a, b) => {
                     const idA = parseInt(a.id);
                     const idB = parseInt(b.id);
@@ -643,9 +547,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return 0; 
                 });
             } else {
+                // Ngẫu nhiên (default)
                 selectedQuestions.sort(() => 0.5 - Math.random());
             }
 
+            // Select number of questions
             const num = parseInt(this.inputs.numQuestions.value);
             if (num > 0 && num < selectedQuestions.length) {
                 this.quizQuestions = selectedQuestions.slice(0, num);
@@ -653,7 +559,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.quizQuestions = selectedQuestions;
             }
 
+            // Cấu hình thời gian mỗi câu
             this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+            
+            // Khởi tạo tổng thời gian còn lại (chỉ dùng cho mode 'total')
             this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
 
             this.userAnswers = new Array(this.quizQuestions.length).fill(null);
@@ -664,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.startTimers();
             this.displayQuestion();
-            this.renderQuestionNav(); 
+            this.renderQuestionNav(); // Render danh sách câu hỏi
             this.showScreen('quiz');
         },
 
@@ -677,8 +586,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.setAttribute('data-index', index);
 
                 btn.addEventListener('click', () => {
+                    // Lưu câu trả lời hiện tại trước khi chuyển hoặc mở modal
                     this.saveAnswer(); 
-                    // Thay thế confirm bằng modal tùy chỉnh (nếu muốn) hoặc dùng lại logic hiện tại
                     if (confirm('Bạn có muốn xem đáp án và giải thích cho câu hỏi này không? (Việc này sẽ không ảnh hưởng đến điểm số của bạn, nhưng bạn sẽ thấy đáp án)')) {
                          this.showExplanationModal(index);
                     } else {
@@ -698,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (index === this.currentQuestionIndex) {
                     btn.classList.add('active-q');
                 } else if (this.userAnswers[index] !== null) {
+                    // Tô nền xanh nếu đã trả lời
                     btn.classList.add('answered');
                 } else {
                     btn.classList.add('unanswered');
@@ -717,8 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const q = this.quizQuestions[this.currentQuestionIndex];
-            this.displays.currentQNum.textContent = q.id ? q.id : this.currentQuestionIndex + 1; 
-            this.displays.totalQNum.textContent = this.quizQuestions.length;
+            this.displays.currentQNum.textContent = this.currentQuestionIndex + 1;
             this.displays.questionText.textContent = q.question;
 
             this.displays.optionsContainer.innerHTML = '';
@@ -752,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.updateNavButtons();
             this.resetQuestionTimer();
-            this.updateQuestionNav();
+            this.updateQuestionNav(); // Cập nhật trạng thái nút điều hướng
         },
         
         saveAnswer() {
@@ -760,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(selectedOption) {
                 this.userAnswers[this.currentQuestionIndex] = selectedOption.value;
             }
-            this.updateQuestionNav(); 
+            this.updateQuestionNav(); // Cập nhật trạng thái nút sau khi lưu câu trả lời
         },
 
         navigateQuestion(direction) {
@@ -818,179 +727,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeTaken: this.timers.totalSeconds,
                 questions: this.quizQuestions,
                 userAnswers: this.userAnswers,
-                timestamp: Date.now() 
             };
-            
-            this.currentResult = result; 
+
             this.saveResult(result);
             this.displayResult(result);
             this.showScreen('result');
         },
         
-        // --- DOCX EXPORT FUNCTION ---
-        exportResultDocx() {
-            if (!this.currentResult) {
-                // FIX: Thay alert bằng console.error/thông báo UI không chặn
-                console.error('Không có kết quả để xuất file.');
-                return;
-            }
-
-            const result = this.currentResult;
-            const docChildren = [];
-            const timestamp = new Date(result.date).toLocaleString('vi-VN');
-            const percentage = result.totalQuestions > 0 ? (result.score / result.totalQuestions * 100).toFixed(2) : 0;
-            const filename = `KQ_TracNghiem_${result.name.replace(/\s/g, '_')}_${new Date(result.date).getTime()}.docx`;
-            
-            // Title
-            docChildren.push(new Paragraph({
-                text: "KẾT QUẢ BÀI TRẮC NGHIỆM PHÁP LUẬT ĐẤU THẦU",
-                heading: HeadingLevel.TITLE,
-                alignment: AlignmentType.CENTER,
-            }));
-            
-            // Summary
-            docChildren.push(new Paragraph({
-                children: [
-                    new TextRun({ text: `Thí sinh: ${result.name}`, bold: true, size: 24 }),
-                ],
-                alignment: AlignmentType.LEFT,
-                spacing: { before: 200, after: 100 },
-            }));
-            docChildren.push(new Paragraph({
-                children: [
-                    new TextRun({ text: `Ngày làm bài: ${timestamp}`, size: 24 }),
-                ],
-                alignment: AlignmentType.LEFT,
-                spacing: { after: 100 },
-            }));
-            docChildren.push(new Paragraph({
-                children: [
-                    new TextRun({ text: `Điểm số: ${result.score} / ${result.totalQuestions} (${percentage}%)`, bold: true, size: 28, color: percentage >= 50 ? "10B981" : "EF4444" }),
-                ],
-                alignment: AlignmentType.LEFT,
-                spacing: { after: 300 },
-            }));
-            
-            // Detailed results
-            result.questions.forEach((q, index) => {
-                const userAnswer = result.userAnswers[index];
-                const isCorrect = q.answer === userAnswer;
-                const questionNumber = index + 1;
-
-                // Question Title
-                docChildren.push(new Paragraph({
-                    children: [
-                        new TextRun({ text: `Câu ${questionNumber}: `, bold: true, color: "006B68" }),
-                        new TextRun({ text: q.question, size: 24 }),
-                    ],
-                    spacing: { before: 400, after: 100 },
-                }));
-
-                // User's Answer
-                 docChildren.push(new Paragraph({
-                    children: [
-                        new TextRun({ text: `Câu trả lời của bạn: `, size: 22 }),
-                        new TextRun({ text: `${userAnswer ? userAnswer : 'Chưa trả lời'}`, size: 22, bold: true, color: isCorrect ? "10B981" : "EF4444" }),
-                    ],
-                    spacing: { before: 50, after: 50 },
-                }));
-                // Correct Answer
-                 docChildren.push(new Paragraph({
-                    children: [
-                        new TextRun({ text: `Đáp án đúng: `, size: 22 }),
-                        new TextRun({ text: `${q.answer}`, size: 22, bold: true, color: "10B981" }),
-                    ],
-                    spacing: { after: 100 },
-                }));
-
-                // Options
-                ['A', 'B', 'C', 'D'].forEach(key => {
-                    if (q.options[key]) {
-                        let color = "000000";
-                        if (key === q.answer) {
-                            color = "10B981"; // Green for correct answer
-                        } else if (key === userAnswer && !isCorrect) {
-                            color = "EF4444"; // Red for wrong answer
-                        }
-                        
-                        docChildren.push(new Paragraph({
-                            children: [
-                                new TextRun({ text: `${key}. ${q.options[key]}`, color: color, size: 22, bold: (key === q.answer || key === userAnswer) }),
-                            ],
-                            indent: { left: 300 },
-                            spacing: { after: 50 },
-                        }));
-                    }
-                });
-                
-                // --- Explanations ---
-                docChildren.push(new Paragraph({ text: "Phân tích chuyên sâu:", bold: true, size: 24, spacing: { before: 200 } }));
-
-                const addExplanation = (title, content, color) => {
-                    const lines = content.split('\n');
-                    docChildren.push(new Paragraph({
-                         children: [
-                            new TextRun({ text: title, bold: true, color: color, size: 22 }),
-                         ],
-                         spacing: { before: 100, after: 50 }
-                    }));
-                    
-                    lines.forEach(line => {
-                        let text = line.replace(/<br>/g, '\n');
-                        if (text.trim() !== '') {
-                            docChildren.push(new Paragraph({
-                                children: [
-                                    new TextRun({ text: text, size: 22 }),
-                                ],
-                                indent: { left: 400 },
-                                spacing: { after: 50 }
-                            }));
-                        }
-                    });
-                };
-
-                if (q.explanation_right) {
-                    addExplanation(`Giải thích đáp án đúng (${q.answer}):`, q.explanation_right.replace(/<br>/g, '\n'), "10B981");
-                }
-                if (q.explanation_wrong) {
-                    addExplanation("Giải thích các phương án sai:", q.explanation_wrong.replace(/<br>/g, '\n'), "EF4444");
-                }
-                if (q.explanation_question) {
-                    addExplanation("Bóc phốt đề (Phân tích cách ra đề):", q.explanation_question.replace(/<br>/g, '\n'), "006B68");
-                }
-            });
-            
-            // Create Document
-            const doc = new Document({
-                sections: [{
-                    properties: {
-                        page: {
-                            margin: {
-                                top: 720,    // 0.5 inch
-                                right: 720,  // 0.5 inch
-                                bottom: 720, // 0.5 inch
-                                left: 720,   // 0.5 inch
-                            },
-                        }
-                    },
-                    children: docChildren,
-                }],
-            });
-
-            // Save the document
-            Packer.toBlob(doc).then(blob => {
-                saveAs(blob, filename);
-            }).catch(error => {
-                // FIX: Thay alert bằng console.error/thông báo UI không chặn
-                console.error('Lỗi xuất file: ' + error.message);
-                console.error("DOCX Export Error:", error);
-            });
-        },
-        // --- END DOCX EXPORT FUNCTION ---
-
         // Hiển thị màn hình giải thích (Review Mode)
         showExplanationModal(index) {
-            this.jumpToQuestion(index); 
+            this.jumpToQuestion(index); // Chuyển đến câu hỏi đó để nó là câu hỏi hiện tại
             const q = this.quizQuestions[index];
             const userAnswer = this.userAnswers[index];
             
@@ -998,9 +744,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ['A', 'B', 'C', 'D'].forEach(key => {
                 if (q.options[key]) {
                     let classList = 'option-label mt-2 cursor-default';
+                    // Tô xanh đáp án đúng
                     if (key === q.answer) {
                         classList += ' correct-answer';
                     }
+                    // Tô đỏ nếu người dùng trả lời sai
                     if (key === userAnswer && key !== q.answer) {
                          classList += ' wrong-answer';
                     }
@@ -1010,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let explanationHtml = '';
             
+            // 1. Giải thích đáp án đúng (explanation_right)
             if (q.explanation_right) {
                 explanationHtml += `
                     <div class="explanation-box explanation-right">
@@ -1019,6 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            // 2. Giải thích đáp án sai (explanation_wrong)
             if (q.explanation_wrong) {
                 explanationHtml += `
                     <div class="explanation-box explanation-wrong">
@@ -1028,6 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
             
+            // 3. Bóc phốt đề (explanation_question)
             if (q.explanation_question) {
                 explanationHtml += `
                     <div class="explanation-box explanation-question">
@@ -1055,21 +806,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             
+            // Add close button event listener
             document.getElementById('modal-close-btn').addEventListener('click', () => this.closeModal());
             
             this.displays.reviewModalBackdrop.classList.add('active');
             
+            // Dừng/tạm dừng timer khi modal hiện lên
             if (this.timers.question) {
                  clearInterval(this.timers.question);
             }
             if (this.timingMode === 'per_question' && this.timers.total) {
-                clearInterval(this.timers.total); 
+                clearInterval(this.timers.total); // Dừng tổng thời gian ở chế độ per_question
             }
         },
         
         closeModal() {
             this.displays.reviewModalBackdrop.classList.remove('active');
+            // Khởi động lại timer theo chế độ đang chạy
             if (this.timingMode === 'per_question') {
+                 // Khởi động lại total timer nếu nó đã bị dừng khi mở modal
                  if (!this.timers.total) { 
                     this.timers.total = setInterval(() => {
                         this.timers.totalSeconds++;
@@ -1078,14 +833,13 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
                 this.resetQuestionTimer(); 
             } else {
-                this.resetQuestionTimer(); 
+                this.resetQuestionTimer(); // Sẽ chỉ cập nhật hiển thị, total timer vẫn chạy
             }
         },
         
         displayResult(result) {
-            this.currentResult = result; 
             const { name, date, score, totalQuestions, timeTaken } = result;
-            const percentage = totalQuestions > 0 ? (result.score / totalQuestions * 100).toFixed(2) : 0;
+            const percentage = totalQuestions > 0 ? (score / totalQuestions * 100).toFixed(2) : 0;
             const formattedTime = this.formatTime(timeTaken);
 
             this.displays.resultSummary.innerHTML = `
@@ -1121,16 +875,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
+                // --- LOGIC CẬP NHẬT TRƯỜNG GIẢI THÍCH MỚI ---
                 let explanationHtml = '';
+                
+                // 1. Giải thích đáp án đúng (explanation_right)
                 if (q.explanation_right) {
-                    explanationHtml += `<div class="explanation-box explanation-right"><p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p><p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p></div>`;
+                    explanationHtml += `
+                        <div class="explanation-box explanation-right">
+                            <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
                 }
+
+                // 2. Giải thích đáp án sai (explanation_wrong)
                 if (q.explanation_wrong) {
-                    explanationHtml += `<div class="explanation-box explanation-wrong"><p class="explanation-title text-red-700">Giải thích các phương án sai:</p><p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p></div>`;
+                    explanationHtml += `
+                        <div class="explanation-box explanation-wrong">
+                            <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
+                            <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
                 }
+                
+                // 3. Bóc phốt đề (explanation_question)
                 if (q.explanation_question) {
-                    explanationHtml += `<div class="explanation-box explanation-question"><p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p><p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p></div>`;
+                    explanationHtml += `
+                        <div class="explanation-box explanation-question">
+                            <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
                 }
+                // --- KẾT THÚC LOGIC CẬP NHẬT ---
 
                 card.innerHTML = `
                     <p class="font-semibold">Câu ${index + 1}: ${q.question}</p>
@@ -1157,6 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showHistory() {
             const history = JSON.parse(localStorage.getItem('quizHistory')) || [];
             
+            // Cập nhật trạng thái nút xóa
             this.buttons.clearHistory.disabled = (history.length === 0);
 
             if (history.length === 0) {
@@ -1180,10 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${result.score}/${result.totalQuestions}
                         </p>
                     </div>
-                    <div class="space-x-2">
-                        <button data-history-index="${index}" class="view-result-btn px-4 py-2 bg-bidv-green text-white text-sm rounded-lg hover:opacity-90">Xem lại</button>
-                        <button data-history-timestamp="${result.timestamp}" class="delete-history-btn px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600">Xóa</button>
-                    </div>
+                    <button data-history-index="${index}" class="view-result-btn px-4 py-2 bg-bidv-green text-white text-sm rounded-lg hover:opacity-90">Xem lại</button>
                 `;
                 this.displays.historyList.appendChild(item);
             });
@@ -1199,28 +974,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Add event listener for deleting single history item
-            document.querySelectorAll('.delete-history-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const timestamp = parseInt(e.target.getAttribute('data-history-timestamp'));
-                    this.deleteSingleHistory(timestamp);
-                });
-            });
-
             this.calculateStats(history);
             this.showScreen('history');
         },
         
-        deleteSingleHistory(timestamp) {
-            if (confirm('Bạn có chắc chắn muốn xóa lần thi này?')) {
-                let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
-                // Filter out the entry matching the timestamp
-                history = history.filter(item => item.timestamp !== timestamp);
-                localStorage.setItem('quizHistory', JSON.stringify(history));
-                this.showHistory(); // Reload history screen
-            }
-        },
-
         clearHistory() {
             if (confirm('Bạn có chắc chắn muốn xóa TẤT CẢ lịch sử làm bài? Hành động này không thể hoàn tác.')) {
                 localStorage.removeItem('quizHistory');
@@ -1261,13 +1018,15 @@ document.addEventListener('DOMContentLoaded', () => {
             this.stopTimers();
             this.timers.totalSeconds = 0;
             
+            // Khởi tạo tổng thời gian chạy (Total Timer)
             this.timers.total = setInterval(() => {
                 this.timers.totalSeconds++;
+                // Cập nhật hiển thị tổng thời gian nếu đang ở chế độ per_question
                 if (this.timingMode === 'per_question') {
-                    // Khi là chế độ 'per_question', totalTimer hiển thị tổng thời gian đã làm
+                    // Trong chế độ per_question, Total Timer là thời gian đã trôi qua
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
                 } else {
-                    // Khi là chế độ 'total', totalTimer hiển thị tổng thời gian còn lại
+                    // Trong chế độ total, Total Timer là thời gian còn lại
                     this.timers.remainingTotalSeconds--;
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
                     if (this.timers.remainingTotalSeconds <= 0) {
@@ -1284,6 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(this.timers.question);
             
             if (this.timingMode === 'per_question') {
+                // Chế độ tính giờ mỗi câu hỏi
                 this.timers.questionSeconds = this.timePerQuestion;
                 this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
                 
@@ -1292,14 +1052,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
                     
                     if (this.timers.questionSeconds <= 0) {
+                        // Tự động chuyển câu hoặc nộp bài khi hết giờ câu hỏi
                         if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
-                            this.submitQuiz(); 
+                            this.submitQuiz(); // Auto-submit on last question
                         } else {
-                            this.navigateQuestion(1); 
+                            this.navigateQuestion(1); // Auto-navigate to next
                         }
                     }
                 }, 1000);
             } else {
+                // Chế độ tổng thời gian: Vô hiệu hóa timer câu hỏi riêng biệt
                 this.displays.questionTimer.textContent = '---';
             }
         },
@@ -1310,6 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         formatTime(seconds) {
+            // Đảm bảo không hiển thị số âm (cho chế độ total)
             seconds = Math.max(0, seconds);
             const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
             const secs = (seconds % 60).toString().padStart(2, '0');
@@ -1323,4 +1086,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
