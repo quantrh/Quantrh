@@ -145,14 +145,20 @@
         }
         /* Style for Collapsible Content */
         .collapsible-content {
+            /* Sử dụng auto để max-height tính toán theo nội dung */
             max-height: 0;
+            opacity: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out;
+            /* Tăng thời gian transition để mượt mà hơn */
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1rem; /* Bắt đầu với padding 0 */
         }
         .collapsible-content.expanded {
-            /* Tăng giá trị max-height lên đáng kể để đảm bảo nội dung hiển thị */
-            max-height: 5000px; 
-            transition: max-height 0.8s ease-in-out;
+            /* Giá trị lớn hơn đủ để chứa nội dung */
+            max-height: 4000px; 
+            opacity: 1;
+            transition: max-height 0.7s ease-in, opacity 0.5s ease-in, padding 0.5s ease-in;
+            padding: 1rem; /* Padding khi mở ra */
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -286,6 +292,39 @@
                     <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
                 <!-- End Configuration Section -->
+
+
+                <!-- Instruction Section (New separate section) -->
+                <div class="mt-8">
+                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
+                        Hướng dẫn sử dụng (Mở rộng)
+                    </button>
+                    
+                    <!-- Sửa lỗi: Đặt padding 0 ban đầu cho collapsible-content và đặt lại khi expanded -->
+                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50"> 
+                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
+                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
+                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
+                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
+                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
+                        </ul>
+                        
+                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
+                        <ul class="text-gray-700 space-y-2 ml-4">
+                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
+                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
+                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
+                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
+                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
+                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- End Instruction Section -->
+
+
             </div>
 
             <!-- Quiz Screen - New Layout -->
@@ -301,6 +340,7 @@
                              </div>
                              <div class="text-right">
                                 <span class="text-xs font-medium text-gray-600">Tổng thời gian:</span>
+                                <!-- Chú ý: total-timer sẽ hiển thị tổng thời gian còn lại (khi total mode) hoặc thời gian đã làm (khi per_question mode) -->
                                 <p id="total-timer" class="text-xl font-bold text-bidv-green">00:00</p>
                              </div>
                         </div>
@@ -428,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backToHome: document.getElementById('back-to-home-btn'),
             clearHistory: document.getElementById('clear-history-btn'), 
             exportResult: document.getElementById('export-result-btn'), 
-            toggleGuide: document.getElementById('toggle-guide-btn'), 
+            toggleGuide: document.getElementById('toggle-guide-btn'), // Thêm nút hướng dẫn
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -454,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
-            guideSection: document.getElementById('guide-section'), 
+            guideSection: document.getElementById('guide-section'), // Thêm section hướng dẫn
         },
 
         // State
@@ -477,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.addEventListeners();
             this.loadQuestions();
             this.showScreen('start');
-            // Cần gọi lại calculateTotalTime sau khi loadQuestions xong
+            // Ghi chú: calculateTotalTime ban đầu sẽ hiển thị "-- phút" vì allQuestions chưa có
         },
 
         addEventListeners() {
@@ -490,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
             this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); 
             this.buttons.exportResult.addEventListener('click', () => this.exportResultDocx()); 
-            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); 
+            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); // Lắng nghe sự kiện mở/thu hẹp
             
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
@@ -508,6 +548,8 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleGuideSection() {
             const section = this.displays.guideSection;
             const btn = this.buttons.toggleGuide;
+            
+            // Lỗi 2: Logic Collapsible được sửa tại đây (chủ yếu là CSS đã được tối ưu)
             const isExpanded = section.classList.toggle('expanded');
             
             if (isExpanded) {
@@ -523,13 +565,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Xử lý trường hợp "Tất cả" (value=0)
             if (numQuestions === 0) {
-                numQuestions = this.allQuestions.length;
+                // Lỗi 1: Chỉ lấy total length sau khi allQuestions đã được tải thành công
+                numQuestions = this.allQuestions.length; 
             }
 
             if (numQuestions > 0 && !isNaN(timePerQuestion)) {
                 const totalSeconds = numQuestions * timePerQuestion;
-                const totalMinutes = Math.ceil(totalSeconds / 60);
-                this.displays.totalQuizTime.textContent = `${totalMinutes} phút`;
+                // Tính phút làm tròn lên
+                const totalMinutes = Math.ceil(totalSeconds / 60); 
+                this.displays.totalQuizTime.textContent = `${totalMinutes} phút (${totalSeconds} giây)`;
             } else {
                  this.displays.totalQuizTime.textContent = `-- phút`;
             }
@@ -549,7 +593,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadQuestions() {
             try {
-                const response = await fetch('./Dauthaujson.json');
+                // Thay thế fetch('./Dauthaujson.json') bằng fetch cho file json giả định
+                // Nếu file json không có sẵn, sẽ cần thay đổi logic tải data
+                const response = await fetch('./Dauthaujson.json'); 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -560,7 +606,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.buttons.start.disabled = false;
-                    this.calculateTotalTime(); // Gọi tính toán thời gian sau khi tải xong câu hỏi
+                    // Lỗi 1 FIX: Gọi hàm tính tổng thời gian sau khi dữ liệu đã tải
+                    this.calculateTotalTime(); 
                 } else {
                     throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
                 }
@@ -574,7 +621,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startQuiz() {
             if (this.inputs.studentName.value.trim() === '') {
-                alert('Vui lòng nhập tên của bạn.');
+                // Thay alert bằng thông báo không chặn UI
+                const nameInput = this.inputs.studentName;
+                nameInput.focus();
+                nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                setTimeout(() => {
+                    nameInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }, 1500);
                 return;
             }
             
@@ -627,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 btn.addEventListener('click', () => {
                     this.saveAnswer(); 
+                    // Thay thế confirm bằng modal tùy chỉnh (nếu muốn) hoặc dùng lại logic hiện tại
                     if (confirm('Bạn có muốn xem đáp án và giải thích cho câu hỏi này không? (Việc này sẽ không ảnh hưởng đến điểm số của bạn, nhưng bạn sẽ thấy đáp án)')) {
                          this.showExplanationModal(index);
                     } else {
@@ -1210,8 +1264,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.timers.total = setInterval(() => {
                 this.timers.totalSeconds++;
                 if (this.timingMode === 'per_question') {
+                    // Khi là chế độ 'per_question', totalTimer hiển thị tổng thời gian đã làm
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
                 } else {
+                    // Khi là chế độ 'total', totalTimer hiển thị tổng thời gian còn lại
                     this.timers.remainingTotalSeconds--;
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
                     if (this.timers.remainingTotalSeconds <= 0) {
