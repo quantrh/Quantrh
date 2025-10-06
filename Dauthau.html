@@ -150,8 +150,9 @@
             transition: max-height 0.3s ease-out;
         }
         .collapsible-content.expanded {
-            max-height: 2000px; /* Large enough value to show all content */
-            transition: max-height 0.5s ease-in;
+            /* Tăng giá trị max-height lên đáng kể để đảm bảo nội dung hiển thị */
+            max-height: 5000px; 
+            transition: max-height 0.8s ease-in-out;
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -285,38 +286,6 @@
                     <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
                 <!-- End Configuration Section -->
-
-
-                <!-- Instruction Section (New separate section) -->
-                <div class="mt-8">
-                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
-                        Hướng dẫn sử dụng (Mở rộng)
-                    </button>
-                    
-                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50 p-4">
-                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
-                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
-                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
-                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
-                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
-                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
-                        </ul>
-                        
-                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
-                        <ul class="text-gray-700 space-y-2 ml-4">
-                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
-                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
-                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
-                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
-                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
-                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
-                        </ul>
-                    </div>
-                </div>
-                <!-- End Instruction Section -->
-
-
             </div>
 
             <!-- Quiz Screen - New Layout -->
@@ -459,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backToHome: document.getElementById('back-to-home-btn'),
             clearHistory: document.getElementById('clear-history-btn'), 
             exportResult: document.getElementById('export-result-btn'), 
-            toggleGuide: document.getElementById('toggle-guide-btn'), // Thêm nút hướng dẫn
+            toggleGuide: document.getElementById('toggle-guide-btn'), 
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -485,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
-            guideSection: document.getElementById('guide-section'), // Thêm section hướng dẫn
+            guideSection: document.getElementById('guide-section'), 
         },
 
         // State
@@ -508,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.addEventListeners();
             this.loadQuestions();
             this.showScreen('start');
-            this.calculateTotalTime(); // Tính toán thời gian ban đầu
+            // Cần gọi lại calculateTotalTime sau khi loadQuestions xong
         },
 
         addEventListeners() {
@@ -521,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
             this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); 
             this.buttons.exportResult.addEventListener('click', () => this.exportResultDocx()); 
-            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); // Lắng nghe sự kiện mở/thu hẹp
+            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); 
             
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
@@ -591,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.buttons.start.disabled = false;
-                    this.calculateTotalTime(); 
+                    this.calculateTotalTime(); // Gọi tính toán thời gian sau khi tải xong câu hỏi
                 } else {
                     throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
                 }
