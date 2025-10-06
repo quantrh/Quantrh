@@ -448,7 +448,6 @@
 // DOCX module needs to be accessed globally for the export function
 const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ShadingType, BorderStyle } = docx;
 
-
 document.addEventListener('DOMContentLoaded', () => {
     const quizApp = {
         // DOM Elements
@@ -517,7 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.addEventListeners();
             this.loadQuestions();
             this.showScreen('start');
-            // Ghi chú: calculateTotalTime ban đầu sẽ hiển thị "-- phút" vì allQuestions chưa có
         },
 
         addEventListeners() {
@@ -530,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
             this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); 
             this.buttons.exportResult.addEventListener('click', () => this.exportResultDocx()); 
-            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); // Lắng nghe sự kiện mở/thu hẹp
+            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); 
             
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
@@ -549,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = this.displays.guideSection;
             const btn = this.buttons.toggleGuide;
             
-            // Lỗi 2: Logic Collapsible được sửa tại đây (chủ yếu là CSS đã được tối ưu)
             const isExpanded = section.classList.toggle('expanded');
             
             if (isExpanded) {
@@ -563,15 +560,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let numQuestions = parseInt(this.inputs.numQuestions.value);
             const timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
 
-            // Xử lý trường hợp "Tất cả" (value=0)
             if (numQuestions === 0) {
-                // Lỗi 1: Chỉ lấy total length sau khi allQuestions đã được tải thành công
                 numQuestions = this.allQuestions.length; 
             }
 
             if (numQuestions > 0 && !isNaN(timePerQuestion)) {
                 const totalSeconds = numQuestions * timePerQuestion;
-                // Tính phút làm tròn lên
                 const totalMinutes = Math.ceil(totalSeconds / 60); 
                 this.displays.totalQuizTime.textContent = `${totalMinutes} phút (${totalSeconds} giây)`;
             } else {
@@ -593,35 +587,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadQuestions() {
             try {
-                // Thay thế fetch('./Dauthaujson.json') bằng fetch cho file json giả định
-                // Nếu file json không có sẵn, sẽ cần thay đổi logic tải data
-                const response = await fetch('./Dauthaujson.json'); 
+                const url = './Dauthaujson.json';
+                
+                // Bắt buộc tải dữ liệu từ file JSON
+                const response = await fetch(url); 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Nếu lỗi HTTP (404, 500, etc.), ném lỗi để xử lý
+                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}).`);
                 }
+                
                 const data = await response.json();
                 
                 this.allQuestions = data.filter(q => q.question && q.answer);
                 
                 if (this.allQuestions.length > 0) {
-                    this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
+                    this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi từ Dauthaujson.json.`;
                     this.buttons.start.disabled = false;
-                    // Lỗi 1 FIX: Gọi hàm tính tổng thời gian sau khi dữ liệu đã tải
                     this.calculateTotalTime(); 
                 } else {
-                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
+                    // Nếu file tải được nhưng không có câu hỏi hợp lệ
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ hoặc rỗng (thiếu trường 'question' hoặc 'answer').");
                 }
 
             } catch (error) {
-                console.error("Lỗi tải tệp JSON câu hỏi:", error);
-                this.displays.dataStatus.textContent = 'Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng làm mới trang.';
+                // Xử lý lỗi khi tải file thất bại
+                console.error("Lỗi tải dữ liệu câu hỏi:", error);
+                this.displays.dataStatus.innerHTML = `<span class="text-red-600 font-semibold">LỖI NẶNG:</span> Không thể tải dữ liệu từ Dauthaujson.json. Vui lòng kiểm tra file. Chi tiết: ${error.message}`;
+                this.buttons.start.disabled = true; // Vô hiệu hóa nút Bắt đầu
                 this.allQuestions = [];
             }
         },
 
         startQuiz() {
             if (this.inputs.studentName.value.trim() === '') {
-                // Thay alert bằng thông báo không chặn UI
                 const nameInput = this.inputs.studentName;
                 nameInput.focus();
                 nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
@@ -832,7 +830,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- DOCX EXPORT FUNCTION ---
         exportResultDocx() {
             if (!this.currentResult) {
-                alert('Không có kết quả để xuất file.');
+                // FIX: Thay alert bằng console.error/thông báo UI không chặn
+                console.error('Không có kết quả để xuất file.');
                 return;
             }
 
@@ -982,7 +981,8 @@ document.addEventListener('DOMContentLoaded', () => {
             Packer.toBlob(doc).then(blob => {
                 saveAs(blob, filename);
             }).catch(error => {
-                alert('Lỗi xuất file: ' + error.message);
+                // FIX: Thay alert bằng console.error/thông báo UI không chặn
+                console.error('Lỗi xuất file: ' + error.message);
                 console.error("DOCX Export Error:", error);
             });
         },
@@ -1085,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayResult(result) {
             this.currentResult = result; 
             const { name, date, score, totalQuestions, timeTaken } = result;
-            const percentage = totalQuestions > 0 ? (score / totalQuestions * 100).toFixed(2) : 0;
+            const percentage = totalQuestions > 0 ? (result.score / totalQuestions * 100).toFixed(2) : 0;
             const formattedTime = this.formatTime(timeTaken);
 
             this.displays.resultSummary.innerHTML = `
