@@ -143,23 +143,6 @@
         #quiz-screen #submit-btn {
             @apply bg-bidv-green hover:opacity-90;
         }
-        /* Style for Collapsible Content */
-        .collapsible-content {
-            /* Sử dụng auto để max-height tính toán theo nội dung */
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            /* Tăng thời gian transition để mượt mà hơn */
-            transition: max-height 0.5s ease-out, opacity 0.5s ease-out, padding 0.5s ease-out;
-            padding: 0 1rem; /* Bắt đầu với padding 0 */
-        }
-        .collapsible-content.expanded {
-            /* Giá trị lớn hơn đủ để chứa nội dung */
-            max-height: 4000px; 
-            opacity: 1;
-            transition: max-height 0.7s ease-in, opacity 0.5s ease-in, padding 0.5s ease-in;
-            padding: 1rem; /* Padding khi mở ra */
-        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -294,38 +277,19 @@
                 <!-- End Configuration Section -->
 
 
-                <!-- Instruction Section (New separate section) -->
-                <div class="mt-8">
-                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
-                        Hướng dẫn sử dụng (Mở rộng)
+                <!-- New Guide Button -->
+                <div class="mt-4">
+                    <button id="open-guide-modal-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 inline-block mr-2 align-text-bottom">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.943 6.967c-.042-.777.625-1.42 1.455-1.42A3.08 3.08 0 0 1 14 8.019v.457c0 1.25-.99 2.29-2.203 2.366-1.18.077-2.197.94-2.29 2.052-.027.318-.28.56-.599.56h-.146c-.319 0-.572-.242-.599-.56a5.532 5.532 0 0 1 2.52-4.834c.828-.485 1.442-1.29 1.442-2.158 0-.46-.3-.88-.73-1.077-.4-.176-.84-.23-1.25-.138-.41.092-.77.34-1.002.73a.5.5 0 0 1-.775.14c-.3-.217-.46-.48-.46-.648a1.006 1.006 0 0 1 .158-.584Z" clip-rule="evenodd" />
+                          <path d="M10 14a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
+                        </svg>
+                        Hướng dẫn sử dụng chi tiết
                     </button>
-                    
-                    <!-- Sửa lỗi: Đặt padding 0 ban đầu cho collapsible-content và đặt lại khi expanded -->
-                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50"> 
-                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
-                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
-                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
-                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
-                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
-                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
-                        </ul>
-                        
-                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
-                        <ul class="text-gray-700 space-y-2 ml-4">
-                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
-                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
-                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
-                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
-                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
-                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
-                        </ul>
-                    </div>
                 </div>
-                <!-- End Instruction Section -->
-
 
             </div>
+            <!-- End Start Screen -->
 
             <!-- Quiz Screen - New Layout -->
             <div id="quiz-screen" class="screen">
@@ -426,16 +390,45 @@
                 </div>
             </div>
             
-            <!-- Modal for Review/Explanation -->
-            <div id="review-modal-backdrop" class="modal-backdrop">
-                <div id="review-modal" class="modal-content md:max-w-3xl">
-                    <div id="modal-content-placeholder">
-                        <!-- Content will be inserted here -->
-                    </div>
+        </main>
+        
+        <!-- Modal for Usage Guide (Hướng dẫn sử dụng) - NEW -->
+        <div id="guide-modal-backdrop" class="modal-backdrop">
+            <div id="guide-modal" class="modal-content md:max-w-4xl max-w-lg">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-2xl font-bold text-bidv-green">Hướng dẫn sử dụng chương trình</h3>
+                    <button id="guide-modal-close-btn" class="text-gray-500 hover:text-gray-900 font-bold text-3xl leading-none">&times;</button>
+                </div>
+
+                <h3 class="text-xl font-bold text-bidv-green mb-3 border-b pb-2">Tính năng ưu việt của chương trình luyện thi:</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4 mb-6">
+                    <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
+                    <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
+                    <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
+                    <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
+                    <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
+                </ul>
+                
+                <h3 class="text-xl font-bold text-bidv-green mt-4 mb-2 border-t pt-4 border-b pb-2">Hướng dẫn chi tiết các bước:</h3>
+                <ul class="text-gray-700 space-y-3 ml-4">
+                    <li>**1. Lựa chọn cấu hình:** Chọn tên thí sinh, số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
+                    <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị tổng thời gian làm bài ở góc phải.</li>
+                    <li>**3. Điều hướng và ôn tập:** Sử dụng nút "Câu trước" / "Câu tiếp". Để xem giải thích chi tiết trong khi làm bài, **hãy nhấp vào số câu hỏi ở cột bên phải** và xác nhận xem giải thích.</li>
+                    <li>**4. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn **"Xuất kết quả (.docx)"** để lưu lại.</li>
+                    <li>**5. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Modal for Review/Explanation - OLD -->
+        <div id="review-modal-backdrop" class="modal-backdrop">
+            <div id="review-modal" class="modal-content md:max-w-3xl">
+                <div id="modal-content-placeholder">
+                    <!-- Content will be inserted here -->
                 </div>
             </div>
+        </div>
 
-        </main>
         
         <!-- Footer for Copyright -->
         <footer class="mt-8 text-center text-gray-500 text-sm">
@@ -467,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backToHome: document.getElementById('back-to-home-btn'),
             clearHistory: document.getElementById('clear-history-btn'), 
             exportResult: document.getElementById('export-result-btn'), 
-            toggleGuide: document.getElementById('toggle-guide-btn'), // Thêm nút hướng dẫn
+            // REMOVED: toggleGuide: document.getElementById('toggle-guide-btn'), 
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -493,7 +486,10 @@ document.addEventListener('DOMContentLoaded', () => {
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
-            guideSection: document.getElementById('guide-section'), // Thêm section hướng dẫn
+            // NEW: Guide Modal Elements
+            guideModalBackdrop: document.getElementById('guide-modal-backdrop'),
+            openGuideModalBtn: document.getElementById('open-guide-modal-btn'),
+            guideModalCloseBtn: null, // Sẽ được gán listener khi modal mở lần đầu
         },
 
         // State
@@ -528,14 +524,23 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
             this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); 
             this.buttons.exportResult.addEventListener('click', () => this.exportResultDocx()); 
-            this.buttons.toggleGuide.addEventListener('click', () => this.toggleGuideSection()); 
             
+            // NEW: Guide Modal Listeners
+            this.displays.openGuideModalBtn.addEventListener('click', () => this.openGuideModal());
+            
+            // Lắng nghe sự kiện click để đóng modal hướng dẫn khi click ra ngoài
+            this.displays.guideModalBackdrop.addEventListener('click', (e) => {
+                if (e.target === this.displays.guideModalBackdrop) {
+                    this.closeGuideModal();
+                }
+            });
+
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timingMode.addEventListener('change', () => this.calculateTotalTime());
             
-            // Đóng modal khi click ra ngoài
+            // Đóng modal review khi click ra ngoài
             this.displays.reviewModalBackdrop.addEventListener('click', (e) => {
                 if (e.target === this.displays.reviewModalBackdrop) {
                     this.closeModal();
@@ -543,17 +548,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
         
-        toggleGuideSection() {
-            const section = this.displays.guideSection;
-            const btn = this.buttons.toggleGuide;
-            
-            const isExpanded = section.classList.toggle('expanded');
-            
-            if (isExpanded) {
-                btn.textContent = 'Hướng dẫn sử dụng (Thu hẹp)';
-            } else {
-                btn.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
+        openGuideModal() {
+            this.displays.guideModalBackdrop.classList.add('active');
+            // Gán listener cho nút đóng bên trong modal
+            if (!this.displays.guideModalCloseBtn) {
+                this.displays.guideModalCloseBtn = document.getElementById('guide-modal-close-btn');
+                this.displays.guideModalCloseBtn.addEventListener('click', () => this.closeGuideModal());
             }
+        },
+
+        closeGuideModal() {
+            this.displays.guideModalBackdrop.classList.remove('active');
         },
 
         calculateTotalTime() {
@@ -578,11 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.screens[screenId]) {
                 this.screens[screenId].classList.add('active');
             }
-            // Đảm bảo phần hướng dẫn thu hẹp lại khi chuyển sang màn hình khác
-            if (screenId !== 'start') {
-                this.displays.guideSection.classList.remove('expanded');
-                this.buttons.toggleGuide.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
-            }
+            // Đảm bảo đóng modal hướng dẫn nếu nó đang mở
+            this.closeGuideModal();
         },
 
         async loadQuestions() {
