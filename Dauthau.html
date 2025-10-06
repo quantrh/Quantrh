@@ -218,35 +218,7 @@
                 <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
                 <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
                 
-                <!-- Instruction Button and Section -->
-                <div class="mb-6">
-                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
-                        Hướng dẫn sử dụng & Tính năng ưu việt (Mở rộng)
-                    </button>
-                    
-                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50 p-4">
-                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
-                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
-                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
-                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
-                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
-                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
-                        </ul>
-                        
-                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
-                        <ul class="text-gray-700 space-y-2 ml-4">
-                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
-                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
-                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
-                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
-                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
-                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
-                        </ul>
-                    </div>
-                </div>
-                <!-- End Instruction Button and Section -->
-
+                <!-- Configuration Section -->
                 <div class="space-y-6">
                     <div>
                         <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">Nhập tên của bạn:</label>
@@ -312,6 +284,39 @@
                      <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
                     <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
+                <!-- End Configuration Section -->
+
+
+                <!-- Instruction Section (New separate section) -->
+                <div class="mt-8">
+                    <button id="toggle-guide-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 transition-colors">
+                        Hướng dẫn sử dụng (Mở rộng)
+                    </button>
+                    
+                    <div id="guide-section" class="collapsible-content mt-4 border border-gray-200 rounded-lg bg-gray-50 p-4">
+                        <h3 class="text-lg font-bold text-bidv-green mb-3">Tính năng ưu việt của chương trình luyện thi:</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                            <li>**Chế độ ôn tập chuyên sâu:** Cho phép xem **Đáp án, Giải thích Phương án Đúng, Giải thích Phương án Sai, và Phân tích cách ra đề** (Bóc phốt đề) ngay trong quá trình làm bài, giúp người học hiểu rõ bản chất câu hỏi và quy định pháp luật.</li>
+                            <li>**Cá nhân hóa bài thi:** Tùy chỉnh số lượng câu hỏi và thời gian làm bài theo nhu cầu (chế độ tiêu chuẩn 70 câu/60 phút hoặc tùy chọn riêng).</li>
+                            <li>**Quản lý thời gian linh hoạt:** Lựa chọn giữa **Tính giờ tổng thể** (như thi thật) hoặc **Tính giờ theo từng câu hỏi** (để rèn luyện tốc độ xử lý).</li>
+                            <li>**Lưu trữ và phân tích lịch sử:** Lưu lại kết quả các lần thi, thống kê các câu hỏi hay bị sai để tập trung ôn luyện.</li>
+                            <li>**Xuất báo cáo:** Cho phép xuất kết quả và toàn bộ phần giải thích chuyên sâu ra file Word (.docx) để in ấn hoặc ôn tập offline.</li>
+                        </ul>
+                        
+                        <h3 class="text-lg font-bold text-bidv-green mt-4 mb-2 border-t pt-2">Hướng dẫn chi tiết:</h3>
+                        <ul class="text-gray-700 space-y-2 ml-4">
+                            <li>**1. Lựa chọn cấu hình:** Chọn số câu, thời gian, chế độ tính giờ (Tổng thể/Từng câu), và thứ tự câu hỏi (Ngẫu nhiên/Theo ID).</li>
+                            <li>**2. Bắt đầu làm bài:** Nhấn "Bắt đầu làm bài". Màn hình sẽ hiển thị thời gian tổng (hoặc thời gian câu hỏi) ở góc phải.</li>
+                            <li>**3. Điều hướng:** Sử dụng nút "Câu trước" / "Câu tiếp" hoặc danh sách số câu hỏi bên phải.</li>
+                            <li>**4. Chế độ ôn tập (Mới):** Khi nhấn vào số câu hỏi ở cột bên phải, hệ thống sẽ hỏi bạn có muốn xem giải thích không. Chọn "Có" để mở modal xem đáp án và phân tích chi tiết.</li>
+                            <li>**5. Nộp bài:** Nhấn "Nộp bài" để kết thúc và xem kết quả. Tại màn hình kết quả, bạn có thể nhấn "Xuất kết quả (.docx)" để lưu lại.</li>
+                            <li>**6. Xóa lịch sử:** Tại màn hình "Lịch sử", bạn có thể xóa từng lần thi hoặc xóa toàn bộ lịch sử thi.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- End Instruction Section -->
+
+
             </div>
 
             <!-- Quiz Screen - New Layout -->
@@ -537,9 +542,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const isExpanded = section.classList.toggle('expanded');
             
             if (isExpanded) {
-                btn.textContent = 'Hướng dẫn sử dụng & Tính năng ưu việt (Thu hẹp)';
+                btn.textContent = 'Hướng dẫn sử dụng (Thu hẹp)';
             } else {
-                btn.textContent = 'Hướng dẫn sử dụng & Tính năng ưu việt (Mở rộng)';
+                btn.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
             }
         },
 
@@ -569,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Đảm bảo phần hướng dẫn thu hẹp lại khi chuyển sang màn hình khác
             if (screenId !== 'start') {
                 this.displays.guideSection.classList.remove('expanded');
-                this.buttons.toggleGuide.textContent = 'Hướng dẫn sử dụng & Tính năng ưu việt (Mở rộng)';
+                this.buttons.toggleGuide.textContent = 'Hướng dẫn sử dụng (Mở rộng)';
             }
         },
 
