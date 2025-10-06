@@ -9,6 +9,20 @@
     <!-- SheetJS/xlsx library for reading Excel files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* Custom Tailwind Configuration (BIDV Colors) */
+        :root {
+            --color-bidv-green: #006B68; /* Xanh BIDV */
+            --color-bidv-yellow: #FFC62F; /* Vàng BIDV */
+            --color-bidv-green-light: #e0f2f1; /* Light tone */
+        }
+        
+        /* Custom classes based on BIDV colors */
+        .bg-bidv-green { background-color: var(--color-bidv-green); }
+        .text-bidv-green { color: var(--color-bidv-green); }
+        .bg-bidv-yellow { background-color: var(--color-bidv-yellow); }
+        .text-bidv-yellow { color: var(--color-bidv-yellow); }
+        .border-bidv-green { border-color: var(--color-bidv-green); }
+        
         /* Custom styles for better UI */
         body {
             font-family: 'Inter', sans-serif;
@@ -32,8 +46,8 @@
             background-color: #f3f4f6;
         }
         input[type="radio"]:checked + .option-label {
-            background-color: #dbeafe;
-            border-color: #3b82f6;
+            background-color: var(--color-bidv-green-light);
+            border-color: var(--color-bidv-green);
         }
         .correct-answer {
             background-color: #dcfce7 !important; /* green-100 */
@@ -73,10 +87,14 @@
             @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
         }
         .q-nav-btn.answered {
-            @apply bg-blue-500 text-white hover:bg-blue-600;
+            background-color: var(--color-bidv-green);
+            color: white;
+            @apply hover:opacity-90;
         }
         .q-nav-btn.active-q {
-            @apply ring-4 ring-yellow-400/50 bg-yellow-500 text-white;
+            background-color: var(--color-bidv-yellow);
+            color: #000;
+            @apply ring-4 ring-yellow-400/50;
         }
         /* Modal Backdrop */
         .modal-backdrop {
@@ -102,6 +120,25 @@
             max-height: 90%;
             overflow-y: auto;
         }
+        /* Apply custom colors to quiz-screen elements */
+        #quiz-screen .bg-blue-50 {
+            background-color: var(--color-bidv-green-light);
+        }
+        #quiz-screen .text-blue-600 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen .text-blue-700 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen .text-blue-800 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen #question-timer {
+            color: #ef4444; /* Red for timer, keeping contrast */
+        }
+        #quiz-screen #submit-btn {
+            @apply bg-bidv-green hover:opacity-90;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,11 +147,52 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- Banner (BIDV Look and Feel) -->
+        <div class="mb-6 rounded-xl shadow-lg overflow-hidden bg-bidv-green text-white p-4">
+            <div class="flex items-center">
+                <!-- SVG Illustration: Asian Test Takers -->
+                <svg viewBox="0 0 100 60" class="w-20 h-16 mr-4 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="60" fill="#006B68"/>
+                    <!-- Desks/People - Simplified Asian figures -->
+                    <rect x="5" y="45" width="25" height="10" fill="#FFC62F"/>
+                    <rect x="35" y="45" width="25" height="10" fill="#FFC62F"/>
+                    <rect x="65" y="45" width="25" height="10" fill="#FFC62F"/>
+                    
+                    <!-- Screens/Laptops -->
+                    <rect x="8" y="30" width="19" height="15" fill="#3B82F6"/>
+                    <rect x="38" y="30" width="19" height="15" fill="#3B82F6"/>
+                    <rect x="68" y="30" width="19" height="15" fill="#3B82F6"/>
+
+                    <!-- Heads/Faces (Asian style, simple circles) -->
+                    <circle cx="17.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    <circle cx="47.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    <circle cx="77.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    
+                    <!-- Generic Test Content on Screens (white lines) -->
+                    <line x1="12" y1="35" x2="25" y2="35" stroke="white" stroke-width="1"/>
+                    <line x1="12" y1="38" x2="25" y2="38" stroke="white" stroke-width="1"/>
+                    <line x1="42" y1="35" x2="55" y2="35" stroke="white" stroke-width="1"/>
+                    <line x1="72" y1="38" x2="85" y2="38" stroke="white" stroke-width="1"/>
+                    
+                    <!-- Text Overlay -->
+                    <text x="50" y="15" font-size="6" fill="#FFC62F" text-anchor="middle" font-weight="bold">THI ONLINE</text>
+                    <text x="50" y="22" font-size="4" fill="white" text-anchor="middle">Luật Đấu thầu & Mua sắm</text>
+                </svg>
+
+
+                <div class="flex-grow">
+                    <h2 class="text-3xl font-bold">HỆ THỐNG TRẮC NGHIỆM PHÁP LUẬT</h2>
+                    <p class="text-sm opacity-90 mt-1">Chuẩn bị kiến thức vững vàng cho kỳ thi Đấu thầu quốc gia.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="mb-8 flex justify-between items-center">
-            <h1 class="text-3xl font-bold text-blue-600">Trắc nghiệm Pháp luật Đấu thầu</h1>
+            <h1 class="text-3xl font-bold text-bidv-green">Trắc nghiệm Pháp luật Đấu thầu</h1>
             <div>
-                <button id="home-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors">Trang chủ</button>
+                <button id="home-btn" class="px-4 py-2 bg-bidv-green text-white rounded-lg shadow hover:opacity-90 transition-colors">Trang chủ</button>
                 <button id="history-btn" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600 transition-colors">Lịch sử</button>
             </div>
         </header>
@@ -123,18 +201,18 @@
         <main class="bg-white p-6 rounded-xl shadow-lg">
             <!-- Start Screen -->
             <div id="start-screen" class="screen active">
-                <h2 class="text-2xl font-semibold mb-4 text-center">Chào mừng bạn!</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
                 <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
                 <div class="space-y-6">
                     <div>
                         <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">Nhập tên của bạn:</label>
-                        <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ví dụ: Nguyễn Văn A">
+                        <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green" placeholder="Ví dụ: Trương Hồng Quân">
                     </div>
                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="num-questions" class="block text-sm font-medium text-gray-700 mb-1">Số câu hỏi:</label>
-                            <select id="num-questions" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <select id="num-questions" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
                                 <option value="70">70 câu (Tiêu chuẩn)</option>
                                 <option value="10">10 câu</option>
                                 <option value="50">50 câu</option>
@@ -147,7 +225,7 @@
                         </div>
                         <div>
                             <label for="time-per-question" class="block text-sm font-medium text-gray-700 mb-1">Thời gian mỗi câu (giây):</label>
-                            <select id="time-per-question" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <select id="time-per-question" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
                                 <option value="51">51 giây (cho 70 câu)</option>
                                 <option value="30">30 giây</option>
                                 <option value="60">60 giây</option>
@@ -161,12 +239,23 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="quiz-order" class="block text-sm font-medium text-gray-700 mb-1">Thứ tự câu hỏi:</label>
-                            <select id="quiz-order" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <select id="quiz-order" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
                                 <option value="random">Ngẫu nhiên (Đề thi thử)</option>
                                 <option value="sequential">Theo thứ tự ID (Để xem lại)</option>
                             </select>
                         </div>
-                        <!-- New element to display calculated total time -->
+                        <!-- New element for timing mode -->
+                        <div>
+                            <label for="timing-mode" class="block text-sm font-medium text-gray-700 mb-1">Chế độ tính giờ:</label>
+                            <select id="timing-mode" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
+                                <option value="total">Tổng thời gian (Mặc định)</option>
+                                <option value="per_question">Tính giờ mỗi câu hỏi</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Total time display moved to bottom row for better spacing -->
+                    <div class="md:grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tổng thời gian làm bài:</label>
                             <p id="total-quiz-time" class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm font-semibold text-gray-700">
@@ -175,8 +264,9 @@
                         </div>
                     </div>
 
+
                      <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
-                    <button id="start-btn" class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
+                    <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu làm bài</button>
                 </div>
             </div>
 
@@ -186,14 +276,14 @@
                     
                     <!-- Cột trái: Thông tin chính và Câu hỏi -->
                     <div class="md:w-3/4 flex flex-col space-y-6">
-                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg shadow">
+                        <div class="flex justify-between items-center p-4 bg-bidv-green/10 rounded-lg shadow">
                              <div class="text-left">
-                                <span class="text-xs font-medium text-blue-700">Thí sinh:</span>
-                                <p id="student-name-display" class="text-lg font-semibold text-blue-800"></p>
+                                <span class="text-xs font-medium text-bidv-green">Thí sinh:</span>
+                                <p id="student-name-display" class="text-lg font-semibold text-bidv-green"></p>
                              </div>
                              <div class="text-right">
                                 <span class="text-xs font-medium text-gray-600">Tổng thời gian:</span>
-                                <p id="total-timer" class="text-xl font-bold text-blue-600">00:00</p>
+                                <p id="total-timer" class="text-xl font-bold text-bidv-green">00:00</p>
                              </div>
                         </div>
 
@@ -216,8 +306,8 @@
                             
                             <div class="flex justify-between mt-6">
                                 <button id="prev-btn" class="py-2 px-6 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Câu trước</button>
-                                <button id="next-btn" class="py-2 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Câu tiếp</button>
-                                <button id="submit-btn" class="py-2 px-6 bg-green-600 text-white rounded-lg hover:bg-green-700" style="display: none;">Nộp bài</button>
+                                <button id="next-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90">Câu tiếp</button>
+                                <button id="submit-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90" style="display: none;">Nộp bài</button>
                             </div>
                         </div>
                     </div>
@@ -241,7 +331,7 @@
 
             <!-- Result Screen -->
             <div id="result-screen" class="screen">
-                <h2 class="text-2xl font-semibold mb-4 text-center">Kết quả bài làm</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Kết quả bài làm</h2>
                 <div id="result-summary" class="text-center bg-gray-50 p-6 rounded-lg mb-6">
                     <!-- Summary here -->
                 </div>
@@ -250,13 +340,19 @@
                     <!-- Detailed results here -->
                 </div>
                  <div class="text-center mt-8">
-                    <button id="back-to-home-btn" class="py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">Làm bài thi mới</button>
+                    <button id="back-to-home-btn" class="py-3 px-6 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90">Làm bài thi mới</button>
                 </div>
             </div>
 
             <!-- History Screen -->
             <div id="history-screen" class="screen">
-                <h2 class="text-2xl font-semibold mb-4">Lịch sử làm bài</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-bidv-green">Lịch sử làm bài</h2>
+                
+                <!-- Nút xóa lịch sử thi -->
+                <div class="text-right mb-4">
+                    <button id="clear-history-btn" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">Xóa tất cả lịch sử thi</button>
+                </div>
+                
                 <div id="history-stats" class="mb-6">
                     <h3 class="text-xl font-semibold mb-2">Thống kê các câu hay sai</h3>
                     <div id="missed-questions-stats" class="text-gray-600">Chưa có dữ liệu.</div>
@@ -276,6 +372,12 @@
             </div>
 
         </main>
+        
+        <!-- Footer for Copyright -->
+        <footer class="mt-8 text-center text-gray-500 text-sm">
+            <p>Bản quyền thuộc về: Trương Hồng Quân</p>
+            <p>Email: <a href="mailto:Quantrhvn@gmail.com" class="text-bidv-green hover:underline">Quantrhvn@gmail.com</a></p>
+        </footer>
     </div>
 
 <script>
@@ -296,12 +398,14 @@ document.addEventListener('DOMContentLoaded', () => {
             next: document.getElementById('next-btn'),
             submit: document.getElementById('submit-btn'),
             backToHome: document.getElementById('back-to-home-btn'),
+            clearHistory: document.getElementById('clear-history-btn'), // Thêm nút xóa lịch sử
         },
         inputs: {
             studentName: document.getElementById('student-name'),
             numQuestions: document.getElementById('num-questions'),
             timePerQuestion: document.getElementById('time-per-question'),
-            quizOrder: document.getElementById('quiz-order'), 
+            quizOrder: document.getElementById('quiz-order'),
+            timingMode: document.getElementById('timing-mode'), 
         },
         displays: {
             dataStatus: document.getElementById('data-status'),
@@ -328,11 +432,13 @@ document.addEventListener('DOMContentLoaded', () => {
         userAnswers: [],
         currentQuestionIndex: 0,
         timePerQuestion: 60,
+        timingMode: 'total', // Mặc định là tính tổng thời gian
         timers: {
             total: null,
             question: null,
             totalSeconds: 0,
             questionSeconds: 0,
+            remainingTotalSeconds: 0, // Tổng thời gian còn lại
         },
         
         init() {
@@ -350,10 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.prev.addEventListener('click', () => this.navigateQuestion(-1));
             this.buttons.submit.addEventListener('click', () => this.confirmSubmit());
             this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
+            this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); // Lắng nghe sự kiện xóa lịch sử
             
             // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
             this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.timingMode.addEventListener('change', () => this.calculateTotalTime());
             
             // Đóng modal khi click ra ngoài
             this.displays.reviewModalBackdrop.addEventListener('click', (e) => {
@@ -419,6 +527,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            // 1. Cấu hình chế độ tính giờ
+            this.timingMode = this.inputs.timingMode.value;
+
             // Determine question pool
             let selectedQuestions = [...this.allQuestions];
             
@@ -451,6 +562,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Cấu hình thời gian mỗi câu
             this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
             
+            // Khởi tạo tổng thời gian còn lại (chỉ dùng cho mode 'total')
+            this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
+
             this.userAnswers = new Array(this.quizQuestions.length).fill(null);
             this.currentQuestionIndex = 0;
             
@@ -472,6 +586,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.setAttribute('data-index', index);
 
                 btn.addEventListener('click', () => {
+                    // Lưu câu trả lời hiện tại trước khi chuyển hoặc mở modal
+                    this.saveAnswer(); 
                     if (confirm('Bạn có muốn xem đáp án và giải thích cho câu hỏi này không? (Việc này sẽ không ảnh hưởng đến điểm số của bạn, nhưng bạn sẽ thấy đáp án)')) {
                          this.showExplanationModal(index);
                     } else {
@@ -491,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (index === this.currentQuestionIndex) {
                     btn.classList.add('active-q');
                 } else if (this.userAnswers[index] !== null) {
+                    // Tô nền xanh nếu đã trả lời
                     btn.classList.add('answered');
                 } else {
                     btn.classList.add('unanswered');
@@ -619,6 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Hiển thị màn hình giải thích (Review Mode)
         showExplanationModal(index) {
+            this.jumpToQuestion(index); // Chuyển đến câu hỏi đó để nó là câu hỏi hiện tại
             const q = this.quizQuestions[index];
             const userAnswer = this.userAnswers[index];
             
@@ -664,7 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.explanation_question) {
                 explanationHtml += `
                     <div class="explanation-box explanation-question">
-                        <p class="explanation-title text-blue-700">Bóc phốt đề (Phân tích cách ra đề):</p>
+                        <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
                         <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                     </div>
                 `;
@@ -672,7 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.displays.modalContentPlaceholder.innerHTML = `
                 <div class="flex justify-between items-center border-b pb-2 mb-4">
-                    <h3 class="text-xl font-bold text-blue-600">Đáp án và Giải thích (Câu ${index + 1})</h3>
+                    <h3 class="text-xl font-bold text-bidv-green">Đáp án và Giải thích (Câu ${index + 1})</h3>
                     <button id="modal-close-btn" class="text-gray-500 hover:text-gray-900 font-bold text-2xl leading-none">&times;</button>
                 </div>
                 <p class="font-semibold mb-3">${q.question}</p>
@@ -693,13 +811,30 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.displays.reviewModalBackdrop.classList.add('active');
             
-            // Dừng timer khi modal hiện lên
-            clearInterval(this.timers.question);
+            // Dừng/tạm dừng timer khi modal hiện lên
+            if (this.timers.question) {
+                 clearInterval(this.timers.question);
+            }
+            if (this.timingMode === 'per_question' && this.timers.total) {
+                clearInterval(this.timers.total); // Dừng tổng thời gian ở chế độ per_question
+            }
         },
         
         closeModal() {
             this.displays.reviewModalBackdrop.classList.remove('active');
-            this.resetQuestionTimer(); // Khởi động lại timer câu hỏi
+            // Khởi động lại timer theo chế độ đang chạy
+            if (this.timingMode === 'per_question') {
+                 // Khởi động lại total timer nếu nó đã bị dừng khi mở modal
+                 if (!this.timers.total) { 
+                    this.timers.total = setInterval(() => {
+                        this.timers.totalSeconds++;
+                        this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                    }, 1000);
+                 }
+                this.resetQuestionTimer(); 
+            } else {
+                this.resetQuestionTimer(); // Sẽ chỉ cập nhật hiển thị, total timer vẫn chạy
+            }
         },
         
         displayResult(result) {
@@ -708,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedTime = this.formatTime(timeTaken);
 
             this.displays.resultSummary.innerHTML = `
-                <p class="text-lg mb-2">Thí sinh: <span class="font-bold text-blue-600">${name}</span></p>
+                <p class="text-lg mb-2">Thí sinh: <span class="font-bold text-bidv-green">${name}</span></p>
                 <p class="text-4xl font-bold my-4 ${percentage >= 50 ? 'text-green-600' : 'text-red-600'}">
                     ${score} / ${totalQuestions} (${percentage}%)
                 </p>
@@ -767,7 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (q.explanation_question) {
                     explanationHtml += `
                         <div class="explanation-box explanation-question">
-                            <p class="explanation-title text-blue-700">Bóc phốt đề (Phân tích cách ra đề):</p>
+                            <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
                             <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                         </div>
                     `;
@@ -798,6 +933,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showHistory() {
             const history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+            
+            // Cập nhật trạng thái nút xóa
+            this.buttons.clearHistory.disabled = (history.length === 0);
+
             if (history.length === 0) {
                 this.displays.historyList.innerHTML = '<p>Chưa có lịch sử làm bài.</p>';
                 this.displays.missedQuestionsStats.innerHTML = 'Chưa có dữ liệu.';
@@ -819,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${result.score}/${result.totalQuestions}
                         </p>
                     </div>
-                    <button data-history-index="${index}" class="view-result-btn px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">Xem lại</button>
+                    <button data-history-index="${index}" class="view-result-btn px-4 py-2 bg-bidv-green text-white text-sm rounded-lg hover:opacity-90">Xem lại</button>
                 `;
                 this.displays.historyList.appendChild(item);
             });
@@ -837,6 +976,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.calculateStats(history);
             this.showScreen('history');
+        },
+        
+        clearHistory() {
+            if (confirm('Bạn có chắc chắn muốn xóa TẤT CẢ lịch sử làm bài? Hành động này không thể hoàn tác.')) {
+                localStorage.removeItem('quizHistory');
+                this.showHistory(); // Tải lại màn hình lịch sử
+            }
         },
 
         calculateStats(history) {
@@ -871,29 +1017,53 @@ document.addEventListener('DOMContentLoaded', () => {
         startTimers() {
             this.stopTimers();
             this.timers.totalSeconds = 0;
+            
+            // Khởi tạo tổng thời gian chạy (Total Timer)
             this.timers.total = setInterval(() => {
                 this.timers.totalSeconds++;
-                this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                // Cập nhật hiển thị tổng thời gian nếu đang ở chế độ per_question
+                if (this.timingMode === 'per_question') {
+                    // Trong chế độ per_question, Total Timer là thời gian đã trôi qua
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                } else {
+                    // Trong chế độ total, Total Timer là thời gian còn lại
+                    this.timers.remainingTotalSeconds--;
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
+                    if (this.timers.remainingTotalSeconds <= 0) {
+                        this.stopTimers();
+                        this.submitQuiz();
+                    }
+                }
             }, 1000);
+            
             this.resetQuestionTimer();
         },
         
         resetQuestionTimer() {
             clearInterval(this.timers.question);
-            this.timers.questionSeconds = this.timePerQuestion;
-            this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0');
             
-            this.timers.question = setInterval(() => {
-                this.timers.questionSeconds--;
-                this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0');
-                if (this.timers.questionSeconds <= 0) {
-                    if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
-                        this.submitQuiz(); // Auto-submit on last question
-                    } else {
-                        this.navigateQuestion(1); // Auto-navigate to next
+            if (this.timingMode === 'per_question') {
+                // Chế độ tính giờ mỗi câu hỏi
+                this.timers.questionSeconds = this.timePerQuestion;
+                this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                
+                this.timers.question = setInterval(() => {
+                    this.timers.questionSeconds--;
+                    this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                    
+                    if (this.timers.questionSeconds <= 0) {
+                        // Tự động chuyển câu hoặc nộp bài khi hết giờ câu hỏi
+                        if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
+                            this.submitQuiz(); // Auto-submit on last question
+                        } else {
+                            this.navigateQuestion(1); // Auto-navigate to next
+                        }
                     }
-                }
-            }, 1000);
+                }, 1000);
+            } else {
+                // Chế độ tổng thời gian: Vô hiệu hóa timer câu hỏi riêng biệt
+                this.displays.questionTimer.textContent = '---';
+            }
         },
 
         stopTimers() {
@@ -902,6 +1072,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         formatTime(seconds) {
+            // Đảm bảo không hiển thị số âm (cho chế độ total)
+            seconds = Math.max(0, seconds);
             const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
             const secs = (seconds % 60).toString().padStart(2, '0');
             return `${mins}:${secs}`;
