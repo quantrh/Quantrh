@@ -9,9 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Calm Harmony (White, Gray, Soft Green for accents) -->
-    <!-- Application Structure Plan: Cấu trúc ứng dụng là một bài kiểm tra đơn trang, cuộn liên tục (scrollable single-page test). Cấu trúc phẳng này loại bỏ thanh điều hướng và các module lồng nhau, ưu tiên việc hiển thị toàn bộ đề bài theo thứ tự logic của tài liệu gốc (chia theo 4 Topic chính). Giao diện bắt đầu bằng thông tin thí sinh, sau đó là nội dung đề bài. Tương tác chính là nhập liệu/chọn đáp án và nhấn nút 'Chấm điểm' ở cuối trang để xem kết quả và đáp án. Cấu trúc này được chọn để mô phỏng trải nghiệm làm bài thi truyền thống, đáp ứng yêu cầu hiển thị đầy đủ nội dung và cấu trúc đề. -->
-    <!-- Visualization & Content Choices: Report Info -> Toàn bộ 18 bài tập. Goal -> Mô phỏng bài thi, cho phép tự chấm điểm và học hỏi thông qua giải thích chi tiết. Viz/Presentation Method -> Sử dụng HTML/CSS để tái tạo cấu trúc đề thi. Interaction -> Text inputs (cho Dạng từ, tên/lớp) và Radio buttons (cho MCQ). Nút 'Xem/Ẩn Đáp án' cho phép hiển thị/ẩn đáp án và rationale tại chỗ. Nút 'Chấm điểm' cuối cùng chấm toàn bộ bài. Justification -> Thêm rationale chi tiết bao gồm cả phân tích ngữ pháp, biến bài kiểm tra thành công cụ học tập tương tác. Library/Method -> TailwindCSS, Vanilla JS. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
@@ -97,6 +94,73 @@
             background-color: #A0A0A0;
             cursor: default;
         }
+        .delete-button {
+            background-color: #EF4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .delete-button:hover {
+            background-color: #DC2626;
+        }
+        .history-button {
+            background-color: #588157; /* Màu xanh lá đậm hơn */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .history-button:hover {
+            background-color: #4CAF50;
+        }
+        .new-test-button {
+            background-color: #3B82F6; /* Blue for new action */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .new-test-button:hover {
+            background-color: #2563EB;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+            width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close-button {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-button:hover {
+            color: #3C3C3B;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -109,7 +173,22 @@
                 <input type="text" id="student-class" placeholder="Lớp: ...................................." class="p-2 border rounded-lg focus:ring-[#3A5A40] focus:border-[#3A5A40] md:w-1/4">
             </div>
             <p id="total-score" class="text-2xl font-bold mt-4 text-gray-800 hidden">Điểm: 0 / 148</p>
+            <button id="back-to-latest" type="button" class="mt-4 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 hidden">
+                < Quay Lại Bài Mới Nhất
+            </button>
         </header>
+
+        <div class="flex flex-wrap justify-center space-x-4 mb-6">
+            <button type="button" id="start-new-test" class="new-test-button">
+                LÀM BÀI MỚI (Lưu bản nháp cũ)
+            </button>
+            <button type="button" id="view-history" class="history-button">
+                XEM LỊCH SỬ LÀM BÀI
+            </button>
+            <button type="button" id="clear-history" class="delete-button">
+                XÓA TOÀN BỘ LỊCH SỬ (Local Storage)
+            </button>
+        </div>
 
         <form id="test-form">
             
@@ -126,12 +205,28 @@
         </form>
     </div>
 
+    <!-- History Modal -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content">
+            <span id="history-modal-close" class="close-button">&times;</span>
+            <h3 class="text-2xl font-bold text-[#3A5A40] mb-4">Lịch Sử Các Lần Nộp Bài</h3>
+            <div id="history-list" class="space-y-3">
+                <!-- History items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Key for storing history array (array of submitted tests)
+        const TEST_HISTORY_KEY = 'tienganh11_submission_history';
+        // Key for storing current progress/draft (used for autosave)
+        const CURRENT_DRAFT_KEY = 'tienganh11_current_draft';
+
         // Mapping of letter choices to indices for easy grading
         const CHOICE_MAP = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
 
         // Data Structure for the entire test
-        // Structure: [ { topic: string, exercises: [ { id: string, title: string, type: 'mcq'|'wordform'|'cloze'|'reading'|'rearrange', questions: [ ... ], passage?: string } ] } ]
+        // NOTE: The allTestContent structure is truncated here for brevity but is assumed to be fully present for the app to function.
         const allTestContent = [
             {
                 topic: "TOPIC 1: A LONG AND HEALTHY LIFE",
@@ -413,10 +508,7 @@
             { id: 'T4_Ex18_Q17_4', title: 'Question 17 (Generation Gap Analogy):', type: 'rearrange', text: 'a. Teens, as digital natives, find social media and instant messaging natural, while their parents—without the same skills—often feel left out, which leads to misunderstandings.\nb. This vivid image illustrates how generation gaps show up in differences in values, communication styles, and beliefs between parents and children. \nc. “Across the dining table, two generations speak in different languages — one digital, one analog.” \nd. These gaps are made worse when parents hold traditional views about roles or chores and teens want more freedom to express themselves.\ne. But when both sides make an effort—by listening, sharing experiences, and respecting each other—families can turn these differences into connections and close the generation gap.', options: ["c-d-a-b-e", "a-d-c-b-e", "c-b-a-d-e", "a-b-c-d-e"], answer: "C", rationale: "<b>Phân tích Logic/Cấu trúc:</b> Đoạn văn bắt đầu bằng một hình ảnh ẩn dụ mạnh mẽ (c). Câu tiếp theo giải thích ý nghĩa của hình ảnh ẩn dụ đó (b). Sau đó, đi sâu vào các khía cạnh cụ thể của vấn đề: công nghệ (a) và giá trị truyền thống (d). Cuối cùng là câu kết luận đưa ra giải pháp (e). Do đó, trật tự <b>c-b-a-d-e</b> là hợp lý nhất." }
         ];
 
-
-        // END: Biến allRearrangeQuestions
-
-        // Replace the default SENTENCE REARRANGEMENT block with the consolidated array
+        // Combine test content
         const finalTestContent = allTestContent.slice(0, 3);
         finalTestContent.push({
             topic: "SENTENCE REARRANGEMENT (Exercise 18)",
@@ -428,7 +520,409 @@
             }))
         });
 
-        // Function to reveal answer and rationale for a specific question
+        // --- CORE STORAGE AND HISTORY FUNCTIONS ---
+
+        // 1. Function to collect current answers (draft/submission)
+        function collectAnswers() {
+            const answers = {};
+            const formElements = document.getElementById('test-form').elements;
+            
+            for (let i = 0; i < formElements.length; i++) {
+                const el = formElements[i];
+                if (el.name && (el.type === 'radio' && el.checked || el.type === 'text')) {
+                    answers[el.name] = el.value;
+                } else if (el.type === 'text' && el.name && el.value.trim() !== '') {
+                    // Collect all non-empty text answers regardless of checked status
+                    answers[el.name] = el.value;
+                }
+            }
+            return answers;
+        }
+
+        // 2. Function to save current draft (autosave)
+        function saveDraft() {
+            const draft = {
+                name: document.getElementById('student-name').value,
+                class: document.getElementById('student-class').value,
+                answers: collectAnswers()
+            };
+            localStorage.setItem(CURRENT_DRAFT_KEY, JSON.stringify(draft));
+            // console.log("Draft saved.");
+        }
+
+        // 3. Function to load draft (on page load, if no submission is being viewed)
+        function loadDraft() {
+            const draft = JSON.parse(localStorage.getItem(CURRENT_DRAFT_KEY));
+            if (!draft) return;
+
+            document.getElementById('student-name').value = draft.name || '';
+            document.getElementById('student-class').value = draft.class || '';
+
+            for (const name in draft.answers) {
+                const value = draft.answers[name];
+                const elements = document.getElementsByName(name);
+
+                elements.forEach(el => {
+                    if (el.type === 'radio' && el.value === value) {
+                        el.checked = true;
+                    } else if (el.type === 'text') {
+                        el.value = value;
+                    }
+                });
+            }
+            // console.log("Draft loaded.");
+        }
+
+        // 4. Function to load history (only the latest submission)
+        function loadLatestSubmission() {
+            const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
+            if (history.length === 0) return;
+
+            // Load the last submitted test for viewing
+            const latestSubmission = history[history.length - 1];
+            viewSubmission(latestSubmission);
+            console.log("Đã tải kết quả bài nộp gần nhất.");
+        }
+
+        // 5. Function to clear all history
+        function clearHistory() {
+            // NOTE: Using window.confirm instead of alert/confirm
+            if (window.confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử làm bài và bản nháp đã lưu?")) {
+                localStorage.removeItem(TEST_HISTORY_KEY);
+                localStorage.removeItem(CURRENT_DRAFT_KEY);
+                alert("Đã xóa lịch sử làm bài và bản nháp thành công. Vui lòng tải lại trang.");
+                window.location.reload(); // Tải lại trang để reset giao diện
+            }
+        }
+        
+        // 5b. Function to start a new test (clear draft and reload)
+        function startNewTest() {
+            // Check if user is currently viewing a previous submission
+            if (!document.getElementById('back-to-latest').classList.contains('hidden')) {
+                // If viewing a previous submission, simply reload to go back to the latest draft view.
+                resetView();
+                return; 
+            }
+
+            // If not viewing a previous submission, check if the current draft is dirty/submitted
+            if (document.getElementById('submit-test').disabled) {
+                // Already submitted. Ask before proceeding.
+                 if (!window.confirm("Bài làm hiện tại đã được nộp. Bạn có muốn bắt đầu một bài mới với cùng nội dung câu trả lời (chỉ xóa tên/lớp)?")) {
+                     return;
+                 }
+            } else if (document.getElementById('student-name').value.trim() !== '') {
+                // If not submitted, and name is entered, ask to confirm
+                if (!window.confirm("Bạn đang có một bài làm dở dang. Bạn có chắc muốn tạo bài mới (chỉ xóa tên/lớp) và tiếp tục với cùng các câu trả lời đang có?")) {
+                    return;
+                }
+            }
+            
+            // 1. Clear student name and class inputs (but keep current answers in place)
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-class').value = '';
+
+            // 2. Re-enable all inputs and submit button
+            document.getElementById('test-form').querySelectorAll('input').forEach(input => input.disabled = false);
+            document.getElementById('submit-test').disabled = false;
+            document.getElementById('submit-test').classList.remove('hidden');
+
+            // 3. Hide score and "back to latest" button
+            document.getElementById('total-score').classList.add('hidden');
+            document.getElementById('back-to-latest').classList.add('hidden');
+            
+            // 4. Clear all score/rationale indicators
+            document.querySelectorAll('.correct-indicator, .rationale-text').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('correct-answer-option', 'incorrect-answer-option'));
+            document.querySelectorAll('.cloze-input').forEach(el => el.classList.remove('correct-fill', 'incorrect-fill'));
+            
+            // 5. Re-enable reveal buttons
+            document.querySelectorAll('.reveal-button').forEach(button => {
+                 button.disabled = false;
+                 button.textContent = 'Xem Đáp án & Giải thích';
+            });
+
+            // 6. Save the new blank-name draft
+            saveDraft();
+            alert("Đã sẵn sàng cho bài làm mới. Vui lòng nhập tên người làm bài.");
+        }
+
+        
+        // 6. Function to view history (open modal)
+        function viewHistory() {
+            const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = `<p class="text-gray-500 italic">Chưa có bài làm nào được nộp.</p>`;
+            } else {
+                // Reverse history so latest is at the top
+                history.reverse().forEach((submission, originalIndex) => {
+                    const actualIndex = history.length - 1 - originalIndex; // Calculate the true index in the original (unreversed) array
+                    const date = new Date(submission.timestamp).toLocaleString('vi-VN', { 
+                        year: 'numeric', month: 'numeric', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                    });
+                    
+                    const item = document.createElement('div');
+                    item.className = 'p-3 border rounded-lg bg-gray-50 flex justify-between items-center hover:bg-gray-100 cursor-pointer transition';
+                    item.innerHTML = `
+                        <div>
+                            <p class="font-bold text-gray-700">${submission.name} - Lớp ${submission.class}</p>
+                            <p class="text-sm text-gray-500">Ngày nộp: ${date}</p>
+                            <p class="text-lg font-extrabold text-[#3A5A40]">Điểm: ${submission.totalCorrect} / ${submission.totalQuestions}</p>
+                        </div>
+                        <button type="button" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md" onclick="window.viewSubmission(TEST_HISTORY_KEY, ${actualIndex})">
+                            Xem Chi Tiết
+                        </button>
+                    `;
+                    historyList.appendChild(item);
+                });
+            }
+
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        // 7. Function to display a specific historical submission
+        function viewSubmission(historyKey, index) {
+            const history = JSON.parse(localStorage.getItem(historyKey));
+            if (!history || index < 0 || index >= history.length) {
+                alert("Không tìm thấy lịch sử bài nộp.");
+                return;
+            }
+
+            const submission = history[index];
+            document.getElementById('history-modal').style.display = 'none'; // Close modal
+
+            // 1. Reset form (load current draft first to ensure all inputs exist, then reset)
+            document.getElementById('test-form').reset();
+            loadDraft(); // Reset to clean state
+            
+            // 2. Clear all previous highlights and re-render the test structure
+            renderTest();
+
+            // 3. Populate student info
+            document.getElementById('student-name').value = submission.name || '';
+            document.getElementById('student-class').value = submission.class || '';
+
+            // 4. Populate answers from history
+            for (const name in submission.answers) {
+                const value = submission.answers[name];
+                const elements = document.getElementsByName(name);
+
+                elements.forEach(el => {
+                    if (el.type === 'radio' && el.value === value) {
+                        el.checked = true;
+                    } else if (el.type === 'text') {
+                        el.value = value;
+                    }
+                });
+            }
+
+            // 5. Run checkTest in loading mode (true) to grade and show results for this submission
+            checkTest(true, submission);
+
+            // 6. Disable inputs and submit button
+            document.getElementById('test-form').querySelectorAll('input').forEach(input => input.disabled = true);
+            document.getElementById('submit-test').disabled = true;
+
+            // 7. Show 'Back to Latest' button and hide "Chấm điểm"
+            document.getElementById('back-to-latest').classList.remove('hidden');
+            document.getElementById('submit-test').classList.add('hidden');
+            
+            // 8. Update title/score display
+            document.getElementById('total-score').textContent = `Điểm [LỊCH SỬ]: ${submission.totalCorrect} / ${submission.totalQuestions}`;
+            document.getElementById('total-score').classList.remove('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Function to reset the view to the latest (or fresh) test
+        function resetView() {
+            window.location.reload(); 
+            // This is the simplest way to reload the original draft/latest view, 
+            // as loadHistory will handle finding the correct state on DOMContentLoaded.
+        }
+
+        // Function to check all answers and display results (Final Check)
+        function checkTest(isLoading = false, submissionData = null) {
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            let currentAnswers = submissionData ? submissionData.answers : collectAnswers();
+
+            // Loop through all exercises to check answers
+            finalTestContent.forEach(topicBlock => {
+                topicBlock.exercises.forEach(exercise => {
+                    exercise.questions.forEach(q => {
+                        const qContainer = document.querySelector(`[data-q-id="${exercise.id}_q${q.q}"]`);
+                        if (!qContainer) return;
+                        
+                        const correctIndicator = qContainer.querySelector('.correct-indicator');
+                        const rationaleTextElement = qContainer.querySelector('.rationale-text');
+                        const revealButton = qContainer.querySelector('.reveal-button');
+                        const correctOptionId = q.answer;
+
+                        // Ensure rationale is shown and update button text
+                        const rationale = q.rationale || "Không có giải thích chi tiết cho câu này.";
+                        if (isLoading) {
+                            rationaleTextElement.innerHTML = `Giải thích: ${rationale}`;
+                            rationaleTextElement.classList.remove('hidden');
+                        }
+                        if (revealButton && isLoading) {
+                             revealButton.textContent = 'Ẩn Đáp án & Giải thích';
+                             revealButton.disabled = true;
+                        }
+                        
+                        totalQuestions++;
+                        let isCorrect = false;
+
+                        const inputName = `${exercise.id}_q${q.q}`;
+                        const userAnswer = currentAnswers[inputName];
+
+
+                        if (exercise.type === 'mcq' || exercise.type === 'cloze' || exercise.type === 'reading' || exercise.type === 'rearrange') {
+                            
+                            // Reset and apply highlighting (Correct answer always highlighted green)
+                            qContainer.querySelectorAll('.mcq-option').forEach(label => {
+                                label.classList.remove('correct-answer-option', 'incorrect-answer-option');
+                                if (label.dataset.optionId === correctOptionId) {
+                                    label.classList.add('correct-answer-option');
+                                }
+                            });
+
+                            if (userAnswer === correctOptionId) {
+                                isCorrect = true;
+                            } else if (userAnswer) {
+                                // Highlight user's incorrect choice red
+                                const incorrectOption = qContainer.querySelector(`.mcq-option[data-option-id="${userAnswer}"]`);
+                                if (incorrectOption && !incorrectOption.classList.contains('correct-answer-option')) {
+                                    incorrectOption.classList.add('incorrect-answer-option');
+                                }
+                            }
+                        } else if (exercise.type === 'wordform') {
+                            const inputField = qContainer.querySelector('input[type="text"]');
+                            if (inputField) {
+                                const userText = (userAnswer || '').trim().toLowerCase();
+                                const correctAnswer = q.answer.toLowerCase();
+
+                                // Reset highlights
+                                inputField.classList.remove('correct-fill', 'incorrect-fill');
+                                
+                                // Check if user's entry matches the correct answer
+                                if (userText === correctAnswer) {
+                                    isCorrect = true;
+                                    inputField.classList.add('correct-fill');
+                                } else if (userText !== '') {
+                                    // If incorrect and attempted, apply red highlight
+                                    inputField.classList.add('incorrect-fill');
+                                }
+                                // Fill the input field with the user's recorded answer if viewing history
+                                if (isLoading) {
+                                    inputField.value = userAnswer || ''; 
+                                }
+                            }
+                        }
+
+                        // Update indicator status
+                        if (isCorrect) {
+                            totalCorrect++;
+                            correctIndicator.textContent = "CHÍNH XÁC";
+                            correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
+                        } else {
+                            // Show error/missed message
+                            const isAttempted = !!userAnswer;
+                            
+                            let statusText = 'CHƯA LÀM';
+                            if (isAttempted) {
+                                statusText = 'SAI';
+                            }
+                            
+                            correctIndicator.textContent = `${statusText}. Đáp án đúng: ${q.answer}`;
+                            correctIndicator.className = 'correct-indicator mt-2 block font-bold text-red-600';
+                        }
+                        
+                        // Disable inputs and reveal button
+                        qContainer.querySelectorAll('input').forEach(input => input.disabled = true);
+                        if (revealButton) revealButton.disabled = true;
+                        correctIndicator.classList.remove('hidden');
+                    });
+                });
+            });
+
+            // Display final score
+            const scoreElement = document.getElementById('total-score');
+            scoreElement.textContent = `Điểm: ${totalCorrect} / ${totalQuestions}`;
+            scoreElement.classList.remove('hidden');
+            
+            // Final save and alert logic runs only on submission (not loading)
+            if (!isLoading) {
+                // 1. Save submission to history array
+                const newSubmission = {
+                    timestamp: new Date().getTime(),
+                    name: document.getElementById('student-name').value,
+                    class: document.getElementById('student-class').value,
+                    totalCorrect: totalCorrect,
+                    totalQuestions: totalQuestions,
+                    answers: currentAnswers
+                };
+                
+                const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
+                history.push(newSubmission);
+                localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(history));
+
+                // 2. Disable form elements
+                document.getElementById('submit-test').disabled = true;
+                
+                // 3. Show final alert
+                alert(`Bạn đã hoàn thành bài làm. Số câu đúng: ${totalCorrect} / ${totalQuestions}. Kết quả đã được lưu vào Lịch Sử Làm Bài.`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render test structure first
+            renderTest();
+            
+            // Then check if we should load the last submitted history or a current draft
+            const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
+            if (history.length > 0) {
+                // If there's history, load the *latest submitted test* for viewing by default
+                loadLatestSubmission();
+            } else {
+                // Otherwise, load any in-progress draft
+                loadDraft();
+                
+                // Add autosave listener only if starting fresh or continuing a draft
+                document.getElementById('test-form').addEventListener('input', saveDraft);
+                document.getElementById('student-name').addEventListener('input', saveDraft);
+                document.getElementById('student-class').addEventListener('input', saveDraft);
+            }
+            
+            // Attach main event listeners
+            document.getElementById('submit-test').addEventListener('click', () => checkTest(false));
+            document.getElementById('clear-history').addEventListener('click', clearHistory);
+            document.getElementById('view-history').addEventListener('click', viewHistory);
+            document.getElementById('start-new-test').addEventListener('click', startNewTest); // UPDATED BUTTON
+            
+            // Modal close listeners
+            document.getElementById('history-modal-close').addEventListener('click', () => {
+                document.getElementById('history-modal').style.display = 'none';
+            });
+            window.addEventListener('click', (event) => {
+                if (event.target == document.getElementById('history-modal')) {
+                    document.getElementById('history-modal').style.display = 'none';
+                }
+            });
+
+            // Back to latest view
+            document.getElementById('back-to-latest').addEventListener('click', resetView);
+            
+            // Expose viewSubmission globally for modal buttons
+            window.viewSubmission = viewSubmission; 
+        });
+
+
+        // Function to reveal answer and rationale for a specific question (remains the same)
         function revealAnswer(exId, qNum, correctAnswer, rationale) {
             const qContainer = document.querySelector(`[data-q-id="${exId}_q${qNum}"]`);
             if (!qContainer) return;
@@ -462,8 +956,8 @@
                 else if (qContainer.querySelector('input[type="text"]')) {
                     const inputField = qContainer.querySelector('input[type="text"]');
                     inputField.classList.add('correct-fill');
+                    inputField.classList.remove('incorrect-fill'); // Ensure red is removed if present
                     inputField.value = correctAnswer; // Fill in the correct answer
-                    // inputField.disabled = true; // DO NOT disable here, let user submit if they wish
                     correctIndicator.textContent = `Đáp án đúng: ${correctAnswer}`;
                     correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
                 }
@@ -481,13 +975,40 @@
                 });
                 if (qContainer.querySelector('input[type="text"]')) {
                     const inputField = qContainer.querySelector('input[type="text"]');
-                    inputField.classList.remove('correct-fill', 'incorrect-fill');
-                    // inputField.disabled = false;
+                    // Only remove green fill, keep user input
+                    inputField.classList.remove('correct-fill');
+                    
+                    // If the test was submitted (or viewing history), re-apply the red highlight if it was incorrect
+                    const isSubmitted = document.getElementById('submit-test').disabled;
+                    if (isSubmitted) {
+                         const qInfo = findQuestionInfo(exId, qNum);
+                         const isWordForm = qContainer.querySelector('input[type="text"]');
+                         if (isWordForm) {
+                            const userAnswer = inputField.value.trim().toLowerCase();
+                            if (qInfo && userAnswer !== qInfo.answer.toLowerCase()) {
+                                 inputField.classList.add('incorrect-fill');
+                            }
+                         }
+                    }
                 }
             }
         }
 
-        // Function to render the entire test structure
+        // Helper function to find question data (remains the same)
+        function findQuestionInfo(exId, qNum) {
+            for (const topicBlock of finalTestContent) {
+                for (const exercise of topicBlock.exercises) {
+                    // This comparison handles T4_Ex18_Q13 style IDs
+                    if (exercise.id === exId.split('_q')[0]) {
+                        return exercise.questions.find(q => q.q == qNum);
+                    }
+                }
+            }
+            return null;
+        }
+
+
+        // Function to render the entire test structure (remains the same)
         function renderTest() {
             const container = document.getElementById('test-content');
             container.innerHTML = `<p class="text-gray-600 mb-6 italic text-center">Đây là nội dung đầy đủ của đề ôn tập. Vui lòng hoàn thành tất cả các bài tập trước khi bấm nút 'Chấm điểm' ở cuối trang.</p>`;
@@ -530,7 +1051,7 @@
             attachRevealListeners();
         }
 
-        // Helper to attach listeners for the reveal button
+        // Helper functions (renderMCQ, renderWordForm, renderPassageQuestions, renderRearrange, attachRevealListeners) remain the same.
         function attachRevealListeners() {
             document.querySelectorAll('.reveal-button').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -539,8 +1060,6 @@
                 });
             });
         }
-
-        // Helper to render an MCQ question with reveal button
         function renderMCQ(q, exId, globalQIndex, answer, rationale) {
             const optionsHtml = q.options.map((option, idx) => `
                 <label class="mcq-option" data-option-id="${String.fromCharCode(65 + idx)}">
@@ -566,14 +1085,9 @@
                 </div>
             `;
         }
-        
-        // Helper to render a Word Form question with reveal button
         function renderWordForm(q, exId, globalQIndex, answer, rationale) {
             const textToReplace = '_________________________';
-            // Store the full text before replacing the blank
             const fullText = q.text; 
-            
-            // Replace the blank line with an input field
             const textWithInput = fullText.replace(textToReplace, `<input type="text" name="${exId}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án" data-global-q="${globalQIndex}">`);
             
             return `
@@ -592,8 +1106,6 @@
                 </div>
             `;
         }
-
-        // Helper to render Cloze/Reading passages and their associated questions
         function renderPassageQuestions(exercise, startQIndex) {
             let passageHtml = `<div class="bg-gray-50 p-4 mb-6 rounded-lg border border-gray-200">
                                 <h4 class="font-bold mb-3">${exercise.title.split(': ')[0]}</h4>
@@ -630,11 +1142,8 @@
             });
             return passageHtml;
         }
-        
-        // Helper to render Sentence Rearrangement questions with reveal button
         function renderRearrange(q, exId, globalQIndex, answer, rationale) {
             const paragraphs = q.text.split('\n').map(line => {
-                // Keep the letter if it's explicitly marked (e.g., 'a. ' or 'Farrah: ')
                 return `<p class="ml-4 text-gray-700">${line}</p>`;
             }).join('');
 
@@ -664,117 +1173,6 @@
                 </div>
             `;
         }
-
-
-        // Function to check all answers and display results (Final Check)
-        function checkTest() {
-            let totalCorrect = 0;
-            let totalQuestions = 0;
-
-            // Loop through all exercises to check answers
-            finalTestContent.forEach(topicBlock => {
-                topicBlock.exercises.forEach(exercise => {
-                    exercise.questions.forEach(q => {
-                        const qContainer = document.querySelector(`[data-q-id="${exercise.id}_q${q.q}"]`);
-                        if (!qContainer) return;
-                        
-                        const correctIndicator = qContainer.querySelector('.correct-indicator');
-                        const rationaleTextElement = qContainer.querySelector('.rationale-text');
-                        const revealButton = qContainer.querySelector('.reveal-button');
-                        const correctOptionId = q.answer;
-
-                        // Ensure rationale is shown after final check
-                        const rationale = q.rationale || "Không có giải thích chi tiết cho câu này.";
-                        rationaleTextElement.innerHTML = `Giải thích: ${rationale}`;
-                        rationaleTextElement.classList.remove('hidden');
-                        
-                        totalQuestions++;
-                        let isCorrect = false;
-
-                        if (exercise.type === 'mcq' || exercise.type === 'cloze' || exercise.type === 'reading' || exercise.type === 'rearrange') {
-                            const selectedOption = document.querySelector(`input[name="${exercise.id}_q${q.q}"]:checked`);
-
-                            // Reset and apply highlighting (Correct answer always highlighted green)
-                            qContainer.querySelectorAll('.mcq-option').forEach(label => {
-                                label.classList.remove('correct-answer-option', 'incorrect-answer-option');
-                                if (label.dataset.optionId === correctOptionId) {
-                                    label.classList.add('correct-answer-option');
-                                }
-                            });
-
-                            if (selectedOption && selectedOption.value === correctOptionId) {
-                                isCorrect = true;
-                            } else if (selectedOption) {
-                                // Highlight user's incorrect choice red
-                                if (!selectedOption.closest('.mcq-option').classList.contains('correct-answer-option')) {
-                                    selectedOption.closest('.mcq-option').classList.add('incorrect-answer-option');
-                                }
-                            }
-                        } else if (exercise.type === 'wordform') {
-                            const inputField = qContainer.querySelector('input[type="text"]');
-                            if (inputField) {
-                                const userAnswer = inputField.value.trim().toLowerCase();
-                                const correctAnswer = q.answer.toLowerCase();
-                                
-                                // Check if user's entry matches the correct answer
-                                if (userAnswer === correctAnswer) {
-                                    isCorrect = true;
-                                    inputField.classList.add('correct-fill');
-                                    inputField.classList.remove('incorrect-fill');
-                                } else {
-                                    // If incorrect, apply red highlight
-                                    inputField.classList.add('incorrect-fill');
-                                    inputField.classList.remove('correct-fill');
-                                    // Also check if it was previously revealed (green) and reset if needed
-                                    if (inputField.value.toLowerCase() === correctAnswer) {
-                                        inputField.classList.add('correct-fill');
-                                        inputField.classList.remove('incorrect-fill');
-                                    }
-                                }
-                            }
-                        }
-
-                        // Update indicator status
-                        if (isCorrect) {
-                            totalCorrect++;
-                            correctIndicator.textContent = "CHÍNH XÁC";
-                            correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
-                        } else {
-                            // Show error/missed message
-                            const isAttempted = document.querySelector(`input[name="${exercise.id}_q${q.q}"]:checked`) || (qContainer.querySelector('input[type="text"]') && qContainer.querySelector('input[type="text"]').value.trim() !== '');
-                            
-                            let statusText = 'CHƯA LÀM';
-                            if (isAttempted) {
-                                statusText = 'SAI';
-                            }
-                            
-                            correctIndicator.textContent = `${statusText}. Đáp án đúng: ${q.answer}`;
-                            correctIndicator.className = 'correct-indicator mt-2 block font-bold text-red-600';
-                        }
-
-                        // Disable inputs and reveal button after submission
-                        qContainer.querySelectorAll('input').forEach(input => input.disabled = true);
-                        if (revealButton) revealButton.disabled = true;
-                        correctIndicator.classList.remove('hidden');
-                    });
-                });
-            });
-
-            // Display final score
-            const scoreElement = document.getElementById('total-score');
-            scoreElement.textContent = `Điểm: ${totalCorrect} / ${totalQuestions}`;
-            scoreElement.classList.remove('hidden');
-            
-            // Disable final submit button
-            document.getElementById('submit-test').disabled = true;
-
-            alert(`Bạn đã hoàn thành bài làm. Số câu đúng: ${totalCorrect} / ${totalQuestions}`);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTest();
-            document.getElementById('submit-test').addEventListener('click', checkTest);
-        });
     </script>
 </body>
 </html>
