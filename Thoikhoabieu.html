@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tiêu đề sẽ được cập nhật động bằng JavaScript -->
+    <title id="scheduleTitle">Lịch Học & Tập Tổng Hợp</title>
+    <!-- Tải Google Font: Be Vietnam Pro (hỗ trợ tiếng Việt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thiết lập cấu hình Tailwind để sử dụng font Be Vietnam Pro và màu sắc tùy chỉnh -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Màu Chính Khóa - Indigo
+                        'primary-class': '#4f46e5',
+                        // Màu Lịch Tập - Green
+                        'secondary-study': '#10b981',
+                        // Màu Học Thêm/Tối - Rose
+                        'tertiary-evening': '#f43f5e',
+                        // MÀU LỊCH THI - Amber/Orange
+                        'exam-color': '#f59e0b',
+                    },
+                    fontFamily: {
+                        sans: ['"Be Vietnam Pro"', 'Inter', 'sans-serif'], // Thay đổi font
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Đảm bảo toàn bộ trang sử dụng font Be Vietnam Pro */
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8fafc; /* Màu nền nhẹ nhàng (slate-50) */
+        }
+        /* Hiệu ứng khi ẩn/hiện */
+        .activity-item {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Style cho Modal Overlay */
+        .modal-overlay {
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        /* Style cho Alert Message */
+        #alert-box {
+            z-index: 1001;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        /* Thẻ ngày ẩn khi filter */
+        .activity-item.hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Tiêu đề lớn -->
+        <header class="text-center mb-6 p-4 bg-white shadow-lg rounded-xl border-t-4 border-primary-class">
+            <h1 class="3xl sm:text-4xl font-extrabold text-gray-900 flex items-center justify-center">
+                <span class="mr-3 text-4xl">🗓</span> LỊCH HỌC & TẬP TỔNG HỢP
+            </h1>
+            <!-- Cập nhật phạm vi ngày hiển thị -->
+            <p id="dateRangeDisplay" class="mt-2 text-lg font-medium text-primary-class">
+                Đang tải lịch...
+            </p>
+            
+            <!-- Nút Quản lý Lịch -->
+            <button
+                onclick="openManageEventModal('add')"
+                class="mt-4 bg-teal-500 text-white font-semibold py-2 px-4 rounded-full transition-colors duration-200 hover:bg-teal-600 shadow-lg text-sm flex items-center mx-auto"
+            >
+                <span class="mr-2">➕</span> Thêm Sự Kiện Mới
+            </button>
+        </header>
+
+        <!-- Thanh Điều Hướng Tuần -->
+        <div class="mb-4 flex justify-between items-center p-4 bg-white rounded-xl shadow-md">
+            <button
+                onclick="navigateWeek(-1)"
+                class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-full transition-colors duration-200 hover:bg-indigo-600 shadow-md flex items-center text-sm"
+            >
+                <span class="mr-1">◀</span> Tuần Trước
+            </button>
+            <button
+                onclick="resetDate()"
+                class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-full transition-colors duration-200 hover:bg-gray-300 shadow-md text-sm"
+            >
+                Tuần Gốc
+            </button>
+            <button
+                onclick="navigateWeek(1)"
+                class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-full transition-colors duration-200 hover:bg-indigo-600 shadow-md flex items-center text-sm"
+            >
+                Tuần Sau <span class="ml-1">▶</span>
+            </button>
+        </div>
+
+        <!-- Bộ lọc (Filters) -->
+        <div id="filters" class="mb-8 p-4 bg-white rounded-xl shadow-md flex flex-wrap justify-center gap-3">
+            <button data-filter="official" onclick="filterSchedule('official')" class="filter-btn bg-primary-class text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors duration-200 hover:opacity-90 shadow-md flex items-center">
+                <span class="mr-2">🎒</span> Chính Khóa
+            </button>
+            <button data-filter="extra" onclick="filterSchedule('extra')" class="filter-btn bg-tertiary-evening text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors duration-200 hover:opacity-90 shadow-md flex items-center">
+                <span class="mr-2">💡</span> Học Thêm
+            </button>
+            <button data-filter="study" onclick="filterSchedule('study')" class="filter-btn bg-secondary-study text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors duration-200 hover:opacity-90 shadow-md flex items-center">
+                <span class="mr-2">🏋️</span> Lịch Tập
+            </button>
+            <button data-filter="exam" onclick="filterSchedule('exam')" class="filter-btn bg-exam-color text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors duration-200 hover:opacity-90 shadow-md flex items-center">
+                <span class="mr-2">💯</span> Lịch Thi
+            </button>
+        </div>
+
+        <!-- Container cho các thẻ ngày (Nơi lịch được render) -->
+        <div id="scheduleContainer" class="space-y-6">
+            <!-- Nội dung lịch sẽ được chèn ở đây bởi JavaScript -->
+        </div>
+
+    </div>
+
+    <!-- Alert Box (Hộp thông báo tùy chỉnh) -->
+    <div id="alert-box" class="fixed top-5 right-5 p-4 rounded-lg shadow-xl text-white opacity-0 transform translate-x-full transition duration-300 pointer-events-none" style="min-width: 250px;">
+        <p id="alert-message" class="font-semibold"></p>
+    </div>
+
+    <!-- Modal Quản Lý Sự Kiện (Thêm / Sửa) -->
+    <div id="manageEventModal" class="fixed inset-0 hidden modal-overlay items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 flex justify-between items-center">
+                <span id="modal-title">Quản Lý Sự Kiện</span>
+                <button onclick="closeManageEventModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </h3>
+            <form id="manageEventForm" onsubmit="handleManageEvent(event)">
+                <input type="hidden" id="eventId">
+                <input type="hidden" id="eventType">
+                
+                <div class="space-y-4">
+                    <!-- Loại Lịch (Cố Định / Lặp Lại) -->
+                    <div>
+                        <label for="recurrenceTypeSelect" class="block text-sm font-medium text-gray-700">Loại Lịch</label>
+                        <select id="recurrenceTypeSelect" onchange="toggleRecurrenceFields(this.value)" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                            <option value="fixed">Sự kiện Cố Định (Ngày cụ thể)</option>
+                            <option value="weekly">Lặp lại Hàng Tuần (Theo Thứ)</option>
+                            <!-- Tạm thời ẩn các tùy chọn phức tạp hơn -->
+                            <!-- <option value="monthly" disabled>Lặp lại Hàng Tháng (Chưa hỗ trợ)</option>
+                            <option value="yearly" disabled>Lặp lại Hàng Năm (Chưa hỗ trợ)</option> -->
+                        </select>
+                    </div>
+
+                    <!-- Trường Lịch Cố Định -->
+                    <div id="fixedFields" class="space-y-4">
+                        <label for="eventDate" class="block text-sm font-medium text-gray-700">Ngày (YYYY-MM-DD)</label>
+                        <input type="date" id="eventDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                    </div>
+
+                    <!-- Trường Lịch Lặp Lại -->
+                    <div id="recurringFields" class="space-y-4 hidden border p-4 rounded-lg bg-gray-50">
+                         <h4 class="text-base font-semibold text-gray-800">Cài đặt Lặp lại Hàng Tuần</h4>
+                        
+                         <!-- Chọn Thứ trong tuần -->
+                        <div>
+                            <label for="eventDayIndex" class="block text-sm font-medium text-gray-700">Thứ trong tuần (áp dụng cho lịch lặp lại)</label>
+                            <select id="eventDayIndex" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                                <option value="1">Thứ 2</option>
+                                <option value="2">Thứ 3</option>
+                                <option value="3">Thứ 4</option>
+                                <option value="4">Thứ 5</option>
+                                <option value="5">Thứ 6</option>
+                                <option value="6">Thứ 7</option>
+                                <option value="0">Chủ nhật</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Ngày Hết Hạn -->
+                        <div>
+                            <label for="eventRecurrenceEnd" class="block text-sm font-medium text-gray-700">Ngày Hết Hạn Lặp Lại (YYYY-MM-DD)</label>
+                            <input type="date" id="eventRecurrenceEnd" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                        </div>
+                    </div>
+
+
+                    <!-- Trường thông tin chung -->
+                    <div>
+                        <label for="eventTime" class="block text-sm font-medium text-gray-700">Thời gian (VD: 13h00 – 14h00)</label>
+                        <input type="text" id="eventTime" placeholder="VD: 13h00 – 14h00" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                    </div>
+                    <div>
+                        <label for="eventSubject" class="block text-sm font-medium text-gray-700">Nội dung / Môn học</label>
+                        <input type="text" id="eventSubject" placeholder="VD: Thi Vật lý" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                    </div>
+                    <div>
+                        <label for="eventDetail" class="block text-sm font-medium text-gray-700">Chi tiết / Ghi chú</label>
+                        <input type="text" id="eventDetail" placeholder="VD: Lịch Thi - Tiết 2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                    <!-- Danh mục -->
+                    <div>
+                        <label for="eventCategory" class="block text-sm font-medium text-gray-700">Danh mục</label>
+                        <select id="eventCategory" required onchange="updateDetailPlaceholder(this.value)" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-class focus:border-primary-class">
+                            <option value="official">🎒 Chính Khóa</option>
+                            <option value="extra">💡 Học Thêm</option>
+                            <option value="study">🏋️ Lịch Tập</option>
+                            <option value="exam">💯 Lịch Thi</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Nút Submit -->
+                <div class="mt-6 flex justify-end">
+                    <button type="button" onclick="closeManageEventModal()" class="mr-3 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Hủy
+                    </button>
+                    <button type="submit" id="saveEventButton" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                        Thêm & Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Hàm hỗ trợ và Logic lọc (JavaScript) -->
+    <script>
+        // --- CẤU TRÚC DỮ LIỆU CỐ ĐỊNH BAN ĐẦU ---
+
+        const RECURRENCE_END_DATE_DEFAULT = '2026-12-31';
+        const RECURRENCE_ICON = '🔄';
+        let currentDate = new Date('2025-10-14T00:00:00'); 
+        const activeFilters = new Set(['official', 'extra', 'study', 'exam']);
+        let currentScheduleData; 
+        let nextId = 1000; // Counter for new IDs
+
+        const dayNamesVN = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+        const dayNamesMap = { 0: "Chủ nhật", 1: "Thứ 2", 2: "Thứ 3", 3: "Thứ 4", 4: "Thứ 5", 5: "Thứ 6", 6: "Thứ 7" };
+
+
+        const activityMap = {
+            'GDQP & Thể dục': { icon: '🛡️', category: 'extra' }, 'Địa lí': { icon: '🗺️', category: 'official' },
+            'Tin học': { icon: '💻', category: 'official' }, 'Văn học': { icon: '📚', category: 'official' },
+            'Chào cờ': { icon: '🇻🇳', category: 'official' }, 'Văn PĐ': { icon: '⚡', category: 'extra' },
+            'Toán': { icon: '📐', category: 'official' }, 'Lịch sử': { icon: '🏛️', category: 'official' },
+            'Ngoại ngữ': { icon: '💬', category: 'official' }, 'Anh PĐ': { icon: '⚡', category: 'extra' },
+            'Vật lý': { icon: '⚛️', category: 'official' }, 'Mỹ thuật': { icon: '🎨', category: 'official' },
+            'Sinh hoạt': { icon: '👥', category: 'official' }, 'Tập': { icon: '💪', category: 'study' },
+            'Toán (thầy Bình)': { icon: '🌃', category: 'extra' }, 'Tiếng Hàn (online)': { icon: '🌐', category: 'extra' },
+            'Thi Tiếng Anh': { icon: '📝', category: 'exam' }, 'Thi Tin học': { icon: '📝', category: 'exam' },
+            'Thi Vật lý': { icon: '📝', category: 'exam' }, 'Thi Mỹ thuật': { icon: '📝', category: 'exam' },
+            'Thi Địa lý': { icon: '📝', category: 'exam' }, 'Thi Lịch sử': { icon: '📝', category: 'exam' },
+            'Thi Ngữ Văn': { icon: '📝', category: 'exam' }, 'Thi Toán': { icon: '📝', category: 'exam' },
+        };
+
+        // Dữ liệu ban đầu được định nghĩa dưới dạng mảng phẳng
+        const DEMO_RECURRING_EVENTS = [
+            // THỨ 2 (Official)
+            { id: 'R1', time: "13h00 – 13h45", subject: "Địa lí", detail: "Chính Khóa - Tiết 1", category: 'official', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R2', time: "13h55 – 14h40", subject: "Tin học", detail: "Chính Khóa - Tiết 2", category: 'official', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R3', time: "14h50 – 15h35", subject: "Văn học", detail: "Chính Khóa - Tiết 3", category: 'official', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R4', time: "15h50 – 16h35", subject: "Văn học", detail: "Chính Khóa - Tiết 4", category: 'official', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R5', time: "16h45 – 17h30", subject: "Chào cờ", detail: "Chính Khóa - Tiết 5", category: 'official', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            // THỨ 3 (Official)
+            { id: 'R6', time: "13h00 – 13h45", subject: "Toán", detail: "Chính Khóa - Tiết 1", category: 'official', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R7', time: "13h55 – 14h40", subject: "Toán", detail: "Chính Khóa - Tiết 2", category: 'official', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R8', time: "14h45 – 15h30", subject: "Lịch sử", detail: "Chính Khóa - Tiết 3", category: 'official', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R9', time: "15h35 – 16h20", subject: "Ngoại ngữ", detail: "Chính Khóa - Tiết 4", category: 'official', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            // THỨ 4 (Official)
+            { id: 'R10', time: "13h00 – 13h45", subject: "Ngoại ngữ", detail: "Chính Khóa - Tiết 1", category: 'official', dayIndex: 3, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R11', time: "13h55 – 14h40", subject: "Ngoại ngữ", detail: "Chính Khóa - Tiết 2", category: 'official', dayIndex: 3, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R12', time: "14h45 – 15h30", subject: "Địa lí", detail: "Chính Khóa - Tiết 3", category: 'official', dayIndex: 3, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            // THỨ 5 (Official)
+            { id: 'R13', time: "13h00 – 13h45", subject: "Toán", detail: "Chính Khóa - Tiết 1", category: 'official', dayIndex: 4, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R14', time: "13h55 – 14h40", subject: "Tin học", detail: "Chính Khóa - Tiết 2", category: 'official', dayIndex: 4, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R15', time: "14h50 – 15h35", subject: "Vật lý", detail: "Chính Khóa - Tiết 3", category: 'official', dayIndex: 4, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R16', time: "15h50 – 16h35", subject: "Toán", detail: "Chính Khóa - Tiết 4", category: 'official', dayIndex: 4, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            // THỨ 6 (Official)
+            { id: 'R17', time: "13h00 – 13h45", subject: "Mỹ thuật", detail: "Chính Khóa - Tiết 1", category: 'official', dayIndex: 5, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R18', time: "13h55 – 14h40", subject: "Vật lý", detail: "Chính Khóa - Tiết 2", category: 'official', dayIndex: 5, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R19', time: "14h50 – 15h35", subject: "Văn học", detail: "Chính Khóa - Tiết 3", category: 'official', dayIndex: 5, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R20', time: "15h50 – 16h35", subject: "Mỹ thuật", detail: "Chính Khóa - Tiết 4", category: 'official', dayIndex: 5, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R21', time: "16h45 – 17h30", subject: "Sinh hoạt", detail: "Chính Khóa - Tiết 5", category: 'official', dayIndex: 5, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+
+            // Lịch Học Thêm (Extra - Recurring)
+            { id: 'R22', time: "7h00 – 10h50", subject: "GDQP & Thể dục", detail: "Học Thêm - Sáng", category: 'extra', dayIndex: 1, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R23', time: "7h30 – 10h30", subject: "Văn PĐ", detail: "Học Thêm - Sáng", category: 'extra', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R24', time: "18h00 – 21h00", subject: "Toán (thầy Bình)", detail: "Học Thêm - Tối", category: 'extra', dayIndex: 2, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT }, // Thứ 3
+            { id: 'R25', time: "7h30 – 10h30", subject: "Anh PĐ", detail: "Học Thêm - Sáng", category: 'extra', dayIndex: 3, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R26', time: "Tối", subject: "Tiếng Hàn (online)", detail: "Học Thêm - Tối", category: 'extra', dayIndex: 3, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT },
+            { id: 'R27', time: "18h00 – 21h00", subject: "Toán (thầy Bình)", detail: "Học Thêm - Tối", category: 'extra', dayIndex: 4, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT }, // Thứ 5
+            { id: 'R28', time: "Sáng", subject: "Tiếng Hàn (online)", detail: "Học Thêm - Online", category: 'extra', dayIndex: 6, recurrenceEnd: RECURRENCE_END_DATE_DEFAULT }, // Thứ 7
+        ];
+
+        // Sự kiện Cố Định (Fixed Date Events)
+        const DEMO_SPECIAL_EVENTS = {
+            "2025-10-14": [{ id: 'S1', time: "11h00 – 13h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện", category: "study" }],
+            "2025-10-15": [
+                { id: 'S2', time: "11h00 – 13h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện (Lần 1)", category: "study" },
+                { id: 'S3', time: "15h30 – 17h30", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện (Lần 2)", category: "study" },
+                { id: 'S4', time: "13h00 – 13h45", subject: "Thi Tiếng Anh", detail: "Lịch Thi - Tiết 1", category: "exam" },
+            ],
+            "2025-10-16": [
+                { id: 'S5', time: "11h00 – 13h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện", category: "study" },
+                { id: 'S6', time: "13h55 – 14h40", subject: "Thi Tin học", detail: "Lịch Thi - Tiết 2", category: "exam" },
+            ],
+            "2025-10-17": [
+                { id: 'S7', time: "11h00 – 13h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện", category: "study" },
+                { id: 'S8', time: "13h55 – 14h40", subject: "Thi Vật lý", detail: "Lịch Thi - Tiết 2", category: "exam" },
+                { id: 'S9', time: "15h50 – 16h35", subject: "Thi Mỹ thuật", detail: "Lịch Thi - Tiết 4", category: "exam" },
+            ],
+            "2025-10-18": [{ id: 'S10', time: "11h00 – 13h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện", category: "study" }],
+            "2025-10-19": [{ id: 'S11', time: "14h00 – 17h00", subject: "Tập", detail: "Lịch Tập - Tự học/Tự luyện", category: "study" }],
+            "2025-10-20": [{ id: 'S12', time: "13h00 – 13h45", subject: "Thi Địa lý", detail: "Lịch Thi - Tiết 1", category: "exam" }],
+            "2025-10-21": [{ id: 'S13', time: "14h45 – 15h30", subject: "Thi Lịch sử", detail: "Lịch Thi - Tiết 3", category: "exam" }],
+            "2025-10-22": [
+                { id: 'S14', time: "9h00 – 10h45", subject: "Thi Ngữ Văn", detail: "Lịch Thi - Sáng", category: "exam" },
+                { id: 'S15', time: "15h15 – 17h00", subject: "Thi Toán", detail: "Lịch Thi - Chiều", category: "exam" },
+            ],
+        };
+
+        const INITIAL_DATA = {
+            recurringEvents: DEMO_RECURRING_EVENTS,
+            specialEvents: DEMO_SPECIAL_EVENTS
+        };
+
+        // --- CHỨC NĂNG LOCAL STORAGE VÀ LƯU DỮ LIỆU ---
+
+        function getNextId() {
+            return `U${nextId++}`;
+        }
+
+        function alertMessage(message, type) {
+            const alertBox = document.getElementById('alert-box');
+            const alertMessageElement = document.getElementById('alert-message');
+
+            let bgColor = 'bg-blue-500'; 
+            if (type === 'success') bgColor = 'bg-green-500';
+            if (type === 'error') bgColor = 'bg-red-500';
+
+            alertBox.className = 'fixed top-5 right-5 p-4 rounded-lg shadow-xl text-white opacity-0 transform translate-x-full transition duration-300 pointer-events-none';
+            alertBox.classList.add(bgColor);
+            alertMessageElement.textContent = message;
+
+            setTimeout(() => {
+                alertBox.classList.remove('opacity-0', 'translate-x-full', 'pointer-events-none');
+                alertBox.classList.add('opacity-100', 'translate-x-0', 'pointer-events-auto');
+            }, 50);
+
+            setTimeout(() => {
+                alertBox.classList.remove('opacity-100', 'translate-x-0', 'pointer-events-auto');
+                alertBox.classList.add('opacity-0', 'translate-x-full', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function loadScheduleData() {
+            const storedData = localStorage.getItem('userSchedule');
+            if (storedData) {
+                try {
+                    const data = JSON.parse(storedData);
+                    // Update nextId for new custom events
+                    const allIds = [
+                        ...data.recurringEvents.map(e => e.id),
+                        ...Object.values(data.specialEvents).flat().map(e => e.id)
+                    ].filter(id => id.startsWith('U')).map(id => parseInt(id.substring(1)));
+                    
+                    if (allIds.length > 0) {
+                        nextId = Math.max(...allIds) + 1;
+                    }
+
+                    alertMessage("Đã tải lịch cá nhân từ bộ nhớ.", 'success');
+                    return data;
+                } catch (e) {
+                    console.error("Lỗi khi phân tích lịch từ localStorage:", e);
+                    alertMessage("Lỗi dữ liệu. Tải lịch demo.", 'error');
+                    return INITIAL_DATA;
+                }
+            }
+            alertMessage("Tải lịch demo ban đầu. Dữ liệu sẽ được lưu khi bạn chỉnh sửa.", 'success');
+            return INITIAL_DATA; 
+        }
+
+        function saveScheduleData() {
+            try {
+                localStorage.setItem('userSchedule', JSON.stringify(currentScheduleData));
+                // Do not show alert here, it is shown in calling functions
+            } catch (e) {
+                console.error("Lỗi khi lưu lịch vào localStorage:", e);
+                alertMessage("Lỗi khi lưu lịch! Không thể ghi vào bộ nhớ.", 'error');
+            }
+        }
+        
+        // --- LOGIC DUYỆT NGÀY & RENDER ---
+
+        function getDayNameVN(date) {
+            return dayNamesVN[date.getDay()];
+        }
+
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${d}/${m}`;
+        }
+
+        function formatFullDateKey(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getRecurrenceEndDisplay(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        function getActivity(subject) {
+            return activityMap[subject] || { icon: '📝', category: 'official' }; 
+        }
+
+        function renderActivity(id, time, subject, detail, category, isRecurring, recurrenceEnd, dateKey) {
+            const info = getActivity(subject);
+            const finalCategory = category || info.category;
+            const isExam = finalCategory === 'exam';
+
+            let bgColor = 'bg-white';
+            let borderColorClass = 'border-gray-300';
+            let textColorClass = 'text-gray-500';
+
+            if (finalCategory === 'official') {
+                bgColor = 'bg-indigo-50';
+                borderColorClass = 'border-primary-class';
+                textColorClass = 'text-primary-class';
+            } else if (finalCategory === 'study') {
+                bgColor = 'bg-green-50';
+                borderColorClass = 'border-secondary-study';
+                textColorClass = 'text-secondary-study';
+            } else if (finalCategory === 'extra') {
+                bgColor = 'bg-rose-50';
+                borderColorClass = 'border-tertiary-evening';
+                textColorClass = 'text-tertiary-evening';
+            } else if (finalCategory === 'exam') {
+                bgColor = 'bg-amber-100';
+                borderColorClass = 'border-exam-color';
+                textColorClass = 'text-exam-color';
+            }
+
+            const displaySubject = isExam ? `KIỂM TRA / THI: ${subject}` : subject;
+            
+            let recurrenceDetail = '';
+            let managementBtns = '';
+
+            if (isRecurring) {
+                const endDateDisplay = getRecurrenceEndDisplay(recurrenceEnd);
+                recurrenceDetail = `
+                    <p class="text-xs text-gray-500 mt-1 flex items-center">
+                        <span class="mr-1">${RECURRENCE_ICON}</span> Lặp lại Hàng Tuần | Hết hạn: ${endDateDisplay}
+                    </p>`;
+                // Management for Recurring events (ID is enough)
+                managementBtns = `
+                    <div class="mt-2 flex space-x-2">
+                        <button onclick="openManageEventModal('edit', '${id}', 'recurring')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Sửa</button>
+                        <button onclick="deleteEvent('${id}', 'recurring')" class="text-xs text-red-500 hover:text-red-700 font-medium">Xóa</button>
+                    </div>`;
+            } else if (id && id.startsWith('S')) {
+                 // Management for Special Events (Need ID and DateKey)
+                 managementBtns = `
+                    <div class="mt-2 flex space-x-2">
+                        <button onclick="openManageEventModal('edit', '${id}', 'fixed', '${dateKey}')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Sửa</button>
+                        <button onclick="deleteEvent('${id}', 'fixed', '${dateKey}')" class="text-xs text-red-500 hover:text-red-700 font-medium">Xóa</button>
+                    </div>`;
+            }
+
+            return `
+                <div class="activity-item flex items-start p-3 ${bgColor} border-l-4 ${borderColorClass} rounded-lg shadow-sm transition hover:shadow-md relative" data-category="${finalCategory}">
+                    <span class="text-xl mr-3 mt-1">${info.icon}</span>
+                    <div class="flex-grow">
+                        <p class="text-xs font-semibold uppercase ${textColorClass}">
+                            ${displaySubject}
+                        </p>
+                        <p class="text-sm font-bold text-gray-800">${time}</p>
+                        ${detail ? `<p class="text-xs text-gray-500 mt-1">${detail}</p>` : ''}
+                        ${recurrenceDetail}
+                        ${managementBtns}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDayCard(dayTitle, dateStr, activitiesHtml) {
+            const hasExam = activitiesHtml.some(a => a.includes('data-category="exam"'));
+            const headerColor = hasExam ? 'bg-amber-600/90' : 'bg-indigo-600/90';
+            const headerBorder = hasExam ? 'border-exam-color' : 'border-indigo-200';
+
+            return `
+                <div class="day-card bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all duration-300 hover:scale-[1.01] border-b-4 ${headerBorder}">
+                    <h2 class="text-xl font-bold p-4 text-white ${headerColor} flex items-center justify-between">
+                        <span>${dayTitle}</span>
+                        <span class="text-sm font-normal bg-white/20 px-2 py-0.5 rounded-full">${dateStr}</span>
+                    </h2>
+                    <div class="p-5 space-y-4">
+                        ${activitiesHtml.join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderSchedule() {
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+            
+            // 1. Tính toán ngày bắt đầu tuần (luôn là Thứ 2)
+            let tempDate = new Date(currentDate);
+            let dayIndex = tempDate.getDay(); 
+            const daysToSubtract = (dayIndex - 1 + 7) % 7;
+            tempDate.setDate(tempDate.getDate() - daysToSubtract);
+            let mondayDate = tempDate; 
+
+            let currentDay = new Date(mondayDate); 
+            const activitiesHtml = [];
+
+            let startRange = new Date(currentDay);
+            let endRange = new Date(startRange);
+            endRange.setDate(endRange.getDate() + 6);
+
+            // Cập nhật tiêu đề ngày
+            document.getElementById('dateRangeDisplay').textContent = `${formatDate(startRange)} – ${formatDate(endRange)} / ${startRange.getFullYear()}`;
+            document.getElementById('scheduleTitle').textContent = `Lịch Học & Tập Tổng Hợp (${formatDate(startRange)} – ${formatDate(endRange)})`;
+
+            const { recurringEvents, specialEvents } = currentScheduleData;
+
+            for (let i = 0; i < 7; i++) {
+                const dateKey = formatFullDateKey(currentDay);
+                const dayIndex = currentDay.getDay(); // 0 (CN) đến 6 (T7)
+                const dayTitle = getDayNameVN(currentDay);
+                const dateStr = formatDate(currentDay);
+
+                let dayActivities = [];
+                
+                // 1. Lịch Lặp Lại (Recurring)
+                const todayRecurring = recurringEvents.filter(e => {
+                    if (e.dayIndex !== dayIndex) return false;
+                    
+                    // Kiểm tra ngày hết hạn
+                    const endDate = new Date(e.recurrenceEnd + 'T23:59:59');
+                    return currentDay <= endDate;
+                });
+
+                todayRecurring.forEach(activity => {
+                    dayActivities.push(renderActivity(
+                        activity.id, 
+                        activity.time, 
+                        activity.subject, 
+                        activity.detail, 
+                        activity.category, 
+                        true, // isRecurring
+                        activity.recurrenceEnd 
+                    ));
+                });
+
+
+                // 2. Sự kiện Cố Định (Fixed Date)
+                const special = specialEvents[dateKey] || [];
+                special.forEach(activity => {
+                    dayActivities.push(renderActivity(
+                        activity.id, 
+                        activity.time, 
+                        activity.subject, 
+                        activity.detail, 
+                        activity.category, 
+                        false, 
+                        null,
+                        dateKey // Pass dateKey for fixed event management
+                    ));
+                });
+                
+                activitiesHtml.push(renderDayCard(dayTitle, dateStr, dayActivities));
+                
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+
+            container.innerHTML = activitiesHtml.join('');
+            
+            updateFilterDisplay();
+            applyCurrentFilters(); 
+        }
+
+        // --- LOGIC LỌC (FILTER) ---
+
+        function applyCurrentFilters() {
+            const items = document.querySelectorAll('.activity-item');
+            items.forEach(item => {
+                const itemCategory = item.getAttribute('data-category');
+                if (activeFilters.has(itemCategory)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterSchedule(category) {
+            if (activeFilters.has(category)) {
+                activeFilters.delete(category);
+            } else {
+                activeFilters.add(category);
+            }
+
+            updateFilterDisplay();
+            applyCurrentFilters();
+        }
+
+        function updateFilterDisplay() {
+             document.querySelectorAll('.filter-btn').forEach(button => {
+                const category = button.getAttribute('data-filter');
+                button.classList.remove('bg-primary-class', 'bg-tertiary-evening', 'bg-secondary-study', 'bg-exam-color', 'text-white', 'bg-gray-200', 'text-gray-600');
+
+                if (activeFilters.has(category)) {
+                    if (category === 'official') button.classList.add('bg-primary-class', 'text-white');
+                    else if (category === 'extra') button.classList.add('bg-tertiary-evening', 'text-white');
+                    else if (category === 'study') button.classList.add('bg-secondary-study', 'text-white');
+                    else if (category === 'exam') button.classList.add('bg-exam-color', 'text-white');
+                } else {
+                    button.classList.add('bg-gray-200', 'text-gray-600');
+                }
+            });
+        }
+
+        // --- LOGIC DUYỆT NGÀY ---
+
+        function navigateWeek(weeks) {
+            currentDate.setDate(currentDate.getDate() + (weeks * 7));
+            renderSchedule();
+        }
+
+        function resetDate() {
+            currentDate = new Date('2025-10-14T00:00:00');
+            renderSchedule();
+        }
+
+        // --- LOGIC QUẢN LÝ SỰ KIỆN (CRUD) ---
+
+        function toggleRecurrenceFields(type) {
+            const fixed = document.getElementById('fixedFields');
+            const recurring = document.getElementById('recurringFields');
+            const categorySelect = document.getElementById('eventCategory');
+            
+            if (type === 'fixed') {
+                fixed.classList.remove('hidden');
+                recurring.classList.add('hidden');
+                // Lịch cố định có thể là Lịch Tập/Lịch Thi
+                categorySelect.value = 'study'; // Mặc định Lịch Tập
+            } else {
+                fixed.classList.add('hidden');
+                recurring.classList.remove('hidden');
+                // Lịch lặp lại không thể là Lịch Thi/Lịch Tập (chúng thường là cố định)
+                if (categorySelect.value === 'study' || categorySelect.value === 'exam') {
+                    categorySelect.value = 'official'; // Mặc định Chính Khóa
+                }
+            }
+        }
+        
+        function updateDetailPlaceholder(category) {
+             const detailInput = document.getElementById('eventDetail');
+             if (category === 'official') detailInput.placeholder = 'VD: Chính Khóa - Tiết 1';
+             else if (category === 'extra') detailInput.placeholder = 'VD: Học Thêm - Tối';
+             else if (category === 'study') detailInput.placeholder = 'VD: Lịch Tập - Tự học';
+             else if (category === 'exam') detailInput.placeholder = 'VD: Lịch Thi - Tiết 2';
+        }
+
+        function openManageEventModal(mode, id = null, type = 'fixed', dateKey = null) {
+            const modal = document.getElementById('manageEventModal');
+            const modalContent = document.getElementById('modal-content');
+            const form = document.getElementById('manageEventForm');
+            const title = document.getElementById('modal-title');
+            const saveBtn = document.getElementById('saveEventButton');
+            
+            form.reset();
+
+            // Setup fields based on mode
+            if (mode === 'add') {
+                title.textContent = 'Thêm Sự Kiện Mới';
+                saveBtn.textContent = 'Thêm & Lưu';
+                document.getElementById('eventId').value = '';
+                document.getElementById('eventType').value = 'add';
+                document.getElementById('recurrenceTypeSelect').value = 'fixed';
+                
+                // Mặc định ngày hiện tại hoặc ngày đầu tuần
+                document.getElementById('eventDate').valueAsDate = new Date(currentDate);
+                document.getElementById('eventRecurrenceEnd').value = RECURRENCE_END_DATE_DEFAULT;
+                document.getElementById('eventCategory').value = 'official';
+                toggleRecurrenceFields('fixed');
+            } else if (mode === 'edit') {
+                title.textContent = 'Sửa Sự Kiện';
+                saveBtn.textContent = 'Lưu Thay Đổi';
+                document.getElementById('eventId').value = id;
+                document.getElementById('eventType').value = 'edit';
+                
+                let eventData = null;
+                
+                if (type === 'fixed') {
+                    document.getElementById('recurrenceTypeSelect').value = 'fixed';
+                    toggleRecurrenceFields('fixed');
+                    eventData = currentScheduleData.specialEvents[dateKey]?.find(e => e.id === id);
+                    if (eventData) document.getElementById('eventDate').value = dateKey;
+                } else if (type === 'recurring') {
+                    document.getElementById('recurrenceTypeSelect').value = 'weekly';
+                    toggleRecurrenceFields('weekly');
+                    eventData = currentScheduleData.recurringEvents.find(e => e.id === id);
+                    if (eventData) {
+                        document.getElementById('eventDayIndex').value = eventData.dayIndex;
+                        document.getElementById('eventRecurrenceEnd').value = eventData.recurrenceEnd;
+                    }
+                }
+                
+                if (eventData) {
+                    document.getElementById('eventTime').value = eventData.time;
+                    document.getElementById('eventSubject').value = eventData.subject;
+                    document.getElementById('eventDetail').value = eventData.detail || '';
+                    document.getElementById('eventCategory').value = eventData.category;
+                }
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        function closeManageEventModal() {
+            const modal = document.getElementById('manageEventModal');
+            const modalContent = document.getElementById('modal-content');
+            
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+                document.getElementById('manageEventForm').reset();
+            }, 300);
+        }
+        
+        // Hàm Xóa Sự Kiện
+        function deleteEvent(id, type, dateKey = null) {
+            // Thay vì alert, dùng confirm modal (nhưng ở đây dùng code block vì giới hạn iframe)
+            if (!confirm(`Bạn có chắc chắn muốn xóa sự kiện ID ${id}?`)) return;
+
+            if (type === 'fixed') {
+                if (currentScheduleData.specialEvents[dateKey]) {
+                    currentScheduleData.specialEvents[dateKey] = currentScheduleData.specialEvents[dateKey].filter(e => e.id !== id);
+                    // Xóa mảng nếu trống
+                    if (currentScheduleData.specialEvents[dateKey].length === 0) {
+                        delete currentScheduleData.specialEvents[dateKey];
+                    }
+                    alertMessage("Đã xóa sự kiện cố định.", 'success');
+                }
+            } else if (type === 'recurring') {
+                currentScheduleData.recurringEvents = currentScheduleData.recurringEvents.filter(e => e.id !== id);
+                alertMessage("Đã xóa sự kiện lặp lại.", 'success');
+            }
+            
+            saveScheduleData();
+            renderSchedule();
+        }
+
+        // Hàm Thêm/Sửa Sự Kiện
+        function handleManageEvent(event) {
+            event.preventDefault();
+            
+            const mode = document.getElementById('eventType').value; // 'add' or 'edit'
+            const id = document.getElementById('eventId').value;
+            const recurrenceTypeSelect = document.getElementById('recurrenceTypeSelect').value;
+            
+            const time = document.getElementById('eventTime').value;
+            const subject = document.getElementById('eventSubject').value;
+            const detail = document.getElementById('eventDetail').value || '';
+            const category = document.getElementById('eventCategory').value;
+
+            if (!time || !subject) {
+                alertMessage("Vui lòng điền đủ Thời gian và Nội dung.", 'error');
+                return;
+            }
+
+            let newEvent = { time, subject, detail, category };
+            
+            if (recurrenceTypeSelect === 'fixed') {
+                const date = document.getElementById('eventDate').value;
+                if (!date) { alertMessage("Vui lòng chọn Ngày cố định.", 'error'); return; }
+
+                if (mode === 'add') {
+                    newEvent.id = getNextId();
+                    if (!currentScheduleData.specialEvents[date]) {
+                        currentScheduleData.specialEvents[date] = [];
+                    }
+                    currentScheduleData.specialEvents[date].push(newEvent);
+                    alertMessage(`Đã thêm sự kiện cố định "${subject}".`, 'success');
+                } else if (mode === 'edit') {
+                    // Cần phải tìm và cập nhật đúng sự kiện. Nếu ngày thay đổi, cần xóa ở ngày cũ và thêm ở ngày mới (không hỗ trợ trong phiên bản đơn giản này).
+                    // Giả sử ngày không đổi khi sửa Fixed Event
+                    const oldDateKey = Object.keys(currentScheduleData.specialEvents).find(key => 
+                        currentScheduleData.specialEvents[key].some(e => e.id === id)
+                    );
+
+                    if (oldDateKey) {
+                        const eventIndex = currentScheduleData.specialEvents[oldDateKey].findIndex(e => e.id === id);
+                        
+                        // Nếu ngày bị thay đổi
+                        if (oldDateKey !== date) {
+                            // Xóa sự kiện khỏi ngày cũ
+                            currentScheduleData.specialEvents[oldDateKey].splice(eventIndex, 1);
+                            if (currentScheduleData.specialEvents[oldDateKey].length === 0) {
+                                delete currentScheduleData.specialEvents[oldDateKey];
+                            }
+                            // Thêm vào ngày mới
+                            if (!currentScheduleData.specialEvents[date]) {
+                                currentScheduleData.specialEvents[date] = [];
+                            }
+                            currentScheduleData.specialEvents[date].push({ id, ...newEvent });
+                            
+                        } else {
+                            // Cập nhật sự kiện trong cùng ngày
+                            currentScheduleData.specialEvents[date][eventIndex] = { id, ...newEvent };
+                        }
+                        
+                        alertMessage(`Đã cập nhật sự kiện cố định "${subject}".`, 'success');
+                    } else {
+                         alertMessage("Lỗi: Không tìm thấy sự kiện cố định để sửa.", 'error');
+                         return;
+                    }
+                }
+            } 
+            else if (recurrenceTypeSelect === 'weekly') {
+                const dayIndex = parseInt(document.getElementById('eventDayIndex').value);
+                const recurrenceEnd = document.getElementById('eventRecurrenceEnd').value;
+                
+                if (category === 'exam' || category === 'study') {
+                     alertMessage("Lịch Thi và Lịch Tập nên là Sự kiện Cố Định (Fixed Date).", 'error');
+                     return;
+                }
+
+                newEvent.dayIndex = dayIndex;
+                newEvent.recurrenceEnd = recurrenceEnd;
+
+                if (mode === 'add') {
+                    newEvent.id = getNextId();
+                    currentScheduleData.recurringEvents.push(newEvent);
+                    alertMessage(`Đã thêm sự kiện lặp lại "${subject}" vào ${dayNamesMap[dayIndex]}.`, 'success');
+                } else if (mode === 'edit') {
+                    const index = currentScheduleData.recurringEvents.findIndex(e => e.id === id);
+                    if (index !== -1) {
+                        currentScheduleData.recurringEvents[index] = { ...currentScheduleData.recurringEvents[index], ...newEvent };
+                        alertMessage(`Đã cập nhật sự kiện lặp lại "${subject}".`, 'success');
+                    }
+                }
+            }
+
+            saveScheduleData();
+            closeManageEventModal();
+            renderSchedule();
+        }
+
+        // Khởi chạy khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            currentScheduleData = loadScheduleData();
+            renderSchedule();
+        });
+    </script>
+
+</body>
+</html>
