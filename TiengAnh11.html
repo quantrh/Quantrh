@@ -185,7 +185,7 @@
                 <p id="total-score" class="text-2xl font-bold text-gray-800 hidden"></p>
             </div>
             <button id="back-to-latest" type="button" class="mt-4 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 hidden">
-                < Quay Lại Bài Mới Nhất
+                &lt; Quay Lại Bài Mới Nhất
             </button>
         </header>
 
@@ -289,8 +289,8 @@
                 console.log('Question data loaded successfully.');
                 return true;
             } catch (error) {
-                console.error("Error loading question data. Check if 'questions_data.json' exists in the same directory.", error);
-                alert("Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng kiểm tra file 'questions_data.json'.");
+                console.error("Error loading question data. Check if 'questions_data.json' exists and is valid JSON.", error);
+                alert("Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng kiểm tra file 'questions_data.json' và đảm bảo nó có định dạng JSON hợp lệ.");
                 return false;
             }
         }
@@ -309,99 +309,13 @@
             return shuffled.slice(0, count);
         }
         
-        // --- TEST GENERATION LOGIC (Vẫn giữ 40 câu) ---
-
-        // Helper to get question details by ID from the global pool
-        function getQuestionById(poolName, qId) {
-            const pool = questionData[poolName];
-            if (!pool) return null;
-
-            // Handle Cloze questions which are nested by passage
-            if (poolName.includes('ClozePool') || poolName.includes('readingCompPool')) {
-                 // For these pools, the ID is the full passage object ID (e.g., T3_Ex14)
-                 // We rely on the random generator having already selected the full passage. 
-                 // We need to return the question within that passage based on q.q.
-                 // This function is mainly used by resolveQuestionDetails to get the full object
-                 // which is complex due to the nested array structure of the pools.
-                 
-                 // Simpler approach: when rendering, we pull all details from the generated structure,
-                 // but when resolving answers, we need the original pool structure. 
-                 // For now, assume the pools are flat for mcqSinglePool, wordFormPool, rearrangePool.
-                 // For passages, the 'qId' passed here is actually the question's local index (q.q).
-                 
-                 // This helper is mainly used by `resolveQuestionDetails`.
-                 // Let's rely on the structure generator having resolved the passage objects already.
-                 
-                 // For flat pools:
-                 if (poolName === 'mcqSinglePool' || poolName === 'wordFormPool') {
-                    // qId is the question's local index (1-based), adjust for 0-based array index
-                    return pool[qId - 1];
-                 }
-                 return null;
-            }
-            
-            // Default for flat pools (MCQ, WordForm)
-            // Assumes qId here is the index used in the pool definitions (1-based or array index)
-            const question = pool.find(q => q.q === qId);
-            if (!question) {
-                 console.warn(`Question ID ${qId} not found in pool ${poolName}.`);
-            }
-            return question;
-        }
-
-        function resolveQuestionDetails(qInfo) {
-            const poolName = qInfo.pool;
-            let questionDetail;
-            let passage = null;
-
-            if (poolName === 'mcqSinglePool' || poolName === 'wordFormPool' || poolName === 'rearrangePool' || poolName === 'fillInBoxPool') {
-                // For flat pools, use the q property as the unique identifier
-                questionDetail = questionData[poolName].find(q => q.q === qInfo.q);
-            } else if (poolName.includes('ClozePool') || poolName.includes('readingCompPool')) {
-                 // For passage-based pools, qInfo.passageId holds the passage ID (e.g., T3_Ex14)
-                 const pool = questionData[poolName];
-                 const passageDetail = pool.find(p => p.id === qInfo.passageId);
-                 if (passageDetail) {
-                     passage = passageDetail.passage;
-                     // Find the specific question within the selected passage
-                     questionDetail = passageDetail.questions.find(q => q.q === qInfo.q);
-                 }
-            }
-
-            if (!questionDetail) {
-                console.error(`Error resolving details for Q: ${qInfo.q}, Pool: ${poolName}`);
-                return { text: "Dữ liệu câu hỏi bị lỗi.", options: [], answer: null, rationale: "Không tìm thấy dữ liệu gốc." };
-            }
-
-            // Construct the final object
-            const finalQ = { ...questionDetail };
-            if (passage) {
-                finalQ.passage = passage;
-            }
-            
-            // Add global index and context IDs
-            finalQ.globalQIndex = qInfo.globalQIndex;
-            finalQ.exId = qInfo.exId;
-            
-            return finalQ;
-        }
-
-        // --- TEST GENERATION LOGIC (Vẫn giữ 40 câu) ---
+        // --- TEST GENERATION LOGIC ---
 
         function generateRandomTestStructure() {
             const { mcqSinglePool, wordFormPool, rearrangePool, announceClozePool, leafletClozePool, readingClozePool, readingCompPool, fillInBoxPool } = questionData;
             
             const testStructure = [];
             let globalQIndex = 1;
-            
-            // Function to generate question references for exercises (to be resolved later)
-            const mapQuestionRefs = (pool, questions, exId) => questions.map(q => ({
-                q: q.q, // Original local question ID
-                globalQIndex: globalQIndex++,
-                pool: pool,
-                passageId: q.id // Use passage ID for cloze/reading
-            }));
-
 
             // --- I. MULTIPLE-CHOICE QUESTIONS (28 Qs: 6+6+3+5+8) ---
             
@@ -431,9 +345,9 @@
                 id: 'Rearrange_Set',
                 title: `Sắp xếp câu/đoạn văn (Re-arrange) (3 câu - Câu ${globalQIndex} - ${globalQIndex + rearrangeQuestions.length - 1})`,
                 type: 'rearrange',
-                questions: rearrangeQuestions.map((q, idx) => ({ 
+                questions: rearrangeQuestions.map((q) => ({ 
                     ...q, 
-                    q: q.id, // Use original ID as local Q num for rendering/lookup consistency
+                    q: q.id, 
                     globalQIndex: globalQIndex++ 
                 }))
             });
@@ -476,9 +390,8 @@
                 id: 'WordForm_Set',
                 title: `Điền dạng đúng của từ (Word Form) (6 câu - Câu ${globalQIndex} - ${globalQIndex + randomWordForms.length - 1})`,
                 type: 'wordform',
-                // Map to transfer full details including answer and rationale
                 questions: randomWordForms.map(q => ({ 
-                    ...q, // Spread all properties (q, text, answer, rationale)
+                    ...q, 
                     globalQIndex: globalQIndex++ 
                 }))
             });
@@ -494,17 +407,13 @@
         }
 
         function startTimer(durationMinutes) {
-            // Stop any existing timer first
             clearInterval(timerInterval);
-            
-            // Calculate total seconds and initialize
             timeRemaining = durationMinutes * 60;
             const timerDisplay = document.getElementById('timer-display');
             timerDisplay.textContent = formatTime(timeRemaining);
             timerDisplay.classList.remove('hidden');
             isTestRunning = true;
             
-            // Start interval
             timerInterval = setInterval(() => {
                 timeRemaining--;
                 timerDisplay.textContent = formatTime(timeRemaining);
@@ -512,10 +421,10 @@
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     timerDisplay.textContent = "HẾT GIỜ!";
-                    timerDisplay.style.backgroundColor = '#EF4444'; // Red background for timeout
+                    timerDisplay.style.backgroundColor = '#EF4444'; 
                     timerDisplay.style.color = 'white';
                     alert("Đã hết thời gian làm bài. Hệ thống sẽ tự động chấm điểm.");
-                    checkTest(false); // Auto submit and check
+                    checkTest(false);
                 }
             }, 1000);
         }
@@ -534,9 +443,7 @@
             
             for (let i = 0; i < formElements.length; i++) {
                 const el = formElements[i];
-                if (el.name && (el.type === 'radio' && el.checked || el.type === 'text')) {
-                    answers[el.name] = el.value;
-                } else if (el.type === 'text' && el.name && el.value.trim() !== '') {
+                if (el.name && (el.type === 'radio' && el.checked || (el.type === 'text' && el.value.trim() !== ''))) {
                     answers[el.name] = el.value;
                 }
             }
@@ -544,50 +451,45 @@
         }
 
         function saveDraft() {
-            // Only save if the test is currently running/rendered
             if (currentTestStructure.length === 0) return; 
 
             const draft = {
                 name: document.getElementById('student-name').value,
                 class: document.getElementById('student-class').value,
                 answers: collectAnswers(),
-                testStructure: currentTestStructure, // Save the actual test structure
+                testStructure: currentTestStructure,
                 timeRemaining: timeRemaining,
                 timestamp: new Date().getTime()
             };
             localStorage.setItem(CURRENT_DRAFT_KEY, JSON.stringify(draft));
-            // console.log("Draft saved.");
         }
 
         function loadDraft(testMode) {
-            const draft = JSON.parse(localStorage.getItem(CURRENT_DRAFT_KEY));
+            const draftJSON = localStorage.getItem(CURRENT_DRAFT_KEY);
+            const draft = draftJSON ? JSON.parse(draftJSON) : null;
             
             const fullTestContent = questionData.fullTestContent;
 
-            if (!draft || draft.testStructure.length === 0) {
-                 // If no valid draft, generate a new one based on the selected mode
-                 if (testMode === 'FULL') {
-                    currentTestStructure = fullTestContent;
-                 } else if (testMode === 'RANDOM') {
-                    currentTestStructure = generateRandomTestStructure();
+            // Decide whether to resume or start new
+            let shouldResume = false;
+            if (draft && draft.testStructure && draft.testStructure.length > 0) {
+                 if (window.confirm("Phát hiện bài làm dang dở. Bạn có muốn tiếp tục không?")) {
+                    shouldResume = true;
                  }
-                 renderTest(currentTestStructure);
-                 startTimer(parseInt(document.getElementById('test-time').value));
-                 return;
             }
 
-            // If a draft exists, ask if user wants to continue
-            if (window.confirm("Phát hiện bài làm dang dở. Bạn có muốn tiếp tục bài làm đã lưu trước đó không?")) {
+            if (shouldResume) {
+                // RESUME DRAFT
                 currentTestStructure = draft.testStructure;
                 renderTest(currentTestStructure);
                 
                 document.getElementById('student-name').value = draft.name || '';
                 document.getElementById('student-class').value = draft.class || '';
 
+                // Restore answers
                 for (const name in draft.answers) {
                     const value = draft.answers[name];
                     const elements = document.getElementsByName(name);
-
                     elements.forEach(el => {
                         if (el.type === 'radio' && el.value === value) {
                             el.checked = true;
@@ -598,12 +500,11 @@
                 }
                 
                 // Resume timer
-                timeRemaining = draft.timeRemaining;
-                const durationMinutes = Math.ceil(timeRemaining / 60);
-                startTimer(durationMinutes); 
-
+                const resumeTime = draft.timeRemaining > 0 ? draft.timeRemaining : (parseInt(document.getElementById('test-time').value) * 60);
+                startTimer(Math.ceil(resumeTime / 60)); 
             } else {
-                 // User chose not to resume, generate a new test based on selected mode
+                // START NEW TEST
+                localStorage.removeItem(CURRENT_DRAFT_KEY); // Clear old draft if starting new
                  if (testMode === 'FULL') {
                     currentTestStructure = fullTestContent;
                  } else if (testMode === 'RANDOM') {
@@ -611,18 +512,7 @@
                  }
                  renderTest(currentTestStructure);
                  startTimer(parseInt(document.getElementById('test-time').value));
-                 // Clear draft answers to start fresh
-                 localStorage.removeItem(CURRENT_DRAFT_KEY);
             }
-        }
-
-        function loadLatestSubmission() {
-            const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
-            if (history.length === 0) return;
-
-            const latestSubmission = history[history.length - 1];
-            viewSubmission(TEST_HISTORY_KEY, history.length - 1);
-            console.log("Đã tải kết quả bài nộp gần nhất.");
         }
 
         function clearHistory() {
@@ -641,7 +531,6 @@
                 }
                 stopTimer();
             }
-            // Show the generation modal again
             document.getElementById('generation-modal').style.display = 'flex';
             document.getElementById('test-form').classList.add('hidden');
             document.getElementById('total-score').classList.add('hidden');
@@ -651,7 +540,6 @@
             document.getElementById('submit-test').disabled = false;
         }
 
-        // Exposed function for modal button
         window.setTestMode = function(mode) {
             document.getElementById('modeFull').checked = (mode === 'FULL');
             document.getElementById('modeRandom').checked = (mode === 'RANDOM');
@@ -659,7 +547,6 @@
             document.getElementById('start-test-button').dataset.mode = mode;
         }
 
-        // Logic executed when "BẮT ĐẦU BÀI LÀM" is clicked
         function startTestFromModal() {
             const mode = document.getElementById('start-test-button').dataset.mode;
             if (!mode) return;
@@ -669,11 +556,9 @@
             document.getElementById('timer-display').style.backgroundColor = '#FEEBC7'; 
             document.getElementById('timer-display').style.color = '#9C551F';
             
-            // Clear all previous highlights, reset form, and re-enable inputs
             document.getElementById('test-form').reset();
-            document.getElementById('test-form').querySelectorAll('input').forEach(input => input.disabled = false);
+            document.querySelectorAll('input').forEach(input => input.disabled = false);
             
-            // Load draft or create new test
             loadDraft(mode);
         }
 
@@ -685,12 +570,9 @@
             if (history.length === 0) {
                 historyList.innerHTML = `<p class="text-gray-500 italic">Chưa có bài làm nào được nộp.</p>`;
             } else {
-                history.reverse().forEach((submission, originalIndex) => {
-                    const actualIndex = history.length - 1 - originalIndex; 
-                    const date = new Date(submission.timestamp).toLocaleString('vi-VN', { 
-                        year: 'numeric', month: 'numeric', day: 'numeric', 
-                        hour: '2-digit', minute: '2-digit' 
-                    });
+                history.slice().reverse().forEach((submission, index) => {
+                    const originalIndex = history.length - 1 - index; 
+                    const date = new Date(submission.timestamp).toLocaleString('vi-VN');
                     
                     const item = document.createElement('div');
                     item.className = 'p-3 border rounded-lg bg-gray-50 flex justify-between items-center hover:bg-gray-100 cursor-pointer transition';
@@ -700,7 +582,7 @@
                             <p class="text-sm text-gray-500">Ngày nộp: ${date}</p>
                             <p class="text-lg font-extrabold text-[#3A5A40]">Điểm: ${submission.totalCorrect} / ${submission.totalQuestions}</p>
                         </div>
-                        <button type="button" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md" onclick="window.viewSubmission('${TEST_HISTORY_KEY}', ${actualIndex})">
+                        <button type="button" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md" onclick="window.viewSubmission('${TEST_HISTORY_KEY}', ${originalIndex})">
                             Xem Chi Tiết
                         </button>
                     `;
@@ -711,7 +593,6 @@
             document.getElementById('history-modal').style.display = 'flex';
         }
 
-        // Function to display a specific historical submission
         window.viewSubmission = function(historyKey, index) {
             const history = JSON.parse(localStorage.getItem(historyKey));
             if (!history || index < 0 || index >= history.length) {
@@ -721,8 +602,7 @@
 
             const submission = history[index];
             document.getElementById('history-modal').style.display = 'none'; 
-            
-            stopTimer(); // Stop timer when viewing history
+            stopTimer();
             
             currentTestStructure = submission.testStructure;
             renderTest(currentTestStructure);
@@ -730,19 +610,15 @@
             document.getElementById('student-name').value = submission.name || '';
             document.getElementById('student-class').value = submission.class || '';
 
-            // Populate answers and run checkTest in loading mode (true)
             checkTest(true, submission);
 
-            // Disable everything
-            document.getElementById('test-form').querySelectorAll('input').forEach(input => input.disabled = true);
+            document.querySelectorAll('input').forEach(input => input.disabled = true);
             document.getElementById('submit-test').disabled = true;
 
-            // Show 'Back to Latest' button and hide "Chấm điểm"
             document.getElementById('back-to-latest').classList.remove('hidden');
             document.getElementById('submit-test').classList.add('hidden');
-            document.getElementById('timer-display').classList.add('hidden'); // Hide timer for history view
+            document.getElementById('timer-display').classList.add('hidden');
             
-            // Update title/score display
             document.getElementById('total-score').textContent = `Điểm [LỊCH SỬ]: ${submission.totalCorrect} / ${submission.totalQuestions}`;
             document.getElementById('total-score').classList.remove('hidden');
             
@@ -754,58 +630,53 @@
         }
 
         function checkTest(isLoading = false, submissionData = null) {
-            stopTimer(); // Stop timer immediately on submission or loading
+            stopTimer();
             
             let totalCorrect = 0;
             let totalQuestions = 0;
             let currentAnswers = submissionData ? submissionData.answers : collectAnswers();
 
-            // Loop through the CURRENTLY RENDERED test structure
             currentTestStructure.forEach(topicBlock => {
                 topicBlock.exercises.forEach(exercise => {
-                    exercise.questions.forEach(q => {
-                        const qContainer = document.querySelector(`[data-q-id="${exercise.id}_q${q.q}"]`);
+                    const questionsInExercise = exercise.questions || [];
+                    questionsInExercise.forEach(q => {
+                        // Use a consistent ID format, using q.id for rearrange, q.q for others
+                        const questionId = (exercise.type === 'rearrange') ? q.id : q.q;
+                        const qContainer = document.querySelector(`[data-q-id="${exercise.id}_q${questionId}"]`);
                         if (!qContainer) return;
                         
-                        const correctIndicator = qContainer.querySelector('.correct-indicator');
                         const rationaleTextElement = qContainer.querySelector('.rationale-text');
                         const revealButton = qContainer.querySelector('.reveal-button');
-                        const correctOptionId = q.answer;
+                        const correctIndicator = qContainer.querySelector('.correct-indicator');
 
-                        // Ensure rationale is shown and update button text
-                        const rationale = q.rationale || "Không có giải thích chi tiết cho câu này.";
                         if (isLoading) {
+                            const rationale = q.rationale || "Không có giải thích chi tiết.";
                             rationaleTextElement.innerHTML = `Giải thích: ${rationale}`;
                             rationaleTextElement.classList.remove('hidden');
-                            if (revealButton) revealButton.textContent = 'Ẩn Đáp án & Giải thích';
+                            if (revealButton) revealButton.textContent = 'Ẩn Giải thích';
                         }
-                        if (revealButton && !isLoading) {
-                             revealButton.disabled = true; // Disable on submission
-                        }
+                        if (revealButton) revealButton.disabled = true;
                         
                         totalQuestions++;
                         let isCorrect = false;
 
-                        const inputName = `${exercise.id}_q${q.q}`;
+                        const inputName = `${exercise.id}_q${questionId}`;
                         const userAnswer = currentAnswers[inputName];
-
+                        const correctAnswer = q.answer;
 
                         if (exercise.type === 'mcq' || exercise.type === 'cloze' || exercise.type === 'reading' || exercise.type === 'rearrange') {
-                            
-                            // Reset and apply highlighting (Correct answer always highlighted green)
                             qContainer.querySelectorAll('.mcq-option').forEach(label => {
                                 label.classList.remove('correct-answer-option', 'incorrect-answer-option');
-                                if (label.dataset.optionId === correctOptionId) {
+                                if (label.dataset.optionId === correctAnswer) {
                                     label.classList.add('correct-answer-option');
                                 }
                             });
 
-                            if (userAnswer === correctOptionId) {
+                            if (userAnswer === correctAnswer) {
                                 isCorrect = true;
                             } else if (userAnswer) {
-                                // Highlight user's incorrect choice red
-                                const incorrectOption = qContainer.querySelector(`.mcq-option[data-option-id="${userAnswer}"]`);
-                                if (incorrectOption && !incorrectOption.classList.contains('correct-answer-option')) {
+                                const incorrectOption = qContainer.querySelector(`[data-option-id="${userAnswer}"]`);
+                                if (incorrectOption) {
                                     incorrectOption.classList.add('incorrect-answer-option');
                                 }
                             }
@@ -813,44 +684,26 @@
                             const inputField = qContainer.querySelector('input[type="text"]');
                             if (inputField) {
                                 const userText = (userAnswer || '').trim().toLowerCase();
-                                const correctAnswer = q.answer.toLowerCase();
-
-                                inputField.classList.remove('correct-fill', 'incorrect-fill');
-                                
-                                if (userText === correctAnswer) {
+                                if (userText === correctAnswer.toLowerCase()) {
                                     isCorrect = true;
                                     inputField.classList.add('correct-fill');
-                                } else if (userText !== '') {
+                                } else if (userText) {
                                     inputField.classList.add('incorrect-fill');
                                 }
-                                
-                                if (isLoading) {
-                                    inputField.value = userAnswer || ''; 
-                                }
+                                if (isLoading) inputField.value = userAnswer || ''; 
                             }
                         }
 
-                        // Update indicator status
                         if (isCorrect) {
                             totalCorrect++;
                             correctIndicator.textContent = "CHÍNH XÁC";
                             correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
                         } else {
-                            const isAttempted = !!userAnswer;
-                            let statusText = 'CHƯA LÀM';
-                            
-                            if (isAttempted) {
-                                statusText = 'SAI';
-                            }
-                            
-                            correctIndicator.textContent = `${statusText}. Đáp án đúng: ${q.answer}`;
+                            correctIndicator.textContent = `${userAnswer ? 'SAI' : 'CHƯA LÀM'}. Đáp án đúng: ${correctAnswer}`;
                             correctIndicator.className = 'correct-indicator mt-2 block font-bold text-red-600';
                         }
-                        
-                        // Disable inputs and reveal button on check/load
-                        qContainer.querySelectorAll('input').forEach(input => input.disabled = true);
-                        if (revealButton) revealButton.disabled = true;
                         correctIndicator.classList.remove('hidden');
+                        qContainer.querySelectorAll('input').forEach(input => input.disabled = true);
                     });
                 });
             });
@@ -860,17 +713,15 @@
             scoreElement.classList.remove('hidden');
             
             if (!isLoading) {
-                // Clear the current draft after successful submission
                 localStorage.removeItem(CURRENT_DRAFT_KEY);
-
                 const newSubmission = {
                     timestamp: new Date().getTime(),
-                    name: document.getElementById('student-name').value || 'Người nộp bài (Ẩn danh)',
+                    name: document.getElementById('student-name').value || 'Ẩn danh',
                     class: document.getElementById('student-class').value || 'Không rõ',
-                    totalCorrect: totalCorrect,
-                    totalQuestions: totalQuestions,
+                    totalCorrect,
+                    totalQuestions,
                     answers: currentAnswers,
-                    testStructure: currentTestStructure // Save the test structure used
+                    testStructure: currentTestStructure
                 };
                 
                 const history = JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
@@ -878,13 +729,11 @@
                 localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(history));
 
                 document.getElementById('submit-test').disabled = true;
-                
-                alert(`Bạn đã hoàn thành bài làm. Số câu đúng: ${totalCorrect} / ${totalQuestions}. Kết quả đã được lưu vào Lịch Sử Làm Bài.`);
+                alert(`Bạn đã hoàn thành. Số câu đúng: ${totalCorrect} / ${totalQuestions}. Kết quả đã được lưu.`);
             }
         }
 
         // --- RENDER FUNCTIONS ---
-        // (Modified to use globalQIndex for universal question numbering)
 
         function renderMCQ(q, exId, answer, rationale) {
             const optionsHtml = q.options.map((option, idx) => `
@@ -893,17 +742,15 @@
                     <span class="font-medium">${String.fromCharCode(65 + idx)}. ${option}</span>
                 </label>
             `).join('');
-
+            const rationaleSafe = (rationale || "").replace(/"/g, '&quot;');
             return `
                 <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exId}_q${q.q}">
                     <div class="flex justify-between items-start mb-3">
                         <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${q.text}</p>
                         <button type="button" class="reveal-button flex-shrink-0" 
-                                data-exid="${exId}" 
-                                data-qnum="${q.q}" 
                                 data-answer="${answer}"
-                                data-rationale="${rationale.replace(/"/g, '&quot;')}"
-                                >Xem Đáp án & Giải thích</button>
+                                data-rationale="${rationaleSafe}"
+                                >Xem Đáp án</button>
                     </div>
                     <div class="space-y-2">${optionsHtml}</div>
                     <span class="correct-indicator mt-2 block font-bold hidden"></span>
@@ -913,118 +760,76 @@
         }
 
         function renderWordForm(q, exId, answer, rationale) {
-            const textToReplace = '_________________________';
-            const fullText = q.text; 
-            const textWithInput = fullText.replace(textToReplace, `<input type="text" name="${exId}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`);
-            
+            const textWithInput = q.text.replace('_________________________', `<input type="text" name="${exId}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`);
+            const rationaleSafe = (rationale || "").replace(/"/g, '&quot;');
             return `
                 <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exId}_q${q.q}">
                     <div class="flex justify-between items-start mb-2">
                         <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${textWithInput}</p>
                         <button type="button" class="reveal-button flex-shrink-0" 
-                                data-exid="${exId}" 
-                                data-qnum="${q.q}" 
                                 data-answer="${answer}"
-                                data-rationale="${rationale.replace(/"/g, '&quot;')}"
-                                >Xem Đáp án & Giải thích</button>
+                                data-rationale="${rationaleSafe}"
+                                >Xem Đáp án</button>
                     </div>
                     <span class="correct-indicator mt-2 block font-bold hidden"></span>
                     <p class="rationale-text mt-2 italic text-sm text-gray-600 hidden"></p>
                 </div>
             `;
         }
-
+        
         function renderFillInBox(exercise) {
-            const words = exercise.words.join(' | ');
-            let fillInHtml = `<div class="bg-gray-100 p-4 mb-6 rounded-lg border border-gray-200">
-                                <h4 class="font-bold mb-3 text-red-700">TỪ GỢI Ý (Dùng để điền vào 6 câu hỏi dưới):</h4>
-                                <p class="text-base font-mono">${words}</p>
+            let html = `<div class="bg-gray-100 p-4 mb-6 rounded-lg border border-gray-200">
+                                <h4 class="font-bold mb-3 text-red-700">TỪ GỢI Ý:</h4>
+                                <p class="text-base font-mono">${exercise.words.join(' | ')}</p>
                              </div>`;
-
             exercise.questions.forEach(q => {
-                const inputPlaceholder = `Nhập đáp án (Câu ${q.globalQIndex || q.q})`;
-                fillInHtml += `
+                const rationaleSafe = (q.rationale || "").replace(/"/g, '&quot;');
+                html += `
                     <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exercise.id}_q${q.q}">
                         <div class="flex justify-between items-start mb-2">
-                            <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${q.text.replace('_______', `<input type="text" name="${exercise.id}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="${inputPlaceholder}">`)}</p>
+                            <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${q.text.replace('_______', `<input type="text" name="${exercise.id}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`)}</p>
                             <button type="button" class="reveal-button flex-shrink-0" 
-                                    data-exid="${exercise.id}" 
-                                    data-qnum="${q.q}" 
                                     data-answer="${q.answer}"
-                                    data-rationale="${q.rationale.replace(/"/g, '&quot;')}"
-                                    >Xem Đáp án & Giải thích</button>
+                                    data-rationale="${rationaleSafe}"
+                                    >Xem Đáp án</button>
                         </div>
                         <span class="correct-indicator mt-2 block font-bold hidden"></span>
                         <p class="rationale-text mt-2 italic text-sm text-gray-600 hidden"></p>
                     </div>
                 `;
             });
-            return fillInHtml;
+            return html;
         }
 
-
         function renderPassageQuestions(exercise) {
-            let passageHtml = `<div class="bg-gray-50 p-4 mb-6 rounded-lg border border-gray-200">
+            let html = `<div class="bg-gray-50 p-4 mb-6 rounded-lg border border-gray-200">
                                 <h4 class="font-bold mb-3">${exercise.title.split('(')[0]}</h4>
                                 <p class="whitespace-pre-wrap">${exercise.passage.replace(/\n/g, '<br>')}</p>
                              </div>`;
-
             exercise.questions.forEach(q => {
-                // FIX: Add defensive check for question options
-                if (!q || !Array.isArray(q.options)) {
-                    console.warn(`Bỏ qua câu hỏi bị thiếu dữ liệu trong bài tập: ${exercise.id}`);
-                    return;
-                }
-
-                const optionsHtml = q.options.map((option, idx) => `
-                    <label class="mcq-option" data-option-id="${String.fromCharCode(65 + idx)}">
-                        <input type="radio" name="${exercise.id}_q${q.q}" value="${String.fromCharCode(65 + idx)}" class="w-5 h-5 text-[#3A5A40] focus:ring-[#3A5A40]">
-                        <span class="font-medium">${String.fromCharCode(65 + idx)}. ${option}</span>
-                    </label>
-                `).join('');
-
-                passageHtml += `
-                    <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exercise.id}_q${q.q}">
-                        <div class="flex justify-between items-start mb-3">
-                            <p class="font-medium text-lg">Câu ${q.globalQIndex || q.q}: ${q.text}</p>
-                            <button type="button" class="reveal-button flex-shrink-0" 
-                                data-exid="${exercise.id}" 
-                                data-qnum="${q.q}" 
-                                data-answer="${q.answer}"
-                                data-rationale="${q.rationale.replace(/"/g, '&quot;')}"
-                                >Xem Đáp án & Giải thích</button>
-                        </div>
-                        <div class="space-y-2">${optionsHtml}</div>
-                        <span class="correct-indicator mt-2 block font-bold hidden"></span>
-                        <p class="rationale-text mt-2 italic text-sm text-gray-600 hidden"></p>
-                    </div>
-                `;
+                if (!q || !Array.isArray(q.options)) return;
+                html += renderMCQ(q, exercise.id, q.answer, q.rationale);
             });
-            return passageHtml;
+            return html;
         }
         
         function renderRearrange(q, exId, answer, rationale) {
-            const paragraphs = q.text.split('\n').map(line => {
-                return `<p class="ml-4 text-gray-700">${line}</p>`;
-            }).join('');
-
+            const paragraphs = q.text.split('\n').map(line => `<p class="ml-4 text-gray-700">${line}</p>`).join('');
             const optionsHtml = q.options.map((option, idx) => `
                 <label class="mcq-option" data-option-id="${String.fromCharCode(65 + idx)}">
                     <input type="radio" name="${exId}_q${q.q}" value="${String.fromCharCode(65 + idx)}" class="w-5 h-5 text-[#3A5A40] focus:ring-[#3A5A40]">
                     <span class="font-medium">${String.fromCharCode(65 + idx)}. ${option}</span>
                 </label>
             `).join('');
-
+            const rationaleSafe = (rationale || "").replace(/"/g, '&quot;');
             return `
                 <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exId}_q${q.q}">
                     <div class="flex justify-between items-start mb-3">
                         <p class="font-medium text-lg">Câu ${q.globalQIndex || q.q}: ${q.title || 'Sắp xếp câu/đoạn'}</p>
                         <button type="button" class="reveal-button flex-shrink-0" 
-                                data-exid="${exId}" 
-                                data-qnum="${q.q}" 
                                 data-answer="${answer}"
-                                data-rationale="${rationale.replace(/"/g, '&quot;')}"
-                                >Xem Đáp án & Giải thích</button>
+                                data-rationale="${rationaleSafe}"
+                                >Xem Đáp án</button>
                     </div>
                     <div class="bg-gray-50 p-4 mb-4 rounded-lg border border-gray-200">${paragraphs}</div>
                     <p class="font-medium mb-3">Chọn thứ tự sắp xếp đúng:</p>
@@ -1036,11 +841,11 @@
         }
 
         // --- MAIN RENDER FUNCTION ---
-
         function renderTest(testStructure) {
             const container = document.getElementById('test-content');
             container.innerHTML = '';
-            
+            let globalQIndex = 1;
+
             testStructure.forEach(topicBlock => {
                 const topicDiv = document.createElement('div');
                 topicDiv.className = 'my-8';
@@ -1051,97 +856,67 @@
                     exDiv.id = exercise.id;
                     exDiv.className = 'question-block';
                     exDiv.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-[#3A5A40]">${exercise.title}</h3>`;
-
-                    if (exercise.type === 'mcq' || exercise.type === 'cloze' || exercise.type === 'reading') {
-                         if (exercise.passage) {
-                            // Render passage questions directly (for Random Test where passages are resolved)
-                            exDiv.innerHTML += renderPassageQuestions(exercise);
-                        } else {
-                            // Resolve and render questions for Full Test structure
-                            // Note: This logic assumes that for FullTest, the passage details are stored in the questionData.fullTestContent structure
-                            let passageDetails = {};
-
-                            if (exercise.passageId) {
-                                // Find the original passage object in the appropriate pool
-                                const pool = questionData[exercise.poolName || exercise.id.includes('Cloze') || exercise.id.includes('R') ? (exercise.id.includes('R_Comp') ? 'readingCompPool' : exercise.id.includes('Cloze') || exercise.id.includes('R_Cloze') ? 'readingClozePool' : 'unknown') : 'unknown'];
-                                
-                                // Simple mapping for standard passage pools based on ID
-                                const passagePool = exercise.id.includes('Cloze') ? [...questionData.announceClozePool, ...questionData.leafletClozePool, ...questionData.readingClozePool] : questionData.readingCompPool;
-                                
-                                const passageObj = passagePool.find(p => p.id === exercise.passageId);
-                                if (passageObj) {
-                                    passageDetails.passage = passageObj.passage;
-                                    passageDetails.title = passageObj.title;
-                                }
-                            }
-                            
-                            let questionsHtml = '';
-                            if (passageDetails.passage) {
-                                questionsHtml += `<div class="bg-gray-50 p-4 mb-6 rounded-lg border border-gray-200">
-                                                    <h4 class="font-bold mb-3">${exercise.title.split('(')[0]}</h4>
-                                                    <p class="whitespace-pre-wrap">${passageDetails.passage.replace(/\n/g, '<br>')}</p>
-                                                 </div>`;
-                            }
-
-                            exercise.questions.forEach((qRef, index) => {
-                                // Get question data from the pools using the original index qRef.q (1-based)
-                                const pool = questionData[qRef.pool];
-                                if (!pool) return;
-                                
-                                const qData = pool[qRef.q - 1]; // Assume qRef.q is 1-based index in the pool array
-                                
-                                if (qData) {
-                                    qData.globalQIndex = qRef.globalQIndex || (index + 1);
-                                    qData.q = qRef.q; // Ensure correct q number for radio button names
-                                    exDiv.innerHTML += renderMCQ(qData, exercise.id, qData.answer, qData.rationale);
-                                }
-                            });
-                        }
-                    } 
                     
-                    if (exercise.type === 'wordform') {
-                        exDiv.innerHTML += `<p class="mb-4 italic text-gray-600">Điền dạng đúng của từ trong ngoặc vào chỗ trống.</p>`;
-                        exercise.questions.forEach((qRef, index) => {
+                    let htmlBuffer = '';
+                    const isRandomMode = exercise.passage && typeof exercise.questions[0].text !== 'undefined';
+
+                    if (exercise.type === 'mcq') {
+                        exercise.questions.forEach(qRef => {
                             const pool = questionData[qRef.pool];
-                            if (!pool) return;
-                            const qData = pool[qRef.q - 1]; 
+                            const qData = pool.find(q => q.q === qRef.q);
                             if (qData) {
-                                qData.globalQIndex = qRef.globalQIndex || (index + 1);
-                                qData.q = qRef.q;
-                                exDiv.innerHTML += renderWordForm(qData, exercise.id, qData.answer, qData.rationale);
+                                qData.globalQIndex = globalQIndex++;
+                                htmlBuffer += renderMCQ(qData, exercise.id, qData.answer, qData.rationale);
+                            }
+                        });
+                    } else if (exercise.type === 'wordform') {
+                        exercise.questions.forEach(qRef => {
+                            const pool = questionData[qRef.pool];
+                            const qData = pool.find(q => q.q === qRef.q);
+                            if (qData) {
+                                qData.globalQIndex = globalQIndex++;
+                                htmlBuffer += renderWordForm(qData, exercise.id, qData.answer, qData.rationale);
+                            }
+                        });
+                    } else if (exercise.type === 'rearrange') {
+                         exercise.questions.forEach(qRef => {
+                            const pool = questionData[qRef.pool];
+                            const qData = pool.find(q => q.id === qRef.q);
+                            if (qData) {
+                                qData.globalQIndex = globalQIndex++;
+                                qData.q = qRef.q; // Use ID for tracking
+                                htmlBuffer += renderRearrange(qData, exercise.id, qData.answer, qData.rationale);
                             }
                         });
                     } else if (exercise.type === 'fill_in_box') {
-                        // The FillBoxPool structure is fixed, so we just grab the content directly
                         const fillInBoxContent = questionData.fillInBoxPool[0];
                         if (fillInBoxContent) {
-                            // Overwrite questions with resolved global indices
-                            const resolvedExercise = { ...fillInBoxContent, questions: fillInBoxContent.questions.map((q, index) => ({
-                                ...q,
-                                globalQIndex: (exercise.questions[index] ? exercise.questions[index].globalQIndex : 0) || (index + 1)
-                            }))};
-                            exDiv.innerHTML += renderFillInBox(resolvedExercise);
+                            const resolvedExercise = { ...fillInBoxContent, questions: fillInBoxContent.questions.map(q => ({...q, globalQIndex: globalQIndex++}))};
+                            htmlBuffer += renderFillInBox(resolvedExercise);
                         }
-                    } else if (exercise.type === 'rearrange') {
-                         exercise.questions.forEach((qRef, index) => {
-                            const pool = questionData[qRef.pool];
-                            if (!pool) return;
-                            
-                            // Find the question using its ID (R_Q1, R_Q2, etc.)
-                            const qData = pool.find(q => q.id === qRef.q); 
-                            
-                            if (qData) {
-                                qData.globalQIndex = qRef.globalQIndex || (index + 1);
-                                qData.q = qRef.q; // Use ID for tracking/naming consistency
-                                exDiv.innerHTML += renderRearrange(qData, exercise.id, qData.answer, qData.rationale);
-                            }
-                        });
                     } else if (exercise.type === 'cloze' || exercise.type === 'reading') {
-                        // This handles the random generation structure where passage details are embedded
-                        exDiv.innerHTML += renderPassageQuestions(exercise);
+                        if (isRandomMode) {
+                            exercise.questions.forEach(q => q.globalQIndex = globalQIndex++);
+                            htmlBuffer += renderPassageQuestions(exercise);
+                        } else if (exercise.passageId) {
+                            const poolName = exercise.questions[0].pool;
+                            const pool = questionData[poolName];
+                            const passageObj = pool.find(p => p.id === exercise.passageId);
+                            if (passageObj) {
+                                const resolvedExercise = {
+                                    ...exercise,
+                                    passage: passageObj.passage,
+                                    questions: exercise.questions.map(qRef => {
+                                        const originalQ = passageObj.questions.find(pq => pq.q === qRef.q);
+                                        return originalQ ? { ...originalQ, globalQIndex: globalQIndex++ } : null;
+                                    }).filter(Boolean)
+                                };
+                                 htmlBuffer += renderPassageQuestions(resolvedExercise);
+                            }
+                        }
                     }
-
-
+                    
+                    exDiv.innerHTML += htmlBuffer;
                     topicDiv.appendChild(exDiv);
                 });
                 container.appendChild(topicDiv);
@@ -1149,106 +924,79 @@
             attachRevealListeners();
         }
 
+
         // --- ATTACH LISTENERS ---
 
         function attachRevealListeners() {
             document.querySelectorAll('.reveal-button').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const { exid, qnum, answer, rationale } = e.target.dataset;
-                    revealAnswer(exid, qnum, answer, rationale);
+                    const { answer, rationale } = e.target.dataset;
+                    const qContainer = e.target.closest('[data-q-id]');
+                    revealAnswer(qContainer, answer, rationale);
                 });
             });
         }
         
-        function revealAnswer(exId, qNum, correctAnswer, rationale) {
-            const qContainer = document.querySelector(`[data-q-id="${exId}_q${qNum}"]`);
+        function revealAnswer(qContainer, correctAnswer, rationale) {
             if (!qContainer) return;
-
-            const correctIndicator = qContainer.querySelector('.correct-indicator');
-            const rationaleTextElement = qContainer.querySelector('.rationale-text');
+            const rationaleEl = qContainer.querySelector('.rationale-text');
             const button = qContainer.querySelector('.reveal-button');
+            const indicatorEl = qContainer.querySelector('.correct-indicator');
 
-            // Toggle visibility
-            if (rationaleTextElement.classList.contains('hidden')) {
-                // REVEAL LOGIC
-                
-                rationaleTextElement.innerHTML = `Giải thích: ${rationale}`;
-                rationaleTextElement.classList.remove('hidden');
+            if (rationaleEl.classList.contains('hidden')) {
+                // REVEAL
+                rationaleEl.innerHTML = `Giải thích: ${rationale}`;
+                rationaleEl.classList.remove('hidden');
+                indicatorEl.textContent = `Đáp án đúng: ${correctAnswer}`;
+                indicatorEl.className = 'correct-indicator mt-2 block font-bold text-blue-600';
+                indicatorEl.classList.remove('hidden');
 
                 if (qContainer.querySelector('input[type="radio"]')) {
                     qContainer.querySelectorAll('.mcq-option').forEach(label => {
-                        label.classList.remove('incorrect-answer-option');
                         if (label.dataset.optionId === correctAnswer) {
                             label.classList.add('correct-answer-option');
                         }
                     });
-                    correctIndicator.textContent = `Đáp án đúng: ${correctAnswer}`;
-                    correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
-
                 } else if (qContainer.querySelector('input[type="text"]')) {
                     const inputField = qContainer.querySelector('input[type="text"]');
+                    inputField.value = correctAnswer;
                     inputField.classList.add('correct-fill');
-                    inputField.classList.remove('incorrect-fill'); 
-                    inputField.value = correctAnswer; 
-                    correctIndicator.textContent = `Đáp án đúng: ${correctAnswer}`;
-                    correctIndicator.className = 'correct-indicator mt-2 block font-bold text-green-600';
                 }
-                correctIndicator.classList.remove('hidden');
-                button.textContent = 'Ẩn Đáp án & Giải thích';
+                button.textContent = 'Ẩn Giải thích';
             } else {
-                // HIDE LOGIC
-                rationaleTextElement.classList.add('hidden');
-                correctIndicator.classList.add('hidden');
-                button.textContent = 'Xem Đáp án & Giải thích';
-                
-                // Remove highlighting but keep user's answer
-                qContainer.querySelectorAll('.mcq-option').forEach(label => {
-                    label.classList.remove('correct-answer-option', 'incorrect-answer-option');
+                // HIDE
+                rationaleEl.classList.add('hidden');
+                indicatorEl.classList.add('hidden');
+                button.textContent = 'Xem Đáp án';
+                qContainer.querySelectorAll('.mcq-option, .cloze-input').forEach(el => {
+                    el.classList.remove('correct-answer-option', 'correct-fill');
                 });
-                if (qContainer.querySelector('input[type="text"]')) {
-                    const inputField = qContainer.querySelector('input[type="text"]');
-                    inputField.classList.remove('correct-fill');
-                    // Note: If the test was already submitted, incorrect answers will be highlighted red when loaded, but this function will only remove the green one.
-                }
             }
         }
 
-
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
-            
-            // 1. Load Data
             const dataLoaded = await loadQuestionData();
-
             if (!dataLoaded) {
                  document.getElementById('generation-modal').innerHTML = '<div class="modal-content text-center"><h3 class="text-2xl font-bold text-red-600 mb-4">Lỗi tải dữ liệu</h3><p>Không thể tải dữ liệu câu hỏi từ file questions_data.json. Vui lòng kiểm tra lại file.</p></div>';
                  return;
             }
-
-            // 2. Initialize Application after data loads
             initializeApplication();
         });
 
         function initializeApplication() {
             document.getElementById('start-test-button').addEventListener('click', startTestFromModal);
-            
-            // Attach main control listeners
             document.getElementById('test-form').addEventListener('input', saveDraft);
-            document.getElementById('student-name').addEventListener('input', saveDraft);
-            document.getElementById('student-class').addEventListener('input', saveDraft);
+            ['student-name', 'student-class'].forEach(id => document.getElementById(id).addEventListener('input', saveDraft));
             document.getElementById('submit-test').addEventListener('click', () => checkTest(false));
             document.getElementById('clear-history').addEventListener('click', clearHistory);
             document.getElementById('view-history').addEventListener('click', viewHistory);
             document.getElementById('start-new-test').addEventListener('click', startNewTest); 
             
-            // Modal close listeners
-            document.getElementById('history-modal-close').addEventListener('click', () => {
-                document.getElementById('history-modal').style.display = 'none';
-            });
+            const historyModal = document.getElementById('history-modal');
+            document.getElementById('history-modal-close').addEventListener('click', () => historyModal.style.display = 'none');
             window.addEventListener('click', (event) => {
-                if (event.target == document.getElementById('history-modal')) {
-                    document.getElementById('history-modal').style.display = 'none';
-                }
+                if (event.target == historyModal) historyModal.style.display = 'none';
             });
 
             document.getElementById('back-to-latest').addEventListener('click', resetView);
