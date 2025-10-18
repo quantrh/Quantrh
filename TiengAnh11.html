@@ -858,47 +858,65 @@
                     exDiv.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-[#3A5A40]">${exercise.title}</h3>`;
                     
                     let htmlBuffer = '';
-                    const isRandomMode = exercise.passage && typeof exercise.questions[0].text !== 'undefined';
+                    
+                    // A robust check to see if the structure is resolved (like in random mode) 
+                    // or needs to be resolved (like in full mode).
+                    // Full mode structure has a 'pool' property in its question references.
+                    const isFullMode = exercise.questions && exercise.questions.length > 0 && typeof exercise.questions[0].pool !== 'undefined';
 
-                    if (exercise.type === 'mcq') {
-                        exercise.questions.forEach(qRef => {
-                            const pool = questionData[qRef.pool];
-                            const qData = pool.find(q => q.q === qRef.q);
-                            if (qData) {
-                                qData.globalQIndex = globalQIndex++;
-                                htmlBuffer += renderMCQ(qData, exercise.id, qData.answer, qData.rationale);
-                            }
-                        });
-                    } else if (exercise.type === 'wordform') {
-                        exercise.questions.forEach(qRef => {
-                            const pool = questionData[qRef.pool];
-                            const qData = pool.find(q => q.q === qRef.q);
-                            if (qData) {
-                                qData.globalQIndex = globalQIndex++;
+                    if (!isFullMode) {
+                        // --- LOGIC FOR RANDOM / PRE-RESOLVED STRUCTURE ---
+                        if (exercise.type === 'wordform') {
+                            exercise.questions.forEach(qData => {
                                 htmlBuffer += renderWordForm(qData, exercise.id, qData.answer, qData.rationale);
-                            }
-                        });
-                    } else if (exercise.type === 'rearrange') {
-                         exercise.questions.forEach(qRef => {
-                            const pool = questionData[qRef.pool];
-                            const qData = pool.find(q => q.id === qRef.q);
-                            if (qData) {
-                                qData.globalQIndex = globalQIndex++;
-                                qData.q = qRef.q; // Use ID for tracking
+                            });
+                        } else if (exercise.type === 'rearrange') {
+                            exercise.questions.forEach(qData => {
+                                qData.q = qData.id; // Ensure q property is set from id for consistency
                                 htmlBuffer += renderRearrange(qData, exercise.id, qData.answer, qData.rationale);
-                            }
-                        });
-                    } else if (exercise.type === 'fill_in_box') {
-                        const fillInBoxContent = questionData.fillInBoxPool[0];
-                        if (fillInBoxContent) {
-                            const resolvedExercise = { ...fillInBoxContent, questions: fillInBoxContent.questions.map(q => ({...q, globalQIndex: globalQIndex++}))};
-                            htmlBuffer += renderFillInBox(resolvedExercise);
-                        }
-                    } else if (exercise.type === 'cloze' || exercise.type === 'reading') {
-                        if (isRandomMode) {
-                            exercise.questions.forEach(q => q.globalQIndex = globalQIndex++);
+                            });
+                        } else if (exercise.type === 'fill_in_box') {
+                            htmlBuffer += renderFillInBox(exercise);
+                        } else if (exercise.type === 'cloze' || exercise.type === 'reading') {
                             htmlBuffer += renderPassageQuestions(exercise);
-                        } else if (exercise.passageId) {
+                        }
+                    } else {
+                        // --- LOGIC FOR FULL / REFERENCE STRUCTURE ---
+                        if (exercise.type === 'mcq') {
+                            exercise.questions.forEach(qRef => {
+                                const pool = questionData[qRef.pool];
+                                const qData = pool.find(q => q.q === qRef.q);
+                                if (qData) {
+                                    qData.globalQIndex = globalQIndex++;
+                                    htmlBuffer += renderMCQ(qData, exercise.id, qData.answer, qData.rationale);
+                                }
+                            });
+                        } else if (exercise.type === 'wordform') {
+                            exercise.questions.forEach(qRef => {
+                                const pool = questionData[qRef.pool];
+                                const qData = pool.find(q => q.q === qRef.q);
+                                if (qData) {
+                                    qData.globalQIndex = globalQIndex++;
+                                    htmlBuffer += renderWordForm(qData, exercise.id, qData.answer, qData.rationale);
+                                }
+                            });
+                        } else if (exercise.type === 'rearrange') {
+                            exercise.questions.forEach(qRef => {
+                                const pool = questionData[qRef.pool];
+                                const qData = pool.find(q => q.id === qRef.q);
+                                if (qData) {
+                                    qData.globalQIndex = globalQIndex++;
+                                    qData.q = qRef.q; // Use ID for tracking
+                                    htmlBuffer += renderRearrange(qData, exercise.id, qData.answer, qData.rationale);
+                                }
+                            });
+                        } else if (exercise.type === 'fill_in_box') {
+                            const fillInBoxContent = questionData.fillInBoxPool[0];
+                            if (fillInBoxContent) {
+                                const resolvedExercise = { ...fillInBoxContent, questions: fillInBoxContent.questions.map(q => ({...q, globalQIndex: globalQIndex++}))};
+                                htmlBuffer += renderFillInBox(resolvedExercise);
+                            }
+                        } else if ((exercise.type === 'cloze' || exercise.type === 'reading') && exercise.passageId) {
                             const poolName = exercise.questions[0].pool;
                             const pool = questionData[poolName];
                             const passageObj = pool.find(p => p.id === exercise.passageId);
@@ -1004,3 +1022,4 @@
     </script>
 </body>
 </html>
+
