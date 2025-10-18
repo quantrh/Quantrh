@@ -760,7 +760,7 @@
         }
 
         function renderWordForm(q, exId, answer, rationale) {
-            const textWithInput = q.text.replace('_________________________', `<input type="text" name="${exId}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`);
+            const textWithInput = q.text.replace(/_{5,}/, `<input type="text" name="${exId}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`);
             const rationaleSafe = (rationale || "").replace(/"/g, '&quot;');
             return `
                 <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exId}_q${q.q}">
@@ -787,7 +787,7 @@
                 html += `
                     <div class="mb-6 p-4 border-l-4 border-gray-200" data-q-id="${exercise.id}_q${q.q}">
                         <div class="flex justify-between items-start mb-2">
-                            <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${q.text.replace('_______', `<input type="text" name="${exercise.id}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`)}</p>
+                            <p class="font-medium">Câu ${q.globalQIndex || q.q}: ${q.text.replace(/_{5,}/, `<input type="text" name="${exercise.id}_q${q.q}" class="cloze-input w-2/5 p-1 border-b-2 border-gray-400 focus:border-[#3A5A40] focus:outline-none" placeholder="Nhập đáp án">`)}</p>
                             <button type="button" class="reveal-button flex-shrink-0" 
                                     data-answer="${q.answer}"
                                     data-rationale="${rationaleSafe}"
@@ -1022,4 +1022,5 @@
     </script>
 </body>
 </html>
+
 
