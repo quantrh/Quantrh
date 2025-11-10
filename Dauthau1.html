@@ -820,8 +820,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadQuestions() {
             try {
-                // SỬA LỖI: Thử dùng đường dẫn tuyệt đối (từ gốc)
-                const response = await fetch('/Dauthaujson.json');
+                // SỬA LỖI: Dùng đường dẫn tương đối (./) cho GitHub Pages
+                // Đường dẫn '/Dauthaujson.json' (tuyệt đối) sẽ sai khi host trên GitHub Pages (project site)
+                // Đường dẫn đúng phải là tương đối (ví dụ: './Dauthaujson.json')
+                const response = await fetch('./Dauthaujson.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -841,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Lỗi tải tệp JSON câu hỏi:", error);
                 // SỬA LỖI: Cập nhật thông báo lỗi
-                this.displays.dataStatus.innerHTML = '<span class="text-red-500">Lỗi: Không tải được tệp <code>/Dauthaujson.json</code>.<br>Hãy đảm bảo bạn đã tải tệp này lên cùng lúc với tệp HTML.</span>';
+                this.displays.dataStatus.innerHTML = '<span class="text-red-500 font-bold text-lg">LỖI: Không tải được tệp <code>./Dauthaujson.json</code>.<br>Hãy đảm bảo tệp JSON nằm CÙNG THƯ MỤC với tệp HTML trên GitHub.</span>';
                 this.allQuestions = [];
             }
         },
