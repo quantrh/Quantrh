@@ -7,7 +7,9 @@
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS/xlsx library for reading Excel files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- THÊM MỚI: Thư viện Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         /* Custom Tailwind Configuration (BIDV Colors) */
         :root {
@@ -501,6 +503,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- THÊM MỚI: Cấu hình Supabase ---
+    // BẠN CẦN THAY THẾ CÁC GIÁ TRỊ NÀY!
+    // Lấy từ Project Settings > API trong Supabase
+    const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; // Thay bằng URL dự án của bạn
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; // Thay bằng Anon Key của bạn
+    
+    let supabaseClient = null; // SỬA 1: Đổi tên biến để tránh xung đột
+    try {
+        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+            // SỬA 1: Gọi 'window.supabase' (đối tượng global) thay vì biến local 'supabase' (đang là null)
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+            console.warn('Supabase chưa được cấu hình. Vui lòng cập nhật SUPABASE_URL và SUPABASE_KEY.');
+        }
+    } catch (error) {
+        console.error('Lỗi khởi tạo Supabase:', error);
+    }
+    // --- KẾT THÚC CẤU HÌNH SUPABASE ---
+
     const quizApp = {
         // DOM Elements
         screens: {
@@ -555,6 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestionIndex: 0,
         timePerQuestion: 60,
         timingMode: 'total', // Mặc định là tính tổng thời gian
+        visitorIP: null, // THÊM MỚI: Lưu IP của người dùng
         timers: {
             total: null,
             question: null,
@@ -568,7 +591,75 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loadQuestions();
             this.showScreen('start');
             this.calculateTotalTime(); // Tính toán thời gian ban đầu
+            this.initializeTracking(); // THÊM MỚI: Khởi chạy theo dõi
         },
+
+        // --- THÊM MỚI: Các hàm theo dõi (Tracking) ---
+        async initializeTracking() {
+            await this.getVisitorIP();
+            await this.logPageVisit();
+        },
+
+        async getVisitorIP() {
+            try {
+                // Sử dụng dịch vụ bên ngoài để lấy IP public
+                const response = await fetch('https://api.ipify.org?format=json');
+                if (!response.ok) throw new Error('Không thể lấy IP');
+                const data = await response.json();
+                this.visitorIP = data.ip;
+                console.log('IP của người truy cập:', this.visitorIP);
+            } catch (error) {
+                console.error('Lỗi khi lấy IP:', error);
+                this.visitorIP = 'unknown';
+            }
+        },
+
+        async logPageVisit() {
+            if (!supabaseClient) return; // SỬA 1: Dùng tên biến mới
+            
+            try {
+                const { error } = await supabaseClient // SỬA 1: Dùng tên biến mới
+                    .from('page_visits')
+                    .insert({ ip_address: this.visitorIP });
+                
+                if (error) throw error;
+                console.log('Ghi nhận lượt truy cập thành công.');
+            } catch (error) {
+                console.error('Lỗi ghi nhận lượt truy cập:', error.message);
+            }
+        },
+        
+        async logQuizResult(result, config) {
+            if (!supabaseClient) return; // SỬA 1: Dùng tên biến mới
+
+            const payload = {
+                // Thông tin kết quả
+                student_name: result.name,
+                score: result.score,
+                total_questions: result.totalQuestions,
+                time_taken_seconds: result.timeTaken,
+                quiz_date: result.date, // new Date().toISOString()
+                ip_address: this.visitorIP,
+                
+                // Thông tin cấu hình
+                config_num_questions: config.numQuestions,
+                config_time_per_question: config.timePerQuestion,
+                config_quiz_order: config.quizOrder,
+                config_timing_mode: config.timingMode
+            };
+
+            try {
+                const { error } = await supabaseClient // SỬA 1: Dùng tên biến mới
+                    .from('quiz_results')
+                    .insert(payload);
+                
+                if (error) throw error;
+                console.log('Lưu kết quả thi thành công.');
+            } catch (error) {
+                console.error('Lỗi lưu kết quả thi:', error.message);
+            }
+        },
+        // --- KẾT THÚC CÁC HÀM THEO DÕI ---
 
         addEventListeners() {
             this.buttons.home.addEventListener('click', () => this.showScreen('start'));
@@ -637,7 +728,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadQuestions() {
             try {
-                const response = await fetch('./Dauthaujson.json');
+                // SỬA 2: Xóa './' khỏi đường dẫn fetch.
+                const response = await fetch('Dauthaujson.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -875,6 +967,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 questions: this.quizQuestions,
                 userAnswers: this.userAnswers,
             };
+            
+            // --- THÊM MỚI: Ghi lại cấu hình và gửi lên Supabase ---
+            const quizConfig = {
+                numQuestions: this.inputs.numQuestions.options[this.inputs.numQuestions.selectedIndex].text, // Lấy text (ví dụ: "70 câu")
+                timePerQuestion: this.inputs.timePerQuestion.options[this.inputs.timePerQuestion.selectedIndex].text, // Lấy text
+                quizOrder: this.inputs.quizOrder.value,
+                timingMode: this.inputs.timingMode.value
+            };
+            this.logQuizResult(result, quizConfig);
+            // --- KẾT THÚC PHẦN THÊM MỚI ---
 
             this.saveResult(result);
             this.displayResult(result);
