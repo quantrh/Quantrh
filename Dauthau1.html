@@ -216,6 +216,42 @@
         <main class="bg-white p-6 rounded-xl shadow-lg">
             <!-- Start Screen -->
             <div id="start-screen" class="screen active">
+
+                <!-- BỔ SUNG: KHỐI THỐNG KÊ TOÀN TRANG -->
+                <div id="global-stats-section" class="mb-8 p-4 bg-bidv-green/10 rounded-lg shadow-inner">
+                    <h3 class="text-xl font-semibold text-bidv-green mb-4 border-b border-bidv-green/30 pb-2">Thống kê Toàn hệ thống</h3>
+                    <div id="stats-loading" class="text-center text-gray-600">
+                        <svg class="animate-spin h-6 w-6 text-bidv-green mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p>Đang tải dữ liệu thống kê...</p>
+                    </div>
+                    <div id="stats-content" class="hidden grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                        <div>
+                            <p class="text-2xl font-bold text-bidv-green" id="stats-total-visits">--</p>
+                            <p class="text-sm font-medium text-gray-600">Lượt truy cập</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-bidv-green" id="stats-total-quizzes">--</p>
+                            <p class="text-sm font-medium text-gray-600">Lượt bài đã làm</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-bidv-green" id="stats-avg-score">--</p>
+                            <p class="text-sm font-medium text-gray-600">Điểm bình quân</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-bidv-green" id="stats-avg-questions">--</p>
+                            <p class="text-sm font-medium text-gray-600">Câu hỏi / Bài</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-bidv-green" id="stats-avg-time-per-q">--</p>
+                            <p class="text-sm font-medium text-gray-600">Giây / Câu</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- KẾT THÚC KHỐI THỐNG KÊ -->
+
                 <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
                 <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
                 <div class="space-y-6">
@@ -568,6 +604,15 @@ document.addEventListener('DOMContentLoaded', () => {
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
             helpContentContainer: document.getElementById('help-content-container'), // Thêm container nội dung hướng dẫn
+            
+            // Bổ sung cho thống kê
+            statsLoading: document.getElementById('stats-loading'),
+            statsContent: document.getElementById('stats-content'),
+            statsTotalVisits: document.getElementById('stats-total-visits'),
+            statsTotalQuizzes: document.getElementById('stats-total-quizzes'),
+            statsAvgScore: document.getElementById('stats-avg-score'),
+            statsAvgQuestions: document.getElementById('stats-avg-questions'),
+            statsAvgTimePerQ: document.getElementById('stats-avg-time-per-q'),
         },
 
         // State
@@ -592,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.showScreen('start');
             this.calculateTotalTime(); // Tính toán thời gian ban đầu
             this.initializeTracking(); // THÊM MỚI: Khởi chạy theo dõi
+            this.loadGlobalStats(); // BỔ SUNG: Tải thống kê
         },
 
         // --- THÊM MỚI: Các hàm theo dõi (Tracking) ---
@@ -626,6 +672,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Ghi nhận lượt truy cập thành công.');
             } catch (error) {
                 console.error('Lỗi ghi nhận lượt truy cập:', error.message);
+            }
+        },
+        
+        // BỔ SUNG: Hàm tải thống kê toàn hệ thống
+        async loadGlobalStats() {
+            if (!supabaseClient) {
+                this.displays.statsLoading.innerHTML = '<p class="text-red-500">Lỗi kết nối Supabase.</p>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.rpc('get_global_stats');
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    const stats = data[0];
+                    
+                    // Lấy dữ liệu
+                    const totalVisits = stats.total_visits || 0;
+                    const totalQuizzes = stats.total_quizzes || 0;
+                    const avgScore = stats.avg_score || 0;
+                    const totalTime = stats.total_time_all_quizzes || 0;
+                    const totalQuestions = stats.total_questions_all_quizzes || 0;
+
+                    // Tính toán
+                    const avgQuestionsPerQuiz = (totalQuizzes > 0) ? (totalQuestions / totalQuizzes) : 0;
+                    const avgTimePerQuestion = (totalQuestions > 0) ? (totalTime / totalQuestions) : 0;
+
+                    // Cập nhật UI
+                    this.displays.statsTotalVisits.textContent = totalVisits;
+                    this.displays.statsTotalQuizzes.textContent = totalQuizzes;
+                    this.displays.statsAvgScore.textContent = avgScore.toFixed(1);
+                    this.displays.statsAvgQuestions.textContent = avgQuestionsPerQuiz.toFixed(1);
+                    this.displays.statsAvgTimePerQ.textContent = avgTimePerQuestion.toFixed(1);
+
+                    // Hiển thị nội dung
+                    this.displays.statsLoading.style.display = 'none';
+                    this.displays.statsContent.classList.remove('hidden');
+                } else {
+                    throw new Error('Không nhận được dữ liệu thống kê.');
+                }
+
+            } catch (error) {
+                console.error('Lỗi tải thống kê:', error.message);
+                this.displays.statsLoading.innerHTML = `<p class="text-red-500">Lỗi: ${error.message}</p>`;
             }
         },
         
@@ -728,7 +820,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadQuestions() {
             try {
-                // SỬA 2: Xóa './' khỏi đường dẫn fetch.
+                // SỬA LỖI 1: Thử xóa './' khỏi đường dẫn fetch
                 const response = await fetch('Dauthaujson.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -748,12 +840,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (error) {
                 console.error("Lỗi tải tệp JSON câu hỏi:", error);
-                this.displays.dataStatus.textContent = 'Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng làm mới trang.';
+                // SỬA LỖI 1: Cập nhật thông báo lỗi
+                this.displays.dataStatus.innerHTML = '<span class="text-red-500">Lỗi: Không tải được tệp <code>Dauthaujson.json</code>.<br>Hãy đảm bảo bạn đã tải tệp này lên cùng lúc với tệp HTML.</span>';
                 this.allQuestions = [];
             }
         },
 
         startQuiz() {
+            // Thêm kiểm tra nếu chưa tải được câu hỏi
+            if (this.allQuestions.length === 0) {
+                alert('Dữ liệu câu hỏi chưa sẵn sàng. Vui lòng kiểm tra lỗi ở mục "data-status".');
+                return;
+            }
+            
             if (this.inputs.studentName.value.trim() === '') {
                 // Thay alert bằng thông báo nội bộ
                 alert('Vui lòng nhập tên của bạn.'); 
@@ -765,11 +864,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Determine question pool
             let selectedQuestions = [...this.allQuestions];
-            
-            if (selectedQuestions.length === 0) {
-                 alert('Không có câu hỏi nào để bắt đầu bài thi.');
-                 return;
-            }
             
             // Tùy chọn sắp xếp
             const order = this.inputs.quizOrder.value;
