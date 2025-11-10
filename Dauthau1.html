@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Trắc nghiệm Online</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS/xlsx library for reading Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Custom Tailwind Configuration (BIDV Colors) */
+        :root {
+            --color-bidv-green: #006B68; /* Xanh BIDV */
+            --color-bidv-yellow: #FFC62F; /* Vàng BIDV */
+            --color-bidv-green-light: #e0f2f1; /* Light tone */
+        }
+        
+        /* Custom classes based on BIDV colors */
+        .bg-bidv-green { background-color: var(--color-bidv-green); }
+        .text-bidv-green { color: var(--color-bidv-green); }
+        .bg-bidv-yellow { background-color: var(--color-bidv-yellow); }
+        .text-bidv-yellow { color: var(--color-bidv-yellow); }
+        .border-bidv-green { border-color: var(--color-bidv-green); }
+        
+        /* Custom styles for better UI */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        /* Style for radio buttons */
+        .option-label {
+            display: block;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .option-label:hover {
+            background-color: #f3f4f6;
+        }
+        input[type="radio"]:checked + .option-label {
+            background-color: var(--color-bidv-green-light);
+            border-color: var(--color-bidv-green);
+        }
+        .correct-answer {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #22c55e !important; /* green-500 */
+        }
+        .wrong-answer {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #ef4444 !important; /* red-500 */
+        }
+        /* Custom styles for explanation boxes */
+        .explanation-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .explanation-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .explanation-right {
+            background-color: #ecfdf5; /* Green-50 */
+            border-left: 4px solid #10b981; /* Green-500 */
+        }
+        .explanation-wrong {
+            background-color: #fef2f2; /* Red-50 */
+            border-left: 4px solid #ef4444; /* Red-500 */
+        }
+        .explanation-question {
+            background-color: #f0f9ff; /* Blue-50 */
+            border-left: 4px solid #3b82f6; /* Blue-500 */
+        }
+        /* Style for Question Navigation Buttons */
+        .q-nav-btn {
+            @apply w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer transition-colors;
+        }
+        .q-nav-btn.unanswered {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+        }
+        .q-nav-btn.answered {
+            background-color: var(--color-bidv-green);
+            color: white;
+            @apply hover:opacity-90;
+        }
+        .q-nav-btn.active-q {
+            background-color: var(--color-bidv-yellow);
+            color: #000;
+            @apply ring-4 ring-yellow-400/50;
+        }
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        /* Apply custom colors to quiz-screen elements */
+        #quiz-screen .bg-blue-50 {
+            background-color: var(--color-bidv-green-light);
+        }
+        #quiz-screen .text-blue-600 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen .text-blue-700 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen .text-blue-800 {
+            color: var(--color-bidv-green);
+        }
+        #quiz-screen #question-timer {
+            color: #ef4444; /* Red for timer, keeping contrast */
+        }
+        #quiz-screen #submit-btn {
+            @apply bg-bidv-green hover:opacity-90;
+        }
+        /* Style for help content from help.html */
+        .help-content h2 {
+            border-bottom: 2px solid var(--color-bidv-yellow);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        .help-content .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .help-content .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 107, 104, 0.1);
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- Banner (BIDV Look and Feel) -->
+        <div class="mb-6 rounded-xl shadow-lg overflow-hidden bg-bidv-green text-white p-4">
+            <div class="flex items-center">
+                <!-- SVG Illustration: Asian Test Takers -->
+                <svg viewBox="0 0 100 60" class="w-20 h-16 mr-4 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="60" fill="#006B68"/>
+                    <!-- Desks/People - Simplified Asian figures -->
+                    <rect x="5" y="45" width="25" height="10" fill="#FFC62F"/>
+                    <rect x="35" y="45" width="25" height="10" fill="#FFC62F"/>
+                    <rect x="65" y="45" width="25" height="10" fill="#FFC62F"/>
+                    
+                    <!-- Screens/Laptops -->
+                    <rect x="8" y="30" width="19" height="15" fill="#3B82F6"/>
+                    <rect x="38" y="30" width="19" height="15" fill="#3B82F6"/>
+                    <rect x="68" y="30" width="19" height="15" fill="#3B82F6"/>
+
+                    <!-- Heads/Faces (Asian style, simple circles) -->
+                    <circle cx="17.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    <circle cx="47.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    <circle cx="77.5" cy="28" r="5" fill="#FFC62F" stroke="#006B68" stroke-width="1.5"/>
+                    
+                    <!-- Generic Test Content on Screens (white lines) -->
+                    <line x1="12" y1="35" x2="25" y2="35" stroke="white" stroke-width="1"/>
+                    <line x1="12" y1="38" x2="25" y2="38" stroke="white" stroke-width="1"/>
+                    <line x1="42" y1="35" x2="55" y2="35" stroke="white" stroke-width="1"/>
+                    <line x1="72" y1="38" x2="85" y2="38" stroke="white" stroke-width="1"/>
+                    
+                    <!-- Text Overlay -->
+                    <text x="50" y="15" font-size="6" fill="#FFC62F" text-anchor="middle" font-weight="bold">THI ONLINE</text>
+                    <text x="50" y="22" font-size="4" fill="white" text-anchor="middle">Luật Đấu thầu & Mua sắm</text>
+                </svg>
+
+
+                <div class="flex-grow">
+                    <h2 class="text-3xl font-bold">HỆ THỐNG TRẮC NGHIỆM PHÁP LUẬT ĐẦU THẦU</h2>
+                    <p class="text-sm opacity-90 mt-1">Chuẩn bị kiến thức vững vàng cho kỳ thi Đấu thầu quốc gia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-bidv-green">Trắc nghiệm Pháp luật Đấu thầu</h1>
+            <div>
+                <button id="home-btn" class="px-4 py-2 bg-bidv-green text-white rounded-lg shadow hover:opacity-90 transition-colors">Trang chủ</button>
+                <button id="history-btn" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600 transition-colors">Lịch sử</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="bg-white p-6 rounded-xl shadow-lg">
+            <!-- Start Screen -->
+            <div id="start-screen" class="screen active">
+                <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
+                <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
+                <div class="space-y-6">
+                    <div>
+                        <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">Nhập tên của bạn:</label>
+                        <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green" placeholder="Ví dụ: Trương Hồng Quân">
+                    </div>
+                   
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="num-questions" class="block text-sm font-medium text-gray-700 mb-1">Số câu hỏi:</label>
+                            <select id="num-questions" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
+                                <option value="70">70 câu (Tiêu chuẩn)</option>
+                                <option value="10">10 câu</option>
+                                <option value="50">50 câu</option>
+                                <option value="100">100 câu</option>
+                                <option value="150">150 câu</option>
+                                <option value="200">200 câu</option>
+                                <option value="250">250 câu</option>
+                                <option value="0">Tất cả</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="time-per-question" class="block text-sm font-medium text-gray-700 mb-1">Thời gian mỗi câu (giây):</label>
+                            <select id="time-per-question" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
+                                <option value="51">51 giây (cho 70 câu)</option>
+                                <option value="30">30 giây</option>
+                                <option value="60">60 giây</option>
+                                <option value="90">90 giây</option>
+                                <option value="120">120 giây</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- New row for quiz order and total time -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="quiz-order" class="block text-sm font-medium text-gray-700 mb-1">Thứ tự câu hỏi:</label>
+                            <select id="quiz-order" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
+                                <option value="random">Ngẫu nhiên (Đề thi thử)</option>
+                                <option value="sequential">Theo thứ tự ID (Để xem lại)</option>
+                            </select>
+                        </div>
+                        <!-- New element for timing mode -->
+                        <div>
+                            <label for="timing-mode" class="block text-sm font-medium text-gray-700 mb-1">Chế độ tính giờ:</label>
+                            <select id="timing-mode" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green">
+                                <option value="total">Tổng thời gian (Mặc định)</option>
+                                <option value="per_question">Tính giờ mỗi câu hỏi</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Total time display moved to bottom row for better spacing -->
+                    <div class="md:grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tổng thời gian làm bài:</label>
+                            <p id="total-quiz-time" class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm font-semibold text-gray-700">
+                                -- phút
+                            </p>
+                        </div>
+                    </div>
+
+
+                     <p id="data-status" class="text-sm text-center text-gray-500">Đang tải dữ liệu câu hỏi...</p>
+                    <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed">Bắt đầu làm bài</button>
+                    
+                    <!-- KHỐI NỘI DUNG HƯỚNG DẪN MỚI -->
+                    <div class="mt-8 pt-4 border-t border-gray-200">
+                        <!-- THAY ĐỔI 1: Đổi màu nút Hướng dẫn -->
+                        <button id="toggle-help-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-yellow">
+                            Hiển thị Hướng dẫn sử dụng
+                        </button>
+                        <div id="help-content-container" class="mt-4 p-6 border border-gray-100 rounded-xl shadow-inner bg-white help-content" style="display: none;">
+                            <!-- NỘI DUNG TỪ HELP.HTML ĐƯỢC CHÈN VÀO ĐÂY VÀ CHUYỂN SANG HTML THUẦN -->
+                            
+                            <h2 class="text-2xl font-bold text-bidv-green mb-4">I. TÓM TẮT TÍNH NĂNG NỔI TRỘI</h2>
+                            <p class="mb-6 text-gray-700">Ứng dụng được thiết kế nhằm mô phỏng sát nhất kỳ thi thực tế, đồng thời cung cấp các công cụ phân tích sâu sắc giúp thí sinh dễ dàng ôn tập và cải thiện kiến thức một cách hiệu quả.</p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Card 1: Chế độ thi linh hoạt -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">1. Mô phỏng Thi thực tế</h3>
+                                    <p class="text-sm text-gray-700">Tùy chỉnh số lượng câu hỏi, thời gian và chế độ tính giờ (Tổng thời gian hoặc Tính giờ mỗi câu) để làm quen với áp lực phòng thi.</p>
+                                </div>
+
+                                <!-- Card 2: Phân tích chuyên sâu (Đã Sửa: Bóc phốt đề-soi cách ra đề) -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">2. Phân tích &amp; Giải thích chi tiết</h3>
+                                    <p class="text-sm text-gray-700">Sau khi nộp bài, xem lại đáp án đúng, câu trả lời của bạn, và nhận <strong>Giải thích chuyên sâu</strong> bao gồm <strong>Phân tích đáp án đúng/sai</strong> và <strong>Bóc phốt đề-soi cách ra đề</strong>.</p>
+                                </div>
+
+                                <!-- Card 3: Theo dõi tiến độ -->
+                                <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                    <h3 class="text-xl font-semibold mb-2 text-bidv-green">3. Thống kê Lịch sử</h3>
+                                    <p class="text-sm text-gray-700">Lưu lại toàn bộ lịch sử làm bài. Đặc biệt là chức năng <strong>Thống kê các câu hay sai</strong> giúp bạn tập trung ôn luyện các điểm yếu.</p>
+                                </div>
+                            </div>
+
+                            <!-- Dấu phân cách -->
+                            <div class="my-8 h-px bg-gray-200"></div>
+
+                            <!-- Phần II: Hướng Dẫn Chi Tiết Chức Năng -->
+                            <h2 class="text-2xl font-bold text-bidv-green mb-4">II. HƯỚNG DẪN CHI TIẾT CHỨC NĂNG</h2>
+                            
+                            <!-- 1. Màn hình Cấu hình Bài thi (Start Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">1. Màn hình Trang chủ (Cấu hình Bài thi)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Tên của bạn:</strong> Bắt buộc nhập để lưu lịch sử làm bài.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Số câu hỏi:</strong> Chọn số lượng câu muốn làm (Mặc định <strong>70 câu</strong> là tiêu chuẩn). Chọn <strong>"Tất cả"</strong> để làm hết bộ đề.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thời gian mỗi câu (giây):</strong> Dùng để tính <strong>Tổng thời gian làm bài</strong>. Mặc định <strong>51 giây</strong> (tương đương 60 phút cho 70 câu).</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thứ tự câu hỏi:</strong> 
+                                    <ul class="list-disc list-inside ml-6">
+                                        <li><strong>Ngẫu nhiên:</strong> Đề thi thử, câu hỏi được xáo trộn.</li>
+                                        <li><strong>Theo thứ tự ID:</strong> Dùng khi bạn muốn ôn tập theo tài liệu gốc hoặc dễ dàng tìm lại câu hỏi.</li>
+                                    </ul>
+                                </p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Chế độ tính giờ:</strong> 
+                                    <ul class="list-disc list-inside ml-6">
+                                        <li><strong>Tổng thời gian (Mặc định):</strong> Đồng hồ đếm ngược tổng thời gian. Hết giờ là tự động nộp bài.</li>
+                                        <li><strong>Tính giờ mỗi câu hỏi:</strong> Nếu hết thời gian quy định của một câu, hệ thống tự động chuyển sang câu tiếp theo (<strong>Lưu ý:</strong> Chế độ này không khuyến khích vì làm bài thi thật không có tính năng này).</li>
+                                    </ul>
+                                </p>
+                                <p class="bg-gray-50 p-3 rounded-md border-l-4 border-bidv-yellow">Sau khi cấu hình, nút <strong>"Bắt đầu làm bài"</strong> sẽ được kích hoạt.</p>
+                            </div>
+
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 2. Màn hình làm bài (Quiz Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">2. Màn hình Làm bài (Quiz Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Cấu trúc:</strong> Màn hình chia làm hai cột. Cột trái là <strong>Câu hỏi</strong> và <strong>Đáp án</strong>; Cột phải là <strong>Danh sách câu hỏi</strong> (Navigation).</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Trả lời:</strong> Chỉ cần <strong>chọn (click) vào ô đáp án</strong> (Label). Hệ thống sẽ tự động lưu lại câu trả lời của bạn.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Điều hướng:</strong> Sử dụng nút <strong>"Câu trước"</strong>, <strong>"Câu tiếp"</strong> hoặc <strong>click vào số câu hỏi</strong> ở cột bên phải để chuyển câu.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Nộp bài:</strong> Nút <strong>"Nộp bài"</strong> sẽ xuất hiện khi bạn ở câu hỏi cuối cùng.</p>
+                                
+                                <p class="bg-bidv-green/10 p-3 rounded-md border-l-4 border-bidv-green"><strong>Lưu ý quan trọng:</strong> Khi đang làm bài, nếu bạn click vào số câu hỏi ở cột điều hướng, hệ thống sẽ hỏi bạn có muốn <strong>xem đáp án và giải thích</strong> ngay lập tức không. Việc này giúp bạn học tập linh hoạt, nhưng sẽ tạm dừng bộ đếm giờ của bạn.</p>
+                            </div>
+
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 3. Màn hình Kết quả (Result Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">3. Màn hình Kết quả (Result Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Tóm tắt:</strong> Hiển thị điểm số, tổng số câu, phần trăm đúng/sai và thời gian làm bài.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Chi tiết:</strong> Liệt kê từng câu hỏi, kèm theo <strong>Giải thích chuyên sâu</strong> đã được đề cập ở mục I, giúp bạn hiểu rõ lý do tại sao câu trả lời của bạn đúng hoặc sai.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Lưu trữ:</strong> Kết quả này được tự động lưu vào <strong>Lịch sử làm bài</strong>.</p>
+                            </div>
+                            
+                            <div class="my-6 h-px bg-gray-200"></div>
+
+                            <!-- 4. Màn hình Lịch sử (History Screen) -->
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">4. Màn hình Lịch sử (History Screen)</h3>
+                            <div class="space-y-4 ml-4">
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Xem lại:</strong> Click nút <strong>"Xem lại"</strong> để hiển thị màn hình kết quả chi tiết của lần thi đó.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Thống kê lỗi sai:</strong> Màn hình này sẽ tổng hợp và liệt kê <strong>5 câu hỏi</strong> mà bạn đã trả lời sai nhiều lần nhất trong lịch sử, giúp bạn tập trung ôn tập hiệu quả nhất.</p>
+                                <p><strong><span class="text-bidv-yellow mr-2">•</span> Xóa lịch sử:</strong> Nút <strong>"Xóa tất cả lịch sử thi"</strong> sẽ xóa toàn bộ dữ liệu làm bài đã lưu trữ trên trình duyệt của bạn.</p>
+                            </div>
+
+                            <!-- KẾT THÚC NỘI DUNG TỪ HELP.HTML -->
+                        </div>
+                    </div>
+                    <!-- KẾT THÚC KHỐI NỘI DUNG HƯỚNG DẪN MỚI -->
+                </div>
+            </div>
+
+            <!-- Quiz Screen - New Layout -->
+            <div id="quiz-screen" class="screen">
+                <div class="md:flex md:space-x-6">
+                    
+                    <!-- Cột trái: Thông tin chính và Câu hỏi -->
+                    <div class="md:w-3/4 flex flex-col space-y-6">
+                        <div class="flex justify-between items-center p-4 bg-bidv-green/10 rounded-lg shadow">
+                             <div class="text-left">
+                                <span class="text-xs font-medium text-bidv-green">Thí sinh:</span>
+                                <p id="student-name-display" class="text-lg font-semibold text-bidv-green"></p>
+                             </div>
+                             <div class="text-right">
+                                <span class="text-xs font-medium text-gray-600">Tổng thời gian:</span>
+                                <p id="total-timer" class="text-xl font-bold text-bidv-green">00:00</p>
+                             </div>
+                        </div>
+
+                        <div id="question-card" class="p-6 border border-gray-200 rounded-lg shadow-md bg-white">
+                            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                                <div class="text-lg font-semibold">
+                                    Câu <span id="current-q-num"></span> / <span id="total-q-num"></span>
+                                </div>
+                                <div class="text-lg font-semibold text-right">
+                                    Thời gian còn lại: <span id="question-timer" class="text-red-500">00</span>s
+                                </div>
+                            </div>
+                            
+                            <div id="question-container" class="mb-6">
+                                <p id="question-text" class="text-xl font-medium mb-4"></p>
+                                <div id="options-container" class="space-y-3">
+                                    <!-- Options will be generated here -->
+                                </div>
+                            </div>
+                            
+                            <!-- THAY ĐỔI 2: Thêm nút Xem đáp án -->
+                            <div class="flex justify-between items-center mt-6">
+                                <button id="prev-btn" class="py-2 px-6 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Câu trước</button>
+                                
+                                <!-- Nút Xem Đáp Án MỚI -->
+                                <button id="view-answer-btn" class="py-2 px-6 bg-bidv-yellow text-gray-900 rounded-lg hover:opacity-90">Xem đáp án</button>
+                                
+                                <!-- Container cho Nút Câu tiếp / Nộp bài -->
+                                <div>
+                                    <button id="next-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90">Câu tiếp</button>
+                                    <button id="submit-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90" style="display: none;">Nộp bài</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                    <!-- Cột phải: Danh sách câu hỏi và chức năng điều hướng -->
+                    <div class="md:w-1/4 mt-6 md:mt-0">
+                        <div class="sticky top-0 p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-3 border-b pb-2">Danh sách câu hỏi</h3>
+                            <div id="question-nav-list" class="grid grid-cols-5 gap-3">
+                                <!-- Question number buttons go here -->
+                            </div>
+                            <div class="mt-4 pt-2 border-t text-sm text-gray-600">
+                                <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 answered"></span><span>Đã trả lời</span></p>
+                                <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 unanswered"></span><span>Chưa trả lời</span></p>
+                                <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 active-q"></span><span>Đang xem</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="screen">
+                <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Kết quả bài làm</h2>
+                <div id="result-summary" class="text-center bg-gray-50 p-6 rounded-lg mb-6">
+                    <!-- Summary here -->
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Xem lại chi tiết:</h3>
+                <div id="result-details" class="space-y-6">
+                    <!-- Detailed results here -->
+                </div>
+                 <div class="text-center mt-8">
+                    <button id="back-to-home-btn" class="py-3 px-6 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90">Làm bài thi mới</button>
+                </div>
+            </div>
+
+            <!-- History Screen -->
+            <div id="history-screen" class="screen">
+                <h2 class="text-2xl font-semibold mb-4 text-bidv-green">Lịch sử làm bài</h2>
+                
+                <!-- Nút xóa lịch sử thi -->
+                <div class="text-right mb-4">
+                    <button id="clear-history-btn" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">Xóa tất cả lịch sử thi</button>
+                </div>
+                
+                <div id="history-stats" class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">Thống kê các câu hay sai</h3>
+                    <div id="missed-questions-stats" class="text-gray-600">Chưa có dữ liệu.</div>
+                </div>
+                <div id="history-list" class="space-y-4">
+                    <p>Chưa có lịch sử làm bài.</p>
+                </div>
+            </div>
+            
+            <!-- Modal for Review/Explanation -->
+            <div id="review-modal-backdrop" class="modal-backdrop">
+                <div id="review-modal" class="modal-content md:max-w-3xl">
+                    <div id="modal-content-placeholder">
+                        <!-- Content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <!-- Footer for Copyright -->
+        <footer class="mt-8 text-center text-gray-500 text-sm">
+            <p>Bản quyền thuộc về: Trương Hồng Quân</p>
+            <p>Email: <a href="mailto:Quantrhvn@gmail.com" class="text-bidv-green hover:underline">Quantrhvn@gmail.com</a></p>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const quizApp = {
+        // DOM Elements
+        screens: {
+            start: document.getElementById('start-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            result: document.getElementById('result-screen'),
+            history: document.getElementById('history-screen'),
+        },
+        buttons: {
+            home: document.getElementById('home-btn'),
+            history: document.getElementById('history-btn'),
+            start: document.getElementById('start-btn'),
+            prev: document.getElementById('prev-btn'),
+            next: document.getElementById('next-btn'),
+            submit: document.getElementById('submit-btn'),
+            viewAnswer: document.getElementById('view-answer-btn'), // THAY ĐỔI 3: Thêm nút Xem đáp án
+            backToHome: document.getElementById('back-to-home-btn'),
+            clearHistory: document.getElementById('clear-history-btn'), // Thêm nút xóa lịch sử
+            toggleHelp: document.getElementById('toggle-help-btn'), // Thêm nút ẩn/hiện hướng dẫn
+        },
+        inputs: {
+            studentName: document.getElementById('student-name'),
+            numQuestions: document.getElementById('num-questions'),
+            timePerQuestion: document.getElementById('time-per-question'),
+            quizOrder: document.getElementById('quiz-order'),
+            timingMode: document.getElementById('timing-mode'), 
+        },
+        displays: {
+            dataStatus: document.getElementById('data-status'),
+            currentQNum: document.getElementById('current-q-num'),
+            totalQNum: document.getElementById('total-q-num'),
+            totalTimer: document.getElementById('total-timer'),
+            questionTimer: document.getElementById('question-timer'),
+            questionText: document.getElementById('question-text'),
+            optionsContainer: document.getElementById('options-container'),
+            resultSummary: document.getElementById('result-summary'),
+            resultDetails: document.getElementById('result-details'),
+            historyList: document.getElementById('history-list'),
+            missedQuestionsStats: document.getElementById('missed-questions-stats'),
+            totalQuizTime: document.getElementById('total-quiz-time'),
+            questionNavList: document.getElementById('question-nav-list'),
+            studentNameDisplay: document.getElementById('student-name-display'),
+            reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
+            modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
+            helpContentContainer: document.getElementById('help-content-container'), // Thêm container nội dung hướng dẫn
+        },
+
+        // State
+        allQuestions: [],
+        quizQuestions: [],
+        userAnswers: [],
+        currentQuestionIndex: 0,
+        timePerQuestion: 60,
+        timingMode: 'total', // Mặc định là tính tổng thời gian
+        timers: {
+            total: null,
+            question: null,
+            totalSeconds: 0,
+            questionSeconds: 0,
+            remainingTotalSeconds: 0, // Tổng thời gian còn lại
+        },
+        
+        init() {
+            this.addEventListeners();
+            this.loadQuestions();
+            this.showScreen('start');
+            this.calculateTotalTime(); // Tính toán thời gian ban đầu
+        },
+
+        addEventListeners() {
+            this.buttons.home.addEventListener('click', () => this.showScreen('start'));
+            this.buttons.history.addEventListener('click', () => this.showHistory());
+            this.buttons.start.addEventListener('click', () => this.startQuiz());
+            this.buttons.next.addEventListener('click', () => this.navigateQuestion(1));
+            this.buttons.prev.addEventListener('click', () => this.navigateQuestion(-1));
+            this.buttons.submit.addEventListener('click', () => this.confirmSubmit());
+            this.buttons.viewAnswer.addEventListener('click', () => this.showCurrentAnswer()); // THAY ĐỔI 3
+            this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
+            this.buttons.clearHistory.addEventListener('click', () => this.clearHistory()); // Lắng nghe sự kiện xóa lịch sử
+            
+            // Lắng nghe sự kiện ẩn/hiện hướng dẫn
+            this.buttons.toggleHelp.addEventListener('click', () => this.toggleHelpContent());
+            
+            // Lắng nghe sự kiện thay đổi để cập nhật tổng thời gian
+            this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.timingMode.addEventListener('change', () => this.calculateTotalTime());
+            
+            // Đóng modal khi click ra ngoài
+            this.displays.reviewModalBackdrop.addEventListener('click', (e) => {
+                if (e.target === this.displays.reviewModalBackdrop) {
+                    this.closeModal();
+                }
+            });
+        },
+        
+        // Hàm xử lý ẩn/hiện nội dung hướng dẫn
+        toggleHelpContent() {
+            const container = this.displays.helpContentContainer;
+            const button = this.buttons.toggleHelp;
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                button.textContent = 'Ẩn Hướng dẫn sử dụng';
+            } else {
+                container.style.display = 'none';
+                button.textContent = 'Hiển thị Hướng dẫn sử dụng';
+            }
+        },
+
+        calculateTotalTime() {
+            let numQuestions = parseInt(this.inputs.numQuestions.value);
+            const timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+
+            // Xử lý trường hợp "Tất cả" (value=0)
+            if (numQuestions === 0) {
+                numQuestions = this.allQuestions.length;
+            }
+
+            if (numQuestions > 0 && !isNaN(timePerQuestion)) {
+                const totalSeconds = numQuestions * timePerQuestion;
+                const totalMinutes = Math.ceil(totalSeconds / 60);
+                this.displays.totalQuizTime.textContent = `${totalMinutes} phút`;
+            } else {
+                 this.displays.totalQuizTime.textContent = `-- phút`;
+            }
+        },
+
+        showScreen(screenId) {
+            Object.values(this.screens).forEach(screen => screen.classList.remove('active'));
+            if (this.screens[screenId]) {
+                this.screens[screenId].classList.add('active');
+            }
+        },
+
+        async loadQuestions() {
+            try {
+                const response = await fetch('./Dauthaujson.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                this.allQuestions = data.filter(q => q.question && q.answer);
+                
+                if (this.allQuestions.length > 0) {
+                    this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
+                    // Kích hoạt nút sau khi tải xong (đã xóa thuộc tính disabled khỏi nút trong HTML)
+                    // this.buttons.start.disabled = false;
+                    this.calculateTotalTime(); 
+                } else {
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
+                }
+
+            } catch (error) {
+                console.error("Lỗi tải tệp JSON câu hỏi:", error);
+                this.displays.dataStatus.textContent = 'Lỗi: Không thể tải dữ liệu câu hỏi. Vui lòng làm mới trang.';
+                this.allQuestions = [];
+            }
+        },
+
+        startQuiz() {
+            if (this.inputs.studentName.value.trim() === '') {
+                // Thay alert bằng thông báo nội bộ
+                alert('Vui lòng nhập tên của bạn.'); 
+                return;
+            }
+            
+            // 1. Cấu hình chế độ tính giờ
+            this.timingMode = this.inputs.timingMode.value;
+
+            // Determine question pool
+            let selectedQuestions = [...this.allQuestions];
+            
+            if (selectedQuestions.length === 0) {
+                 alert('Không có câu hỏi nào để bắt đầu bài thi.');
+                 return;
+            }
+            
+            // Tùy chọn sắp xếp
+            const order = this.inputs.quizOrder.value;
+            
+            if (order === 'sequential') {
+                // Sắp xếp theo ID (từ nhỏ đến lớn)
+                selectedQuestions.sort((a, b) => {
+                    const idA = parseInt(a.id);
+                    const idB = parseInt(b.id);
+                    if (!isNaN(idA) && !isNaN(idB)) {
+                        return idA - idB;
+                    }
+                    return 0; 
+                });
+            } else {
+                // Ngẫu nhiên (default)
+                selectedQuestions.sort(() => 0.5 - Math.random());
+            }
+
+            // Select number of questions
+            const num = parseInt(this.inputs.numQuestions.value);
+            if (num > 0 && num < selectedQuestions.length) {
+                this.quizQuestions = selectedQuestions.slice(0, num);
+            } else {
+                this.quizQuestions = selectedQuestions;
+            }
+
+            // Cấu hình thời gian mỗi câu
+            this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+            
+            // Khởi tạo tổng thời gian còn lại (chỉ dùng cho mode 'total')
+            this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
+
+            this.userAnswers = new Array(this.quizQuestions.length).fill(null);
+            this.currentQuestionIndex = 0;
+            
+            this.displays.totalQNum.textContent = this.quizQuestions.length;
+            this.displays.studentNameDisplay.textContent = this.inputs.studentName.value.trim();
+            
+            this.startTimers();
+            this.displayQuestion();
+            this.renderQuestionNav(); // Render danh sách câu hỏi
+            this.showScreen('quiz');
+        },
+
+        renderQuestionNav() {
+            this.displays.questionNavList.innerHTML = '';
+            this.quizQuestions.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'q-nav-btn';
+                btn.textContent = index + 1;
+                btn.setAttribute('data-index', index);
+
+                btn.addEventListener('click', () => {
+                    // Lưu câu trả lời hiện tại trước khi chuyển
+                    this.saveAnswer(); 
+                    // Yêu cầu xác nhận cho chế độ xem đáp án linh hoạt trong khi làm bài
+                    if (confirm('Bạn có muốn xem đáp án và giải thích cho câu hỏi này không? (Việc này sẽ không ảnh hưởng đến điểm số của bạn, nhưng bạn sẽ thấy đáp án)')) {
+                         this.showExplanationModal(index);
+                    } else {
+                         this.jumpToQuestion(index);
+                    }
+                });
+                this.displays.questionNavList.appendChild(btn);
+            });
+            this.updateQuestionNav();
+        },
+        
+        updateQuestionNav() {
+            const navButtons = this.displays.questionNavList.querySelectorAll('.q-nav-btn');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('active-q', 'answered', 'unanswered');
+                
+                if (index === this.currentQuestionIndex) {
+                    btn.classList.add('active-q');
+                } else if (this.userAnswers[index] !== null) {
+                    // Tô nền xanh nếu đã trả lời
+                    btn.classList.add('answered');
+                } else {
+                    btn.classList.add('unanswered');
+                }
+            });
+        },
+        
+        jumpToQuestion(index) {
+            this.saveAnswer();
+            this.currentQuestionIndex = index;
+            this.displayQuestion();
+        },
+
+        displayQuestion() {
+            if (this.currentQuestionIndex < 0 || this.currentQuestionIndex >= this.quizQuestions.length) {
+                return;
+            }
+
+            const q = this.quizQuestions[this.currentQuestionIndex];
+            this.displays.currentQNum.textContent = this.currentQuestionIndex + 1;
+            this.displays.questionText.textContent = q.question;
+
+            this.displays.optionsContainer.innerHTML = '';
+            ['A', 'B', 'C', 'D'].forEach(key => {
+                if (q.options[key]) {
+                    const optionId = `q${this.currentQuestionIndex}-opt${key}`;
+                    const wrapper = document.createElement('div');
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `question-${this.currentQuestionIndex}`;
+                    input.id = optionId;
+                    input.value = key;
+                    input.className = 'hidden';
+                    
+                    if (this.userAnswers[this.currentQuestionIndex] === key) {
+                        input.checked = true;
+                    }
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = optionId;
+                    label.className = 'option-label';
+                    label.textContent = `${key}. ${q.options[key]}`;
+
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(label);
+                    this.displays.optionsContainer.appendChild(wrapper);
+
+                    input.addEventListener('change', () => this.saveAnswer());
+                }
+            });
+            
+            this.updateNavButtons();
+            this.resetQuestionTimer();
+            this.updateQuestionNav(); // Cập nhật trạng thái nút điều hướng
+        },
+        
+        saveAnswer() {
+            const selectedOption = document.querySelector(`input[name="question-${this.currentQuestionIndex}"]:checked`);
+            if(selectedOption) {
+                this.userAnswers[this.currentQuestionIndex] = selectedOption.value;
+            }
+            this.updateQuestionNav(); // Cập nhật trạng thái nút sau khi lưu câu trả lời
+        },
+
+        navigateQuestion(direction) {
+            this.saveAnswer();
+            const newIndex = this.currentQuestionIndex + direction;
+            if (newIndex >= 0 && newIndex < this.quizQuestions.length) {
+                this.currentQuestionIndex = newIndex;
+                this.displayQuestion();
+            }
+        },
+        
+        updateNavButtons() {
+            this.buttons.prev.disabled = this.currentQuestionIndex === 0;
+            this.buttons.prev.classList.toggle('opacity-50', this.buttons.prev.disabled);
+            
+            if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
+                this.buttons.next.style.display = 'none';
+                this.buttons.submit.style.display = 'inline-block';
+            } else {
+                this.buttons.next.style.display = 'inline-block';
+                this.buttons.submit.style.display = 'none';
+            }
+        },
+        
+        confirmSubmit() {
+            this.saveAnswer();
+            const unanswered = this.userAnswers.filter(a => a === null).length;
+            if (unanswered > 0) {
+                 if(!confirm(`Bạn còn ${unanswered} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài không?`)) {
+                     return;
+                 }
+            } else {
+                if (!confirm('Bạn có chắc chắn muốn nộp bài không?')) {
+                    return;
+                }
+            }
+            this.submitQuiz();
+        },
+
+        submitQuiz() {
+            this.stopTimers();
+            
+            let score = 0;
+            this.quizQuestions.forEach((q, index) => {
+                if (q.answer === this.userAnswers[index]) {
+                    score++;
+                }
+            });
+
+            const result = {
+                name: this.inputs.studentName.value.trim(),
+                date: new Date().toISOString(),
+                score: score,
+                totalQuestions: this.quizQuestions.length,
+                timeTaken: this.timers.totalSeconds,
+                questions: this.quizQuestions,
+                userAnswers: this.userAnswers,
+            };
+
+            this.saveResult(result);
+            this.displayResult(result);
+            this.showScreen('result');
+        },
+
+        // THAY ĐỔI 3: Thêm hàm để xử lý nút "Xem đáp án"
+        showCurrentAnswer() {
+            // Hiển thị modal giải thích cho câu hỏi hiện tại
+            this.showExplanationModal(this.currentQuestionIndex);
+        },
+        
+        // Hiển thị màn hình giải thích (Review Mode)
+        showExplanationModal(index) {
+            this.jumpToQuestion(index); // Chuyển đến câu hỏi đó để nó là câu hỏi hiện tại
+            const q = this.quizQuestions[index];
+            const userAnswer = this.userAnswers[index];
+            
+            let optionsHtml = '';
+            ['A', 'B', 'C', 'D'].forEach(key => {
+                if (q.options[key]) {
+                    let classList = 'option-label mt-2 cursor-default';
+                    // Tô xanh đáp án đúng
+                    if (key === q.answer) {
+                        classList += ' correct-answer';
+                    }
+                    // Tô đỏ nếu người dùng trả lời sai
+                    if (key === userAnswer && key !== q.answer) {
+                         classList += ' wrong-answer';
+                    }
+                    optionsHtml += `<div class="${classList}">${key}. ${q.options[key]}</div>`;
+                }
+            });
+
+            let explanationHtml = '';
+            
+            // 1. Giải thích đáp án đúng (explanation_right)
+            if (q.explanation_right) {
+                explanationHtml += `
+                    <div class="explanation-box explanation-right">
+                        <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
+                        <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+
+            // 2. Giải thích đáp án sai (explanation_wrong)
+            if (q.explanation_wrong) {
+                explanationHtml += `
+                    <div class="explanation-box explanation-wrong">
+                        <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
+                        <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+            
+            // 3. Bóc phốt đề (explanation_question)
+            if (q.explanation_question) {
+                explanationHtml += `
+                    <div class="explanation-box explanation-question">
+                        <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
+                        <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+
+            this.displays.modalContentPlaceholder.innerHTML = `
+                <div class="flex justify-between items-center border-b pb-2 mb-4">
+                    <h3 class="text-xl font-bold text-bidv-green">Đáp án và Giải thích (Câu ${index + 1})</h3>
+                    <button id="modal-close-btn" class="text-gray-500 hover:text-gray-900 font-bold text-2xl leading-none">&times;</button>
+                </div>
+                <p class="font-semibold mb-3">${q.question}</p>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-700 mb-2">
+                        Câu trả lời của bạn: <strong>${userAnswer ? userAnswer : 'Chưa trả lời'}</strong>. 
+                        Đáp án đúng: <strong class="text-green-700">${q.answer}</strong>
+                    </p>
+                    ${optionsHtml}
+                </div>
+                <div class="mt-4 border-t pt-4">
+                    ${explanationHtml}
+                </div>
+            `;
+            
+            // Add close button event listener
+            document.getElementById('modal-close-btn').addEventListener('click', () => this.closeModal());
+            
+            this.displays.reviewModalBackdrop.classList.add('active');
+            
+            // Dừng/tạm dừng timer khi modal hiện lên
+            if (this.timers.question) {
+                 clearInterval(this.timers.question);
+            }
+            if (this.timingMode === 'per_question' && this.timers.total) {
+                clearInterval(this.timers.total); // Dừng tổng thời gian ở chế độ per_question
+            }
+        },
+        
+        closeModal() {
+            this.displays.reviewModalBackdrop.classList.remove('active');
+            // Khởi động lại timer theo chế độ đang chạy
+            if (this.timingMode === 'per_question') {
+                 // Khởi động lại total timer nếu nó đã bị dừng khi mở modal
+                 if (!this.timers.total) { 
+                    this.timers.total = setInterval(() => {
+                        this.timers.totalSeconds++;
+                        this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                    }, 1000);
+                 }
+                this.resetQuestionTimer(); 
+            } else {
+                this.resetQuestionTimer(); // Sẽ chỉ cập nhật hiển thị, total timer vẫn chạy
+            }
+        },
+        
+        displayResult(result) {
+            const { name, date, score, totalQuestions, timeTaken } = result;
+            const percentage = totalQuestions > 0 ? (score / totalQuestions * 100).toFixed(2) : 0;
+            const formattedTime = this.formatTime(timeTaken);
+
+            this.displays.resultSummary.innerHTML = `
+                <p class="text-lg mb-2">Thí sinh: <span class="font-bold text-bidv-green">${name}</span></p>
+                <p class="text-4xl font-bold my-4 ${percentage >= 50 ? 'text-green-600' : 'text-red-600'}">
+                    ${score} / ${totalQuestions} (${percentage}%)
+                </p>
+                <div class="flex justify-center space-x-6 text-gray-600">
+                     <p>Thời gian làm bài: <strong>${formattedTime}</strong></p>
+                     <p>Ngày làm: <strong>${new Date(date).toLocaleString('vi-VN')}</strong></p>
+                </div>
+            `;
+            
+            this.displays.resultDetails.innerHTML = '';
+            result.questions.forEach((q, index) => {
+                const userAnswer = result.userAnswers[index];
+                const isCorrect = q.answer === userAnswer;
+                
+                const card = document.createElement('div');
+                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`;
+                
+                let optionsHtml = '';
+                ['A', 'B', 'C', 'D'].forEach(key => {
+                    if (q.options[key]) {
+                        let classList = 'option-label mt-2';
+                        if (key === q.answer) {
+                            classList += ' correct-answer';
+                        }
+                        if (key === userAnswer && !isCorrect) {
+                            classList += ' wrong-answer';
+                        }
+                        optionsHtml += `<div class="${classList}">${key}. ${q.options[key]}</div>`;
+                    }
+                });
+
+                // --- LOGIC CẬP NHẬT TRƯỜNG GIẢI THÍCH MỚI ---
+                let explanationHtml = '';
+                
+                // 1. Giải thích đáp án đúng (explanation_right)
+                if (q.explanation_right) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-right">
+                            <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+
+                // 2. Giải thích đáp án sai (explanation_wrong)
+                if (q.explanation_wrong) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-wrong">
+                            <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
+                            <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+                
+                // 3. Bóc phốt đề (explanation_question)
+                if (q.explanation_question) {
+                    explanationHtml += `
+                        <div class="explanation-box explanation-question">
+                            <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
+                            <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                }
+                // --- KẾT THÚC LOGIC CẬP NHẬT ---
+
+                card.innerHTML = `
+                    <p class="font-semibold">Câu ${index + 1}: ${q.question}</p>
+                    <p class="text-sm text-gray-700 mt-2">
+                        Bạn đã chọn: <strong class="${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAnswer ? userAnswer : 'Chưa trả lời'}</strong>. 
+                        Đáp án đúng: <strong class="text-green-700">${q.answer}</strong>
+                    </p>
+                    <div class="mt-3">${optionsHtml}</div>
+                    <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                        <p class="font-semibold text-sm mb-2">Phân tích chuyên sâu:</p>
+                        ${explanationHtml}
+                    </div>
+                `;
+                this.displays.resultDetails.appendChild(card);
+            });
+        },
+
+        saveResult(result) {
+            let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+            history.unshift(result);
+            localStorage.setItem('quizHistory', JSON.stringify(history));
+        },
+
+        showHistory() {
+            const history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+            
+            // Cập nhật trạng thái nút xóa
+            this.buttons.clearHistory.disabled = (history.length === 0);
+
+            if (history.length === 0) {
+                this.displays.historyList.innerHTML = '<p>Chưa có lịch sử làm bài.</p>';
+                this.displays.missedQuestionsStats.innerHTML = 'Chưa có dữ liệu.';
+                this.showScreen('history');
+                return;
+            }
+
+            this.displays.historyList.innerHTML = '';
+            history.forEach((result, index) => {
+                const item = document.createElement('div');
+                item.className = 'p-4 border rounded-lg flex justify-between items-center';
+                item.innerHTML = `
+                    <div>
+                        <p class="font-semibold">${result.name}</p>
+                        <p class="text-sm text-gray-500">${new Date(result.date).toLocaleString('vi-VN')}</p>
+                    </div>
+                    <div>
+                        <p class="font-bold ${result.score / result.totalQuestions >= 0.5 ? 'text-green-600' : 'text-red-600'}">
+                            ${result.score}/${result.totalQuestions}
+                        </p>
+                    </div>
+                    <button data-history-index="${index}" class="view-result-btn px-4 py-2 bg-bidv-green text-white text-sm rounded-lg hover:opacity-90">Xem lại</button>
+                `;
+                this.displays.historyList.appendChild(item);
+            });
+            
+            document.querySelectorAll('.view-result-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.target.getAttribute('data-history-index');
+                    const selectedResult = history[index];
+                    if (selectedResult) {
+                        this.displayResult(selectedResult);
+                        this.showScreen('result');
+                    }
+                });
+            });
+
+            this.calculateStats(history);
+            this.showScreen('history');
+        },
+        
+        clearHistory() {
+            if (confirm('Bạn có chắc chắn muốn xóa TẤT CẢ lịch sử làm bài? Hành động này không thể hoàn tác.')) {
+                localStorage.removeItem('quizHistory');
+                this.showHistory(); // Tải lại màn hình lịch sử
+            }
+        },
+
+        calculateStats(history) {
+            const missedCounter = {};
+            history.forEach(result => {
+                result.questions.forEach((q, index) => {
+                    if (q.answer !== result.userAnswers[index]) {
+                        const questionId = q.id || q.question.slice(0, 50);
+                        if (!missedCounter[questionId]) {
+                             missedCounter[questionId] = { count: 0, text: q.question };
+                        }
+                        missedCounter[questionId].count++;
+                    }
+                });
+            });
+
+            const sortedMissed = Object.values(missedCounter).sort((a, b) => b.count - a.count).slice(0, 5);
+
+            if (sortedMissed.length > 0) {
+                let statsHtml = '<ul class="list-disc list-inside space-y-2">';
+                sortedMissed.forEach(item => {
+                    statsHtml += `<li><strong>Sai ${item.count} lần:</strong> ${item.text}</li>`;
+                });
+                statsHtml += '</ul>';
+                this.displays.missedQuestionsStats.innerHTML = statsHtml;
+            } else {
+                this.displays.missedQuestionsStats.innerHTML = 'Tuyệt vời! Không có câu nào bị sai nhiều lần.';
+            }
+        },
+
+        // Timer Functions
+        startTimers() {
+            this.stopTimers();
+            this.timers.totalSeconds = 0;
+            
+            // Khởi tạo tổng thời gian chạy (Total Timer)
+            this.timers.total = setInterval(() => {
+                this.timers.totalSeconds++;
+                // Cập nhật hiển thị tổng thời gian nếu đang ở chế độ per_question
+                if (this.timingMode === 'per_question') {
+                    // Trong chế độ per_question, Total Timer là thời gian đã trôi qua
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                } else {
+                    // Trong chế độ total, Total Timer là thời gian còn lại
+                    this.timers.remainingTotalSeconds--;
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
+                    if (this.timers.remainingTotalSeconds <= 0) {
+                        this.stopTimers();
+                        this.submitQuiz();
+                    }
+                }
+            }, 1000);
+            
+            this.resetQuestionTimer();
+        },
+        
+        resetQuestionTimer() {
+            clearInterval(this.timers.question);
+            
+            if (this.timingMode === 'per_question') {
+                // Chế độ tính giờ mỗi câu hỏi
+                this.timers.questionSeconds = this.timePerQuestion;
+                this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                
+                this.timers.question = setInterval(() => {
+                    this.timers.questionSeconds--;
+                    this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                    
+                    if (this.timers.questionSeconds <= 0) {
+                        // Tự động chuyển câu hoặc nộp bài khi hết giờ câu hỏi
+                        if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
+                            this.submitQuiz(); // Auto-submit on last question
+                        } else {
+                            this.navigateQuestion(1); // Auto-navigate to next
+                        }
+                    }
+                }, 1000);
+            } else {
+                // Chế độ tổng thời gian: Vô hiệu hóa timer câu hỏi riêng biệt
+                this.displays.questionTimer.textContent = '---';
+            }
+        },
+
+        stopTimers() {
+            clearInterval(this.timers.total);
+            clearInterval(this.timers.question);
+        },
+        
+        formatTime(seconds) {
+            // Đảm bảo không hiển thị số âm (cho chế độ total)
+            seconds = Math.max(0, seconds);
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+    };
+    
+    quizApp.init();
+});
+</script>
+
+</body>
+</html>
