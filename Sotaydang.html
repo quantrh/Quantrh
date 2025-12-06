@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sổ tay Công tác Đảng</title>
+    <title>Sổ tay Công tác Đảng (Nội bộ BIDV)</title>
     <!-- Tải Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tải Font Awesome cho Icons -->
@@ -31,15 +31,32 @@
             background-color: transparent; 
         }
 
-        /* CSS cho hiệu ứng Collapse/Expand */
+        /* CSS cho hiệu ứng Collapse/Expand - Updated for Mobile Fix */
+        .content-section {
+            overflow: hidden; /* Quan trọng: Ngăn nội dung tràn ra ngoài gây đè lấp */
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+        }
+
         .content-section.collapsed {
             max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
+            opacity: 0;
+            border-top: none; /* Ẩn border khi đóng */
         }
+
         .content-section.expanded {
-            max-height: 10000px; /* Giá trị lớn để chứa nội dung dài */
-            transition: max-height 0.5s ease-in;
+            max-height: 5000px; /* Đủ lớn để chứa nội dung */
+            opacity: 1;
+            /* overflow: visible;  Bỏ dòng này để tránh lỗi layout trên mobile */
+        }
+
+        /* Card styles to ensure stacking context */
+        .bidv-chapter-card {
+            position: relative;
+            z-index: 1;
+            transition: z-index 0.1s;
+        }
+        .bidv-chapter-card.is-open {
+            z-index: 10; /* Đưa card đang mở lên trên cùng */
         }
 
         /* Nút Scroll Up */
@@ -197,8 +214,9 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-star mr-3 bidv-text-accent"></i>I. BÁO CÁO TỔNG HỢP VỀ CÔNG TÁC LÃNH ĐẠO VÀ XÂY DỰNG TỔ CHỨC ĐẢNG CƠ SỞ</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 ml-2 rotate-180"></i>
                 </button>
-                <div id="chapter1Content" class="content-section expanded bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <!-- UPDATE: Moved padding "p-6" to inner div to handle collapse height correctly -->
+                <div id="chapter1Content" class="content-section expanded bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         
                         <!-- 1.1 PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG (Chi tiết) -->
                         <h3 class="text-xl font-bold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-tasks mr-2"></i>I. PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG</h3>
@@ -358,8 +376,8 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-bullhorn mr-3 bidv-text-accent"></i>II. CÔNG TÁC TUYÊN GIÁO, DÂN VẬN</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
                 </button>
-                <div id="chapter2Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <div id="chapter2Content" class="content-section collapsed bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         <!-- 2.1 Công tác Tuyên truyền -->
                         <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-podcast mr-2"></i>2.1. Công tác Tuyên truyền</h3>
                         <div class="ml-4">
@@ -422,8 +440,8 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-sitemap mr-3 bidv-text-accent"></i>III. CÔNG TÁC TỔ CHỨC, XÂY DỰNG ĐẢNG</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
                 </button>
-                <div id="chapter3Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <div id="chapter3Content" class="content-section collapsed bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         <!-- 3.1 Công tác Tổ chức và Cán bộ -->
                         <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-user-tie mr-2"></i>3.1. Công tác Tổ chức và Cán bộ</h3>
                         <div class="overflow-x-auto">
@@ -533,8 +551,8 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-check-double mr-3 bidv-text-accent"></i>IV. CÔNG TÁC KIỂM TRA, GIÁM SÁT, KỶ LUẬT ĐẢNG</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
                 </button>
-                <div id="chapter4Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <div id="chapter4Content" class="content-section collapsed bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         <p class="text-gray-700 mb-4 italic border-l-2 border-yellow-500 pl-3">Kiểm tra, giám sát (KTGS) là chức năng lãnh đạo của Đảng, phải được tiến hành thường xuyên, từ chi bộ đến cấp ủy các cấp. Mọi đảng viên đều bình đẳng trước kỷ luật của Đảng.</p>
 
                         <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">4.1. Nhiệm vụ Kiểm tra, Giám sát của Cấp ủy (BCH/BTV)</h3>
@@ -577,8 +595,8 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-hand-holding-usd mr-3 bidv-text-accent"></i>V. CÔNG TÁC TÀI CHÍNH ĐẢNG</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
                 </button>
-                <div id="chapter5Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <div id="chapter5Content" class="content-section collapsed bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">5.1. Thu, nộp Đảng phí</h3>
                         <p class="text-gray-700 ml-4 mb-2">Đảng phí là nguồn thu chủ yếu, bao gồm:</p>
                         <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
@@ -604,8 +622,8 @@
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-pencil-ruler mr-3 bidv-text-accent"></i>VI. CÔNG TÁC THƯ KÝ GIÚP VIỆC CẤP ỦY</span>
                     <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
                 </button>
-                <div id="chapter6Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
-                    <div class="section-content">
+                <div id="chapter6Content" class="content-section collapsed bg-white rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content p-6">
                         <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">6.1. Chương trình công tác năm</h3>
                         <p class="text-gray-700 ml-4 mb-2">Là kim chỉ nam hoạt động của cấp ủy. Yêu cầu:</p>
                         <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
@@ -672,8 +690,11 @@
         function expandAll() {
             const allContents = document.querySelectorAll('.content-section');
             allContents.forEach(content => {
+                const card = content.closest('.bidv-chapter-card');
                 content.classList.remove('collapsed');
                 content.classList.add('expanded');
+                if(card) card.classList.add('is-open');
+                
                 // Xoay icon
                 const icon = content.previousElementSibling.querySelector('.toggle-icon');
                 if (icon) icon.classList.add('rotate-180');
@@ -683,8 +704,11 @@
         function collapseAll() {
             const allContents = document.querySelectorAll('.content-section');
             allContents.forEach(content => {
+                const card = content.closest('.bidv-chapter-card');
                 content.classList.remove('expanded');
                 content.classList.add('collapsed');
+                if(card) card.classList.remove('is-open');
+                
                 // Xoay icon về mặc định
                 const icon = content.previousElementSibling.querySelector('.toggle-icon');
                 if (icon) icon.classList.remove('rotate-180');
@@ -705,16 +729,19 @@
             const contentDiv = document.getElementById(`chapter${chapterId}Content`);
             const toggleButton = contentDiv.previousElementSibling;
             const icon = toggleButton.querySelector('.toggle-icon');
+            const card = contentDiv.closest('.bidv-chapter-card');
 
             // Toggle chương hiện tại
             if (contentDiv.classList.contains('expanded')) {
                 contentDiv.classList.remove('expanded');
                 contentDiv.classList.add('collapsed');
                 icon.classList.remove('rotate-180');
+                if(card) card.classList.remove('is-open');
             } else {
                 contentDiv.classList.remove('collapsed');
                 contentDiv.classList.add('expanded');
                 icon.classList.add('rotate-180');
+                if(card) card.classList.add('is-open');
                 
                 // Cuộn nhẹ đến chương vừa mở
                 setTimeout(() => {
@@ -748,10 +775,10 @@
              if(ch1) {
                  ch1.classList.remove('collapsed');
                  ch1.classList.add('expanded');
+                 ch1.closest('.bidv-chapter-card').classList.add('is-open');
                  ch1.previousElementSibling.querySelector('.toggle-icon').classList.add('rotate-180');
              }
         };
     </script>
 </body>
 </html>
-
