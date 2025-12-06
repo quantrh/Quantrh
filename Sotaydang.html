@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ tay Công tác Đảng (Nội bộ BIDV)</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Font Awesome cho Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Tải Font Be Vietnam Pro (Hỗ trợ tiếng Việt tốt nhất) -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Định nghĩa màu thương hiệu BIDV */
+        .bidv-main { --tw-bg-opacity: 1; background-color: #006B68; }
+        .bidv-accent { --tw-bg-opacity: 1; background-color: #FFC62F; }
+        .bidv-text-main { color: #006B68; }
+        .bidv-text-accent { color: #FFC62F; }
+
+        /* Font chữ tối ưu cho Tiếng Việt */
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        /* Styling cho phần Highlight khi tìm kiếm (tô nền vàng) */
+        .highlight {
+            background-color: #FFC62F; /* Màu vàng BIDV */
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Logo Placeholder */
+        .logo-placeholder {
+            width: 100px; 
+            height: 60px; 
+            object-fit: contain; 
+            background-color: transparent; 
+        }
+
+        /* CSS cho hiệu ứng Collapse/Expand */
+        .content-section.collapsed {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .content-section.expanded {
+            max-height: 10000px; /* Giá trị lớn để chứa nội dung dài */
+            transition: max-height 0.5s ease-in;
+        }
+
+        /* Nút Scroll Up (Đã đổi màu theo yêu cầu) */
+        .scroll-button {
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 50;
+        }
+        .scroll-button.hidden-btn {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+
+        /* Scrollbar tùy chỉnh */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #006B68;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e0f2f1;
+        }
+
+        /* Định dạng nội dung chi tiết */
+        .section-content ul, .section-content ol {
+            margin-bottom: 15px;
+        }
+        .section-content li {
+            margin-bottom: 8px;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        /* Bỏ bullet mặc định và dùng icon/bullet tùy chỉnh (chỉ dùng cho ul) */
+        .section-content ul li::before {
+            content: "•";
+            color: #006B68;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        .section-content ol li {
+             list-style-type: decimal;
+             margin-left: -1.5rem;
+             padding-left: 0.5rem;
+        }
+        .section-content ol li::before {
+            content: none; 
+        }
+        .section-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .section-content th, .section-content td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+        .section-content th {
+            background-color: #e0f2f1;
+            color: #006B68;
+            font-weight: 700;
+        }
+        .section-content p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .section-content .ml-4 {
+            padding-left: 1rem;
+        }
+        .section-content .ml-6 {
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen relative pb-20">
+
+    <div class="container mx-auto p-3 sm:p-6 lg:p-8">
+        <!-- Header và Thanh tìm kiếm -->
+        <header class="bidv-main text-white p-6 rounded-xl shadow-lg mb-6">
+            <div class="flex items-center mb-4 flex-wrap">
+                <!-- Logo -->
+                <img src="https://thegioibackground.com/wp-content/uploads/2025/07/co-dang-co-viet-nam-2.jpg" 
+                     alt="Logo Đảng" 
+                     class="logo-placeholder rounded-md mr-4 shadow-sm bg-white p-1"
+                     onerror="this.onerror=null; this.src='https://placehold.co/100x60/fff/006B68?text=BIDV';">
+                
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-wide leading-tight">
+                    <i class="fas fa-book-open mr-2 bidv-text-accent"></i>SỔ TAY CÔNG TÁC ĐẢNG VỤ
+                </h1>
+            </div>
+            <p class="text-lg mb-4 opacity-90 pl-1 border-l-4 border-yellow-400">Dành cho Cấp ủy viên cơ sở</p>
+            
+            <div class="relative group">
+                <input type="text" id="searchInput" oninput="searchContent()" placeholder="Tìm kiếm nội dung (ví dụ: Tập trung dân chủ, Đảng phí, Kiểm tra...)"
+                       class="w-full p-3 pl-10 text-gray-800 rounded-lg shadow-inner focus:ring-4 focus:ring-yellow-400/50 focus:border-yellow-400 transition duration-150 outline-none">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-600"></i>
+            </div>
+            <div id="searchMessage" class="mt-2 text-sm font-bold bidv-text-accent hidden"></div>
+        </header>
+
+        <!-- Khung nội dung chính -->
+        <main id="contentContainer" class="space-y-6">
+
+            <!-- MỤC LỤC -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                <h2 class="text-2xl font-bold bidv-text-main mb-4 flex items-center">
+                    <i class="fas fa-list-ol mr-3"></i>MỤC LỤC
+                </h2>
+                <ul class="list-none space-y-3 text-gray-700 font-medium">
+                    <li><a href="#chuong1" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">I.</span> BÁO CÁO TỔNG HỢP VỀ CÔNG TÁC LÃNH ĐẠO VÀ XÂY DỰNG TỔ CHỨC ĐẢNG CƠ SỞ</a></li>
+                    <li><a href="#chuong2" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">II.</span> CÔNG TÁC TUYÊN GIÁO, DÂN VẬN</a></li>
+                    <li><a href="#chuong3" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">III.</span> CÔNG TÁC TỔ CHỨC, XÂY DỰNG ĐẢNG</a></li>
+                    <li><a href="#chuong4" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">IV.</span> CÔNG TÁC KIỂM TRA, GIÁM SÁT, KỶ LUẬT ĐẢNG</a></li>
+                    <li><a href="#chuong5" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">V.</span> CÔNG TÁC TÀI CHÍNH ĐẢNG</a></li>
+                    <li><a href="#chuong6" class="hover:text-yellow-600 transition flex items-start"><span class="w-10 font-bold text-gray-400">VI.</span> CÔNG TÁC THƯ KÝ GIÚP VIỆC CẤP ỦY</a></li>
+                </ul>
+            </div>
+            
+            <!-- CHƯƠNG I: BÁO CÁO TỔNG HỢP (Nội dung mới từ user) -->
+            <div id="chuong1" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-t-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(1)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-star mr-3 bidv-text-accent"></i>I. BÁO CÁO TỔNG HỢP VỀ CÔNG TÁC LÃNH ĐẠO VÀ XÂY DỰNG TỔ CHỨC ĐẢNG CƠ SỞ</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 ml-2 rotate-180"></i>
+                </button>
+                <div id="chapter1Content" class="content-section expanded bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        
+                        <!-- 1.1 PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG (Chi tiết) -->
+                        <h3 class="text-xl font-bold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-tasks mr-2"></i>I. PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG</h3>
+                        <p class="text-gray-700 ml-4 mb-3">Đảng Cộng sản Việt Nam lãnh đạo bằng nhiều phương thức, bao gồm 5 phương thức cốt lõi được áp dụng tại các tổ chức cơ sở đảng:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-3">
+                            <li><span class="font-bold">Lãnh đạo bằng chủ trương, đường lối, nghị quyết:</span> Đảng lãnh đạo thông qua việc đề ra các chủ trương, đường lối, chính sách lớn. Các tổ chức đảng ở cơ sở cụ thể hóa những chủ trương, đường lối này thành các nghị quyết lãnh đạo sát, đúng và xây dựng chương trình hành động cụ thể để triển khai.</li>
+                            <li><span class="font-bold">Lãnh đạo bằng vận động, tuyên truyền, giáo dục:</span> Thông qua công tác vận động, tuyên truyền, giáo dục, Đảng khơi dậy khát vọng và sự đồng thuận trong cán bộ, đảng viên (CBĐV) và quần chúng. Điều này bao gồm việc tuyên truyền, vận động quần chúng thực hiện chủ trương, chính sách và nắm bắt tư tưởng, dư luận xã hội.</li>
+                            <li><span class="font-bold">Lãnh đạo bằng hệ thống tổ chức, đội ngũ cán bộ, đảng viên và công tác tổ chức cán bộ:</span> Đảng lãnh đạo thông qua hệ thống tổ chức chặt chẽ từ Trung ương đến cơ sở, đội ngũ CBĐV đủ phẩm chất, và công tác tổ chức cán bộ nghiêm túc. Cấp ủy cần kiện toàn tổ chức, bầu cấp ủy với số lượng, cơ cấu hợp lý, đảm bảo chất lượng.</li>
+                            <li><span class="font-bold">Lãnh đạo bằng kiểm tra, giám sát, sơ kết, tổng kết:</span> Công tác kiểm tra, giám sát (KTGS) là chức năng lãnh đạo của Đảng, phải được tiến hành thường xuyên để kịp thời phát hiện vi phạm, phát huy nhân tố tích cực và rút ra bài học kinh nghiệm.</li>
+                            <li><span class="font-bold">Lãnh đạo bằng hành động nêu gương:</span> Đảng lãnh đạo thông qua hành động nêu gương của đảng viên, đặc biệt là người đứng đầu cấp ủy và cán bộ lãnh đạo, quản lý. Đảng viên cần nêu gương, đi đầu trong thực hiện nhiệm vụ và chấp hành quy định.</li>
+                        </ol>
+                        <p class="text-gray-700 ml-4 mt-3 italic">Cùng với 5 phương thức này, tổ chức đảng phải thực hiện nghiêm túc nguyên tắc tập trung dân chủ và tự phê bình và phê bình trong sinh hoạt.</p>
+
+                        <!-- 1.2 NHIỆM VỤ CỦA ĐẢNG BỘ, CHI BỘ CƠ SỞ (Chi tiết) -->
+                        <h3 class="text-xl font-bold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-building mr-2"></i>II. NHIỆM VỤ CỦA ĐẢNG BỘ, CHI BỘ CƠ SỞ</h3>
+                        <p class="text-gray-700 ml-4 mb-3">Đảng bộ/Chi bộ cơ sở trong doanh nghiệp nhà nước (DNNN) giữ vai trò là <span class="font-bold">hạt nhân chính trị</span> ở cơ sở. Nhiệm vụ của tổ chức cơ sở đảng bao gồm 6 nhóm chính, theo quy định về chức năng, nhiệm vụ của đảng bộ, chi bộ cơ sở trong DNNN:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-3">
+                            <li><span class="font-bold">Lãnh đạo thực hiện nhiệm vụ sản xuất, kinh doanh, quốc phòng, an ninh:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Lãnh đạo xây dựng và thực hiện chiến lược phát triển, kế hoạch hằng năm, cơ cấu lại, đổi mới và nâng cao hiệu quả doanh nghiệp.</li>
+                                    <li>Lãnh đạo xây dựng và thực hiện điều lệ công ty; thực hiện Quy chế dân chủ ở cơ sở, đảm bảo công khai, minh bạch về tài chính, đầu tư, và công tác cán bộ.</li>
+                                    <li>Lãnh đạo đảng viên và quần chúng giám sát hoạt động của doanh nghiệp.</li>
+                                    <li>Thực hiện trách nhiệm xã hội, nhiệm vụ quốc phòng, an ninh, giữ vững an ninh chính trị, trật tự an toàn xã hội.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Lãnh đạo công tác chính trị, tư tưởng:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Giáo dục, bồi dưỡng chủ nghĩa Mác - Lênin, tư tưởng Hồ Chí Minh; lãnh đạo việc học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh.</li>
+                                    <li>Thường xuyên quan tâm, nắm bắt tâm tư, nguyện vọng của CBĐV, cổ đông, người lao động, kịp thời giải quyết vấn đề phát sinh.</li>
+                                    <li>Chủ động phát hiện, ngăn chặn và kiên quyết đấu tranh chống các quan điểm sai trái, những biểu hiện suy thoái về tư tưởng chính trị, đạo đức, lối sống, "tự diễn biến," "tự chuyển hóa".</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Lãnh đạo công tác tổ chức, cán bộ:</span> Đề ra chủ trương, nghị quyết và lãnh đạo thực hiện công tác tổ chức, cán bộ (nhận xét, đánh giá, quy hoạch, đào tạo, bồi dưỡng, bổ nhiệm, luân chuyển, khen thưởng, kỷ luật cán bộ) theo đúng thẩm quyền được phân cấp.</li>
+                            <li><span class="font-bold">Lãnh đạo xây dựng tổ chức đảng:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Đề ra chủ trương, nhiệm vụ, biện pháp xây dựng đảng bộ/chi bộ trong sạch, vững mạnh; nâng cao năng lực lãnh đạo và sức chiến đấu của tổ chức.</li>
+                                    <li>Thực hiện đúng nguyên tắc tổ chức và sinh hoạt đảng, nhất là nguyên tắc tập trung dân chủ, tự phê bình và phê bình; nâng cao chất lượng sinh hoạt đảng, nhất là sinh hoạt chi bộ.</li>
+                                    <li>Xây dựng cấp ủy có đủ phẩm chất, năng lực, hoạt động có hiệu quả.</li>
+                                    <li>Làm tốt công tác tạo nguồn, phát triển đảng viên, chú trọng đoàn viên ưu tú, giỏi chuyên môn.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Lãnh đạo thực hiện công tác kiểm tra, giám sát:</span> Lãnh đạo và tổ chức thực hiện công tác kiểm tra, giám sát theo Điều lệ Đảng và quy định của cấp trên. Chủ động đấu tranh, ngăn chặn, phát hiện và xử lý kịp thời những biểu hiện tham nhũng, lãng phí, tiêu cực, vi phạm kỷ luật đảng.</li>
+                            <li><span class="font-bold">Lãnh đạo các tổ chức chính trị - xã hội:</span> Lãnh đạo các tổ chức đoàn thể (Công đoàn, Đoàn Thanh niên) thực hiện tốt vai trò đại diện, phát huy quyền làm chủ của người lao động. Phân công cấp ủy viên phụ trách các tổ chức đoàn thể, định kỳ làm việc với các tổ chức này để nắm tình hình, chỉ đạo hoạt động.</li>
+                        </ol>
+                        <p class="font-medium text-gray-800 ml-4 mt-4">Nhiệm vụ cụ thể của Chi bộ trực thuộc Đảng bộ cơ sở:</p>
+                        <ul class="list-disc list-inside text-gray-700 ml-6 space-y-1">
+                            <li>Chi bộ lãnh đạo thực hiện nhiệm vụ chính trị của đơn vị.</li>
+                            <li>Giáo dục, quản lý và phân công công tác cho đảng viên.</li>
+                            <li>Làm công tác vận động quần chúng và phát triển đảng viên.</li>
+                            <li>Kiểm tra, giám sát, thi hành kỷ luật đảng viên.</li>
+                            <li>Thu nộp đảng phí.</li>
+                        </ul>
+
+                        <!-- 1.3 VAI TRÒ CỦA BÍ THƯ VÀ CÁC THÀNH VIÊN -->
+                        <h3 class="text-xl font-bold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-users-cog mr-2"></i>III. VAI TRÒ CỦA BÍ THƯ VÀ CÁC THÀNH VIÊN BAN CHẤP HÀNH</h3>
+                        <div class="ml-4">
+                            <p class="font-bold text-gray-800 mb-2">1. Vai trò của Bí thư Cấp ủy (Chi bộ/Đảng bộ cơ sở)</p>
+                            <p class="text-gray-700 mb-2">Đồng chí Bí thư cấp ủy là người đứng đầu cấp ủy, được bầu hoặc chỉ định, chịu trách nhiệm chung về mọi mặt công tác của tổ chức đảng cơ sở.</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                                <li><span class="font-medium">Chịu trách nhiệm chung và trực tiếp:</span> Bí thư chịu trách nhiệm chung về công tác lãnh đạo của cấp ủy cơ sở, đồng thời trực tiếp phụ trách công tác tư tưởng, công tác tổ chức cán bộ, công tác kiểm tra giám sát và phòng chống tham nhũng tiêu cực.</li>
+                                <li><span class="font-medium">Chủ trì điều hành:</span> Bí thư trực tiếp chuẩn bị và chủ trì các cuộc họp của Ban Chấp hành (BCH), Ban Thường vụ (BTV), hội nghị đảng viên.</li>
+                                <li><span class="font-medium">Hạt nhân đoàn kết:</span> Bí thư có vai trò quan trọng trong việc tổ chức các hoạt động của đơn vị, là hạt nhân đoàn kết, thống nhất ý chí trong tổ chức đảng.</li>
+                                <li><span class="font-medium">Xây dựng mối quan hệ công tác:</span> Bí thư là người xây dựng được mối quan hệ thường xuyên, chặt chẽ với người đứng đầu chính quyền (Tổng giám đốc/Giám đốc) và các tổ chức chính trị - xã hội ở cơ sở.</li>
+                                <li><span class="font-medium">Tổ chức thực hiện Nghị quyết:</span> Bí thư cấp ủy có trách nhiệm tổ chức thực hiện nghị quyết, chỉ đạo lập chương trình công tác hàng năm, hàng quý và chỉ đạo, kiểm tra tình hình thực hiện nhiệm vụ của cấp ủy.</li>
+                            </ul>
+                            
+                            <p class="font-bold text-gray-800 mt-4 mb-2">2. Vai trò của các thành viên Ban Chấp hành (UV BCH/BTV)</p>
+                            <p class="text-gray-700 mb-2">Các Ủy viên BCH/BTV hỗ trợ Bí thư và thực hiện các nhiệm vụ được phân công cụ thể, đảm bảo sự lãnh đạo toàn diện:</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                                <li><span class="font-medium">Phó Bí thư:</span> Thay mặt Bí thư điều hành các cuộc họp và giải quyết công việc khi Bí thư vắng mặt. Hỗ trợ Bí thư trong công tác phát triển Đảng, công tác chuyên môn, công tác kiểm tra Đảng. Phụ trách công tác đào tạo, bồi dưỡng, và theo dõi việc thực hiện nguyên tắc tập trung dân chủ, tự phê bình và phê bình của Đảng bộ.</li>
+                                <li><span class="font-medium">Ủy viên BCH:</span> Mỗi ủy viên thường được phân công phụ trách một lĩnh vực chuyên trách để hỗ trợ Bí thư:
+                                    <ul class="list-circle list-inside ml-6 mt-1 space-y-1">
+                                        <li>Phụ trách công tác đảng vụ (thu chi đảng phí, hoàn thiện và lưu trữ hồ sơ phát triển đảng viên).</li>
+                                        <li>Phụ trách công tác tuyên huấn, tuyên truyền, phổ biến quán triệt đường lối của Đảng, pháp luật của Nhà nước.</li>
+                                        <li>Phụ trách công tác phong trào, lãnh đạo hoạt động đoàn thể (Công đoàn, Đoàn Thanh niên), và thực hiện cuộc vận động "Học tập và làm theo tấm gương đạo đức Hồ Chí Minh".</li>
+                                        <li>Phụ trách công tác đánh giá tình hình thực hiện nhiệm vụ được giao trong cấp ủy phục vụ cho các cuộc họp tổng kết.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- 1.4 GIẢI PHÁP NÂNG CAO CHẤT LƯỢNG -->
+                        <h3 class="text-xl font-bold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-arrow-up mr-2"></i>IV. GIẢI PHÁP NÂNG CAO CHẤT LƯỢNG CẤP ỦY CƠ SỞ</h3>
+                        <p class="text-gray-700 ml-4 mb-3">Để nâng cao năng lực lãnh đạo và sức chiến đấu của cấp ủy cơ sở, cần thực hiện các giải pháp sau:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-2">
+                            <li><span class="font-bold">Xây dựng và phát huy vai trò Bí thư/Cấp ủy:</span> Chú trọng phát huy vai trò của bí thư cấp ủy và xây dựng đội ngũ cấp ủy viên có phẩm chất chính trị, đạo đức, năng lực tham gia lãnh đạo tập thể. Cấp ủy cần giữ vai trò quy tụ, đoàn kết, đảm bảo cho các nguyên tắc, kỷ luật của Đảng được thực hiện nghiêm.</li>
+                            <li><span class="font-bold">Đổi mới Phương thức lãnh đạo:</span> Luôn đổi mới phương thức lãnh đạo của cấp ủy cơ sở để phù hợp với tình hình thực tiễn. Đổi mới, nâng cao chất lượng xây dựng và ban hành nghị quyết của chi bộ, đảng bộ cơ sở phải sát thực tế.</li>
+                            <li><span class="font-bold">Hoàn thiện và thực hiện Quy chế làm việc:</span> Tiếp tục bổ sung, hoàn chỉnh quy chế làm việc của cấp ủy, thực hiện nghiêm quy chế mối quan hệ công tác giữa bí thư cấp ủy với thủ trưởng cơ quan và người đứng đầu các đoàn thể quần chúng.</li>
+                            <li><span class="font-bold">Kiện toàn tổ chức và Đào tạo:</span> Kiện toàn tổ chức và hoạt động của cấp ủy cơ sở, đảm bảo số lượng, cơ cấu hợp lý. Tăng cường công tác đào tạo, bồi dưỡng nhằm nâng cao trình độ (lý luận chính trị, nghiệp vụ công tác Đảng) cho cấp ủy cơ sở.</li>
+                            <li><span class="font-bold">Tăng cường Kiểm tra, Giám sát (KTGS):</span> Tăng cường KTGS việc chấp hành nghị quyết của đảng bộ/chi bộ; kiểm tra công tác đồng thời kiểm tra tư cách đảng viên. Cần nâng cao nhận thức của cấp ủy, nhất là người đứng đầu về công tác KTGS của Đảng.</li>
+                            <li><span class="font-bold">Phát huy Dân chủ và Đoàn thể:</span> Lãnh đạo các đoàn thể ở cơ sở, tạo điều kiện thuận lợi để các tổ chức này thực hiện chức năng giám sát, phản biện xã hội đối với hoạt động của tổ chức cơ sở đảng, của cấp ủy và cán bộ, đảng viên.</li>
+                        </ol>
+
+                        <!-- 1.5 NÂNG CAO CHẤT LƯỢNG SINH HOẠT -->
+                        <h3 class="text-xl font-bold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-comments mr-2"></i>V. NÂNG CAO CHẤT LƯỢNG SINH HOẠT CHI BỘ</h3>
+                        <p class="text-gray-700 ml-4 mb-3">Nâng cao chất lượng sinh hoạt chi bộ là yêu cầu cấp thiết, có ý nghĩa đặc biệt quan trọng, góp phần xây dựng Đảng trong sạch, vững mạnh toàn diện. Các nhiệm vụ và giải pháp trọng tâm bao gồm:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-3">
+                            <li><span class="font-bold">Nâng cao nhận thức và giữ vững nề nếp:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Cán bộ, đảng viên phải nhận thức sâu sắc về tầm quan trọng của sinh hoạt chi bộ, coi đây là <span class="italic">mệnh lệnh chính trị</span>.</li>
+                                    <li>Thực hiện nghiêm túc chế độ sinh hoạt đảng theo Điều lệ Đảng, đảm bảo thời lượng sinh hoạt chi bộ, cấp ủy.</li>
+                                    <li>Duy trì nề nếp sinh hoạt chi bộ định kỳ <span class="italic">một lần/tháng</span> (thống nhất thực hiện sinh hoạt toàn Đảng vào <span class="font-medium">ngày 03 hàng tháng</span> hoặc tuần đầu tiên nếu ngày nghỉ/trường hợp đặc biệt).</li>
+                                    <li><span class="font-medium">Tuyệt đối không được họp chi bộ kết hợp các cuộc họp khác.</span></li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Đổi mới nội dung và hình thức sinh hoạt:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Đổi mới căn bản, toàn diện về nội dung, hình thức sinh hoạt theo hướng <span class="italic">thiết thực, hiệu quả, phù hợp với từng loại hình chi bộ.</span></li>
+                                    <li>Nội dung sinh hoạt phải được thảo luận kỹ, sâu sắc, giải quyết những công việc đúng chức năng, nhiệm vụ của chi bộ.</li>
+                                    <li>Tổ chức <span class="font-medium">sinh hoạt chuyên đề, ít nhất mỗi quý 1 lần.</span> Nội dung chuyên đề phải được chuẩn bị kỹ, thiết thực, bám sát nhiệm vụ, gắn với học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Thực hiện nghiêm túc nguyên tắc Đảng:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Sinh hoạt chi bộ phải thực hiện nghiêm túc các nguyên tắc của Đảng, nhất là nguyên tắc <span class="italic">tập trung dân chủ, tự phê bình và phê bình</span> trên cơ sở đoàn kết.</li>
+                                    <li>Đề cao kỷ luật, kỷ cương, tính tự giác trong sinh hoạt đảng; đảm bảo mọi đảng viên được thông tin đầy đủ và phát huy dân chủ.</li>
+                                    <li>Bí thư chi bộ, cấp ủy phải thực hiện nghiêm túc nguyên tắc tập trung dân chủ, bảo đảm <span class="font-medium">tính lãnh đạo, tính giáo dục, tính chiến đấu</span> trong sinh hoạt chi bộ.</li>
+                                    <li>Mỗi cán bộ, đảng viên phải nhận thức rõ quyền, nghĩa vụ và trách nhiệm; chủ động báo cáo kết quả thực hiện nhiệm vụ được phân công và cầu thị, tự giác sửa chữa khuyết điểm.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Nâng cao chất lượng đội ngũ Bí thư và Cấp ủy viên:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Thường xuyên tổ chức <span class="italic">tập huấn, bồi dưỡng nghiệp vụ</span> công tác đảng, nâng cao kỹ năng điều hành sinh hoạt đảng.</li>
+                                    <li>Bí thư, phó bí thư chi bộ và cấp ủy viên phải nêu cao tinh thần trách nhiệm, <span class="font-medium">trực tiếp chuẩn bị nội dung sinh hoạt</span>, đảm bảo ngắn gọn, dễ hiểu, dễ nhớ và điều hành khoa học.</li>
+                                    <li>Kịp thời kiện toàn, bổ sung bí thư chi bộ khi có thay đổi về nhân sự.</li>
+                                </ul>
+                            </li>
+                            <li><span class="font-bold">Tăng cường kiểm tra, giám sát của cấp ủy cấp trên:</span>
+                                <ul class="list-disc list-inside ml-6 mt-1 space-y-1">
+                                    <li>Cấp ủy cấp trên phải thường xuyên theo dõi, nắm chắc tình hình sinh hoạt chi bộ, nhất là những <span class="italic">chi bộ yếu kém;</span> phân công cấp ủy viên dự sinh hoạt chi bộ.</li>
+                                    <li>Xây dựng tiêu chí đánh giá, xếp loại chất lượng sinh hoạt chi bộ <span class="font-medium">khoa học, chặt chẽ, định lượng.</span> Kết quả đánh giá làm cơ sở để đánh giá mức độ hoàn thành nhiệm vụ của chi bộ và người đứng đầu cấp ủy.</li>
+                                    <li>Nội dung kiểm tra, giám sát tập trung vào việc chấp hành nguyên tắc, chế độ sinh hoạt đảng, <span class="font-medium">chất lượng sinh hoạt và hồ sơ sinh hoạt chi bộ.</span></li>
+                                    <li>Thực hiện chuyển đổi số, đẩy mạnh ứng dụng công nghệ thông tin, triển khai có hiệu quả ứng dụng <span class="font-medium">Sổ tay đảng viên điện tử</span> trong sinh hoạt chi bộ.</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHƯƠNG II: CÔNG TÁC TUYÊN GIÁO, DÂN VẬN (Từ file Word gốc) -->
+            <div id="chuong2" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(2)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-bullhorn mr-3 bidv-text-accent"></i>II. CÔNG TÁC TUYÊN GIÁO, DÂN VẬN</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
+                </button>
+                <div id="chapter2Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        <!-- 2.1 Công tác Tuyên truyền -->
+                        <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-podcast mr-2"></i>2.1. Công tác Tuyên truyền</h3>
+                        <div class="ml-4">
+                            <p class="font-medium text-gray-800 mb-2">A. Nội dung nhiệm vụ</p>
+                            <ol class="list-decimal list-inside text-gray-700 ml-4 mb-4 space-y-2">
+                                <li>Học tập, quán triệt, tuyên truyền chủ trương, đường lối của Đảng (tập trung vào các Nghị quyết, Kết luận của Trung ương, Đảng ủy Khối, Ban Thường vụ Đảng ủy BIDV).</li>
+                                <li>Tuyên truyền triển khai nhiệm vụ chính trị, phong trào thi đua.</li>
+                                <li>Học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh.</li>
+                                <li>Bảo vệ nền tảng tư tưởng của Đảng, đấu tranh phản bác các quan điểm sai trái.</li>
+                                <li>Định hướng tư tưởng, nắm bắt dư luận trong cán bộ, đảng viên, người lao động.</li>
+                                <li>Hưởng ứng các cuộc thi chính luận về công tác xây dựng Đảng.</li>
+                            </ol>
+                            <p class="font-medium text-gray-800 mb-2">B. Trọng tâm công tác Tuyên giáo trong tình hình mới</p>
+                            <p class="text-gray-700 ml-4 mb-4 italic border-l-2 border-yellow-500 pl-3">Công tác tuyên giáo là công tác tư tưởng của Đảng, có vai trò cực kỳ quan trọng, tạo đồng thuận, thống nhất tư tưởng và hành động.</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4">
+                                <li>Tập trung tuyên truyền các Nghị quyết của Đảng ủy BIDV về nhiệm vụ kinh doanh, phát triển; các phong trào thi đua trong hệ thống.</li>
+                                <li>Tuyên truyền chuẩn bị và tổ chức Đại hội Đảng bộ các cấp.</li>
+                                <li>Tuyên truyền các sự kiện lịch sử quan trọng của đất nước và của Đảng bộ BIDV.</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 2.2 Công tác Dân vận -->
+                        <h3 class="text-lg font-semibold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-people-carry mr-2"></i>2.2. Công tác Dân vận</h3>
+                        <div class="ml-4">
+                            <p class="text-gray-700 mb-2">Nội dung công tác dân vận của tổ chức đảng cơ sở:</p>
+                            <ol class="list-decimal list-inside text-gray-700 ml-4 mb-4 space-y-2">
+                                <li>Tuyên truyền, vận động quần chúng thực hiện chủ trương, chính sách của Đảng và pháp luật của Nhà nước.</li>
+                                <li>Thực hiện nghiêm túc <span class="font-medium">Quy chế dân chủ ở cơ sở</span>, đảm bảo quyền làm chủ của người lao động.</li>
+                                <li>Hưởng ứng cuộc vận động "Người Việt Nam ưu tiên dùng hàng Việt Nam" và các phong trào xã hội.</li>
+                                <li>Lãnh đạo các tổ chức đoàn thể (Công đoàn, Đoàn Thanh niên) thực hiện tốt chức năng của mình.</li>
+                                <li>Phối hợp với cấp ủy địa phương nơi đơn vị đóng chân để tham gia công tác dân vận.</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- 2.3 Thực trạng và Giải pháp (từ file Word gốc) -->
+                        <h3 class="text-lg font-semibold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-chart-line mr-2"></i>2.3. Thực trạng và Giải pháp nâng cao chất lượng Tuyên giáo, Dân vận</h3>
+                        <div class="ml-4">
+                            <p class="font-bold text-gray-800 mb-2">A. Một số vướng mắc thực tế</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4 mb-4">
+                                <li>Tính sáng tạo, nghiên cứu trong tuyên truyền, quán triệt còn hạn chế, chưa thực sự đổi mới.</li>
+                                <li>Cơ chế phối hợp giữa công tác Tuyên giáo và Dân vận với chính quyền, đoàn thể chưa đồng bộ, đôi khi còn hình thức.</li>
+                                <li>Thông tin hai chiều, nắm bắt tâm tư, nguyện vọng CBĐV còn hạn chế, chưa kịp thời.</li>
+                                <li>Sinh hoạt chi bộ còn nặng nề về nghiệp vụ, thiếu sáng tạo trong sinh hoạt chuyên đề, chưa phát huy được tính chiến đấu, tính giáo dục.</li>
+                            </ul>
+                            <p class="font-bold text-gray-800 mb-2">B. Giải pháp trọng tâm</p>
+                            <ol class="list-decimal list-inside text-gray-700 ml-4">
+                                <li>Tăng cường cơ chế phối hợp trong công tác Tuyên giáo - Dân vận.</li>
+                                <li>Chủ động nắm bắt tư tưởng, dư luận xã hội thông qua nhiều kênh (mạng xã hội, đối thoại, khảo sát...).</li>
+                                <li>Nâng cao chất lượng sinh hoạt chi bộ, đặc biệt là sinh hoạt chuyên đề.</li>
+                                <li>Đào tạo, bồi dưỡng lý luận chính trị và nghiệp vụ công tác Đảng cho cấp ủy và cán bộ chuyên trách.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHƯƠNG III: CÔNG TÁC TỔ CHỨC, XÂY DỰNG ĐẢNG (Từ file Word gốc) -->
+            <div id="chuong3" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(3)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-sitemap mr-3 bidv-text-accent"></i>III. CÔNG TÁC TỔ CHỨC, XÂY DỰNG ĐẢNG</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
+                </button>
+                <div id="chapter3Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        <!-- 3.1 Công tác Tổ chức và Cán bộ -->
+                        <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-user-tie mr-2"></i>3.1. Công tác Tổ chức và Cán bộ</h3>
+                        <div class="overflow-x-auto">
+                            <table class="text-sm w-full min-w-[600px]">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1/3">Nội dung nhiệm vụ</th>
+                                        <th class="w-1/3">Thời điểm thực hiện</th>
+                                        <th class="w-1/3">Lưu ý/Căn cứ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Xây dựng Đề án nhân sự cấp ủy</td>
+                                        <td>Trước Đại hội Đảng bộ các cấp hoặc khi thành lập mới tổ chức.</td>
+                                        <td>Thực hiện theo hướng dẫn của cấp ủy cấp trên.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Xây dựng, hoàn thiện Quy chế làm việc của BCH, BTV</td>
+                                        <td>Đầu nhiệm kỳ (3 tháng sau Đại hội) / khi có điều chỉnh lớn về tổ chức.</td>
+                                        <td>Phải cụ thể hóa nguyên tắc tập trung dân chủ và nhiệm vụ chính trị.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Phân công nhiệm vụ cấp ủy viên</td>
+                                        <td>Đầu nhiệm kỳ, đầu năm, hoặc khi có biến động nhân sự.</td>
+                                        <td>Bí thư phụ trách chung, tư tưởng, tổ chức, KTGS. Các UV phụ trách chuyên trách.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Quy hoạch cấp ủy cơ sở</td>
+                                        <td>Quý 1 hàng năm (trước 01/3), có điều chỉnh, bổ sung.</td>
+                                        <td>Đảm bảo hệ số từ 1,0 - 1,5 lần (số lượng cấp ủy).</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kiện toàn cấp ủy (bổ sung/chỉ định)</td>
+                                        <td>Khi thiếu số lượng cấp ủy viên.</td>
+                                        <td>Thẩm quyền chỉ định của cấp ủy cấp trên. Chú trọng cán bộ nữ, cán bộ trẻ.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Thôi tham gia cấp ủy/từ chức</td>
+                                        <td>Nguyện vọng cá nhân/điều chuyển công tác/không hoàn thành nhiệm vụ.</td>
+                                        <td>Cần sự đồng ý của > 50% tổng số UV BCH/BTV và được cấp trên chuẩn y.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 3.2 Công tác Tổ chức cơ sở đảng và đảng viên -->
+                        <h3 class="text-lg font-semibold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-users mr-2"></i>3.2. Công tác Tổ chức cơ sở đảng và đảng viên</h3>
+                        <div class="overflow-x-auto">
+                            <table class="text-sm w-full min-w-[600px]">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1/4">Nội dung</th>
+                                        <th class="w-1/4">Thời hạn/Quy định</th>
+                                        <th class="w-1/2">Yêu cầu và Lưu ý</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kết nạp đảng viên</td>
+                                        <td>Thường xuyên theo kế hoạch năm.</td>
+                                        <td>Đảm bảo tiêu chuẩn, quy trình 5 bước. Cần thẩm tra lý lịch, trình Ban Thường vụ Đảng ủy BIDV.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Công nhận chính thức</td>
+                                        <td>Trong 30 ngày sau khi hết 12 tháng dự bị.</td>
+                                        <td>Cần có bản tự kiểm điểm và ý kiến của Chi bộ/Đảng bộ.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Chuyển sinh hoạt Đảng</td>
+                                        <td><span class="font-medium">Chính thức:</span> 60 ngày. <span class="font-medium">Tạm thời:</span> 3 tháng - 1 năm.</td>
+                                        <td>Tạm thời đóng đảng phí nơi tạm thời; sau đó phải hoàn trả phiếu chuyển sinh hoạt cho nơi cấp.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Xóa tên đảng viên</td>
+                                        <td>Khi vi phạm, bỏ sinh hoạt/không đóng phí 3 tháng (không có lý do chính đáng), tự ý trả thẻ...</td>
+                                        <td>Thực hiện theo quy trình thi hành kỷ luật. Quyết định của Chi bộ phải được cấp trên chuẩn y.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tặng Huy hiệu Đảng</td>
+                                        <td>Tháng 12 – Tháng 01 hàng năm (làm thủ tục).</td>
+                                        <td>Các mức: 30, 40, 50, 55, 60, 65, 70, 75, 80 năm tuổi Đảng.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p class="font-medium text-gray-800 ml-4 mt-4 mb-2">Về chế độ Sinh hoạt và đánh giá:</p>
+                        <ul class="list-disc list-inside text-gray-700 ml-6 space-y-1">
+                            <li>Đảng bộ cơ sở họp 2 lần/năm (sơ kết 6 tháng, tổng kết năm).</li>
+                            <li>Cấp ủy họp định kỳ 1 lần/tháng.</li>
+                            <li>Chi bộ họp định kỳ 1 lần/tháng (thống nhất ngày 03). <span class="font-medium">KHÔNG kết hợp họp chi bộ với họp chuyên môn.</span></li>
+                            <li>Sinh hoạt chuyên đề: <span class="font-medium">Ít nhất 1 lần/quý.</span></li>
+                            <li>Kiểm điểm xếp loại: Trước 15/12 hàng năm (đánh giá tổ chức đảng, cá nhân đảng viên).</li>
+                        </ul>
+
+                        <!-- 3.3 Công tác Bảo vệ Chính trị nội bộ -->
+                        <h3 class="text-lg font-semibold bidv-text-main mt-6 mb-3 border-b pb-1"><i class="fas fa-shield-alt mr-2"></i>3.3. Công tác Bảo vệ Chính trị nội bộ</h3>
+                        <p class="text-gray-700 ml-4">Nhiệm vụ trọng tâm là công tác thẩm tra, xác minh, kết luận tiêu chuẩn chính trị cán bộ, đảng viên. Nội dung này thường được thực hiện theo nguyên tắc "mật" (Quy định 367-QĐ/TW), cấp ủy cơ sở cần phối hợp chặt chẽ với cơ quan chuyên môn cấp trên.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHƯƠNG IV: CÔNG TÁC KIỂM TRA, GIÁM SÁT, KỶ LUẬT ĐẢNG (Từ file Word gốc) -->
+            <div id="chuong4" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(4)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-check-double mr-3 bidv-text-accent"></i>IV. CÔNG TÁC KIỂM TRA, GIÁM SÁT, KỶ LUẬT ĐẢNG</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
+                </button>
+                <div id="chapter4Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        <p class="text-gray-700 mb-4 italic border-l-2 border-yellow-500 pl-3">Kiểm tra, giám sát (KTGS) là chức năng lãnh đạo của Đảng, phải được tiến hành thường xuyên, từ chi bộ đến cấp ủy các cấp. Mọi đảng viên đều bình đẳng trước kỷ luật của Đảng.</p>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">4.1. Nhiệm vụ Kiểm tra, Giám sát của Cấp ủy (BCH/BTV)</h3>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-2">
+                            <li><span class="font-medium">Lãnh đạo, chỉ đạo công tác KTGS:</span> Xây dựng chương trình, kế hoạch KTGS hàng năm, phân công cấp ủy viên theo dõi, đôn đốc.</li>
+                            <li><span class="font-medium">Kiểm tra tổ chức đảng cấp dưới và đảng viên:</span> Tập trung vào việc chấp hành Cương lĩnh, Điều lệ Đảng, Nghị quyết, chính sách; kiểm tra đảng viên, nhất là cán bộ chủ chốt, người đứng đầu.</li>
+                            <li><span class="font-medium">Giải quyết tố cáo:</span> Thẩm tra, xác minh, giải quyết tố cáo đối với tổ chức đảng và đảng viên thuộc thẩm quyền.</li>
+                            <li><span class="font-medium">Thẩm quyền thi hành kỷ luật:</span>
+                                <ul class="list-circle list-inside ml-6 mt-1 space-y-1">
+                                    <li><span class="font-medium">Đảng viên:</span> Có quyền thi hành các hình thức kỷ luật (Khiển trách, Cảnh cáo, Cách chức, Khai trừ) nếu được cấp trên ủy quyền.</li>
+                                    <li><span class="font-medium">Tổ chức đảng cấp dưới:</span> Thi hành kỷ luật bằng hình thức Khiển trách, Cảnh cáo.</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">4.2. Nhiệm vụ Kiểm tra, Giám sát của Ủy ban Kiểm tra (UBKT)</h3>
+                        <p class="text-gray-700 ml-4 mb-2">UBKT (thường có từ 3-5 ủy viên, do BCH bầu) có 6 nhiệm vụ chính theo Điều lệ Đảng:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-2">
+                            <li>Kiểm tra tổ chức đảng cấp dưới và đảng viên khi có <span class="font-medium">dấu hiệu vi phạm</span> Cương lĩnh, Điều lệ, nghị quyết, chỉ thị của Đảng. (Đây là nhiệm vụ trọng tâm).</li>
+                            <li>Kiểm tra việc thực hiện nhiệm vụ KTGS và thi hành kỷ luật trong Đảng của tổ chức đảng cấp dưới.</li>
+                            <li>Giám sát thường xuyên tổ chức đảng và đảng viên về việc chấp hành đường lối, chính sách, giữ gìn phẩm chất đạo đức, lối sống.</li>
+                            <li>Kiểm tra tài chính Đảng cấp dưới.</li>
+                            <li>Giải quyết tố cáo đối với tổ chức đảng và đảng viên; giải quyết khiếu nại về kỷ luật Đảng.</li>
+                            <li><span class="font-medium">Kiểm soát việc kê khai tài sản, thu nhập</span> của cán bộ thuộc diện cấp ủy quản lý.</li>
+                        </ol>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">4.3. Nhiệm vụ Kiểm tra, Giám sát và Kỷ luật của Chi bộ</h3>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-2">
+                            <li>Xây dựng và thực hiện kế hoạch KTGS đảng viên (thường xuyên, theo chuyên đề).</li>
+                            <li>Giải quyết tố cáo, kiểm tra dấu hiệu vi phạm đối với đảng viên trong chi bộ.</li>
+                            <li><span class="font-medium">Thẩm quyền kỷ luật:</span> Chi bộ có quyền quyết định kỷ luật <span class="italic">Khiển trách, Cảnh cáo</span> đối với đảng viên trong chi bộ (sau đó phải báo cáo cấp trên chuẩn y).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHƯƠNG V: CÔNG TÁC TÀI CHÍNH ĐẢNG (Từ file Word gốc) -->
+            <div id="chuong5" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(5)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-hand-holding-usd mr-3 bidv-text-accent"></i>V. CÔNG TÁC TÀI CHÍNH ĐẢNG</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
+                </button>
+                <div id="chapter5Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">5.1. Thu, nộp Đảng phí</h3>
+                        <p class="text-gray-700 ml-4 mb-2">Đảng phí là nguồn thu chủ yếu, bao gồm:</p>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                            <li>Đảng phí do đảng viên đóng (trích theo tỷ lệ lương).</li>
+                            <li>Kinh phí cấp trên cấp.</li>
+                            <li>Các khoản thu hợp pháp khác (chủ yếu là cấp dưới nộp và nguồn hỗ trợ từ chuyên môn).</li>
+                        </ul>
+                        <p class="text-gray-700 ml-4 mt-2">Quy trình: Thu đúng, Thu đủ, Đúng pháp lý. Tại BIDV, việc thu nộp đảng phí thường được thực hiện tự động qua <span class="font-medium">Chương trình P.S</span> (trích lương) và theo dõi chặt chẽ.</p>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">5.2. Quản lý, sử dụng Tài chính Đảng</h3>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                            <li><span class="font-medium">Lập Dự toán:</span> Lập dự toán thu chi hàng năm, cân đối nguồn thu và nguồn chi. Phải nộp lên cấp trên <span class="italic">trước 25/12</span> hàng năm.</li>
+                            <li><span class="font-medium">Các khoản chi:</span> Chi cho công tác tuyên truyền, học tập, Đại hội, khen thưởng, phụ cấp cấp ủy, thăm hỏi, hỗ trợ sinh hoạt chi bộ... Chi theo đúng quy định của Trung ương và Đảng ủy cấp trên.</li>
+                            <li><span class="font-medium">Báo cáo Quyết toán:</span> Thực hiện báo cáo Quyết toán Quý (trước ngày 10 tháng đầu quý sau) và Quyết toán Năm (trước 15/3 năm sau).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHƯƠNG VI: CÔNG TÁC THƯ KÝ GIÚP VIỆC CẤP ỦY (Từ file Word gốc) -->
+            <div id="chuong6" class="bidv-chapter-card">
+                <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(6)">
+                    <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-pencil-ruler mr-3 bidv-text-accent"></i>VI. CÔNG TÁC THƯ KÝ GIÚP VIỆC CẤP ỦY</span>
+                    <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 transform rotate-0"></i>
+                </button>
+                <div id="chapter6Content" class="content-section collapsed bg-white p-6 rounded-b-xl shadow-lg border-t border-gray-200">
+                    <div class="section-content">
+                        <h3 class="text-lg font-semibold bidv-text-main mb-3 border-b pb-1">6.1. Chương trình công tác năm</h3>
+                        <p class="text-gray-700 ml-4 mb-2">Là kim chỉ nam hoạt động của cấp ủy. Yêu cầu:</p>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                            <li>Có tính kế hoạch, đảm bảo thực hiện thắng lợi nghị quyết Đại hội.</li>
+                            <li>Nội dung rõ ràng: <span class="font-medium">Rõ tiến độ, rõ người/việc/trách nhiệm.</span></li>
+                            <li>Phải được BCH/BTV thông qua và ban hành chính thức.</li>
+                        </ul>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">6.2. Tổ chức Hội nghị/Cuộc họp Cấp ủy</h3>
+                        <p class="text-gray-700 ml-4 mb-2">Thư ký/Văn phòng cấp ủy cần đảm bảo quy trình:</p>
+                        <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-2">
+                            <li><span class="font-medium">Xác định Mục đích:</span> Phù hợp với chức năng, nhiệm vụ.</li>
+                            <li><span class="font-medium">Chuẩn bị Tài liệu:</span> Gửi trước cho các thành viên tối thiểu 3 ngày (trừ văn bản mật).</li>
+                            <li><span class="font-medium">Triệu tập:</span> Đúng thành phần, thời gian, địa điểm.</li>
+                            <li><span class="font-medium">Hậu cần:</span> Đảm bảo phục vụ tốt cho cuộc họp.</li>
+                            <li><span class="font-medium">Điều hành:</span> Đảm bảo Bí thư/người chủ trì điều hành khoa học, đúng quy chế.</li>
+                            <li><span class="font-medium">Hoàn thiện Hồ sơ:</span> Thu thập đầy đủ tài liệu, biên bản, kết luận.</li>
+                        </ol>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">6.3. Biên bản & Kết luận/Nghị quyết</h3>
+                        <ul class="list-disc list-inside text-gray-700 ml-4 space-y-2">
+                            <li><span class="font-medium">Biên bản:</span> Phải ghi trung thực, đầy đủ diễn biến, ý kiến phát biểu và <span class="italic">ghi rõ tỷ lệ biểu quyết.</span></li>
+                            <li><span class="font-medium">Kết luận/Nghị quyết:</span>
+                                <ul class="list-circle list-inside ml-6 mt-1 space-y-1">
+                                    <li>Đảm bảo tính chính trị, tính khoa học và tính khả thi. Nên có sự tham gia của nhiều đồng chí trong cấp ủy để đảm bảo khách quan.</li>
+                                    <li><span class="font-medium">Ban hành chính thức:</span> Văn bản được ban hành khi có sự thống nhất cao của tập thể. Đồng chí bí thư/phó bí thư cấp ủy đại diện ký, đóng dấu.</li>
+                                    <li><span class="font-medium">Công khai:</span> Sau khi ký ban hành, văn bản cần được gửi đến tất cả đơn vị, cá nhân liên quan và đăng tải tại nơi sinh hoạt chung của chi/đảng bộ để đảm bảo tính minh bạch.</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h3 class="text-lg font-semibold bidv-text-main mt-5 mb-3 border-b pb-1">6.4. Đôn đốc, nhắc nhở, kiểm tra tiến độ</h3>
+                        <div class="ml-4">
+                            <p class="font-bold text-gray-800 mb-2">A. Phân công trách nhiệm thực hiện</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                                <li>Ngay trong nghị quyết/kết luận, cần phân công rõ trách nhiệm cho từng đơn vị, cá nhân: <span class="font-medium">Nhiệm vụ ai, việc gì, thời gian nào phải rõ ràng.</span></li>
+                                <li>Bản phân công phải đảm bảo tính khả thi và cần được công khai trước toàn thể để mọi người biết và giám sát.</li>
+                            </ul>
+                            <p class="font-bold text-gray-800 mt-3 mb-2">B. Tổ chức kiểm tra, giám sát tiến độ</p>
+                            <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                                <li>Cấp ủy phải đi kèm cơ chế kiểm tra, giám sát, ban hành <span class="font-medium">kế hoạch kiểm tra định kỳ</span>, có thời gian, nội dung, đối tượng cụ thể.</li>
+                                <li>Việc giám sát cần kết hợp nhiều hình thức (nghe báo cáo, kiểm tra thực tế, lấy ý kiến phản hồi) để thông tin chính xác, kịp thời phát hiện vướng mắc.</li>
+                                <li>Cần chú trọng <span class="font-medium">sơ kết giữa kỳ</span> để đánh giá bước đầu, rút kinh nghiệm và nhân rộng mô hình tốt.</li>
+                            </ul>
+                            <p class="font-bold text-gray-800 mt-3 mb-2">C. Đôn đốc, nhắc nhở, đánh giá cuối kỳ</p>
+                            <p class="text-gray-700 ml-4">Tổng kết, đánh giá cuối kỳ là bắt buộc để kết thúc một giai đoạn công tác, phục vụ cho công tác kiểm điểm, xếp loại của tổ chức đảng và cá nhân đảng viên.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Nút Cuộn Lên Đầu Trang -->
+    <button id="scrollToTopBtn"
+            class="scroll-button hidden-btn fixed bottom-6 right-6 p-4 bidv-main text-white rounded-full shadow-lg hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-yellow-300"
+            title="Cuộn lên đầu trang">
+        <i class="fas fa-arrow-up text-xl bidv-text-accent"></i>
+    </button>
+
+    <script>
+        // --- LOGIC SEARCH & COLLAPSE ---
+        const chapterContents = [
+            { id: 1, title: 'I. BÁO CÁO TỔNG HỢP...' },
+            { id: 2, title: 'II. CÔNG TÁC TUYÊN GIÁO...' },
+            { id: 3, title: 'III. CÔNG TÁC TỔ CHỨC...' },
+            { id: 4, title: 'IV. CÔNG TÁC KIỂM TRA...' },
+            { id: 5, title: 'V. CÔNG TÁC TÀI CHÍNH...' },
+            { id: 6, title: 'VI. CÔNG TÁC THƯ KÝ...' }
+        ];
+
+        function toggleChapter(chapterId) {
+            const contentDiv = document.getElementById(`chapter${chapterId}Content`);
+            const toggleButton = contentDiv.previousElementSibling;
+            const icon = toggleButton.querySelector('.toggle-icon');
+
+            // Đóng các chương khác
+            chapterContents.forEach(chapter => {
+                const otherContent = document.getElementById(`chapter${chapter.id}Content`);
+                if (otherContent && otherContent.id !== contentDiv.id && otherContent.classList.contains('expanded')) {
+                    const otherIcon = otherContent.previousElementSibling.querySelector('.toggle-icon');
+                    otherContent.classList.remove('expanded');
+                    otherContent.classList.add('collapsed');
+                    otherIcon.classList.remove('rotate-180');
+                }
+            });
+
+            // Toggle chương hiện tại
+            if (contentDiv.classList.contains('expanded')) {
+                contentDiv.classList.remove('expanded');
+                contentDiv.classList.add('collapsed');
+                icon.classList.remove('rotate-180');
+            } else {
+                contentDiv.classList.remove('collapsed');
+                contentDiv.classList.add('expanded');
+                icon.classList.add('rotate-180');
+                
+                // Cuộn nhẹ đến chương vừa mở
+                setTimeout(() => {
+                    toggleButton.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        }
+
+        function searchContent() {
+            const searchText = document.getElementById('searchInput').value.trim();
+            const contentContainer = document.getElementById('contentContainer');
+            const searchMessage = document.getElementById('searchMessage');
+            
+            // Bước 1: Loại bỏ highlight cũ
+            removeHighlight(contentContainer);
+
+            if (searchText.length < 2) {
+                searchMessage.classList.add('hidden');
+                return;
+            }
+
+            const regex = new RegExp('(' + escapeRegExp(searchText) + ')', 'gi');
+            let matchCount = 0;
+            
+            // Bước 2: Tìm kiếm và thêm highlight mới
+            const textElements = contentContainer.querySelectorAll('.section-content p, .section-content li, .section-content td, .section-content h3, .section-content span, .section-content b, .section-content strong, .section-content th');
+
+            textElements.forEach(element => {
+                // Chỉ xử lý các node Text (để tránh làm hỏng cấu trúc HTML)
+                let nodes = Array.from(element.childNodes);
+                let elementMatchCount = 0;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    let node = nodes[i];
+                    if (node.nodeType === 3) { // Node Text
+                        let text = node.nodeValue;
+                        if (regex.test(text)) {
+                            // Tạo span.highlight cho các từ được tìm thấy
+                            const fragment = document.createDocumentFragment();
+                            let lastIndex = 0;
+                            let match;
+
+                            while ((match = regex.exec(text)) !== null) {
+                                // Thêm phần văn bản trước match
+                                if (match.index > lastIndex) {
+                                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                                }
+
+                                // Thêm highlight span
+                                const span = document.createElement('span');
+                                span.className = 'highlight';
+                                span.textContent = match[0];
+                                fragment.appendChild(span);
+                                
+                                lastIndex = regex.lastIndex;
+                                elementMatchCount++;
+                            }
+                            
+                            // Thêm phần văn bản còn lại sau match cuối cùng
+                            if (lastIndex < text.length) {
+                                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                            }
+                            
+                            // Thay thế node Text cũ bằng fragment mới
+                            element.replaceChild(fragment, node);
+                            matchCount += elementMatchCount;
+
+                            // Cập nhật lại danh sách nodes
+                            nodes = Array.from(element.childNodes);
+                            i += elementMatchCount; // Bỏ qua các span vừa chèn
+                        }
+                    }
+                }
+                
+                // Mở rộng chương chứa kết quả
+                if (elementMatchCount > 0) {
+                    const chapterCard = element.closest('.bidv-chapter-card');
+                    if (chapterCard) {
+                        const chapterId = chapterCard.id.replace('chuong', '');
+                        const contentDiv = document.getElementById(`chapter${chapterId}Content`);
+                        if (contentDiv && contentDiv.classList.contains('collapsed')) {
+                            const icon = contentDiv.previousElementSibling.querySelector('.toggle-icon');
+                            contentDiv.classList.remove('collapsed');
+                            contentDiv.classList.add('expanded');
+                            icon.classList.add('rotate-180');
+                        }
+                    }
+                }
+            });
+            
+            // Bước 3: Hiển thị thông báo kết quả
+            searchMessage.classList.remove('hidden');
+            if (matchCount > 0) {
+                searchMessage.textContent = `Tìm thấy ${matchCount} kết quả.`;
+                searchMessage.classList.remove('text-red-500');
+                searchMessage.classList.add('bidv-text-accent');
+            } else {
+                searchMessage.textContent = `Không tìm thấy kết quả nào.`;
+                searchMessage.classList.add('text-red-500');
+                searchMessage.classList.remove('bidv-text-accent');
+            }
+        }
+
+        function escapeRegExp(string) {
+            // $& means the whole matched string
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function removeHighlight(element) {
+            const highlights = element.querySelectorAll('.highlight');
+            highlights.forEach(span => {
+                const parent = span.parentNode;
+                // Thay thế thẻ span bằng nội dung văn bản bên trong nó
+                parent.replaceChild(document.createTextNode(span.textContent), span);
+                parent.normalize(); // Hợp nhất các TextNode liền kề
+            });
+        }
+
+        // --- SCROLL TO TOP LOGIC ---
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.remove('hidden-btn');
+            } else {
+                scrollToTopBtn.classList.add('hidden-btn');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Khởi tạo: Mở chương I
+        window.onload = () => {
+             // Mở chương I
+             const ch1 = document.getElementById('chapter1Content');
+             if(ch1) {
+                 ch1.classList.remove('collapsed');
+                 ch1.classList.add('expanded');
+                 ch1.previousElementSibling.querySelector('.toggle-icon').classList.add('rotate-180');
+             }
+        };
+    </script>
+</body>
+</html>
