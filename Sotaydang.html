@@ -23,14 +23,6 @@
             font-family: 'Be Vietnam Pro', sans-serif;
         }
 
-        /* Styling cho phần Highlight khi tìm kiếm (tô nền vàng) */
-        .highlight {
-            background-color: #FFC62F; /* Màu vàng BIDV */
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
         /* Logo Placeholder */
         .logo-placeholder {
             width: 100px; 
@@ -50,7 +42,7 @@
             transition: max-height 0.5s ease-in;
         }
 
-        /* Nút Scroll Up (Đã đổi màu theo yêu cầu) */
+        /* Nút Scroll Up */
         .scroll-button {
             transition: opacity 0.3s, transform 0.3s;
             z-index: 50;
@@ -126,32 +118,59 @@
         .section-content .ml-6 {
             padding-left: 1.5rem;
         }
+        
+        /* Style cho placeholder ảnh */
+        .img-placeholder-container {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .img-placeholder-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+        }
+        .img-caption {
+            margin-top: 0.5rem;
+            font-style: italic;
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen relative pb-20">
 
     <div class="container mx-auto p-3 sm:p-6 lg:p-8">
-        <!-- Header và Thanh tìm kiếm -->
+        <!-- Header -->
         <header class="bidv-main text-white p-6 rounded-xl shadow-lg mb-6">
-            <div class="flex items-center mb-4 flex-wrap">
-                <!-- Logo -->
-                <img src="https://thegioibackground.com/wp-content/uploads/2025/07/co-dang-co-viet-nam-2.jpg" 
-                     alt="Logo Đảng" 
-                     class="logo-placeholder rounded-md mr-4 shadow-sm bg-white p-1"
-                     onerror="this.onerror=null; this.src='https://placehold.co/100x60/fff/006B68?text=BIDV';">
-                
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-wide leading-tight">
-                    <i class="fas fa-book-open mr-2 bidv-text-accent"></i>SỔ TAY CÔNG TÁC ĐẢNG VỤ
-                </h1>
+            <div class="flex items-center mb-4 flex-wrap justify-between">
+                <div class="flex items-center flex-wrap">
+                    <!-- Logo -->
+                    <img src="https://thegioibackground.com/wp-content/uploads/2025/07/co-dang-co-viet-nam-2.jpg" 
+                         alt="Logo Đảng" 
+                         class="logo-placeholder rounded-md mr-4 shadow-sm bg-white p-1"
+                         onerror="this.onerror=null; this.src='https://placehold.co/100x60/fff/006B68?text=BIDV';">
+                    
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-wide leading-tight">
+                            <i class="fas fa-book-open mr-2 bidv-text-accent"></i>SỔ TAY CÔNG TÁC ĐẢNG VỤ
+                        </h1>
+                        <p class="text-lg opacity-90 pl-1 border-l-4 border-yellow-400 mt-2">Dành cho Cấp ủy viên cơ sở</p>
+                    </div>
+                </div>
             </div>
-            <p class="text-lg mb-4 opacity-90 pl-1 border-l-4 border-yellow-400">Dành cho Cấp ủy viên cơ sở</p>
             
-            <div class="relative group">
-                <input type="text" id="searchInput" oninput="searchContent()" placeholder="Tìm kiếm nội dung (ví dụ: Tập trung dân chủ, Đảng phí, Kiểm tra...)"
-                       class="w-full p-3 pl-10 text-gray-800 rounded-lg shadow-inner focus:ring-4 focus:ring-yellow-400/50 focus:border-yellow-400 transition duration-150 outline-none">
-                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-600"></i>
+            <!-- Nút điều khiển mở rộng/thu hẹp -->
+            <div class="flex gap-3 mt-4">
+                <button onclick="expandAll()" class="bg-white text-teal-800 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-400 hover:text-teal-900 transition flex items-center">
+                    <i class="fas fa-expand-arrows-alt mr-2"></i> Mở tất cả
+                </button>
+                <button onclick="collapseAll()" class="bg-teal-700 text-white border border-teal-600 px-4 py-2 rounded-lg font-bold shadow hover:bg-teal-800 transition flex items-center">
+                    <i class="fas fa-compress-arrows-alt mr-2"></i> Thu hẹp tất cả
+                </button>
             </div>
-            <div id="searchMessage" class="mt-2 text-sm font-bold bidv-text-accent hidden"></div>
         </header>
 
         <!-- Khung nội dung chính -->
@@ -172,7 +191,7 @@
                 </ul>
             </div>
             
-            <!-- CHƯƠNG I: BÁO CÁO TỔNG HỢP (Nội dung mới từ user) -->
+            <!-- CHƯƠNG I: BÁO CÁO TỔNG HỢP -->
             <div id="chuong1" class="bidv-chapter-card">
                 <button class="chapter-toggle w-full flex justify-between items-center bidv-main text-white p-4 rounded-t-xl shadow-md focus:outline-none hover:bg-teal-800 transition" onclick="toggleChapter(1)">
                     <span class="text-lg sm:text-xl font-bold text-left"><i class="fas fa-star mr-3 bidv-text-accent"></i>I. BÁO CÁO TỔNG HỢP VỀ CÔNG TÁC LÃNH ĐẠO VÀ XÂY DỰNG TỔ CHỨC ĐẢNG CƠ SỞ</span>
@@ -183,6 +202,13 @@
                         
                         <!-- 1.1 PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG (Chi tiết) -->
                         <h3 class="text-xl font-bold bidv-text-main mb-3 border-b pb-1"><i class="fas fa-tasks mr-2"></i>I. PHƯƠNG THỨC LÃNH ĐẠO CỦA ĐẢNG</h3>
+                        
+                        <!-- Yêu cầu 3: Chèn ảnh "trongtam.png" vào đây -->
+                        <div class="img-placeholder-container">
+                            <img src="trongtam.png" alt="Nâng cao năng lực lãnh đạo tổ chức cơ sở đảng" onerror="this.src='https://placehold.co/800x400/e0f2f1/006B68?text=Ảnh:+trongtam.png'">
+                            <p class="img-caption">Nâng cao năng lực lãnh đạo tổ chức cơ sở đảng</p>
+                        </div>
+
                         <p class="text-gray-700 ml-4 mb-3">Đảng Cộng sản Việt Nam lãnh đạo bằng nhiều phương thức, bao gồm 5 phương thức cốt lõi được áp dụng tại các tổ chức cơ sở đảng:</p>
                         <ol class="list-decimal list-inside text-gray-700 ml-4 space-y-3">
                             <li><span class="font-bold">Lãnh đạo bằng chủ trương, đường lối, nghị quyết:</span> Đảng lãnh đạo thông qua việc đề ra các chủ trương, đường lối, chính sách lớn. Các tổ chức đảng ở cơ sở cụ thể hóa những chủ trương, đường lối này thành các nghị quyết lãnh đạo sát, đúng và xây dựng chương trình hành động cụ thể để triển khai.</li>
@@ -316,6 +342,12 @@
                                 </ul>
                             </li>
                         </ol>
+
+                         <!-- Yêu cầu 4: Chèn ảnh "Nhiemvucapuyvien.png" vào đây (Cuối Chương 1, trước khi sang Chương 2) -->
+                        <div class="img-placeholder-container mt-6">
+                            <img src="Nhiemvucapuyvien.png" alt="Sổ tay công tác đảng" onerror="this.src='https://placehold.co/800x400/e0f2f1/006B68?text=Ảnh:+Nhiemvucapuyvien.png'">
+                            <p class="img-caption">Sổ tay công tác đảng</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -636,7 +668,30 @@
     </button>
 
     <script>
-        // --- LOGIC SEARCH & COLLAPSE ---
+        // --- LOGIC EXPAND/COLLAPSE ALL ---
+        function expandAll() {
+            const allContents = document.querySelectorAll('.content-section');
+            allContents.forEach(content => {
+                content.classList.remove('collapsed');
+                content.classList.add('expanded');
+                // Xoay icon
+                const icon = content.previousElementSibling.querySelector('.toggle-icon');
+                if (icon) icon.classList.add('rotate-180');
+            });
+        }
+
+        function collapseAll() {
+            const allContents = document.querySelectorAll('.content-section');
+            allContents.forEach(content => {
+                content.classList.remove('expanded');
+                content.classList.add('collapsed');
+                // Xoay icon về mặc định
+                const icon = content.previousElementSibling.querySelector('.toggle-icon');
+                if (icon) icon.classList.remove('rotate-180');
+            });
+        }
+
+        // --- LOGIC COLLAPSE CHAPTER ---
         const chapterContents = [
             { id: 1, title: 'I. BÁO CÁO TỔNG HỢP...' },
             { id: 2, title: 'II. CÔNG TÁC TUYÊN GIÁO...' },
@@ -650,17 +705,6 @@
             const contentDiv = document.getElementById(`chapter${chapterId}Content`);
             const toggleButton = contentDiv.previousElementSibling;
             const icon = toggleButton.querySelector('.toggle-icon');
-
-            // Đóng các chương khác
-            chapterContents.forEach(chapter => {
-                const otherContent = document.getElementById(`chapter${chapter.id}Content`);
-                if (otherContent && otherContent.id !== contentDiv.id && otherContent.classList.contains('expanded')) {
-                    const otherIcon = otherContent.previousElementSibling.querySelector('.toggle-icon');
-                    otherContent.classList.remove('expanded');
-                    otherContent.classList.add('collapsed');
-                    otherIcon.classList.remove('rotate-180');
-                }
-            });
 
             // Toggle chương hiện tại
             if (contentDiv.classList.contains('expanded')) {
@@ -677,116 +721,6 @@
                     toggleButton.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 300);
             }
-        }
-
-        function searchContent() {
-            const searchText = document.getElementById('searchInput').value.trim();
-            const contentContainer = document.getElementById('contentContainer');
-            const searchMessage = document.getElementById('searchMessage');
-            
-            // Bước 1: Loại bỏ highlight cũ
-            removeHighlight(contentContainer);
-
-            if (searchText.length < 2) {
-                searchMessage.classList.add('hidden');
-                return;
-            }
-
-            const regex = new RegExp('(' + escapeRegExp(searchText) + ')', 'gi');
-            let matchCount = 0;
-            
-            // Bước 2: Tìm kiếm và thêm highlight mới
-            const textElements = contentContainer.querySelectorAll('.section-content p, .section-content li, .section-content td, .section-content h3, .section-content span, .section-content b, .section-content strong, .section-content th');
-
-            textElements.forEach(element => {
-                // Chỉ xử lý các node Text (để tránh làm hỏng cấu trúc HTML)
-                let nodes = Array.from(element.childNodes);
-                let elementMatchCount = 0;
-
-                for (let i = 0; i < nodes.length; i++) {
-                    let node = nodes[i];
-                    if (node.nodeType === 3) { // Node Text
-                        let text = node.nodeValue;
-                        if (regex.test(text)) {
-                            // Tạo span.highlight cho các từ được tìm thấy
-                            const fragment = document.createDocumentFragment();
-                            let lastIndex = 0;
-                            let match;
-
-                            while ((match = regex.exec(text)) !== null) {
-                                // Thêm phần văn bản trước match
-                                if (match.index > lastIndex) {
-                                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
-                                }
-
-                                // Thêm highlight span
-                                const span = document.createElement('span');
-                                span.className = 'highlight';
-                                span.textContent = match[0];
-                                fragment.appendChild(span);
-                                
-                                lastIndex = regex.lastIndex;
-                                elementMatchCount++;
-                            }
-                            
-                            // Thêm phần văn bản còn lại sau match cuối cùng
-                            if (lastIndex < text.length) {
-                                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
-                            }
-                            
-                            // Thay thế node Text cũ bằng fragment mới
-                            element.replaceChild(fragment, node);
-                            matchCount += elementMatchCount;
-
-                            // Cập nhật lại danh sách nodes
-                            nodes = Array.from(element.childNodes);
-                            i += elementMatchCount; // Bỏ qua các span vừa chèn
-                        }
-                    }
-                }
-                
-                // Mở rộng chương chứa kết quả
-                if (elementMatchCount > 0) {
-                    const chapterCard = element.closest('.bidv-chapter-card');
-                    if (chapterCard) {
-                        const chapterId = chapterCard.id.replace('chuong', '');
-                        const contentDiv = document.getElementById(`chapter${chapterId}Content`);
-                        if (contentDiv && contentDiv.classList.contains('collapsed')) {
-                            const icon = contentDiv.previousElementSibling.querySelector('.toggle-icon');
-                            contentDiv.classList.remove('collapsed');
-                            contentDiv.classList.add('expanded');
-                            icon.classList.add('rotate-180');
-                        }
-                    }
-                }
-            });
-            
-            // Bước 3: Hiển thị thông báo kết quả
-            searchMessage.classList.remove('hidden');
-            if (matchCount > 0) {
-                searchMessage.textContent = `Tìm thấy ${matchCount} kết quả.`;
-                searchMessage.classList.remove('text-red-500');
-                searchMessage.classList.add('bidv-text-accent');
-            } else {
-                searchMessage.textContent = `Không tìm thấy kết quả nào.`;
-                searchMessage.classList.add('text-red-500');
-                searchMessage.classList.remove('bidv-text-accent');
-            }
-        }
-
-        function escapeRegExp(string) {
-            // $& means the whole matched string
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-
-        function removeHighlight(element) {
-            const highlights = element.querySelectorAll('.highlight');
-            highlights.forEach(span => {
-                const parent = span.parentNode;
-                // Thay thế thẻ span bằng nội dung văn bản bên trong nó
-                parent.replaceChild(document.createTextNode(span.textContent), span);
-                parent.normalize(); // Hợp nhất các TextNode liền kề
-            });
         }
 
         // --- SCROLL TO TOP LOGIC ---
