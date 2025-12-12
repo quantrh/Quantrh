@@ -134,7 +134,7 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="resetForm()" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded">Hủy/Làm mới</button>
-                    <button type="submit" class="px-3 py-1.5 text-sm bg-[#006B68] text-white hover:bg-[#005a57] rounded">Lưu Task</button>
+                    <button type="submit" id="save-btn" class="px-3 py-1.5 text-sm bg-[#006B68] text-white hover:bg-[#005a57] rounded">Thêm Mới</button>
                 </div>
             </form>
 
@@ -177,12 +177,12 @@
         // Fetch Data
         async function fetchTasks() {
             try {
-                // Lấy tất cả task, sắp xếp theo sort_order
+                // Lấy tất cả task, sắp xếp theo day_key rồi đến sort_order
                 const { data, error } = await supabase
                     .from('tasks')
                     .select('*')
-                    .order('day_key')
-                    .order('sort_order');
+                    .order('day_key', { ascending: true })
+                    .order('sort_order', { ascending: true }); // Quan trọng: Sắp xếp theo thứ tự
                 
                 if (error) throw error;
                 allTasks = data;
@@ -212,6 +212,9 @@
 
             // Loop through day groups
             Object.entries(grouped).forEach(([dayKey, tasks]) => {
+                // Sort tasks just in case DB returns unsorted
+                tasks.sort((a, b) => a.sort_order - b.sort_order);
+
                 const dayCol = document.createElement('div');
                 dayCol.className = 'bg-white/70 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-gray-100';
                 
@@ -332,8 +335,9 @@
                 li.className = "flex justify-between items-center bg-white p-2 rounded border hover:bg-gray-50";
                 li.innerHTML = `
                     <div class="truncate mr-2">
-                        <span class="font-bold text-gray-500 text-xs">[${t.day_key}]</span> 
-                        <span class="text-gray-800">${t.content}</span>
+                        <span class="font-bold text-gray-500 text-xs mr-1">[${t.day_key}]</span> 
+                        <span class="font-bold text-blue-600 text-xs mr-2">#${t.sort_order}</span>
+                        <span class="text-gray-800 text-sm">${t.content}</span>
                     </div>
                     <div class="flex gap-2 shrink-0">
                         <button onclick='editTask(${JSON.stringify(t)})' class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
@@ -347,6 +351,7 @@
         function resetForm() {
             document.getElementById('task-form').reset();
             document.getElementById('task-id').value = '';
+            document.getElementById('save-btn').textContent = "Thêm Mới";
         }
 
         window.editTask = function(task) {
@@ -358,6 +363,7 @@
             document.getElementById('assignee').value = task.assignee;
             document.getElementById('is-checkpoint').checked = task.is_checkpoint;
             document.getElementById('is-golive').checked = task.is_golive;
+            document.getElementById('save-btn').textContent = "Cập Nhật";
         };
 
         window.deleteTask = async function(id) {
