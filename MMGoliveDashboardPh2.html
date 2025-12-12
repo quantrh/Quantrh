@@ -3,169 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Go-live Core Banking Myanmar V1.3</title>
+    <title>Dashboard Go-live Core Banking Myanmar V1.3 (Dynamic)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Import Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .task-card {
-            transition: all 0.3s ease;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-        .task-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .task-card { transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .checkpoint { border-left: 4px solid #FFC62F; }
+        .golive-event { border-left: 4px solid #16a34a; }
         .status-select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1.25em;
-            padding-right: 2rem;
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
         }
-        .progress-bar {
-            transition: width 0.5s ease-in-out;
-        }
-        .checkpoint {
-            border-left: 4px solid #FFC62F; /* BIDV Yellow */
-        }
-        .golive-event {
-             border-left: 4px solid #16a34a; /* Green 600 */
-        }
-        .timeline-container {
-            position: relative;
-        }
-        #current-time-indicator-vertical {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #ef4444; /* Red 500 */
-            z-index: 10;
-        }
-        #current-time-label-vertical {
-            position: absolute;
-            top: -10px;
-            transform: translateX(-50%);
-            background-color: #ef4444;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        #current-time-indicator-horizontal {
-            position: relative;
-            height: 2px;
-            background-color: #ef4444;
-            margin: 1rem 0;
-            width: 100%;
-        }
-        #current-time-label-horizontal {
-             position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #ef4444;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .gemini-btn, .lang-btn {
-            background-color: #006B68; /* BIDV Green */
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .gemini-btn:hover, .lang-btn:hover {
-            background-color: #004a48; /* Darker BIDV Green */
-        }
-        .lang-btn {
-            min-width: 50px;
-            text-align: center;
-        }
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 50;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 24px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 640px;
-            border-radius: 8px;
-            position: relative;
-        }
-        .close-btn {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-btn:hover,
-        .close-btn:focus {
-            color: black;
-        }
-         /* Spinner */
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #006B68; /* BIDV Green */
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        /* Modal & Loader styles */
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #006B68; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Toast */
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; right: 30px; bottom: 30px; opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 30px; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 text-slate-800">
 
     <div class="max-w-screen-xl mx-auto">
         <!-- Header -->
-        <div class="mb-8 text-center">
-            <h1 id="header-title" class="text-3xl md:text-4xl font-bold text-[#006B68]"></h1>
-            <div class="flex items-center justify-center gap-4 mt-2">
-                <p id="header-subtitle" class="text-lg text-gray-600"></p>
-                <button id="quick-report-btn" class="gemini-btn"></button>
-                <button id="lang-switcher-btn" class="lang-btn"></button>
+        <div class="mb-8 text-center relative">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#006B68]">Dashboard Go-live V1.3</h1>
+            <p class="text-lg text-gray-600 mt-2">Triển khai Core Banking Myanmar - Giai đoạn 2</p>
+            
+            <div class="flex items-center justify-center gap-3 mt-4">
+                <button onclick="openManageModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition text-sm">
+                    <i class="fa-solid fa-pen-to-square mr-2"></i> Quản lý Data
+                </button>
+            </div>
+            <div id="sync-status" class="text-xs text-gray-400 mt-2 italic">
+                <i class="fa-solid fa-circle text-green-500 text-[8px] mr-1"></i> Kết nối Supabase: Sẵn sàng
             </div>
         </div>
         
-        <!-- Banner Image -->
-        <div class="w-full h-48 md:h-64 bg-cover bg-center rounded-lg shadow-lg mb-8" style="background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop');">
-            <div class="w-full h-full bg-black bg-opacity-30 flex items-end p-6 rounded-lg">
+        <!-- Banner -->
+        <div class="w-full h-48 md:h-64 bg-cover bg-center rounded-lg shadow-lg mb-8 relative" style="background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop');">
+            <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 rounded-b-lg">
                 <div class="text-white">
-                    <h2 class="text-2xl font-bold">Chiến dịch Golive Core Banking V1.3 & Quantum</h2>
-                    <p class="opacity-90">Cập nhật theo CV 1452/CV-QLPTCB ngày 10/12/2025</p>
+                    <h2 class="text-2xl font-bold">Chiến dịch Golive Core Banking</h2>
+                    <p class="opacity-90 text-sm">Cập nhật dữ liệu trực tiếp từ Server</p>
                 </div>
             </div>
         </div>
@@ -173,7 +62,7 @@
         <!-- Progress Bar -->
         <div class="mb-8">
             <div class="flex justify-between mb-1">
-                <span id="progress-title" class="text-base font-medium text-[#006B68]"></span>
+                <span class="text-base font-medium text-[#006B68]">Tiến độ tổng thể</span>
                 <span class="text-sm font-medium text-[#006B68]" id="progress-text">0%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -181,306 +70,327 @@
             </div>
         </div>
 
-        <!-- Task Columns -->
-        <div class="timeline-container">
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="task-board">
-                <!-- Columns will be generated by JavaScript -->
-            </div>
-            <div id="current-time-indicator-vertical" style="display: none;">
-                <div id="current-time-label-vertical"></div>
-            </div>
+        <!-- Task Columns (Rendered dynamically) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="task-board">
+            <!-- Columns will be injected here -->
+            <div class="col-span-3 text-center py-10"><div class="loader"></div></div>
         </div>
-    </div>
-    
-    <!-- Modal for Gemini Response -->
-    <div id="gemini-modal" class="modal">
-      <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2 id="modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
-        <div id="modal-body" class="prose max-w-none">
-            <!-- Content will be injected here -->
-        </div>
-      </div>
     </div>
 
+    <!-- Modal: Quản lý Task -->
+    <div id="manage-modal" class="modal">
+        <div class="modal-content relative">
+            <span onclick="document.getElementById('manage-modal').style.display='none'" class="absolute top-3 right-4 text-2xl cursor-pointer text-gray-400 hover:text-gray-600">&times;</span>
+            <h2 class="text-xl font-bold mb-4 text-[#006B68] border-b pb-2">Quản lý Công việc</h2>
+            
+            <!-- Form thêm/sửa -->
+            <form id="task-form" class="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <input type="hidden" id="task-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Ngày (Nhóm)</label>
+                        <select id="day-key" class="w-full p-2 border rounded text-sm">
+                            <option value="day1">Ngày 1 (Cập nhật)</option>
+                            <option value="day2">Ngày 2 (Hậu kiểm)</option>
+                            <option value="day3">Ngày 3 (Golive)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Thứ tự hiển thị</label>
+                        <input type="number" id="sort-order" class="w-full p-2 border rounded text-sm" placeholder="VD: 1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Thời gian hiển thị</label>
+                    <input type="text" id="time-display" class="w-full p-2 border rounded text-sm" placeholder="VD: 17:00 MYT">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Nội dung công việc</label>
+                    <textarea id="content" class="w-full p-2 border rounded text-sm" rows="2" placeholder="Mô tả công việc..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Đơn vị đầu mối</label>
+                    <input type="text" id="assignee" class="w-full p-2 border rounded text-sm" placeholder="VD: Ban QLDA">
+                </div>
+                <div class="flex gap-4 items-center mt-2">
+                    <label class="inline-flex items-center text-sm">
+                        <input type="checkbox" id="is-checkpoint" class="form-checkbox text-[#006B68]"> <span class="ml-1">Là Checkpoint</span>
+                    </label>
+                    <label class="inline-flex items-center text-sm">
+                        <input type="checkbox" id="is-golive" class="form-checkbox text-green-600"> <span class="ml-1">Là Sự kiện Golive</span>
+                    </label>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="resetForm()" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded">Hủy/Làm mới</button>
+                    <button type="submit" class="px-3 py-1.5 text-sm bg-[#006B68] text-white hover:bg-[#005a57] rounded">Lưu Task</button>
+                </div>
+            </form>
+
+            <!-- Danh sách task rút gọn để sửa -->
+            <div class="max-h-60 overflow-y-auto border-t pt-2">
+                <h3 class="text-sm font-semibold mb-2">Danh sách hiện tại:</h3>
+                <ul id="admin-task-list" class="space-y-2 text-sm">
+                    <!-- List items generated by JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">Thông báo</div>
 
     <script>
-        // --- Data from CV 1452 ---
-        const taskStructure = {
-            day1: [ 
-                { id: 1, time: '09:00 - 18:00 MYT' }, 
-                { id: 2, time: '17:00 MYT', type: 'checkpoint' }, 
-                { id: 3, time: '17:00 - 20:00 MYT' },
-                { id: 4, time: '20:00 - 23:00 MYT' },
-                { id: 5, time: '23:00 MYT', type: 'checkpoint' }
-            ],
-            day2: [ 
-                { id: 6, time: '13/12 - 14/12' }, 
-                { id: 7, time: '13/12 - 14/12' },
-                { id: 8, time: '17:00 MYT (14/12)', type: 'checkpoint' },
-                { id: 9, time: 'Sau 17:00 (14/12)' }
-            ],
-            day3: [ 
-                { id: 10, time: '09:00 MYT', type: 'golive' },
-                { id: 11, time: 'Trong ngày' }
-            ]
-        };
-        
-        const translations = {
-            vi: {
-                header_title: "Dashboard Kế hoạch Go-live V1.3",
-                header_subtitle: "Triển khai Core Banking Myanmar - Giai đoạn 2",
-                quick_report_btn: "✨ Tạo Báo cáo Nhanh",
-                lang_btn: "EN",
-                progress_title: "Tiến độ tổng thể",
-                current_time: "Hiện tại",
-                modal_loading_title: "Đang xử lý...",
-                modal_loading_text: "Vui lòng chờ trong giây lát...",
-                risk_analysis_title: "✨ Phân tích Rủi ro & Đề xuất",
-                quick_report_title: "✨ Báo cáo Nhanh Trạng thái Dự án",
-                risk_analysis_btn: "✨ Phân tích Rủi ro",
-                statuses: { pending: 'Chưa bắt đầu', inprogress: 'Đang thực hiện', done: 'Hoàn thành', blocked: 'Bị chặn' },
-                days: { 
-                    day1: "Thứ 6, 12/12/2025 (Ngày Cập Nhật)", 
-                    day2: "13-14/12/2025 (Hậu kiểm & Batchrun)", 
-                    day3: "Thứ 2, 15/12/2025 (GO-LIVE)" 
-                },
-                tasks: {
-                    1: { task: 'Nhập giao dịch chuyển đổi & Smoke Test Quantum. (09:00-10:00: Nhập GD; 10:00-18:00: Kiểm thử)', assignee: 'Chi nhánh Yangon, Ban QLDA CBM' },
-                    2: { task: 'CHECKPOINT #1: Hoàn thành kiểm thử với các tính năng Quantum.', assignee: 'Ban QLDA CBM' },
-                    3: { task: 'Cài đặt gói cập nhật Core Profile V1.3, Quantum và các ứng dụng tích hợp (SWIFT, CCS, BSMS...). Backup trước khi nâng cấp.', assignee: 'Ban QLPTCB, TTCNTT, TT PTPM' },
-                    4: { task: 'Kiểm thử Smoke test V1.3, Kiểm thử tích hợp Quantum (CCS, SWIFT, GL...). Kiểm thử các ứng dụng sau nâng cấp.', assignee: 'Ban QLDA CBM, Chi nhánh Yangon' },
-                    5: { task: 'CHECKPOINT #2: Hoàn thành kiểm thử tính năng nâng cấp Profile & Tích hợp. Quyết định GO/NO GO.', assignee: 'Ban QLDA CBM, Chi nhánh Yangon' },
-                    6: { task: 'Thực hiện công việc sau CP2: Batchrun Profile, Backup DB, Start dịch vụ Online. Kiểm tra D+1 (MIS, GL).', assignee: 'Ban QLPTCB, TTCNTT, Ban QLDA, CN Yangon' },
-                    7: { task: 'Kiểm thử và fix lỗi phân hệ KDV và tiền tệ trên Quantum (nếu có).', assignee: 'Ban QLDA CBM, CN Yangon' },
-                    8: { task: 'CHECKPOINT #3: Hoàn thành kiểm thử thông luồng tích hợp Quantum với các ứng dụng liên quan.', assignee: 'Ban QLDA CBM, CN Yangon' },
-                    9: { task: 'Kiểm tra hệ thống sau báo cáo triển khai D+2. Chạy EOD Quantum, Batchrun Profile.', assignee: 'Ban QLDA CBM, CN Yangon' },
-                    10: { task: 'GO-LIVE: Hệ thống Profile V1.3 và Quantum chính thức hoạt động.', assignee: 'Chi nhánh Yangon' },
-                    11: { task: 'Chi nhánh đăng nhập hệ thống (WebCSR, TP Teller, Quantum...) thực hiện giao dịch.', assignee: 'Ban QLDA CBM, CN Yangon' }
-                }
-            },
-            en: {
-                header_title: "Go-live Dashboard V1.3",
-                header_subtitle: "Core Banking Myanmar Implementation - Phase 2",
-                quick_report_btn: "✨ Quick Report",
-                lang_btn: "VI",
-                progress_title: "Overall Progress",
-                current_time: "Current",
-                modal_loading_title: "Processing...",
-                modal_loading_text: "Please wait a moment...",
-                risk_analysis_title: "✨ Risk Analysis & Recommendations",
-                quick_report_title: "✨ Project Status Quick Report",
-                risk_analysis_btn: "✨ Analyze Risk",
-                statuses: { pending: 'Pending', inprogress: 'In Progress', done: 'Completed', blocked: 'Blocked' },
-                days: { 
-                    day1: "Fri, 12/12/2025 (Update Day)", 
-                    day2: "13-14/12/2025 (Post-check & Batchrun)", 
-                    day3: "Mon, 15/12/2025 (GO-LIVE)" 
-                },
-                tasks: {
-                    1: { task: 'Input conversion transactions & Smoke Test Quantum. (09:00-10:00: Input; 10:00-18:00: Test)', assignee: 'Yangon Branch, PMO CBM' },
-                    2: { task: 'CHECKPOINT #1: Complete testing of Quantum features.', assignee: 'PMO CBM' },
-                    3: { task: 'Install Core Profile V1.3 update package, Quantum, and integrations (SWIFT, CCS, BSMS...). Backup before upgrade.', assignee: 'Core Banking Dev, IT Center, Software Dev' },
-                    4: { task: 'Smoke Test V1.3, Quantum Integration Test (CCS, SWIFT, GL...). Test applications after upgrade.', assignee: 'PMO CBM, Yangon Branch' },
-                    5: { task: 'CHECKPOINT #2: Complete Profile upgrade & Integration testing. GO/NO GO Decision.', assignee: 'PMO CBM, Yangon Branch' },
-                    6: { task: 'Post-CP2 tasks: Batchrun Profile, Backup DB, Start Online services. Check D+1 (MIS, GL).', assignee: 'Core Banking Dev, IT Center, PMO, Yangon Branch' },
-                    7: { task: 'Test and fix Treasury module bugs on Quantum (if any).', assignee: 'PMO CBM, Yangon Branch' },
-                    8: { task: 'CHECKPOINT #3: Complete end-to-end integration testing of Quantum.', assignee: 'PMO CBM, Yangon Branch' },
-                    9: { task: 'System check after D+2 report. Run EOD Quantum, Batchrun Profile.', assignee: 'PMO CBM, Yangon Branch' },
-                    10: { task: 'GO-LIVE: Profile V1.3 and Quantum systems officially live.', assignee: 'Yangon Branch' },
-                    11: { task: 'Branch logs into systems (WebCSR, TP Teller, Quantum...) to perform transactions.', assignee: 'PMO CBM, Yangon Branch' }
-                }
-            }
-        };
+        // --- 1. Supabase Config ---
+        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const defaultStatuses = { 1: 'done', 2: 'done', 3: 'inprogress', 4: 'pending', 5: 'pending', 6: 'pending', 7: 'pending', 8: 'pending', 9: 'pending', 10: 'pending', 11: 'pending' };
-        
-        let taskStatuses = defaultStatuses;
-        let currentLang = 'vi';
-
+        // --- 2. State & Config ---
+        let allTasks = []; // Chứa toàn bộ dữ liệu từ DB
+        const dayLabels = {
+            day1: "Thứ 6, 12/12/2025 (Ngày Cập Nhật)",
+            day2: "13-14/12/2025 (Hậu kiểm & Batchrun)",
+            day3: "Thứ 2, 15/12/2025 (GO-LIVE)"
+        };
         const statusConfig = {
-            pending:    { text_key: 'pending',   bg: 'bg-slate-100', text_color: 'text-slate-600' },
-            inprogress: { text_key: 'inprogress',  bg: 'bg-amber-100', text_color: 'text-amber-800' },
-            done:       { text_key: 'done',       bg: 'bg-teal-100', text_color: 'text-[#006B68]' },
-            blocked:    { text_key: 'blocked',         bg: 'bg-rose-100', text_color: 'text-rose-700' }
+            pending:    { label: 'Chưa bắt đầu',   bg: 'bg-slate-100', text: 'text-slate-600' },
+            inprogress: { label: 'Đang thực hiện',  bg: 'bg-amber-100', text: 'text-amber-800' },
+            done:       { label: 'Hoàn thành',       bg: 'bg-teal-100', text: 'text-[#006B68]' },
+            blocked:    { label: 'Bị chặn',         bg: 'bg-rose-100', text: 'text-rose-700' }
         };
+        const dayIcons = { day1: 'fa-server', day2: 'fa-database', day3: 'fa-rocket' };
 
-        const dayIcons = { day1: 'fa-solid fa-server', day2: 'fa-solid fa-database', day3: 'fa-solid fa-rocket' };
+        // --- 3. Core Functions ---
 
-        const taskBoard = document.getElementById('task-board');
-        const modal = document.getElementById('gemini-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        const closeBtn = document.querySelector('.close-btn');
+        // Fetch Data
+        async function fetchTasks() {
+            try {
+                // Lấy tất cả task, sắp xếp theo sort_order
+                const { data, error } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .order('day_key')
+                    .order('sort_order');
+                
+                if (error) throw error;
+                allTasks = data;
+                renderBoard();
+                renderAdminList();
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showToast("Lỗi tải dữ liệu!");
+                document.getElementById('sync-status').innerHTML = `<i class="fa-solid fa-circle text-red-500 text-[8px] mr-1"></i> Lỗi kết nối`;
+            }
+        }
 
-        // Placeholder API URL - Replace with real key if needed
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY_HERE`; 
+        // Render Dashboard
+        function renderBoard() {
+            const board = document.getElementById('task-board');
+            board.innerHTML = '';
 
-        // Mock function to simulate API response since no key provided
-        async function callGeminiAPI(prompt) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(`
-                        <h3>Mô phỏng Phân tích AI</h3>
-                        <p>Do chưa có API Key thực tế, đây là nội dung mô phỏng dựa trên yêu cầu của bạn:</p>
-                        <ul class="list-disc list-inside space-y-1">
-                            <li class="text-gray-600">Hệ thống ghi nhận trạng thái hiện tại.</li>
-                            <li class="text-gray-600">Đề xuất kiểm tra kỹ thuật các bước tiếp theo.</li>
-                            <li class="text-gray-600">Vui lòng cập nhật API Key trong mã nguồn để sử dụng tính năng AI thực tế.</li>
-                        </ul>
-                    `);
-                }, 1500);
+            let total = 0;
+            let completed = 0;
+
+            // Group tasks by day_key
+            const grouped = allTasks.reduce((acc, task) => {
+                acc[task.day_key] = acc[task.day_key] || [];
+                acc[task.day_key].push(task);
+                return acc;
+            }, { day1: [], day2: [], day3: [] });
+
+            // Loop through day groups
+            Object.entries(grouped).forEach(([dayKey, tasks]) => {
+                const dayCol = document.createElement('div');
+                dayCol.className = 'bg-white/70 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-gray-100';
+                
+                // Day Header
+                const icon = dayIcons[dayKey] || 'fa-calendar';
+                const titleColor = dayKey === 'day3' ? 'text-[#006B68]' : 'text-gray-700';
+                
+                let html = `
+                    <h2 class="text-lg font-bold mb-4 pb-2 border-b ${titleColor} flex items-center">
+                        <i class="fa-solid ${icon} mr-2 opacity-70"></i> ${dayLabels[dayKey] || dayKey}
+                    </h2>
+                    <div class="space-y-4">`;
+
+                if (tasks.length === 0) {
+                    html += `<p class="text-sm text-gray-400 italic text-center">Chưa có công việc nào.</p>`;
+                } else {
+                    tasks.forEach(task => {
+                        total++;
+                        if (task.status === 'done') completed++;
+
+                        const conf = statusConfig[task.status] || statusConfig.pending;
+                        const borderClass = task.is_checkpoint ? 'checkpoint' : (task.is_golive ? 'golive-event' : '');
+                        
+                        // Highlight keyword in content
+                        let contentHtml = task.content.replace(/(CHECKPOINT|GO-LIVE)/g, '<span class="font-bold text-[#006B68]">$1</span>');
+
+                        html += `
+                        <div class="task-card relative p-4 rounded-lg ${conf.bg} ${borderClass}">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded bg-white/60 ${conf.text}">${task.time_display}</span>
+                                <select onchange="updateTaskStatus(${task.id}, this.value)" class="status-select text-xs font-medium rounded border-0 bg-white/80 focus:ring-1 focus:ring-[#006B68] py-1 pl-2 pr-7 cursor-pointer shadow-sm">
+                                    <option value="pending" ${task.status==='pending'?'selected':''}>Chưa bắt đầu</option>
+                                    <option value="inprogress" ${task.status==='inprogress'?'selected':''}>Đang làm</option>
+                                    <option value="done" ${task.status==='done'?'selected':''}>Hoàn thành</option>
+                                    <option value="blocked" ${task.status==='blocked'?'selected':''}>Bị chặn</option>
+                                </select>
+                            </div>
+                            <p class="font-medium text-sm text-gray-800 mb-2 leading-relaxed">${contentHtml}</p>
+                            <div class="flex items-center text-xs text-gray-500 mt-2 pt-2 border-t border-black/5">
+                                <i class="fa-regular fa-user mr-1.5"></i> ${task.assignee || 'Chưa phân công'}
+                            </div>
+                        </div>`;
+                    });
+                }
+                html += `</div>`;
+                dayCol.innerHTML = html;
+                board.appendChild(dayCol);
+            });
+
+            // Update Progress
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}%`;
+        }
+
+        // Update Status (Optimistic UI)
+        async function updateTaskStatus(id, newStatus) {
+            // 1. Update local state & re-render immediately
+            const taskIndex = allTasks.findIndex(t => t.id === id);
+            if (taskIndex > -1) {
+                allTasks[taskIndex].status = newStatus;
+                renderBoard();
+            }
+
+            // 2. Send to DB
+            const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
+            if (error) {
+                console.error("Update failed:", error);
+                showToast("Lỗi cập nhật!");
+                fetchTasks(); // Revert on error
+            } else {
+                showToast("Đã lưu trạng thái!");
+            }
+        }
+
+        // --- 4. Admin / Management Logic ---
+
+        function openManageModal() {
+            document.getElementById('manage-modal').style.display = 'block';
+            resetForm();
+            renderAdminList();
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-task-list');
+            list.innerHTML = '';
+            
+            // Sort for list view
+            const sorted = [...allTasks].sort((a,b) => {
+                if (a.day_key !== b.day_key) return a.day_key.localeCompare(b.day_key);
+                return a.sort_order - b.sort_order;
+            });
+
+            sorted.forEach(t => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-white p-2 rounded border hover:bg-gray-50";
+                li.innerHTML = `
+                    <div class="truncate mr-2">
+                        <span class="font-bold text-gray-500 text-xs">[${t.day_key}]</span> 
+                        <span class="text-gray-800">${t.content}</span>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick='editTask(${JSON.stringify(t)})' class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick='deleteTask(${t.id})' class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(li);
             });
         }
 
-        function showModal(title, content) {
-            modalTitle.textContent = title;
-            modalBody.innerHTML = content;
-            modal.style.display = 'block';
+        function resetForm() {
+            document.getElementById('task-form').reset();
+            document.getElementById('task-id').value = '';
         }
 
-        function showLoading() {
-            showModal(translations[currentLang].modal_loading_title, `<div class="loader"></div><p class="text-center">${translations[currentLang].modal_loading_text}</p>`);
-        }
-        
-        closeBtn.onclick = () => modal.style.display = 'none';
-        window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
+        window.editTask = function(task) {
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('day-key').value = task.day_key;
+            document.getElementById('sort-order').value = task.sort_order;
+            document.getElementById('time-display').value = task.time_display;
+            document.getElementById('content').value = task.content;
+            document.getElementById('assignee').value = task.assignee;
+            document.getElementById('is-checkpoint').checked = task.is_checkpoint;
+            document.getElementById('is-golive').checked = task.is_golive;
+        };
 
-        async function handleRiskAnalysis(taskId, dayKey) {
-            const task = translations[currentLang].tasks[taskId];
-            if (!task) return;
-            showLoading();
-            // In real scenario, use prompt
-            const analysis = await callGeminiAPI("risk_prompt");
-            showModal(translations[currentLang].risk_analysis_title, analysis);
-        }
-
-        document.getElementById('quick-report-btn').addEventListener('click', async () => {
-            showLoading();
-            // In real scenario, construct report data
-            const summary = await callGeminiAPI("report_prompt");
-            showModal(translations[currentLang].quick_report_title, summary);
-        });
-
-        function renderAllUI() {
-            document.documentElement.lang = currentLang;
-            const T = translations[currentLang];
-            
-            // Update static text
-            document.getElementById('header-title').textContent = T.header_title;
-            document.getElementById('header-subtitle').textContent = T.header_subtitle;
-            document.getElementById('quick-report-btn').textContent = T.quick_report_btn;
-            document.getElementById('lang-switcher-btn').textContent = T.lang_btn;
-            document.getElementById('progress-title').textContent = T.progress_title;
-            document.getElementById('current-time-label-vertical').textContent = T.current_time;
-            
-            // Render dynamic task board
-            taskBoard.innerHTML = '';
-            let totalTasks = 0;
-            let completedTasks = 0;
-            let taskCounter = 1;
-
-            for (const dayKey in taskStructure) {
-                const dayColumn = document.createElement('div');
-                dayColumn.className = 'bg-white/60 backdrop-blur-sm p-4 rounded-lg shadow-sm';
-                let dayTitleColor = T.days[dayKey].includes("GO-LIVE") ? "text-[#006B68] font-bold" : "text-gray-700";
-                let iconHTML = `<i class="${dayIcons[dayKey]} mr-2 text-[#006B68] opacity-80"></i>`;
-                
-                dayColumn.innerHTML = `<h2 class="text-xl font-semibold mb-4 pb-2 border-b ${dayTitleColor} flex items-center">${iconHTML}${T.days[dayKey]}</h2>`;
-                const tasksContainer = document.createElement('div');
-                tasksContainer.className = 'space-y-4';
-                
-                taskStructure[dayKey].forEach(taskInfo => {
-                    const taskId = taskInfo.id;
-                    const taskStatusKey = taskStatuses[taskId];
-                    const status = statusConfig[taskStatusKey] || statusConfig.pending;
-                    const taskData = T.tasks[taskId];
-
-                    totalTasks++;
-                    if (taskStatusKey === 'done') completedTasks++;
-
-                    const taskCard = document.createElement('div');
-                    taskCard.setAttribute('data-task-id', taskId);
-                    taskCard.className = `task-card relative p-4 rounded-lg ${status.bg} ${taskInfo.type || ''}`;
-
-                    let geminiButtonHTML = '';
-                    if (taskStatusKey === 'blocked') {
-                        geminiButtonHTML = `<button data-id="${taskId}" data-day-key="${dayKey}" class="risk-analysis-btn mt-3 w-full text-sm font-semibold text-rose-700 hover:text-rose-900">${T.risk_analysis_btn}</button>`;
-                    }
-
-                    let taskText = taskData.task;
-                    const highlightClass = 'font-bold text-green-600';
-                    taskText = taskText.replace(/CHECKPOINT|GO-LIVE|GO\/NO GO/g, match => `<strong class="${highlightClass}">${match}</strong>`);
-
-                    const taskNumberHTML = `<div class="absolute -top-3 -left-3 flex items-center justify-center w-7 h-7 rounded-full bg-[#006B68] text-[#FFC62F] font-bold text-sm shadow-md">${taskCounter}</div>`;
-
-                    let statusOptionsHTML = '';
-                    for (const key in T.statuses) {
-                        statusOptionsHTML += `<option value="${key}" ${taskStatusKey === key ? 'selected' : ''}>${T.statuses[key]}</option>`;
-                    }
-
-                    taskCard.innerHTML = `
-                        ${taskNumberHTML}
-                        <div class="flex justify-between items-start">
-                            <p class="text-sm font-semibold ${status.text_color} opacity-80">${taskInfo.time}</p>
-                            <select data-id="${taskId}" class="status-select text-xs font-medium rounded border-gray-300 focus:ring-[#006B68] focus:border-[#006B68]">${statusOptionsHTML}</select>
-                        </div>
-                        <p class="font-medium ${status.text_color} my-2">${taskText}</p>
-                        <div class="flex items-center mt-2 ${status.text_color} opacity-90">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-                            <p class="text-sm" title="${taskData.assignee}">${taskData.assignee}</p>
-                        </div>
-                        ${geminiButtonHTML}`;
-                    
-                    tasksContainer.appendChild(taskCard);
-                    taskCounter++;
-                });
-                dayColumn.appendChild(tasksContainer);
-                taskBoard.appendChild(dayColumn);
+        window.deleteTask = async function(id) {
+            if(!confirm("Bạn chắc chắn muốn xóa công việc này?")) return;
+            const { error } = await supabase.from('tasks').delete().eq('id', id);
+            if (!error) {
+                showToast("Đã xóa!");
+                fetchTasks(); // Reload data
+            } else {
+                showToast("Lỗi xóa data!");
             }
-            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
-            document.getElementById('progress-text').innerText = `${progress}%`;
-            
-            updateCurrentTimeIndicator();
-        }
-        
-        function updateCurrentTimeIndicator() {
-            const verticalIndicator = document.getElementById('current-time-indicator-vertical');
-            verticalIndicator.style.display = 'none';
-            const oldHorizontal = document.getElementById('current-time-indicator-horizontal');
-            if (oldHorizontal) oldHorizontal.remove();
-            
-            // Logic timeline indicator - Simplified for Demo
-            // In real app, calculate based on 12/12 to 15/12
-        }
-        
-        // --- Event Listeners ---
-        document.getElementById('lang-switcher-btn').addEventListener('click', () => {
-            currentLang = currentLang === 'vi' ? 'en' : 'vi';
-            renderAllUI();
-        });
+        };
 
-        taskBoard.addEventListener('change', (e) => {
-            if (e.target.classList.contains('status-select')) {
-                const taskId = e.target.dataset.id;
-                taskStatuses[taskId] = e.target.value;
-                renderAllUI();
+        // Form Submit (Create/Update)
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('task-id').value;
+            const payload = {
+                day_key: document.getElementById('day-key').value,
+                sort_order: parseInt(document.getElementById('sort-order').value) || 0,
+                time_display: document.getElementById('time-display').value,
+                content: document.getElementById('content').value,
+                assignee: document.getElementById('assignee').value,
+                is_checkpoint: document.getElementById('is-checkpoint').checked,
+                is_golive: document.getElementById('is-golive').checked
+            };
+
+            let error;
+            if (id) {
+                // Update
+                ({ error } = await supabase.from('tasks').update(payload).eq('id', id));
+            } else {
+                // Create
+                ({ error } = await supabase.from('tasks').insert([payload]));
             }
-        });
-        
-        taskBoard.addEventListener('click', (e) => {
-            if (e.target.classList.contains('risk-analysis-btn')) {
-                const taskId = parseInt(e.target.dataset.id);
-                const dayKey = e.target.dataset.dayKey;
-                handleRiskAnalysis(taskId, dayKey);
+
+            if (!error) {
+                showToast(id ? "Đã cập nhật!" : "Đã thêm mới!");
+                resetForm();
+                fetchTasks(); // Reload UI
+            } else {
+                console.error(error);
+                showToast("Lỗi khi lưu!");
             }
         });
 
-        window.addEventListener('resize', updateCurrentTimeIndicator);
-        
-        // --- Initial Load ---
-        renderAllUI();
+        // --- 5. Realtime Sync ---
+        supabase.channel('public:tasks')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+                console.log('Realtime change:', payload);
+                // Simple strategy: Reload all on any change
+                // For complex apps, handle INSERT/UPDATE/DELETE specifically
+                fetchTasks(); 
+                showToast("Dữ liệu vừa được cập nhật từ máy khác.");
+            })
+            .subscribe();
+
+        // --- 6. Utilities ---
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.className = "show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        // Init
+        fetchTasks();
 
     </script>
 </body>
