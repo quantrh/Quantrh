@@ -124,8 +124,9 @@
     <!-- PIN Modal -->
     <div id="pin-modal" class="modal">
         <div class="pin-modal-content relative">
-            <span onclick="document.getElementById('pin-modal').style.display='none'" class="absolute top-2 right-3 text-xl cursor-pointer text-gray-400 hover:text-gray-600">&times;</span>
+            <span onclick="closePinModal()" class="absolute top-2 right-3 text-xl cursor-pointer text-gray-400 hover:text-gray-600">&times;</span>
             <h3 class="text-lg font-bold mb-4 text-gray-700">Nhập mã PIN</h3>
+            <p id="pin-reason" class="text-xs text-gray-500 mb-2"></p>
             <input type="password" id="pin-input" class="w-full p-2 border rounded text-center mb-4" placeholder="***">
             <p id="pin-error" class="text-red-500 text-xs mb-2 hidden">Mã PIN không đúng!</p>
             <button onclick="checkPin()" class="bg-[#006B68] text-white px-4 py-2 rounded w-full hover:bg-[#005a57]">Xác nhận</button>
@@ -202,6 +203,8 @@
 
         // --- 2. State & Config ---
         let allTasks = []; // Chứa toàn bộ dữ liệu từ DB
+        let pendingStatusChange = null; // Store pending task update {id, status}
+
         const dayLabels = {
             day1: "Thứ 6, 12/12/2025 (Ngày Cập Nhật)",
             day2: "13-14/12/2025 (Hậu kiểm & Batchrun)",
@@ -301,7 +304,7 @@
                             
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-semibold px-2 py-1 rounded bg-white/60 ${conf.text}">${task.time_display}</span>
-                                <select onchange="updateTaskStatus(${task.id}, this.value)" class="status-select text-xs font-medium rounded border-0 bg-white/80 focus:ring-1 focus:ring-[#006B68] py-1 pl-2 pr-7 cursor-pointer shadow-sm">
+                                <select onchange="initiateTaskUpdate(${task.id}, this.value, this)" class="status-select text-xs font-medium rounded border-0 bg-white/80 focus:ring-1 focus:ring-[#006B68] py-1 pl-2 pr-7 cursor-pointer shadow-sm">
                                     <option value="pending" ${task.status==='pending'?'selected':''}>Chưa bắt đầu</option>
                                     <option value="inprogress" ${task.status==='inprogress'?'selected':''}>Đang làm</option>
                                     <option value="done" ${task.status==='done'?'selected':''}>Hoàn thành</option>
@@ -326,9 +329,30 @@
             document.getElementById('progress-text').innerText = `${pct}%`;
         }
 
-        // Update Status (Optimistic UI)
-        async function updateTaskStatus(id, newStatus) {
-            // 1. Update local state & re-render immediately
+        // Step 1: Initiate update (Ask for PIN)
+        function initiateTaskUpdate(id, newStatus, selectElement) {
+            // Revert select temporarily to avoid UI flicker if PIN is wrong
+            // We'll update it properly after PIN check
+            const originalStatus = allTasks.find(t => t.id === id).status;
+            selectElement.value = originalStatus;
+
+            pendingStatusChange = { id, newStatus };
+            
+            // Show PIN modal
+            document.getElementById('pin-reason').textContent = "Cần xác thực để đổi trạng thái";
+            document.getElementById('pin-modal').style.display = 'block';
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-error').classList.add('hidden');
+            document.getElementById('pin-input').focus();
+        }
+
+        // Step 2: Actually update status after PIN check
+        async function confirmTaskUpdate() {
+            if (!pendingStatusChange) return;
+            
+            const { id, newStatus } = pendingStatusChange;
+            
+            // 1. Update local state & re-render immediately (Optimistic UI)
             const taskIndex = allTasks.findIndex(t => t.id === id);
             if (taskIndex > -1) {
                 allTasks[taskIndex].status = newStatus;
@@ -344,11 +368,15 @@
             } else {
                 showToast("Đã lưu trạng thái!");
             }
+            
+            pendingStatusChange = null; // Clear pending
         }
 
         // --- 4. Admin / Management Logic ---
 
         function requestPin() {
+            pendingStatusChange = null; // Clear any pending status update
+            document.getElementById('pin-reason').textContent = "Xác thực quản trị viên";
             document.getElementById('pin-modal').style.display = 'block';
             document.getElementById('pin-input').value = '';
             document.getElementById('pin-error').classList.add('hidden');
@@ -359,10 +387,20 @@
             const pin = document.getElementById('pin-input').value;
             if (pin === '123') {
                 document.getElementById('pin-modal').style.display = 'none';
-                openManageModal();
+                
+                if (pendingStatusChange) {
+                    confirmTaskUpdate(); // If from status change
+                } else {
+                    openManageModal(); // If from "Manage Data" button
+                }
             } else {
                 document.getElementById('pin-error').classList.remove('hidden');
             }
+        }
+        
+        function closePinModal() {
+            document.getElementById('pin-modal').style.display = 'none';
+            pendingStatusChange = null;
         }
 
         // Allow pressing Enter in PIN input
