@@ -24,6 +24,7 @@
         /* Modal & Loader styles */
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; }
+        .pin-modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 300px; border-radius: 8px; text-align: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #006B68; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         /* Toast */
@@ -40,7 +41,7 @@
             <p class="text-lg text-gray-600 mt-2">Triển khai Core Banking Myanmar - Giai đoạn 2</p>
             
             <div class="flex items-center justify-center gap-3 mt-4">
-                <button onclick="openManageModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition text-sm">
+                <button onclick="requestPin()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition text-sm">
                     <i class="fa-solid fa-pen-to-square mr-2"></i> Quản lý Data
                 </button>
             </div>
@@ -74,6 +75,17 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="task-board">
             <!-- Columns will be injected here -->
             <div class="col-span-3 text-center py-10"><div class="loader"></div></div>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pin-modal" class="modal">
+        <div class="pin-modal-content relative">
+            <span onclick="document.getElementById('pin-modal').style.display='none'" class="absolute top-2 right-3 text-xl cursor-pointer text-gray-400 hover:text-gray-600">&times;</span>
+            <h3 class="text-lg font-bold mb-4 text-gray-700">Nhập mã PIN</h3>
+            <input type="password" id="pin-input" class="w-full p-2 border rounded text-center mb-4" placeholder="***">
+            <p id="pin-error" class="text-red-500 text-xs mb-2 hidden">Mã PIN không đúng!</p>
+            <button onclick="checkPin()" class="bg-[#006B68] text-white px-4 py-2 rounded w-full hover:bg-[#005a57]">Xác nhận</button>
         </div>
     </div>
 
@@ -276,6 +288,28 @@
         }
 
         // --- 4. Admin / Management Logic ---
+
+        function requestPin() {
+            document.getElementById('pin-modal').style.display = 'block';
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-error').classList.add('hidden');
+            document.getElementById('pin-input').focus();
+        }
+
+        function checkPin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin === '123') {
+                document.getElementById('pin-modal').style.display = 'none';
+                openManageModal();
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+            }
+        }
+
+        // Allow pressing Enter in PIN input
+        document.getElementById('pin-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPin();
+        });
 
         function openManageModal() {
             document.getElementById('manage-modal').style.display = 'block';
