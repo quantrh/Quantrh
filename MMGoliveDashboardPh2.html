@@ -21,6 +21,25 @@
             background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;
             padding-right: 2.5rem;
         }
+        /* Task Number Badge */
+        .task-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 24px;
+            height: 24px;
+            background-color: #006B68;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
         /* Modal & Loader styles */
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; }
@@ -202,6 +221,7 @@
 
             let total = 0;
             let completed = 0;
+            let globalOrder = 1; // Biến đếm toàn cục cho số thứ tự task
 
             // Group tasks by day_key
             const grouped = allTasks.reduce((acc, task) => {
@@ -243,6 +263,9 @@
 
                         html += `
                         <div class="task-card relative p-4 rounded-lg ${conf.bg} ${borderClass}">
+                            <!-- Task Number Badge -->
+                            <div class="task-number">${globalOrder++}</div>
+                            
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-semibold px-2 py-1 rounded bg-white/60 ${conf.text}">${task.time_display}</span>
                                 <select onchange="updateTaskStatus(${task.id}, this.value)" class="status-select text-xs font-medium rounded border-0 bg-white/80 focus:ring-1 focus:ring-[#006B68] py-1 pl-2 pr-7 cursor-pointer shadow-sm">
