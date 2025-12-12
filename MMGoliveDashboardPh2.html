@@ -39,6 +39,30 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 10;
         }
+        
+        /* We're Here Badge */
+        .were-here-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #ef4444; /* Red 500 */
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
 
         /* Modal & Loader styles */
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; }
@@ -261,10 +285,19 @@
                         // Highlight keyword in content
                         let contentHtml = task.content.replace(/(CHECKPOINT|GO-LIVE)/g, '<span class="font-bold text-[#006B68]">$1</span>');
 
+                        // Check status for "We're here" badge
+                        let hereBadge = '';
+                        if (task.status === 'inprogress') {
+                            hereBadge = `<div class="were-here-badge"><i class="fa-solid fa-location-dot"></i> We're here</div>`;
+                        }
+
                         html += `
                         <div class="task-card relative p-4 rounded-lg ${conf.bg} ${borderClass}">
                             <!-- Task Number Badge -->
                             <div class="task-number">${globalOrder++}</div>
+                            
+                            <!-- "We're here" Badge -->
+                            ${hereBadge}
                             
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-semibold px-2 py-1 rounded bg-white/60 ${conf.text}">${task.time_display}</span>
