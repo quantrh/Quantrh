@@ -154,6 +154,12 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 15px rgba(0, 107, 104, 0.1);
         }
+        /* Search result styling */
+        .search-result-item em {
+            background-color: #fef08a; /* Yellow highlight */
+            font-style: normal;
+            font-weight: bold;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,7 +224,7 @@
             <div id="start-screen" class="screen active">
 
                 <!-- BỔ SUNG: KHỐI THỐNG KÊ TOÀN TRANG -->
-                <div id="global-stats-section" class="mb-8 p-4 bg-bidv-green/10 rounded-lg shadow-inner">
+                <div id="global-stats-section" class="mb-6 p-4 bg-bidv-green/10 rounded-lg shadow-inner">
                     <h3 class="text-xl font-semibold text-bidv-green mb-4 border-b border-bidv-green/30 pb-2">Thống kê Toàn hệ thống</h3>
                     <div id="stats-loading" class="text-center text-gray-600">
                         <svg class="animate-spin h-6 w-6 text-bidv-green mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -251,6 +257,36 @@
                     </div>
                 </div>
                 <!-- KẾT THÚC KHỐI THỐNG KÊ -->
+
+                <!-- BỔ SUNG: KHỐI TÌM KIẾM TRA CỨU -->
+                <div id="search-section" class="mb-8 p-6 bg-white border-2 border-bidv-yellow/30 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4 border-b border-gray-200 pb-2">
+                        <svg class="w-6 h-6 text-bidv-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-bold text-bidv-green">Tra cứu Kiến thức / Câu hỏi</h3>
+                    </div>
+                    
+                    <div class="relative group">
+                        <input type="text" id="search-input" class="w-full px-5 py-4 pl-12 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-bidv-green focus:border-bidv-green focus:bg-white transition-all text-gray-800 placeholder-gray-400" placeholder="Nhập từ khóa bất kỳ để tìm kiếm trong câu hỏi, đáp án hoặc giải thích... (Ví dụ: 'gói thầu', '45 ngày', 'điều 22')">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                             <svg class="h-6 w-6 text-gray-400 group-focus-within:text-bidv-green transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                             </svg>
+                        </div>
+                        <!-- Nút xóa search -->
+                        <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 hidden">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="search-status" class="mt-2 text-sm text-gray-500 italic hidden">Đang tìm kiếm...</div>
+                    <div id="search-results" class="mt-4 space-y-4 max-h-[500px] overflow-y-auto hidden pr-2 custom-scrollbar">
+                        <!-- Search results will appear here -->
+                    </div>
+                </div>
+                <!-- KẾT THÚC KHỐI TÌM KIẾM -->
 
                 <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
                 <p class="text-center mb-6 text-gray-600">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
@@ -578,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backToHome: document.getElementById('back-to-home-btn'),
             clearHistory: document.getElementById('clear-history-btn'), // Thêm nút xóa lịch sử
             toggleHelp: document.getElementById('toggle-help-btn'), // Thêm nút ẩn/hiện hướng dẫn
+            clearSearch: document.getElementById('clear-search-btn'), // Nút xóa search
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -585,6 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timePerQuestion: document.getElementById('time-per-question'),
             quizOrder: document.getElementById('quiz-order'),
             timingMode: document.getElementById('timing-mode'), 
+            searchInput: document.getElementById('search-input'), // Ô tìm kiếm
         },
         displays: {
             dataStatus: document.getElementById('data-status'),
@@ -613,6 +651,10 @@ document.addEventListener('DOMContentLoaded', () => {
             statsAvgScore: document.getElementById('stats-avg-score'),
             statsAvgQuestions: document.getElementById('stats-avg-questions'),
             statsAvgTimePerQ: document.getElementById('stats-avg-time-per-q'),
+
+            // Bổ sung cho Search
+            searchResults: document.getElementById('search-results'),
+            searchStatus: document.getElementById('search-status'),
         },
 
         // State
@@ -623,6 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timePerQuestion: 60,
         timingMode: 'total', // Mặc định là tính tổng thời gian
         visitorIP: null, // THÊM MỚI: Lưu IP của người dùng
+        searchDebounceTimer: null, // Timer cho debounce search
         timers: {
             total: null,
             question: null,
@@ -752,6 +795,106 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         // --- KẾT THÚC CÁC HÀM THEO DÕI ---
+        
+        // --- CHỨC NĂNG TÌM KIẾM ---
+        handleSearch(query) {
+            const resultsContainer = this.displays.searchResults;
+            const statusContainer = this.displays.searchStatus;
+            const clearBtn = this.buttons.clearSearch;
+            
+            // Hiển thị nút xóa nếu có text
+            if(query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            const cleanQuery = query.trim().toLowerCase();
+
+            // Nếu từ khóa quá ngắn, ẩn kết quả
+            if (cleanQuery.length < 2) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                statusContainer.classList.add('hidden');
+                return;
+            }
+            
+            statusContainer.textContent = "Đang tìm kiếm...";
+            statusContainer.classList.remove('hidden');
+
+            // Set timeout nhỏ để UI không bị đơ nếu dữ liệu lớn (giả lập bất đồng bộ)
+            setTimeout(() => {
+                const results = this.allQuestions.filter(q => {
+                    const textToSearch = [
+                        q.question,
+                        q.options?.A, q.options?.B, q.options?.C, q.options?.D,
+                        q.explanation_right,
+                        q.explanation_wrong,
+                        q.explanation_question
+                    ].join(' ').toLowerCase();
+                    
+                    return textToSearch.includes(cleanQuery);
+                }).slice(0, 20); // Giới hạn 20 kết quả hiển thị
+
+                statusContainer.classList.add('hidden');
+                resultsContainer.innerHTML = '';
+
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Không tìm thấy kết quả nào phù hợp.</p>';
+                    resultsContainer.classList.remove('hidden');
+                    return;
+                }
+
+                results.forEach(q => {
+                    const card = document.createElement('div');
+                    card.className = 'search-result-item bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all';
+                    
+                    // Highlight logic đơn giản
+                    const highlight = (text) => {
+                        if (!text) return '';
+                        // Escape regex characters
+                        const escapedQuery = cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+                        return text.replace(regex, '<em>$1</em>');
+                    };
+
+                    let optionsHtml = '';
+                    ['A', 'B', 'C', 'D'].forEach(key => {
+                        if (q.options[key]) {
+                            let classList = 'p-2 rounded mt-1 text-sm border border-transparent';
+                            // Chỉ tô đậm đáp án đúng
+                            if (key === q.answer) {
+                                classList += ' bg-green-100 border-green-300 text-green-800 font-semibold';
+                            } else {
+                                classList += ' bg-white border-gray-200 text-gray-600';
+                            }
+                            optionsHtml += `<div class="${classList}">${key}. ${highlight(q.options[key])}</div>`;
+                        }
+                    });
+
+                    // Nội dung giải thích (hiển thị luôn)
+                    let explanationHtml = '';
+                    if (q.explanation_right) {
+                        explanationHtml += `<div class="mt-2 text-xs text-green-700 bg-green-50 p-2 rounded border-l-2 border-green-500"><strong>Giải thích đúng:</strong> ${highlight(q.explanation_right)}</div>`;
+                    }
+                    if (q.explanation_wrong) {
+                         explanationHtml += `<div class="mt-2 text-xs text-red-700 bg-red-50 p-2 rounded border-l-2 border-red-500"><strong>Giải thích sai:</strong> ${highlight(q.explanation_wrong)}</div>`;
+                    }
+                     if (q.explanation_question) {
+                         explanationHtml += `<div class="mt-2 text-xs text-blue-700 bg-blue-50 p-2 rounded border-l-2 border-blue-500"><strong>Phân tích đề:</strong> ${highlight(q.explanation_question)}</div>`;
+                    }
+
+                    card.innerHTML = `
+                        <p class="font-semibold text-gray-800 mb-2">Câu hỏi: ${highlight(q.question)}</p>
+                        <div class="space-y-1 mb-2">${optionsHtml}</div>
+                        ${explanationHtml}
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+                
+                resultsContainer.classList.remove('hidden');
+            }, 100);
+        },
 
         addEventListeners() {
             this.buttons.home.addEventListener('click', () => this.showScreen('start'));
@@ -777,6 +920,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target === this.displays.reviewModalBackdrop) {
                     this.closeModal();
                 }
+            });
+
+            // Lắng nghe sự kiện tìm kiếm (Input + Debounce)
+            this.inputs.searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.searchDebounceTimer);
+                this.searchDebounceTimer = setTimeout(() => {
+                    this.handleSearch(e.target.value);
+                }, 400); // Đợi 400ms sau khi ngừng gõ mới tìm
+            });
+
+            // Nút xóa tìm kiếm
+            this.buttons.clearSearch.addEventListener('click', () => {
+                this.inputs.searchInput.value = '';
+                this.handleSearch('');
+                this.inputs.searchInput.focus();
             });
         },
         
