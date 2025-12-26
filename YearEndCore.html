@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Quyết toán - Bản in A4</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <!-- SheetJS (xlsx) for Excel processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #525252;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* A4 Simulation Configuration */
+        .page-a4 {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm 15mm;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Brand Colors */
+        .text-brand-teal { color: #006b68; }
+        .bg-brand-teal { background-color: #006b68; }
+        .border-brand-teal { border-color: #006b68; }
+        
+        .text-brand-yellow { color: #ffc62f; }
+        .bg-brand-yellow { background-color: #ffc62f; }
+        .border-brand-yellow { border-color: #ffc62f; }
+
+        .card-border {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        /* Compact Table */
+        .compact-table th, .compact-table td {
+            padding: 4px 8px;
+            font-size: 10px;
+        }
+        
+        /* Modal Animation */
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+
+        /* Print Settings */
+        @media print {
+            body { 
+                background: none; 
+                padding: 0; 
+                display: block;
+            }
+            .page-a4 {
+                width: 100%;
+                height: auto;
+                box-shadow: none;
+                margin: 0;
+                padding: 5mm;
+            }
+            .no-print { display: none !important; }
+            /* Force background colors print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toolbar (No Print) -->
+    <div class="fixed top-4 right-4 flex flex-col gap-2 no-print z-50">
+        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" />
+        
+        <button onclick="document.getElementById('excelFileInput').click()" class="bg-brand-teal text-white px-4 py-2 rounded shadow hover:bg-[#005452] text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-upload"></i> Upload Excel
+        </button>
+        
+        <button onclick="downloadTemplate()" class="bg-white text-brand-teal border border-brand-teal px-4 py-2 rounded shadow hover:bg-gray-50 text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-download"></i> Tải File Mẫu
+        </button>
+
+        <button onclick="toggleModal('dataModal')" class="bg-gray-600 text-white px-4 py-2 rounded shadow hover:bg-gray-700 text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-database"></i> Quản lý Data
+        </button>
+        
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-print"></i> In Báo Cáo
+        </button>
+    </div>
+
+    <!-- A4 PAGE CONTENT -->
+    <div class="page-a4" id="printArea">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-end border-b-2 border-brand-teal pb-2 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-teal rounded flex items-center justify-center text-white text-xl">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 uppercase leading-none">Giám Sát Quyết Toán</h1>
+                    <p class="text-[10px] text-gray-500 font-semibold tracking-wider mt-1">Báo cáo hiệu quả Core Banking hàng ngày</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] text-gray-400">Ngày báo cáo</div>
+                <div class="text-lg font-bold text-brand-teal leading-none" id="report-date-display">--/--/----</div>
+            </div>
+        </header>
+
+        <!-- Section 1: KPIs (Compact Row) -->
+        <section class="grid grid-cols-2 gap-4 mb-4">
+            <!-- KPI 1 -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded card-border border-l-4 border-l-brand-teal">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Tổng Số Lượng GD</p>
+                    <h3 class="text-2xl font-bold text-gray-900" id="kpi-count">--</h3>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">
+                        <i class="fa-solid fa-arrow-up"></i> <span id="kpi-growth-qty">--%</span> YoY
+                    </span>
+                    <p class="text-[9px] text-gray-400 mt-1">So với <span class="kpi-compare-date">cùng kỳ</span></p>
+                </div>
+            </div>
+            <!-- KPI 2 -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded card-border border-l-4 border-l-brand-yellow">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Tổng Giá Trị (VND)</p>
+                    <h3 class="text-2xl font-bold text-gray-900" id="kpi-value">--</h3>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">
+                        <i class="fa-solid fa-arrow-up"></i> <span id="kpi-growth-val">--%</span> YoY
+                    </span>
+                    <p class="text-[9px] text-gray-400 mt-1">So với <span class="kpi-compare-date">cùng kỳ</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Trend & Channel Charts (Side by Side) -->
+        <section class="grid grid-cols-12 gap-4 mb-4 h-[220px]">
+            <!-- Trend Chart (Left - 7 cols) -->
+            <div class="col-span-7 card-border p-3 flex flex-col">
+                <div class="flex justify-between items-start mb-1">
+                    <h3 class="text-xs font-bold text-gray-800">Xu hướng Giao dịch (Số lượng)</h3>
+                    <!-- Updated Legend to Match Chart (Left to Right: Oldest -> Newest) -->
+                    <div class="flex gap-2 text-[8px]">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-gray-300"></span><span id="lbl-trend-old">--/--/--</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-brand-teal"></span><span id="lbl-trend-mid">--/--/--</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-brand-yellow"></span><span id="lbl-trend-new">--/--/--</span></span>
+                    </div>
+                </div>
+                <div class="flex-1 relative">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Channel Chart (Right - 5 cols) -->
+            <div class="col-span-5 card-border p-3 flex flex-col">
+                <div class="mb-1">
+                    <h3 class="text-xs font-bold text-gray-800">Phân bổ theo Nhóm Kênh</h3>
+                </div>
+                <div class="flex-1 relative">
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Top 10 Services -->
+        <section class="card-border p-3 mb-4 h-[240px] flex flex-col">
+            <div class="flex justify-between items-center mb-1">
+                <h3 class="text-xs font-bold text-gray-800">Top 10 Dịch vụ theo Số lượng Giao dịch</h3>
+                <div class="flex gap-2 text-[8px]">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-brand-teal"></span><span id="lbl-top-newest">--/--/--</span></span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-brand-yellow"></span><span id="lbl-top-oldest">--/--/--</span></span>
+                </div>
+            </div>
+            <div class="flex-1 w-full relative">
+                <canvas id="topServiceChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Section 4: Compact Data Table -->
+        <section class="card-border overflow-hidden flex-1 flex flex-col mb-2">
+            <div class="bg-gray-50 px-3 py-1 border-b border-gray-200">
+                <h3 class="text-[10px] font-bold text-gray-700 uppercase">Chi tiết giao dịch (Top 10)</h3>
+            </div>
+            <div class="overflow-x-hidden flex-1 relative">
+                <table class="w-full text-left compact-table">
+                    <thead class="bg-gray-100 text-gray-500 font-semibold border-b">
+                        <tr>
+                            <th>Ngày GD</th>
+                            <th>Nhóm Kênh</th>
+                            <th>Mô tả Dịch vụ</th>
+                            <th class="text-right">Số lượng</th>
+                            <th class="text-right">Giá trị (VND)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-gray-100 text-gray-600">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer Note -->
+        <footer class="text-[10px] text-black font-medium border-t border-gray-200 pt-2 mt-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="font-bold">Ghi chú:</span> Tất cả giao dịch trên Core được chia thành các nhóm: Thanh toán, Mobile + Internet, Batch + Lô, ATM POS Thẻ, Smart Counter Hub, Quầy, Chứng khoán bảo hiểm.
+                </div>
+                <div>Trang 1/1</div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Data Management Modal -->
+    <div id="dataModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-96 mx-auto rounded shadow-lg z-50 p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">Quản lý Dữ liệu</h3>
+                <button onclick="toggleModal('dataModal')"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <ul id="dateList" class="max-h-40 overflow-y-auto mb-4 border rounded text-sm p-2"></ul>
+            <button onclick="deleteAllData()" class="w-full bg-red-100 text-red-600 py-2 rounded font-bold text-sm hover:bg-red-200">Xóa Toàn Bộ</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIG & CONSTANTS ---
+        Chart.register(ChartDataLabels);
+
+        const CONFIG = {
+            colors: {
+                teal: '#006b68',
+                yellow: '#ffc62f',
+                grey: '#cbd5e1',
+                text: '#334155',
+                tealLight: '#2dd4bf',
+                tealDark: '#004d4a'
+            },
+            storageKey: 'monitor_db_a4_v10' // Updated storage key to clear old state
+        };
+
+        // --- 2. DEFAULT DEMO DATA ---
+        const DEFAULT_DATA = [
+            // --- Newest: 25/12/2025 ---
+            { date: "2025-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 5086644, value: 45632437973946 },
+            { date: "2025-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 4900402, value: 22630370668772 },
+            { date: "2025-12-25", channel: "Thanh toán", desc: "TTHD - Online bill payment", qty: 1714328, value: 8538807986287 },
+            { date: "2025-12-25", channel: "Thanh toán", desc: "Payment Hub - Cau phan B2B", qty: 1485960, value: 9917109599476 },
+            { date: "2025-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 1088714, value: 14166257422656 },
+            { date: "2025-12-25", channel: "ATM POS Thẻ", desc: "Giao dịch ATM nội mạng", qty: 450000, value: 900000000000 },
+            { date: "2025-12-25", channel: "Quầy", desc: "Giao dịch tiền mặt tại quầy", qty: 120000, value: 5000000000000 },
+            
+            // --- Middle: 24/12/2025 ---
+            { date: "2025-12-24", channel: "Tổng hợp", desc: "Dữ liệu tổng hợp hôm qua", qty: 16039850, value: 95000000000000 },
+            
+            // --- Oldest: 25/12/2024 ---
+            { date: "2024-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 3500000, value: 35000000000000 },
+            { date: "2024-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 3200000, value: 18000000000000 },
+            { date: "2024-12-25", channel: "Thanh toán", desc: "TTHD - Online bill payment", qty: 1200000, value: 6000000000000 },
+            { date: "2024-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 800000, value: 10000000000000 },
+            { date: "2024-12-25", channel: "Tổng hợp", desc: "Dữ liệu khác", qty: 3290000, value: 20000000000000 }
+        ];
+
+        let appData = [];
+        let charts = {};
+
+        // --- 3. HELPERS ---
+        const fmtNum = (n) => new Intl.NumberFormat('vi-VN').format(n);
+        const fmtDate = (d) => d ? d.split('-').reverse().join('/') : 'N/A';
+        
+        // *** CRITICAL FIX: STRICT DATE PARSING & SORTING ***
+        const parseDate = (val) => {
+            if (val instanceof Date) {
+                const year = val.getFullYear();
+                const month = String(val.getMonth() + 1).padStart(2, '0');
+                const day = String(val.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            const str = String(val).trim();
+            if(str.includes('/')) {
+                const parts = str.split('/');
+                if(parts.length === 3 && parts[2].length === 4) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            // If already YYYY-MM-DD
+            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
+            
+            // Try to handle YYYY-M-D or similar by normalizing
+            const isoParts = str.split('-');
+            if(isoParts.length === 3) {
+                 const year = isoParts[0];
+                 const month = isoParts[1].padStart(2, '0');
+                 const day = isoParts[2].padStart(2, '0');
+                 return `${year}-${month}-${day}`;
+            }
+            return str;
+        };
+
+        // --- 4. CORE LOGIC ---
+        function init() {
+            const stored = localStorage.getItem(CONFIG.storageKey);
+            appData = stored ? JSON.parse(stored) : [...DEFAULT_DATA];
+            renderAll();
+            setupFileUpload();
+        }
+
+        function renderAll() {
+            if (!appData || appData.length === 0) {
+                document.getElementById('report-date-display').innerText = "--/--/----";
+                document.getElementById('kpi-count').innerText = "0";
+                document.getElementById('kpi-value').innerText = "0";
+                document.getElementById('kpi-growth-qty').innerText = "--%";
+                document.getElementById('kpi-growth-val').innerText = "--%";
+                
+                if (charts.trend) { charts.trend.destroy(); charts.trend = null; }
+                if (charts.channel) { charts.channel.destroy(); charts.channel = null; }
+                if (charts.top10) { charts.top10.destroy(); charts.top10 = null; }
+
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400 italic">Chưa có dữ liệu</td></tr>';
+                document.getElementById('lbl-trend-old').innerText = "--/--/--";
+                document.getElementById('lbl-trend-mid').innerText = "--/--/--";
+                document.getElementById('lbl-trend-new').innerText = "--/--/--";
+                document.getElementById('lbl-top-newest').innerText = "--/--/--";
+                document.getElementById('lbl-top-oldest').innerText = "--/--/--";
+                return;
+            }
+
+            // 1. Identify Dates: SORT ASCENDING (Oldest -> Newest) USING DATE OBJECTS for Safety
+            const datesAsc = [...new Set(appData.map(d => d.date))].sort((a,b) => new Date(a) - new Date(b));
+            
+            // Extract specific dates based on sorted array
+            const d_oldest = datesAsc[0]; // Oldest date available
+            const d_newest = datesAsc[datesAsc.length - 1]; // Newest date available
+            // Middle Date: If 3 or more, take the one before newest
+            const d_middle = datesAsc.length > 2 ? datesAsc[datesAsc.length - 2] : null;
+
+            // Update Header
+            document.getElementById('report-date-display').innerText = fmtDate(d_newest);
+
+            // Filter Data Chunks
+            const dataNewest = appData.filter(d => d.date === d_newest);
+            const dataOldest = appData.filter(d => d.date === d_oldest);
+            const dataMiddle = d_middle ? appData.filter(d => d.date === d_middle) : [];
+
+            // Aggregate Metrics
+            const qtyNewest = dataNewest.reduce((s,i) => s + i.qty, 0);
+            const valNewest = dataNewest.reduce((s,i) => s + i.value, 0);
+            const qtyOldest = dataOldest.reduce((s,i) => s + i.qty, 0);
+            const valOldest = dataOldest.reduce((s,i) => s + i.value, 0);
+            const qtyMiddle = dataMiddle.reduce((s,i) => s + i.qty, 0);
+
+            // 4. Update KPIs (Compare Newest vs Oldest)
+            const growthQty = qtyOldest > 0 ? ((qtyNewest - qtyOldest)/qtyOldest * 100).toFixed(1) : '--';
+            const growthVal = valOldest > 0 ? ((valNewest - valOldest)/valOldest * 100).toFixed(1) : '--';
+
+            document.getElementById('kpi-growth-qty').innerText = `${growthQty > 0 ? '+' : ''}${growthQty}%`;
+            document.getElementById('kpi-growth-val').innerText = `${growthVal > 0 ? '+' : ''}${growthVal}%`;
+            
+            const kpiCompareLabels = document.querySelectorAll('.kpi-compare-date');
+            kpiCompareLabels.forEach(el => el.innerText = fmtDate(d_oldest));
+
+            document.getElementById('kpi-count').innerText = fmtNum(qtyNewest);
+            document.getElementById('kpi-value').innerText = (valNewest/1e12).toFixed(2) + ' Tỷ';
+
+            // 5. Update Legend Labels
+            // Trend: Oldest -> Middle -> Newest
+            document.getElementById('lbl-trend-old').innerText = fmtDate(d_oldest);
+            document.getElementById('lbl-trend-mid').innerText = d_middle ? fmtDate(d_middle) : (datesAsc.length === 2 ? 'N/A' : '--/--/--');
+            document.getElementById('lbl-trend-new').innerText = fmtDate(d_newest);
+
+            // Top 10: Newest vs Oldest
+            document.getElementById('lbl-top-newest').innerText = fmtDate(d_newest);
+            document.getElementById('lbl-top-oldest').innerText = fmtDate(d_oldest);
+
+            // 6. Render Charts
+            // Trend: Pass data in Oldest -> Middle -> Newest order explicitly
+            renderTrendChart([qtyOldest, qtyMiddle, qtyNewest], [fmtDate(d_oldest), d_middle ? fmtDate(d_middle) : '', fmtDate(d_newest)]);
+            
+            renderChannelBarChart(dataNewest, qtyNewest);
+            
+            // Top 10: Compare Newest (Teal) and Oldest (Yellow)
+            // Note: dataOldest is the *oldest* date, dataNewest is the *newest*
+            renderTop10(dataNewest, dataOldest, fmtDate(d_newest), fmtDate(d_oldest));
+            
+            renderTable(dataNewest);
+        }
+
+        // --- 5. CHARTS ---
+
+        function renderTrendChart(dataArr, labelsArr) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if(charts.trend) charts.trend.destroy();
+
+            // Filter data to remove empty slots if less than 3 dates
+            const cleanDataSets = [];
+            const cleanLabels = [];
+            const bgColorsMap = [CONFIG.colors.grey, CONFIG.colors.teal, CONFIG.colors.yellow]; // Standard map for Old->Mid->New
+            let finalColors = [];
+
+            dataArr.forEach((val, idx) => {
+                if(labelsArr[idx]) {
+                    cleanDataSets.push(val);
+                    cleanLabels.push(labelsArr[idx]);
+                    finalColors.push(bgColorsMap[idx]);
+                }
+            });
+
+            // Fallback if only 2 items (Oldest & Newest) -> color mapping adjustment
+            // If index 1 (Middle) was empty, we want Index 2 (Newest) to still be Yellow.
+            if(cleanDataSets.length === 2 && !labelsArr[1]) {
+                 finalColors = [CONFIG.colors.grey, CONFIG.colors.yellow];
+            }
+
+            charts.trend = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cleanLabels,
+                    datasets: [{
+                        data: cleanDataSets,
+                        backgroundColor: finalColors,
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 25 } }, 
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            clip: false,
+                            color: CONFIG.colors.text,
+                            font: { weight: 'bold', size: 9 },
+                            formatter: (val) => val > 0 ? (val/1e6).toFixed(1) + 'M' : ''
+                        }
+                    },
+                    scales: { 
+                        y: { display: false, min: 0, grace: '10%' }, 
+                        x: { grid: { display: false }, ticks: { font: {size: 9} } } 
+                    }
+                }
+            });
+        }
+
+        function renderChannelBarChart(data, total) {
+            const ctx = document.getElementById('channelChart').getContext('2d');
+            if(charts.channel) charts.channel.destroy();
+
+            const groups = {};
+            data.forEach(d => { groups[d.channel] = (groups[d.channel] || 0) + d.qty; });
+
+            const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+            const labels = entries.map(e => e[0]);
+            const values = entries.map(e => e[1]);
+
+            const bgColors = values.map((val, index) => {
+                const pct = (val / total);
+                if (pct > 0.5) return CONFIG.colors.tealDark;
+                if (pct > 0.2) return CONFIG.colors.teal;
+                if (pct > 0.1) return CONFIG.colors.yellow;
+                return CONFIG.colors.grey;
+            });
+
+            charts.channel = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: bgColors,
+                        borderRadius: 3,
+                        barThickness: 12
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            color: '#000',
+                            font: { size: 8, weight: 'bold' },
+                            formatter: (val) => {
+                                const pct = (val/total)*100;
+                                return pct.toFixed(1) + '%'; 
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: false, max: Math.max(...values) * 1.4 }, 
+                        y: { grid: { display: false }, ticks: { font: { size: 9 }, autoSkip: false } }
+                    },
+                    layout: { padding: { right: 20 } }
+                }
+            });
+        }
+
+        function renderTop10(dataNewest, dataOldest, labelNewest, labelOldest) {
+            const ctx = document.getElementById('topServiceChart').getContext('2d');
+            if(charts.top10) charts.top10.destroy();
+
+            const getMap = (arr) => {
+                const map = {};
+                arr.forEach(d => { map[d.desc] = (map[d.desc] || 0) + d.qty; });
+                return map;
+            };
+
+            const mapNewest = getMap(dataNewest);
+            const mapOldest = getMap(dataOldest);
+
+            // Sort by Newest volume
+            const sortedKeys = Object.keys(mapNewest).sort((a,b) => mapNewest[b] - mapNewest[a]).slice(0, 10);
+
+            const labels = sortedKeys.map(k => k.length > 40 ? k.substring(0,38)+'...' : k);
+            const valuesNewest = sortedKeys.map(k => mapNewest[k]);
+            const valuesOldest = sortedKeys.map(k => mapOldest[k] || 0);
+
+            charts.top10 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: labelNewest, 
+                            data: valuesNewest,
+                            backgroundColor: CONFIG.colors.teal,
+                            borderRadius: 3,
+                            barThickness: 10
+                        },
+                        {
+                            label: labelOldest, 
+                            data: valuesOldest,
+                            backgroundColor: CONFIG.colors.yellow, 
+                            borderRadius: 3,
+                            barThickness: 10
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            color: (ctx) => ctx.datasetIndex === 0 ? CONFIG.colors.teal : '#b45309',
+                            font: { weight: '600', size: 8 },
+                            formatter: (val) => val > 0 ? fmtNum(val) : ''
+                        }
+                    },
+                    scales: {
+                        x: { display: false, max: Math.max(...valuesNewest, ...valuesOldest) * 1.3 },
+                        y: { grid: { display: false }, ticks: { font: {size: 9} } }
+                    },
+                    layout: { padding: { right: 40 } }
+                }
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            data.slice(0, 10).forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = idx % 2 === 0 ? "bg-white" : "bg-gray-50"; 
+                tr.innerHTML = `
+                    <td>${fmtDate(row.date)}</td>
+                    <td>${row.channel}</td>
+                    <td class="truncate max-w-[150px]">${row.desc}</td>
+                    <td class="text-right font-bold text-brand-teal">${fmtNum(row.qty)}</td>
+                    <td class="text-right text-gray-500">${fmtNum(row.value)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if(data.length > 10) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="5" class="text-center text-gray-400 italic py-1">... Còn ${data.length - 10} dòng khác ...</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // --- 6. UTILS ---
+
+        function downloadTemplate() {
+            const ws_data = [
+                ["Ngay GD", "Nhóm kênh", "Mo ta", "So luong", "Gia tri quy doi"],
+                ["2025-12-25", "Thanh toán", "Chuyển tiền nhanh", 1000, 50000000],
+                ["2025-12-25", "Mobile + Internet", "Tiết kiệm online", 500, 20000000]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            const wscols = [{wch: 12}, {wch: 20}, {wch: 30}, {wch: 15}, {wch: 20}];
+            ws['!cols'] = wscols;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mau_Nhap_Lieu");
+            XLSX.writeFile(wb, "Template_Bao_Cao.xlsx");
+        }
+
+        function setupFileUpload() {
+            document.getElementById('excelFileInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: false, cellDates: true});
+                    if (jsonData.length > 0) processUploadedData(jsonData);
+                    document.getElementById('excelFileInput').value = '';
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function processUploadedData(rawData) {
+            const mappedData = rawData.map(r => {
+                const qtyKey = Object.keys(r).find(k => k.toLowerCase().includes('so luong') || k.toLowerCase().includes('qty'));
+                const valKey = Object.keys(r).find(k => k.toLowerCase().includes('quy doi') || k.toLowerCase().includes('value'));
+                const descKey = Object.keys(r).find(k => k.toLowerCase().includes('mo ta') || k.toLowerCase().includes('desc'));
+                const dateKey = Object.keys(r).find(k => k.toLowerCase().includes('ngay') || k.toLowerCase().includes('date'));
+                const chKey = Object.keys(r).find(k => k.toLowerCase().includes('nhóm kênh') || k.toLowerCase().includes('channel'));
+
+                if(!qtyKey || !dateKey) return null;
+                const cleanNum = (v) => (typeof v === 'number' ? v : parseFloat(String(v||'0').replace(/,/g, '')));
+
+                return {
+                    date: parseDate(r[dateKey]),
+                    channel: r[chKey] || 'Khác',
+                    desc: r[descKey] || 'N/A',
+                    qty: cleanNum(r[qtyKey]),
+                    value: cleanNum(r[valKey])
+                };
+            }).filter(i => i && i.qty > 0);
+
+            if(!mappedData.length) return alert("File không hợp lệ hoặc không có dữ liệu số lượng > 0.");
+
+            const datesToUpdate = new Set(mappedData.map(d => d.date));
+            appData = appData.filter(d => !datesToUpdate.has(d.date));
+            appData.push(...mappedData);
+            
+            localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
+            renderAll();
+            
+            const importedDates = [...datesToUpdate].sort().join(', ');
+            alert(`Đã nhập thành công dữ liệu cho các ngày: ${importedDates}`);
+        }
+
+        // Modal Logic
+        function toggleModal(id){
+            const m = document.getElementById(id);
+            m.classList.toggle('opacity-0');
+            m.classList.toggle('pointer-events-none');
+            if(!m.classList.contains('opacity-0')) renderDateList();
+        }
+        function renderDateList() {
+            const list = document.getElementById('dateList');
+            const dates = [...new Set(appData.map(d => d.date))].sort().reverse();
+            list.innerHTML = dates.map(d => 
+                `<li class="flex justify-between p-2 border-b">
+                    <span>${d}</span>
+                    <button class="text-red-500" onclick="deleteDate('${d}')"><i class="fa-solid fa-trash"></i></button>
+                </li>`
+            ).join('');
+        }
+        function deleteDate(d) {
+            if(confirm('Xóa?')) {
+                appData = appData.filter(i => i.date !== d);
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
+                renderDateList(); renderAll();
+            }
+        }
+        function deleteAllData() {
+            if(confirm('Xóa tất cả?')) {
+                localStorage.removeItem(CONFIG.storageKey);
+                appData = [];
+                renderDateList(); renderAll();
+                toggleModal('dataModal');
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
