@@ -358,7 +358,7 @@
         </section>
 
         <!-- Section 3: Top Services - 3px Gap -->
-        <section class="report-card mb-[3px] h-[200px] flex flex-col"> <!-- Reduced height -->
+        <section class="report-card mb-[3px] h-[230px] flex flex-col"> <!-- Increased height for spacing -->
             <div class="report-section-header my-0 py-0 border-none mb-1">
                 <h3 class="report-section-title"><i class="fa-solid fa-ranking-star"></i> Top 10 Dịch vụ</h3>
                 <div class="flex gap-3 text-[9px] font-bold">
@@ -378,7 +378,7 @@
         <!-- Section 4: Data Table - 3px Gap -->
         <section class="flex-1 flex flex-col mb-[3px] min-h-0">
             <div class="report-section-header mb-1 border-none">
-                <h3 class="report-section-title"><i class="fa-solid fa-list-ol"></i> Chi tiết Giao dịch</h3>
+                <h3 class="report-section-title"><i class="fa-solid fa-list-ol"></i> Chi tiết Giao dịch (Top 15)</h3>
             </div>
             <div class="overflow-hidden border border-[var(--border-color)] flex-1 transition-colors">
                 <table class="w-full text-left financial-table">
@@ -502,7 +502,12 @@
             { date: "2024-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 3500000, value: 35000000000000 },
             { date: "2024-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 3200000, value: 18000000000000 },
             { date: "2024-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 800000, value: 10000000000000 },
-            { date: "2024-12-25", channel: "Tổng hợp", desc: "Dữ liệu khác", qty: 3290000, value: 20000000000000 }
+            { date: "2024-12-25", channel: "Tổng hợp", desc: "Dữ liệu khác", qty: 3290000, value: 20000000000000 },
+            { date: "2025-12-25", channel: "Khác", desc: "DV1 - Dịch vụ bổ sung 1", qty: 150000, value: 300000000000 },
+            { date: "2025-12-25", channel: "Khác", desc: "DV2 - Dịch vụ bổ sung 2", qty: 140000, value: 280000000000 },
+            { date: "2025-12-25", channel: "Khác", desc: "DV3 - Dịch vụ bổ sung 3", qty: 130000, value: 260000000000 },
+            { date: "2025-12-25", channel: "Khác", desc: "DV4 - Dịch vụ bổ sung 4", qty: 120000, value: 240000000000 },
+            { date: "2025-12-25", channel: "Khác", desc: "DV5 - Dịch vụ bổ sung 5", qty: 110000, value: 220000000000 }
         ];
 
         let appData = [];
@@ -645,7 +650,7 @@
                             align: 'top',
                             offset: 2,
                             color: c.text, 
-                            font: { weight: 'bold', size: 9, family: 'Inter' },
+                            font: { weight: 'bold', size: 10, family: 'Inter' },
                             formatter: (val) => val > 0 ? (val/1e6).toFixed(1) + 'M' : ''
                         }
                     },
@@ -653,7 +658,7 @@
                         y: { display: false, min: 0, grace: '15%' }, 
                         x: { 
                             grid: { display: false }, 
-                            ticks: { font: {size: 9, family: 'Inter'}, color: c.text } 
+                            ticks: { font: {size: 10, family: 'Inter'}, color: c.text } 
                         } 
                     },
                     layout: { padding: { top: 15 } }
@@ -801,7 +806,7 @@
             
             const c = getColors();
             
-            data.slice(0, 10).forEach((row, idx) => {
+            data.slice(0, 15).forEach((row, idx) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="font-mono">${fmtDate(row.date)}</td>
