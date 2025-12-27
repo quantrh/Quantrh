@@ -339,6 +339,8 @@
         // --- 3. HELPERS ---
         const fmtNum = (n) => new Intl.NumberFormat('vi-VN').format(n);
         const fmtDate = (d) => d ? d.split('-').reverse().join('/') : 'N/A';
+        
+        // --- UPDATED PARSE DATE LOGIC ---
         const parseDate = (val) => {
             if (val instanceof Date) {
                 const year = val.getFullYear();
@@ -346,17 +348,41 @@
                 const day = String(val.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
+            
             const str = String(val).trim();
+            
+            // Handle various slash formats (DD/MM/YYYY, MM/DD/YYYY, MM/DD/YY)
             if(str.includes('/')) {
                 const parts = str.split('/');
-                if(parts.length === 3 && parts[2].length === 4) {
-                    const day = parts[0].padStart(2, '0');
-                    const month = parts[1].padStart(2, '0');
-                    const year = parts[2];
-                    return `${year}-${month}-${day}`;
+                if(parts.length === 3) {
+                    let p0 = parseInt(parts[0], 10);
+                    let p1 = parseInt(parts[1], 10);
+                    let p2 = parseInt(parts[2], 10);
+
+                    // Handle 2-digit year (e.g., 25 -> 2025)
+                    if (p2 < 100) p2 += 2000;
+
+                    const sP0 = String(p0).padStart(2, '0');
+                    const sP1 = String(p1).padStart(2, '0');
+                    const sYear = String(p2);
+
+                    // Heuristic: If 1st part > 12, it must be DD/MM
+                    if (p0 > 12) {
+                         return `${sYear}-${sP1}-${sP0}`; // DD/MM/YYYY -> YYYY-MM-DD
+                    } 
+                    // If 2nd part > 12, it must be MM/DD (US Style)
+                    else if (p1 > 12) {
+                        return `${sYear}-${sP0}-${sP1}`; // MM/DD/YYYY -> YYYY-MM-DD
+                    }
+                    // Ambiguous case (e.g. 01/02/2025) -> Prefer DD/MM (VN standard)
+                    else {
+                        return `${sYear}-${sP1}-${sP0}`;
+                    }
                 }
             }
+
             if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
+            
             const isoParts = str.split('-');
             if(isoParts.length === 3) {
                  const year = isoParts[0];
@@ -694,7 +720,7 @@
         }
 
         // --- 6. UTILS ---
-        function downloadTemplate() { /* Same as before */ 
+        function downloadTemplate() {
             const ws_data = [["Ngay GD", "Nhóm kênh", "Mo ta", "So luong", "Gia tri quy doi"]];
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
@@ -702,7 +728,7 @@
             XLSX.writeFile(wb, "Template_Bao_Cao.xlsx");
         }
 
-        function setupFileUpload() { /* Same as before */ 
+        function setupFileUpload() {
             document.getElementById('excelFileInput').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if(!file) return;
@@ -718,7 +744,7 @@
             });
         }
 
-        function processUploadedData(rawData) { /* Same as before */ 
+        function processUploadedData(rawData) {
             const mappedData = rawData.map(r => {
                 const qtyKey = Object.keys(r).find(k => k.toLowerCase().includes('so luong') || k.toLowerCase().includes('qty'));
                 const valKey = Object.keys(r).find(k => k.toLowerCase().includes('quy doi') || k.toLowerCase().includes('value'));
@@ -747,30 +773,37 @@
             localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
             renderAll();
             
-            const importedDates = [...datesToUpdate].sort().join(', ');
+            // Fix: Format dates in success alert
+            const importedDates = [...datesToUpdate].sort().map(d => fmtDate(d)).join(', ');
             alert(`Đã nhập thành công dữ liệu cho các ngày: ${importedDates}`);
         }
 
-        function toggleModal(id){ /* Same as before */ 
+        function toggleModal(id){
             const m = document.getElementById(id);
             m.classList.toggle('opacity-0');
             m.classList.toggle('pointer-events-none');
             if(!m.classList.contains('opacity-0')) renderDateList();
         }
-        function renderDateList() { /* Same as before */ 
+        
+        function renderDateList() {
             const list = document.getElementById('dateList');
+            // Sort keys by actual date value, but display formatted
             const dates = [...new Set(appData.map(d => d.date))].sort().reverse();
-            list.innerHTML = dates.map(d => `<li class="flex justify-between p-2 border-b"><span>${d}</span><button class="text-red-500" onclick="deleteDate('${d}')"><i class="fa-solid fa-trash"></i></button></li>`).join('');
+            // Fix: Use fmtDate() inside the list item text
+            list.innerHTML = dates.map(d => `<li class="flex justify-between p-2 border-b"><span>${fmtDate(d)}</span><button class="text-red-500" onclick="deleteDate('${d}')"><i class="fa-solid fa-trash"></i></button></li>`).join('');
         }
-        function deleteDate(d) { /* Same as before */ 
-            if(confirm('Xóa?')) {
+        
+        function deleteDate(d) {
+            // Fix: Use fmtDate() in confirm dialog
+            if(confirm(`Xóa dữ liệu ngày ${fmtDate(d)}?`)) {
                 appData = appData.filter(i => i.date !== d);
                 localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
                 renderDateList(); renderAll();
             }
         }
-        function deleteAllData() { /* Same as before */ 
-            if(confirm('Xóa tất cả?')) {
+        
+        function deleteAllData() {
+            if(confirm('Bạn có chắc muốn xóa tất cả dữ liệu không?')) {
                 localStorage.removeItem(CONFIG.storageKey);
                 appData = [];
                 renderDateList(); renderAll();
