@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo cáo Quyết toán - Bản in A4 (3D Style)</title>
+    <title>Báo cáo Quyết toán - Financial Professional Style</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,135 +18,153 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter (Data) & Playfair Display (Headers) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #525252;
-            color: #334155;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
+        :root {
+            /* Updated Brand Colors */
+            --bidv-green: #006B68;
+            --bidv-yellow: #FFC62F; /* Updated from #fdb913 */
+            
+            --paper-bg: #fdfbf7; /* Màu giấy Wall Street */
+            --text-primary: #1e293b;
+            --border-color: #cbd5e1;
         }
 
-        /* A4 Simulation Configuration */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2d3748; /* Nền tối bên ngoài để làm nổi bật trang giấy */
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Typography Override for Financial Look */
+        h1, h2, h3, .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* A4 Page Simulation - Financial Report Style */
         .page-a4 {
-            background: #f8fafc; /* Very light slate bg for 3D effect contrast */
+            background-color: var(--paper-bg);
             width: 210mm;
             min-height: 297mm;
-            padding: 8mm 12mm; /* Reduced padding for more space */
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* Deep shadow for page */
+            padding: 12mm 15mm;
+            /* 2D Effect: No soft shadows, just a clean hard border relative to background */
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1); 
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
             position: relative;
         }
 
-        /* Brand Colors */
-        .text-brand-teal { color: #006b68; }
-        .bg-brand-teal { background-color: #006b68; }
-        .border-brand-teal { border-color: #006b68; }
-        
-        .text-brand-yellow { color: #ffc62f; }
-        .bg-brand-yellow { background-color: #ffc62f; }
-        .border-brand-yellow { border-color: #ffc62f; }
-
-        /* 3D / Shadow Effects */
-        .card-3d {
+        /* Components: Flat, Bordered, Professional */
+        .report-card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-                0 2px 4px -1px rgba(0, 0, 0, 0.06),
-                0 0 0 1px rgba(0,0,0,0.02); /* Subtle border */
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        /* Inner recessed look for table container if needed, or stick to raised */
-        .table-container-3d {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f1f5f9;
-            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: 2px; /* Góc vuông hoặc bo cực nhẹ */
+            position: relative;
         }
 
-        .kpi-card-3d {
-            background: linear-gradient(145deg, #ffffff, #f3f4f6);
-            border-radius: 16px;
-            box-shadow:  5px 5px 10px #d1d5db, -5px -5px 10px #ffffff;
-            border-left: 5px solid transparent; /* Color defined inline */
+        .report-section-header {
+            border-bottom: 2px solid var(--bidv-green);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* Compact Table */
-        .compact-table th {
-            background-color: #f8fafc;
-            color: #64748b;
-            font-weight: 600;
+        .report-section-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0f172a;
             text-transform: uppercase;
-            font-size: 9px;
-            padding: 6px 8px;
-            border-bottom: 2px solid #e2e8f0;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .compact-table td {
-            padding: 5px 8px;
-            font-size: 10px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .compact-table tr:last-child td { border-bottom: none; }
-        
-        /* Modal Animation */
-        .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
 
+        /* KPI Specifics */
+        .kpi-box {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+        }
+        
+        /* Table Styling - Clean Financial Lines */
+        .financial-table th {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--bidv-green);
+            border-bottom: 2px solid var(--border-color);
+            padding: 8px;
+            background-color: transparent;
+        }
+        .financial-table td {
+            font-size: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+        .financial-table tr:last-child td { border-bottom: none; }
+        .financial-table tr:nth-child(even) { background-color: rgba(0,0,0,0.01); }
+
+        /* Icon Styling */
+        .icon-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(0, 107, 104, 0.1);
+            color: var(--bidv-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* Utility */
+        .text-bidv-green { color: var(--bidv-green); }
+        .bg-bidv-green { background-color: var(--bidv-green); }
+        .text-bidv-yellow { color: #d97706; /* Darker yellow for text readability */ }
+        
         /* Print Settings */
         @media print {
-            body { 
-                background: none; 
-                padding: 0; 
-                display: block;
-            }
-            .page-a4 {
-                width: 100%;
-                height: auto;
-                box-shadow: none;
-                margin: 0;
-                padding: 5mm;
-                background: white; /* Print bg usually white */
-            }
+            body { background: none; padding: 0; }
+            .page-a4 { width: 100%; box-shadow: none; margin: 0; border: none; }
             .no-print { display: none !important; }
-            /* Force background colors print */
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
-            /* Flatten shadows for print clarity, or keep if printer is good */
-            .card-3d, .kpi-card-3d {
-                box-shadow: none;
-                border: 1px solid #e5e7eb;
-            }
+            .report-card, .kpi-box { border: 1px solid #000; } /* High contrast for print */
         }
+        
+        /* Modal */
+        .modal { transition: opacity 0.2s ease; }
     </style>
 </head>
 <body>
 
     <!-- Toolbar (No Print) -->
-    <div class="fixed top-4 right-4 flex flex-col gap-2 no-print z-50">
+    <div class="fixed top-6 right-6 flex flex-col gap-3 no-print z-50">
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" />
         
-        <button onclick="document.getElementById('excelFileInput').click()" class="bg-brand-teal text-white px-4 py-2 rounded shadow-lg hover:bg-[#005452] text-xs font-bold flex items-center gap-2 transform active:scale-95 transition">
+        <button onclick="document.getElementById('excelFileInput').click()" class="bg-bidv-green text-white px-4 py-2 rounded-sm shadow hover:bg-[#005452] text-xs font-semibold flex items-center gap-2 transition border border-[#004d4a]">
             <i class="fa-solid fa-upload"></i> Upload Excel
         </button>
         
-        <button onclick="downloadTemplate()" class="bg-white text-brand-teal border border-brand-teal px-4 py-2 rounded shadow-lg hover:bg-gray-50 text-xs font-bold flex items-center gap-2 transform active:scale-95 transition">
-            <i class="fa-solid fa-download"></i> Tải File Mẫu
+        <button onclick="downloadTemplate()" class="bg-white text-bidv-green border border-bidv-green px-4 py-2 rounded-sm shadow hover:bg-gray-50 text-xs font-semibold flex items-center gap-2 transition">
+            <i class="fa-solid fa-download"></i> Tải Mẫu
         </button>
 
-        <button onclick="toggleModal('dataModal')" class="bg-gray-600 text-white px-4 py-2 rounded shadow-lg hover:bg-gray-700 text-xs font-bold flex items-center gap-2 transform active:scale-95 transition">
-            <i class="fa-solid fa-database"></i> Quản lý Data
+        <button onclick="toggleModal('dataModal')" class="bg-slate-700 text-white px-4 py-2 rounded-sm shadow hover:bg-slate-800 text-xs font-semibold flex items-center gap-2 transition border border-slate-900">
+            <i class="fa-solid fa-database"></i> Dữ liệu
         </button>
         
-        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded shadow-lg hover:bg-blue-700 text-xs font-bold flex items-center gap-2 transform active:scale-95 transition">
+        <button onclick="window.print()" class="bg-blue-700 text-white px-4 py-2 rounded-sm shadow hover:bg-blue-800 text-xs font-semibold flex items-center gap-2 transition border border-blue-900">
             <i class="fa-solid fa-print"></i> In Báo Cáo
         </button>
     </div>
@@ -154,63 +172,76 @@
     <!-- A4 PAGE CONTENT -->
     <div class="page-a4" id="printArea">
         
-        <!-- Header -->
-        <header class="flex justify-between items-end border-b border-gray-300 pb-3 mb-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-brand-teal to-[#004d4a] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
+        <!-- Header Section -->
+        <header class="flex justify-between items-start border-b-4 border-double border-gray-300 pb-4 mb-6">
+            <div class="flex items-center gap-5">
+                <!-- BIDV Logo Simulation -->
+                <div class="w-14 h-14 bg-white border border-gray-200 flex items-center justify-center text-bidv-green text-3xl">
                     <i class="fa-solid fa-building-columns"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-extrabold text-gray-800 uppercase leading-none tracking-tight">CORE BANKING MONITOR</h1>
-                    <p class="text-[10px] text-gray-500 font-bold tracking-widest mt-1 uppercase">Hệ thống báo cáo Core Banking</p>
+                    <h1 class="text-3xl font-bold text-bidv-green uppercase tracking-tight leading-none">CORE BANKING MONITOR</h1>
+                    <p class="text-[11px] text-gray-500 font-semibold tracking-widest mt-1 uppercase font-serif">Hệ thống Core Banking - Daily Report</p>
                 </div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ngày báo cáo</div>
-                <div class="text-xl font-black text-brand-teal leading-none drop-shadow-sm" id="report-date-display">--/--/----</div>
+                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ngày dữ liệu</div>
+                <div class="text-2xl font-bold text-gray-800 font-serif" id="report-date-display">--/--/----</div>
             </div>
         </header>
 
-        <!-- Section 1: KPIs (3D Cards) -->
-        <section class="grid grid-cols-2 gap-5 mb-5">
-            <!-- KPI 1 -->
-            <div class="kpi-card-3d p-4 flex items-center justify-between border-brand-teal">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Tổng Số Lượng GD</p>
-                    <h3 class="text-3xl font-black text-gray-800 mt-1" id="kpi-count">--</h3>
-                </div>
-                <div class="text-right">
-                    <div class="inline-flex items-center px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg shadow-sm border border-green-200">
-                        <i class="fa-solid fa-arrow-up mr-1"></i> <span id="kpi-growth-qty">--%</span>
+        <!-- Section 1: Executive Summary (KPIs) -->
+        <section class="mb-6">
+            <div class="grid grid-cols-2 gap-6">
+                <!-- KPI 1: Qty -->
+                <div class="kpi-box flex flex-col justify-between h-28 border-t-4 border-t-[#006B68]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-file-invoice text-bidv-green"></i> Tổng Số Lượng GD
+                            </p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-mono tracking-tight" id="kpi-count">--</h3>
+                        </div>
                     </div>
-                    <p class="text-[9px] font-medium text-gray-400 mt-1">vs <span class="kpi-compare-date">--/--/--</span></p>
-                </div>
-            </div>
-            <!-- KPI 2 -->
-            <div class="kpi-card-3d p-4 flex items-center justify-between border-brand-yellow">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Tổng Giá Trị (VND)</p>
-                    <h3 class="text-3xl font-black text-gray-800 mt-1" id="kpi-value">--</h3>
-                </div>
-                <div class="text-right">
-                    <div class="inline-flex items-center px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg shadow-sm border border-green-200">
-                        <i class="fa-solid fa-arrow-up mr-1"></i> <span id="kpi-growth-val">--%</span>
+                    <div class="flex justify-between items-end border-t border-gray-100 pt-2 mt-2">
+                        <span class="text-[10px] text-gray-400">So với ngày <span class="kpi-compare-date font-bold">--</span></span>
+                        <div class="text-xs font-bold text-bidv-green flex items-center">
+                            <i class="fa-solid fa-arrow-trend-up mr-1"></i> <span id="kpi-growth-qty">--%</span>
+                        </div>
                     </div>
-                    <p class="text-[9px] font-medium text-gray-400 mt-1">vs <span class="kpi-compare-date">--/--/--</span></p>
+                </div>
+
+                <!-- KPI 2: Value -->
+                <div class="kpi-box flex flex-col justify-between h-28 border-t-4 border-t-[#FFC62F]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-yellow-600"></i> Tổng Giá Trị (VND)
+                            </p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-mono tracking-tight" id="kpi-value">--</h3>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-end border-t border-gray-100 pt-2 mt-2">
+                        <span class="text-[10px] text-gray-400">So với ngày <span class="kpi-compare-date font-bold">--</span></span>
+                        <div class="text-xs font-bold text-yellow-600 flex items-center">
+                            <i class="fa-solid fa-arrow-trend-up mr-1"></i> <span id="kpi-growth-val">--%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Combined Charts Area (Space Saver) -->
-        <section class="card-3d p-4 mb-5 flex flex-row gap-4 h-[240px]">
-            <!-- Trend Chart (Left - 60%) -->
-            <div class="flex-1 flex flex-col border-r border-dashed border-gray-200 pr-4">
-                <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-sm font-bold text-gray-800">Xu hướng Giao dịch</h3>
-                    <div class="flex gap-2 text-[9px] font-medium bg-gray-100 px-2 py-1 rounded-md shadow-inner">
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span><span id="lbl-trend-old">--</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-teal"></span><span id="lbl-trend-mid">--</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-yellow"></span><span id="lbl-trend-new">--</span></span>
+        <!-- Section 2: Charts Area -->
+        <section class="report-card p-5 mb-6 flex flex-row gap-6 h-[260px]">
+            <!-- Trend Chart -->
+            <div class="flex-1 flex flex-col border-r border-gray-200 pr-6">
+                <div class="report-section-header">
+                    <h3 class="report-section-title"><i class="fa-solid fa-chart-line text-bidv-green"></i> Xu hướng Giao dịch</h3>
+                    <!-- Legend -->
+                    <div class="flex gap-3 text-[9px] font-medium font-serif italic text-gray-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-gray-300"></span><span id="lbl-trend-old">--</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-bidv-green"></span><span id="lbl-trend-mid">--</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[#FFC62F]"></span><span id="lbl-trend-new">--</span></span>
                     </div>
                 </div>
                 <div class="flex-1 relative w-full">
@@ -218,10 +249,10 @@
                 </div>
             </div>
 
-            <!-- Channel Chart (Right - 40%) -->
-            <div class="w-[40%] flex flex-col">
-                <div class="mb-2">
-                    <h3 class="text-sm font-bold text-gray-800">Tỷ trọng nhóm giao dịch</h3>
+            <!-- Channel Chart -->
+            <div class="w-[35%] flex flex-col">
+                <div class="report-section-header">
+                    <h3 class="report-section-title"><i class="fa-solid fa-chart-pie text-bidv-green"></i> Tỷ trọng Kênh</h3>
                 </div>
                 <div class="flex-1 relative w-full">
                     <canvas id="channelChart"></canvas>
@@ -229,16 +260,16 @@
             </div>
         </section>
 
-        <!-- Section 3: Top 10 Services (Horizontal Bar) -->
-        <section class="card-3d p-4 mb-5 h-[260px] flex flex-col">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-sm font-bold text-gray-800">Top 10 Dịch vụ (Theo Số Lượng)</h3>
-                <div class="flex gap-3 text-[9px] font-medium">
-                    <div class="flex items-center gap-1.5 px-2 py-1 rounded bg-brand-teal/10 text-brand-teal border border-brand-teal/20">
-                        <span class="w-2 h-2 rounded-sm bg-brand-teal"></span> <span id="lbl-top-newest">--</span>
+        <!-- Section 3: Top Services -->
+        <section class="report-card p-5 mb-6 h-[280px] flex flex-col">
+            <div class="report-section-header">
+                <h3 class="report-section-title"><i class="fa-solid fa-ranking-star text-bidv-green"></i> Top 10 Dịch vụ (Số lượng)</h3>
+                <div class="flex gap-4 text-[9px] font-bold">
+                    <div class="flex items-center gap-1 text-bidv-green">
+                        <i class="fa-solid fa-square text-[8px]"></i> <span id="lbl-top-newest">--</span>
                     </div>
-                    <div class="flex items-center gap-1.5 px-2 py-1 rounded bg-brand-yellow/10 text-brand-yellow border border-brand-yellow/20">
-                        <span class="w-2 h-2 rounded-sm bg-brand-yellow"></span> <span id="lbl-top-oldest">--</span>
+                    <div class="flex items-center gap-1 text-yellow-600">
+                        <i class="fa-solid fa-square text-[8px]"></i> <span id="lbl-top-oldest">--</span>
                     </div>
                 </div>
             </div>
@@ -247,13 +278,13 @@
             </div>
         </section>
 
-        <!-- Section 4: 3D Table -->
-        <section class="table-container-3d flex-1 flex flex-col mb-2">
-            <div class="bg-gradient-to-r from-gray-50 to-white px-4 py-2 border-b border-gray-200">
-                <h3 class="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest">Chi tiết giao dịch (Top 10)</h3>
+        <!-- Section 4: Data Table -->
+        <section class="flex-1 flex flex-col mb-2">
+            <div class="report-section-header mb-0">
+                <h3 class="report-section-title"><i class="fa-solid fa-list-ol text-bidv-green"></i> Chi tiết Giao dịch (Top 10)</h3>
             </div>
-            <div class="overflow-x-hidden flex-1 relative">
-                <table class="w-full text-left compact-table">
+            <div class="overflow-hidden border border-t-0 border-gray-200 bg-white">
+                <table class="w-full text-left financial-table">
                     <thead>
                         <tr>
                             <th class="w-[10%]">Ngày GD</th>
@@ -263,20 +294,23 @@
                             <th class="w-[25%] text-right">Giá trị (VND)</th>
                         </tr>
                     </thead>
-                    <tbody id="dataTableBody" class="text-gray-600">
-                        <!-- Rows rendered via JS -->
+                    <tbody id="dataTableBody">
+                        <!-- Content -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- Footer Note -->
-        <footer class="text-[10px] text-red-600 font-bold border-t border-gray-200 pt-2 mt-auto">
-            <div class="flex justify-between items-start">
-                <div class="opacity-100">
-                    <span class="uppercase">Ghi chú:</span> Tất cả giao dịch trên Core được chia thành các nhóm: Thanh toán, Mobile + Internet, Batch + Lô, ATM POS Thẻ, Smart Counter Hub, Quầy, Chứng khoán bảo hiểm. CÁC KÊNH MOBILE VÀ INTERNET BANKING CHƯA CÓ CÁC GIAO DỊCH THANH TOÁN
+        <!-- Footer -->
+        <footer class="mt-auto border-t-2 border-gray-800 pt-3">
+            <div class="flex justify-between items-start text-[9px] leading-relaxed">
+                <div class="w-3/4 text-gray-600 text-justify pr-4 italic font-serif">
+                    <span class="font-bold text-gray-900 not-italic uppercase">Ghi chú:</span> Tất cả giao dịch trên Core được chia thành các nhóm: Thanh toán, Mobile + Internet, Batch + Lô, ATM POS Thẻ, Smart Counter Hub, Quầy, Chứng khoán bảo hiểm. CÁC KÊNH MOBILE VÀ INTERNET BANKING CHƯA CÓ CÁC GIAO DỊCH THANH TOÁN
                 </div>
-                <div class="font-bold text-brand-teal ml-4 whitespace-nowrap">Trang 1/1</div>
+                <div class="w-1/4 text-right">
+                    <div class="font-bold text-bidv-green font-serif text-xs">BAN QL&PT CORE BANKING</div>
+                    <div class="text-gray-400 mt-1">Page 1 of 1</div>
+                </div>
             </div>
         </footer>
 
@@ -284,14 +318,16 @@
 
     <!-- Data Management Modal -->
     <div id="dataModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-96 mx-auto rounded shadow-lg z-50 p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg">Quản lý Dữ liệu</h3>
-                <button onclick="toggleModal('dataModal')"><i class="fa-solid fa-times"></i></button>
+        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-70"></div>
+        <div class="modal-container bg-white w-96 mx-auto rounded-sm shadow-2xl z-50 p-6 border-t-4 border-bidv-green">
+            <div class="flex justify-between items-center mb-6 border-b pb-2">
+                <h3 class="font-bold text-lg font-serif text-bidv-green">Quản lý Dữ liệu</h3>
+                <button onclick="toggleModal('dataModal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
             </div>
-            <ul id="dateList" class="max-h-40 overflow-y-auto mb-4 border rounded text-sm p-2"></ul>
-            <button onclick="deleteAllData()" class="w-full bg-red-100 text-red-600 py-2 rounded font-bold text-sm hover:bg-red-200">Xóa Toàn Bộ</button>
+            <ul id="dateList" class="max-h-40 overflow-y-auto mb-6 border border-gray-200 rounded-sm text-sm p-0"></ul>
+            <button onclick="deleteAllData()" class="w-full bg-red-50 text-red-700 border border-red-200 py-2 rounded-sm font-bold text-xs hover:bg-red-100 uppercase tracking-wide transition">
+                <i class="fa-solid fa-trash-can mr-2"></i> Xóa Toàn Bộ Dữ liệu
+            </button>
         </div>
     </div>
 
@@ -301,46 +337,19 @@
 
         const CONFIG = {
             colors: {
-                teal: '#006b68',
-                yellow: '#ffc62f',
-                grey: '#94a3b8', // Darker grey for better visibility on white
-                text: '#334155',
-                tealLight: '#2dd4bf',
-                tealDark: '#004d4a'
+                teal: '#006B68',
+                yellow: '#FFC62F', // Updated Yellow
+                grey: '#64748b',
+                text: '#1e293b',
+                gridLine: '#f1f5f9'
             },
-            storageKey: 'monitor_db_a4_v11' 
+            storageKey: 'monitor_db_finance_style_v2' 
         };
 
-        // --- 2. DEFAULT DEMO DATA ---
-        const DEFAULT_DATA = [
-            // --- Newest: 25/12/2025 ---
-            { date: "2025-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 5086644, value: 45632437973946 },
-            { date: "2025-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 4900402, value: 22630370668772 },
-            { date: "2025-12-25", channel: "Thanh toán", desc: "TTHD - Online bill payment", qty: 1714328, value: 8538807986287 },
-            { date: "2025-12-25", channel: "Thanh toán", desc: "Payment Hub - Cau phan B2B", qty: 1485960, value: 9917109599476 },
-            { date: "2025-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 1088714, value: 14166257422656 },
-            { date: "2025-12-25", channel: "ATM POS Thẻ", desc: "Giao dịch ATM nội mạng", qty: 450000, value: 900000000000 },
-            { date: "2025-12-25", channel: "Quầy", desc: "Giao dịch tiền mặt tại quầy", qty: 120000, value: 5000000000000 },
-            
-            // --- Middle: 24/12/2025 ---
-            { date: "2025-12-24", channel: "Tổng hợp", desc: "Dữ liệu tổng hợp hôm qua", qty: 16039850, value: 95000000000000 },
-            
-            // --- Oldest: 25/12/2024 ---
-            { date: "2024-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 3500000, value: 35000000000000 },
-            { date: "2024-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 3200000, value: 18000000000000 },
-            { date: "2024-12-25", channel: "Thanh toán", desc: "TTHD - Online bill payment", qty: 1200000, value: 6000000000000 },
-            { date: "2024-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 800000, value: 10000000000000 },
-            { date: "2024-12-25", channel: "Tổng hợp", desc: "Dữ liệu khác", qty: 3290000, value: 20000000000000 }
-        ];
-
-        let appData = [];
-        let charts = {};
-
-        // --- 3. HELPERS ---
+        // --- 2. LOGIC DATE PROCESSING ---
         const fmtNum = (n) => new Intl.NumberFormat('vi-VN').format(n);
         const fmtDate = (d) => d ? d.split('-').reverse().join('/') : 'N/A';
         
-        // --- UPDATED PARSE DATE LOGIC ---
         const parseDate = (val) => {
             if (val instanceof Date) {
                 const year = val.getFullYear();
@@ -348,52 +357,50 @@
                 const day = String(val.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
-            
             const str = String(val).trim();
-            
-            // Handle various slash formats (DD/MM/YYYY, MM/DD/YYYY, MM/DD/YY)
             if(str.includes('/')) {
                 const parts = str.split('/');
                 if(parts.length === 3) {
                     let p0 = parseInt(parts[0], 10);
                     let p1 = parseInt(parts[1], 10);
                     let p2 = parseInt(parts[2], 10);
-
-                    // Handle 2-digit year (e.g., 25 -> 2025)
                     if (p2 < 100) p2 += 2000;
-
                     const sP0 = String(p0).padStart(2, '0');
                     const sP1 = String(p1).padStart(2, '0');
                     const sYear = String(p2);
-
-                    // Heuristic: If 1st part > 12, it must be DD/MM
-                    if (p0 > 12) {
-                         return `${sYear}-${sP1}-${sP0}`; // DD/MM/YYYY -> YYYY-MM-DD
-                    } 
-                    // If 2nd part > 12, it must be MM/DD (US Style)
-                    else if (p1 > 12) {
-                        return `${sYear}-${sP0}-${sP1}`; // MM/DD/YYYY -> YYYY-MM-DD
-                    }
-                    // Ambiguous case (e.g. 01/02/2025) -> Prefer DD/MM (VN standard)
-                    else {
-                        return `${sYear}-${sP1}-${sP0}`;
-                    }
+                    if (p0 > 12) return `${sYear}-${sP1}-${sP0}`; 
+                    else if (p1 > 12) return `${sYear}-${sP0}-${sP1}`;
+                    else return `${sYear}-${sP1}-${sP0}`;
                 }
             }
-
             if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
-            
             const isoParts = str.split('-');
             if(isoParts.length === 3) {
-                 const year = isoParts[0];
-                 const month = isoParts[1].padStart(2, '0');
-                 const day = isoParts[2].padStart(2, '0');
-                 return `${year}-${month}-${day}`;
+                 return `${isoParts[0]}-${isoParts[1].padStart(2, '0')}-${isoParts[2].padStart(2, '0')}`;
             }
             return str;
         };
 
-        // --- 4. CORE LOGIC ---
+        // --- 3. DEFAULT DATA ---
+        const DEFAULT_DATA = [
+            { date: "2025-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 5086644, value: 45632437973946 },
+            { date: "2025-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 4900402, value: 22630370668772 },
+            { date: "2025-12-25", channel: "Thanh toán", desc: "TTHD - Online bill payment", qty: 1714328, value: 8538807986287 },
+            { date: "2025-12-25", channel: "Payment Hub", desc: "Payment Hub - Cau phan B2B", qty: 1485960, value: 9917109599476 },
+            { date: "2025-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 1088714, value: 14166257422656 },
+            { date: "2025-12-25", channel: "ATM POS Thẻ", desc: "Giao dịch ATM nội mạng", qty: 450000, value: 900000000000 },
+            { date: "2025-12-25", channel: "Quầy", desc: "Giao dịch tiền mặt tại quầy", qty: 120000, value: 5000000000000 },
+            { date: "2025-12-24", channel: "Tổng hợp", desc: "Dữ liệu tổng hợp hôm qua", qty: 16039850, value: 95000000000000 },
+            { date: "2024-12-25", channel: "Thanh toán", desc: "A42 - 24x7 Napas", qty: 3500000, value: 35000000000000 },
+            { date: "2024-12-25", channel: "Thanh toán", desc: "A23 - TT song phương", qty: 3200000, value: 18000000000000 },
+            { date: "2024-12-25", channel: "Mobile + Internet", desc: "BIDV SmartBanking", qty: 800000, value: 10000000000000 },
+            { date: "2024-12-25", channel: "Tổng hợp", desc: "Dữ liệu khác", qty: 3290000, value: 20000000000000 }
+        ];
+
+        let appData = [];
+        let charts = {};
+
+        // --- 4. APP LOGIC ---
         function init() {
             const stored = localStorage.getItem(CONFIG.storageKey);
             appData = stored ? JSON.parse(stored) : [...DEFAULT_DATA];
@@ -402,40 +409,24 @@
         }
 
         function renderAll() {
-            if (!appData || appData.length === 0) {
-                document.getElementById('report-date-display').innerText = "--/--/----";
-                document.getElementById('kpi-count').innerText = "0";
-                document.getElementById('kpi-value').innerText = "0";
-                
-                if (charts.trend) { charts.trend.destroy(); charts.trend = null; }
-                if (charts.channel) { charts.channel.destroy(); charts.channel = null; }
-                if (charts.top10) { charts.top10.destroy(); charts.top10 = null; }
+            if (!appData || appData.length === 0) return;
 
-                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400 italic">Chưa có dữ liệu</td></tr>';
-                return;
-            }
-
-            // Identify Dates: SORT ASCENDING (Oldest -> Newest)
             const datesAsc = [...new Set(appData.map(d => d.date))].sort((a,b) => new Date(a) - new Date(b));
-            
             const d_oldest = datesAsc[0];
             const d_newest = datesAsc[datesAsc.length - 1];
             const d_middle = datesAsc.length > 2 ? datesAsc[datesAsc.length - 2] : null;
 
-            // Update Header
             document.getElementById('report-date-display').innerText = fmtDate(d_newest);
 
-            // Filter Data Chunks
             const dataNewest = appData.filter(d => d.date === d_newest);
             const dataOldest = appData.filter(d => d.date === d_oldest);
-            const dataMiddle = d_middle ? appData.filter(d => d.date === d_middle) : [];
-
-            // Metrics
+            
+            // Calc Metrics
             const qtyNewest = dataNewest.reduce((s,i) => s + i.qty, 0);
             const valNewest = dataNewest.reduce((s,i) => s + i.value, 0);
             const qtyOldest = dataOldest.reduce((s,i) => s + i.qty, 0);
             const valOldest = dataOldest.reduce((s,i) => s + i.value, 0);
-            const qtyMiddle = dataMiddle.reduce((s,i) => s + i.qty, 0);
+            const qtyMiddle = d_middle ? appData.filter(d => d.date === d_middle).reduce((s,i)=>s+i.qty,0) : 0;
 
             // KPIs
             const growthQty = qtyOldest > 0 ? ((qtyNewest - qtyOldest)/qtyOldest * 100).toFixed(1) : '--';
@@ -443,91 +434,64 @@
 
             document.getElementById('kpi-growth-qty').innerText = `${growthQty > 0 ? '+' : ''}${growthQty}%`;
             document.getElementById('kpi-growth-val').innerText = `${growthVal > 0 ? '+' : ''}${growthVal}%`;
-            
             document.querySelectorAll('.kpi-compare-date').forEach(el => el.innerText = fmtDate(d_oldest));
             document.getElementById('kpi-count').innerText = fmtNum(qtyNewest);
             document.getElementById('kpi-value').innerText = (valNewest/1e12).toFixed(2) + ' Tỷ';
 
-            // Legend Update
+            // Legend
             document.getElementById('lbl-trend-old').innerText = fmtDate(d_oldest);
-            document.getElementById('lbl-trend-mid').innerText = d_middle ? fmtDate(d_middle) : (datesAsc.length === 2 ? 'N/A' : '--/--/--');
+            document.getElementById('lbl-trend-mid').innerText = d_middle ? fmtDate(d_middle) : (datesAsc.length === 2 ? 'N/A' : '-');
             document.getElementById('lbl-trend-new').innerText = fmtDate(d_newest);
-
             document.getElementById('lbl-top-newest').innerText = fmtDate(d_newest);
             document.getElementById('lbl-top-oldest').innerText = fmtDate(d_oldest);
 
-            // Render Charts
+            // Render Charts with Flat Colors
             renderTrendChart([qtyOldest, qtyMiddle, qtyNewest], [fmtDate(d_oldest), d_middle ? fmtDate(d_middle) : '', fmtDate(d_newest)]);
             renderChannelBarChart(dataNewest, qtyNewest);
             renderTop10(dataNewest, dataOldest, fmtDate(d_newest), fmtDate(d_oldest));
             renderTable(dataNewest);
         }
 
-        // --- 5. CHARTS (3D Effect Enhancements via Gradients) ---
-
-        function getGradient(ctx, colorBase) {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            // Simple lightening logic
-            if(colorBase === CONFIG.colors.teal) {
-                gradient.addColorStop(0, '#006b68'); // Darker top
-                gradient.addColorStop(1, '#008f8b'); // Lighter bottom
-            } else if (colorBase === CONFIG.colors.yellow) {
-                gradient.addColorStop(0, '#ffc62f');
-                gradient.addColorStop(1, '#ffda75');
-            } else {
-                gradient.addColorStop(0, '#94a3b8');
-                gradient.addColorStop(1, '#cbd5e1');
-            }
-            return gradient;
-        }
+        // --- 5. CHART RENDERERS (2D FLAT STYLE) ---
 
         function renderTrendChart(dataArr, labelsArr) {
-            const canvas = document.getElementById('trendChart');
-            const ctx = canvas.getContext('2d');
+            const ctx = document.getElementById('trendChart').getContext('2d');
             if(charts.trend) charts.trend.destroy();
 
-            // Prepare dynamic gradients after context creation
-            const gradGrey = getGradient(ctx, CONFIG.colors.grey);
-            const gradTeal = getGradient(ctx, CONFIG.colors.teal);
-            const gradYellow = getGradient(ctx, CONFIG.colors.yellow);
-
-            const cleanDataSets = [];
+            // Clean data
+            const cleanData = [];
             const cleanLabels = [];
-            let bgColors = [];
-
-            // Logic: 0 -> Oldest (Grey), 1 -> Middle (Teal), 2 -> Newest (Yellow)
-            const colorMap = [gradGrey, gradTeal, gradYellow]; 
-
+            const bgColors = [];
+            
+            // Logic: Oldest(Grey) -> Middle(Teal) -> Newest(Yellow)
+            const mapColors = ['#cbd5e1', CONFIG.colors.teal, CONFIG.colors.yellow]; 
+            
             dataArr.forEach((val, idx) => {
                 if(labelsArr[idx]) {
-                    cleanDataSets.push(val);
+                    cleanData.push(val);
                     cleanLabels.push(labelsArr[idx]);
-                    bgColors.push(colorMap[idx]);
+                    bgColors.push(mapColors[idx]);
                 }
             });
-
-            // Adjust if only 2
-            if(cleanDataSets.length === 2 && !labelsArr[1]) {
-                 bgColors = [gradGrey, gradYellow];
-            }
+            
+            if(cleanData.length === 2 && !labelsArr[1]) bgColors[1] = CONFIG.colors.yellow; // If only 2, use grey & yellow
 
             charts.trend = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: cleanLabels,
                     datasets: [{
-                        data: cleanDataSets,
+                        data: cleanData,
                         backgroundColor: bgColors,
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                        borderWidth: 0,
-                        // Pseudo-3D: Adding shadow via plugin is complex, stick to gradient + clean look
+                        borderRadius: 0,
+                        barPercentage: 0.5,
+                        borderColor: '#94a3b8',
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 25 } }, 
                     plugins: {
                         legend: { display: false },
                         tooltip: { enabled: false },
@@ -536,14 +500,18 @@
                             align: 'top',
                             offset: 2,
                             color: CONFIG.colors.text,
-                            font: { weight: 'bold', size: 9 },
+                            font: { weight: 'bold', size: 10, family: 'Inter' },
                             formatter: (val) => val > 0 ? (val/1e6).toFixed(1) + 'M' : ''
                         }
                     },
                     scales: { 
-                        y: { display: false, min: 0, grace: '10%' }, 
-                        x: { grid: { display: false }, ticks: { font: {size: 9} } } 
-                    }
+                        y: { display: false, min: 0, grace: '15%' }, 
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: {size: 10, family: 'Inter', weight: '500'}, color: CONFIG.colors.text } 
+                        } 
+                    },
+                    layout: { padding: { top: 20 } }
                 }
             });
         }
@@ -554,30 +522,15 @@
 
             const groups = {};
             data.forEach(d => { groups[d.channel] = (groups[d.channel] || 0) + d.qty; });
-
             const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
             const labels = entries.map(e => e[0]);
             const values = entries.map(e => e[1]);
 
-            // Gradients for channel bars based on dominance
-            const bgColors = values.map((val, index) => {
-                const pct = (val / total);
-                // Top channels get rich Teal gradient, others lighter or grey
-                const g = ctx.createLinearGradient(0, 0, 200, 0); // Horizontal gradient
-                if (pct > 0.5) {
-                    g.addColorStop(0, CONFIG.colors.teal);
-                    g.addColorStop(1, '#008f8b');
-                } else if (pct > 0.2) {
-                    g.addColorStop(0, '#2dd4bf'); // Light Teal
-                    g.addColorStop(1, '#5eead4');
-                } else if (pct > 0.1) {
-                    g.addColorStop(0, CONFIG.colors.yellow);
-                    g.addColorStop(1, '#ffda75');
-                } else {
-                    g.addColorStop(0, '#cbd5e1');
-                    g.addColorStop(1, '#e2e8f0');
-                }
-                return g;
+            // Simple Flat Colors
+            const bgColors = values.map((val, i) => {
+                if(i === 0) return CONFIG.colors.teal;
+                if(i === 1) return '#2dd4bf'; // lighter teal
+                return '#cbd5e1'; // grey
             });
 
             charts.channel = new Chart(ctx, {
@@ -587,8 +540,8 @@
                     datasets: [{
                         data: values,
                         backgroundColor: bgColors,
-                        borderRadius: 4,
-                        barThickness: 12
+                        borderRadius: 0,
+                        barThickness: 10
                     }]
                 },
                 options: {
@@ -601,17 +554,14 @@
                         datalabels: {
                             anchor: 'end',
                             align: 'right',
-                            color: '#334155',
-                            font: { size: 8, weight: 'bold' },
-                            formatter: (val) => {
-                                const pct = (val/total)*100;
-                                return pct.toFixed(1) + '%'; 
-                            }
+                            color: '#1e293b',
+                            font: { size: 9, weight: '600' },
+                            formatter: (val) => ((val/total)*100).toFixed(1) + '%'
                         }
                     },
                     scales: {
-                        x: { display: false, max: Math.max(...values) * 1.4 }, 
-                        y: { grid: { display: false }, ticks: { font: { size: 9 }, autoSkip: false } }
+                        x: { display: false, max: Math.max(...values) * 1.5 }, 
+                        y: { grid: { display: false }, ticks: { font: { size: 9, family: 'Inter' }, autoSkip: false } }
                     },
                     layout: { padding: { right: 20 } }
                 }
@@ -619,8 +569,7 @@
         }
 
         function renderTop10(dataNewest, dataOldest, labelNewest, labelOldest) {
-            const canvas = document.getElementById('topServiceChart');
-            const ctx = canvas.getContext('2d');
+            const ctx = document.getElementById('topServiceChart').getContext('2d');
             if(charts.top10) charts.top10.destroy();
 
             const getMap = (arr) => {
@@ -628,24 +577,13 @@
                 arr.forEach(d => { map[d.desc] = (map[d.desc] || 0) + d.qty; });
                 return map;
             };
-
             const mapNewest = getMap(dataNewest);
             const mapOldest = getMap(dataOldest);
-
             const sortedKeys = Object.keys(mapNewest).sort((a,b) => mapNewest[b] - mapNewest[a]).slice(0, 10);
 
             const labels = sortedKeys.map(k => k.length > 40 ? k.substring(0,38)+'...' : k);
             const valuesNewest = sortedKeys.map(k => mapNewest[k]);
             const valuesOldest = sortedKeys.map(k => mapOldest[k] || 0);
-
-            // 3D Gradients
-            const gradNew = ctx.createLinearGradient(0, 0, 300, 0);
-            gradNew.addColorStop(0, CONFIG.colors.teal);
-            gradNew.addColorStop(1, '#008f8b');
-
-            const gradOld = ctx.createLinearGradient(0, 0, 300, 0);
-            gradOld.addColorStop(0, CONFIG.colors.yellow);
-            gradOld.addColorStop(1, '#ffda75');
 
             charts.top10 = new Chart(ctx, {
                 type: 'bar',
@@ -655,18 +593,16 @@
                         {
                             label: labelNewest, 
                             data: valuesNewest,
-                            backgroundColor: gradNew,
-                            borderRadius: 4,
-                            barThickness: 10,
+                            backgroundColor: CONFIG.colors.teal,
+                            barThickness: 8,
                             categoryPercentage: 0.8,
                             barPercentage: 0.9
                         },
                         {
                             label: labelOldest, 
                             data: valuesOldest,
-                            backgroundColor: gradOld, 
-                            borderRadius: 4,
-                            barThickness: 10,
+                            backgroundColor: CONFIG.colors.yellow,
+                            barThickness: 8,
                             categoryPercentage: 0.8,
                             barPercentage: 0.9
                         }
@@ -682,12 +618,12 @@
                             anchor: 'end',
                             align: 'right',
                             color: (ctx) => ctx.datasetIndex === 0 ? CONFIG.colors.teal : '#b45309',
-                            font: { weight: '600', size: 8 },
+                            font: { weight: 'bold', size: 9 },
                             formatter: (val) => val > 0 ? fmtNum(val) : ''
                         }
                     },
                     scales: {
-                        x: { display: false, max: Math.max(...valuesNewest, ...valuesOldest) * 1.3 },
+                        x: { display: false, max: Math.max(...valuesNewest, ...valuesOldest) * 1.4 },
                         y: { grid: { display: false }, ticks: { font: {size: 9} } }
                     },
                     layout: { padding: { right: 40 } }
@@ -701,25 +637,18 @@
             
             data.slice(0, 10).forEach((row, idx) => {
                 const tr = document.createElement('tr');
-                // Alternating row colors for depth
-                tr.className = idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"; 
                 tr.innerHTML = `
-                    <td>${fmtDate(row.date)}</td>
-                    <td><span class="px-2 py-0.5 rounded-full bg-gray-100 text-[9px] font-bold border border-gray-200">${row.channel}</span></td>
-                    <td class="truncate max-w-[150px] font-medium">${row.desc}</td>
-                    <td class="text-right font-bold text-brand-teal">${fmtNum(row.qty)}</td>
-                    <td class="text-right text-gray-500 font-mono text-[9px]">${fmtNum(row.value)}</td>
+                    <td class="font-mono text-gray-500">${fmtDate(row.date)}</td>
+                    <td class="font-semibold text-gray-700">${row.channel}</td>
+                    <td class="truncate max-w-[150px] text-gray-600">${row.desc}</td>
+                    <td class="text-right font-bold text-bidv-green font-mono">${fmtNum(row.qty)}</td>
+                    <td class="text-right text-gray-800 font-mono">${fmtNum(row.value)}</td>
                 `;
                 tbody.appendChild(tr);
             });
-            if(data.length > 10) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="5" class="text-center text-gray-400 italic py-1 text-[9px]">... Còn ${data.length - 10} dòng khác ...</td>`;
-                tbody.appendChild(tr);
-            }
         }
 
-        // --- 6. UTILS ---
+        // --- 6. UTILITIES ---
         function downloadTemplate() {
             const ws_data = [["Ngay GD", "Nhóm kênh", "Mo ta", "So luong", "Gia tri quy doi"]];
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -773,7 +702,6 @@
             localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
             renderAll();
             
-            // Fix: Format dates in success alert
             const importedDates = [...datesToUpdate].sort().map(d => fmtDate(d)).join(', ');
             alert(`Đã nhập thành công dữ liệu cho các ngày: ${importedDates}`);
         }
@@ -787,14 +715,16 @@
         
         function renderDateList() {
             const list = document.getElementById('dateList');
-            // Sort keys by actual date value, but display formatted
             const dates = [...new Set(appData.map(d => d.date))].sort().reverse();
-            // Fix: Use fmtDate() inside the list item text
-            list.innerHTML = dates.map(d => `<li class="flex justify-between p-2 border-b"><span>${fmtDate(d)}</span><button class="text-red-500" onclick="deleteDate('${d}')"><i class="fa-solid fa-trash"></i></button></li>`).join('');
+            list.innerHTML = dates.map(d => `
+                <li class="flex justify-between p-3 border-b hover:bg-gray-50 transition items-center">
+                    <span class="font-mono text-bidv-green font-bold">${fmtDate(d)}</span>
+                    <button class="text-gray-400 hover:text-red-500 transition" onclick="deleteDate('${d}')"><i class="fa-solid fa-trash"></i></button>
+                </li>
+            `).join('');
         }
         
         function deleteDate(d) {
-            // Fix: Use fmtDate() in confirm dialog
             if(confirm(`Xóa dữ liệu ngày ${fmtDate(d)}?`)) {
                 appData = appData.filter(i => i.date !== d);
                 localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
@@ -815,4 +745,3 @@
     </script>
 </body>
 </html>
-
