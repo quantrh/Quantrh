@@ -436,7 +436,8 @@
             document.getElementById('kpi-growth-val').innerText = `${growthVal > 0 ? '+' : ''}${growthVal}%`;
             document.querySelectorAll('.kpi-compare-date').forEach(el => el.innerText = fmtDate(d_oldest));
             document.getElementById('kpi-count').innerText = fmtNum(qtyNewest);
-            document.getElementById('kpi-value').innerText = (valNewest/1e12).toFixed(2) + ' Tỷ';
+            // Updated to 'Nghìn Tỷ'
+            document.getElementById('kpi-value').innerText = (valNewest/1e12).toFixed(2) + ' Nghìn Tỷ';
 
             // Legend
             document.getElementById('lbl-trend-old').innerText = fmtDate(d_oldest);
