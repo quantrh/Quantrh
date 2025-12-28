@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Core Banking Monitor - Compact Dual Theme</title>
+    <title>Core Banking Monitor - Opulent Edition</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,35 +23,43 @@
 
     <style>
         :root {
-            /* --- DEFAULT THEME: DARK GOLD & SILVER (Luxury) --- */
-            --bg-body-start: #2b2b2b;
-            --bg-body-end: #121212;
-            --page-bg: radial-gradient(circle at 50% -10%, #54430e, #1a1a1a 90%);
-            --card-bg: linear-gradient(180deg, rgba(50,50,50,0.7) 0%, rgba(30,30,30,0.8) 100%);
-            --text-main: #ffffff;
-            --text-sub: #aaaaaa;
-            --text-muted: #888888;
-            --border-color: #444;
-            --border-dim: rgba(255, 215, 0, 0.25);
+            /* --- THEME 1: OPULENT EMERALD & GOLD (Based on new prompt) --- */
+            --bg-body-start: #001A18; /* Very Dark Deep Emerald */
+            --bg-body-end: #000C0A;   /* Nearly Black */
             
-            --accent-primary: #FFD700;   /* Gold - Newest Data */
-            --accent-secondary: #FFFFFF; /* Silver - Oldest Data */
+            /* Vignette & Circuitry Effect Background */
+            --page-bg: radial-gradient(circle at 50% 30%, #002220, #000908 90%);
             
-            /* Specific Gradient Colors for Dark Theme Title (Gold -> Bronze) */
-            --title-grad-start: #FFD700;
-            --title-grad-mid: #FDB931;
-            --title-grad-end: #b8860b;
+            /* Glassy Emerald Card Background */
+            --card-bg: linear-gradient(180deg, rgba(0, 35, 30, 0.85) 0%, rgba(0, 15, 12, 0.95) 100%);
             
-            --chart-grid: #333;
-            --table-row-hover: rgba(255,255,255,0.05);
-            --table-header-bg: rgba(255, 215, 0, 0.05);
-            --kpi-bg: linear-gradient(145deg, #2a2a2a 0%, #181818 100%);
-            --kpi-badge-bg: rgba(0,0,0,0.4);
+            --text-main: #E6BE8A; /* Polished Champagne Gold */
+            --text-sub: #b0c4b1;  /* Muted Emerald/Silver */
+            --text-muted: #5a7065;
             
-            --shadow-card: 0 4px 6px rgba(0,0,0,0.2);
+            --border-color: #F4C430; /* Brilliant Radiant Bronze */
+            --border-dim: rgba(244, 196, 48, 0.3);
+            
+            --accent-primary: #F4C430;   /* Bronze Gold */
+            --accent-secondary: #E6BE8A; /* Champagne Gold */
+            
+            /* Gradient for Title (Gold Leaf effect) */
+            --title-grad-start: #F4C430;
+            --title-grad-mid: #FFD700;
+            --title-grad-end: #E6BE8A;
+            
+            --chart-grid: rgba(244, 196, 48, 0.1);
+            --table-row-hover: rgba(244, 196, 48, 0.05);
+            --table-header-bg: rgba(0, 40, 35, 0.9);
+            
+            --kpi-bg: linear-gradient(135deg, #001f1d 0%, #000a08 100%);
+            --kpi-badge-bg: rgba(244, 196, 48, 0.15);
+            
+            --shadow-card: 0 0 15px rgba(244, 196, 48, 0.1); /* Subtle Gold Glow */
+            --outer-frame: 1px solid #F4C430; /* Polished copper line */
         }
 
-        /* --- THEME: BIDV BRAND LIGHT (Flat Colors) --- */
+        /* --- THEME 2: BIDV BRAND LIGHT (Flat Colors - Green/Yellow) --- */
         body.theme-brand {
             --bg-body-start: #525252;
             --bg-body-end: #525252;
@@ -66,7 +74,6 @@
             --accent-primary: #006B68;   /* BIDV Green */
             --accent-secondary: #FFC62F; /* BIDV Yellow */
             
-            /* Flat Title Color for Light Theme */
             --title-grad-start: #006B68;
             --title-grad-mid: #006B68;
             --title-grad-end: #006B68;
@@ -78,6 +85,7 @@
             --kpi-badge-bg: #dcfce7;
             
             --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --outer-frame: 1px solid #e2e8f0;
         }
 
         body {
@@ -88,14 +96,27 @@
             justify-content: center;
             padding: 20px;
             min-height: 100vh;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: all 0.5s ease;
         }
 
         h1, h2, h3, .serif-font {
             font-family: 'Playfair Display', serif;
         }
 
-        /* Dynamic Text Gradient */
+        /* Circuitry Pattern Overlay for Dark Theme */
+        body:not(.theme-brand) .page-a4::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(244, 196, 48, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(244, 196, 48, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Dynamic Text Gradient (Gold Leaf effect) */
         .text-gradient-dynamic {
             background: linear-gradient(to bottom, var(--title-grad-start), var(--title-grad-mid), var(--title-grad-end));
             -webkit-background-clip: text;
@@ -104,7 +125,6 @@
             color: transparent;
         }
         
-        /* Disable shadow for Brand Theme, Enable for Dark */
         body.theme-brand .text-gradient-dynamic {
             background: none;
             -webkit-background-clip: initial;
@@ -115,7 +135,8 @@
         }
 
         body:not(.theme-brand) .text-gradient-dynamic {
-             text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
+             text-shadow: 0px 1px 3px rgba(0,0,0,0.8); /* Stronger shadow for metallic look */
+             filter: drop-shadow(0 0 2px rgba(244, 196, 48, 0.3)); /* Subtle glow */
         }
 
         /* A4 Page */
@@ -123,33 +144,36 @@
             background: var(--page-bg);
             width: 210mm;
             min-height: 297mm;
-            padding: 8mm; /* Reduced padding */
-            border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            padding: 8mm;
+            border: var(--outer-frame);
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
             position: relative;
             transition: background 0.3s ease;
+            overflow: hidden; /* For pattern containment */
         }
 
-        /* Cards - Compact spacing */
+        /* Cards */
         .report-card {
             background: var(--card-bg);
             border: 1px solid var(--border-dim);
+            /* Thin polished line at top for luxury feel */
             border-top: 1px solid var(--border-color); 
             position: relative;
-            padding: 8px 10px; /* Reduced padding inside cards */
-            backdrop-filter: blur(8px);
+            padding: 8px 10px;
+            backdrop-filter: blur(10px);
             box-shadow: var(--shadow-card);
-            border-radius: 6px;
+            border-radius: 4px; /* Sharper corners for executive feel */
+            z-index: 1;
         }
 
         .report-section-header {
             border-bottom: 1px solid;
-            border-image: linear-gradient(to right, transparent, var(--accent-primary), transparent) 1;
+            border-image: linear-gradient(to right, transparent, var(--border-color), transparent) 1;
             padding-bottom: 4px;
-            margin-bottom: 4px; /* Tight spacing */
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -163,23 +187,29 @@
         .report-section-title {
             font-family: 'Playfair Display', serif;
             font-weight: 700;
-            font-size: 14px; /* Slightly smaller for compact */
+            font-size: 14px;
             color: var(--accent-primary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
+        
+        /* Dark Theme Title Specifics (Embossed Gold) */
+        body:not(.theme-brand) .report-section-title {
+            text-shadow: 0 1px 1px rgba(0,0,0,0.8);
+        }
 
-        /* KPI Box - Compact */
+        /* KPI Box */
         .kpi-box {
             background: var(--kpi-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border-dim);
             padding: 8px 12px;
-            border-left: 4px solid var(--accent-primary);
+            border-left: 3px solid var(--accent-primary);
             box-shadow: var(--shadow-card);
-            border-radius: 8px;
+            border-radius: 4px;
+            z-index: 1;
         }
         
         /* Table Styling */
@@ -189,7 +219,7 @@
             font-weight: 700;
             text-transform: uppercase;
             color: var(--accent-primary); 
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
             padding: 4px 6px;
             background-color: var(--table-header-bg);
             text-align: left;
@@ -197,26 +227,36 @@
         
         body.theme-brand .financial-table th {
             color: #64748b; 
+            border-bottom: 2px solid var(--border-color);
         }
 
         .financial-table td {
             font-size: 10px;
-            padding: 4px 6px; /* Tight rows */
+            padding: 4px 6px;
             border-bottom: 1px solid var(--border-dim);
             color: var(--text-sub);
         }
         .financial-table tr:last-child td { border-bottom: none; }
-        .financial-table tr:hover td { background-color: var(--table-row-hover); }
+        .financial-table tr:hover td { background-color: var(--table-row-hover); color: var(--text-main); }
 
         /* Helpers */
         .text-accent-primary { color: var(--accent-primary); }
         .text-accent-secondary { color: var(--accent-secondary); }
         .text-muted-custom { color: var(--text-muted); }
-        .border-accent { border-color: var(--accent-border); }
+        .border-accent { border-color: var(--border-color); }
         .bg-badge { background-color: var(--kpi-badge-bg); }
         
+        /* Specific overrides */
         body.theme-brand .kpi-value-text { color: #334155 !important; }
         body.theme-brand .kpi-badge-text { color: #15803d !important; }
+        
+        /* Dark mode value text needs to shine */
+        body:not(.theme-brand) .kpi-value-text {
+            background: linear-gradient(to bottom, #fff 0%, #E6BE8A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
 
         /* Print */
         @media print {
@@ -228,10 +268,12 @@
                 background: white !important; 
                 color: black !important;
             }
-            .text-gradient-dynamic { 
-                background: none; 
-                -webkit-text-fill-color: #006B68; 
-                color: #006B68;
+            .page-a4::before { display: none; } /* Hide circuitry in print */
+            .text-gradient-dynamic, .kpi-value-text { 
+                background: none !important; 
+                -webkit-text-fill-color: #006B68 !important; 
+                color: #006B68 !important;
+                text-shadow: none !important;
             }
             .no-print { display: none !important; }
         }
@@ -270,7 +312,7 @@
     <div class="page-a4" id="printArea">
         
         <!-- Header -->
-        <header class="flex justify-between items-center border-b border-[var(--border-color)] pb-2 mb-3 transition-colors"> <!-- Reduced mb -->
+        <header class="flex justify-between items-center border-b border-[var(--border-color)] pb-2 mb-3 transition-colors relative z-10">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-transparent border-2 border-[var(--accent-primary)] flex items-center justify-center text-accent-primary text-2xl rounded-md shadow-sm">
                     <i class="fa-solid fa-building-columns"></i>
@@ -288,7 +330,7 @@
         </header>
 
         <!-- Section 1: KPIs - 3px Gap -->
-        <section class="mb-[3px]"> 
+        <section class="mb-[3px] relative z-10"> 
             <div class="grid grid-cols-2 gap-[3px]">
                 <!-- KPI 1 -->
                 <div class="kpi-box flex flex-col justify-between h-24" style="border-left-color: var(--accent-primary);">
@@ -329,9 +371,9 @@
         </section>
 
         <!-- Section 2: Charts Area - 3px Gap -->
-        <section class="report-card mb-[3px] flex flex-row gap-[3px] h-[200px]"> <!-- Reduced height -->
+        <section class="report-card mb-[3px] flex flex-row gap-[3px] h-[200px]"> 
             <!-- Trend Chart -->
-            <div class="flex-1 flex flex-col border-r border-[var(--border-color)] pr-2 transition-colors">
+            <div class="flex-1 flex flex-col border-r border-[var(--border-dim)] pr-2 transition-colors">
                 <div class="report-section-header my-0 py-0 border-none mb-1">
                     <h3 class="report-section-title"><i class="fa-solid fa-chart-line"></i> Xu hướng Giao dịch</h3>
                     <!-- Legend -->
@@ -358,7 +400,7 @@
         </section>
 
         <!-- Section 3: Top Services - 3px Gap -->
-        <section class="report-card mb-[3px] h-[230px] flex flex-col"> <!-- Increased height for spacing -->
+        <section class="report-card mb-[3px] h-[230px] flex flex-col"> 
             <div class="report-section-header my-0 py-0 border-none mb-1">
                 <h3 class="report-section-title"><i class="fa-solid fa-ranking-star"></i> Top 10 Dịch vụ</h3>
                 <div class="flex gap-3 text-[9px] font-bold">
@@ -376,11 +418,11 @@
         </section>
 
         <!-- Section 4: Data Table - 3px Gap -->
-        <section class="flex-1 flex flex-col mb-[3px] min-h-0">
+        <section class="flex-1 flex flex-col mb-[3px] min-h-0 relative z-10">
             <div class="report-section-header mb-1 border-none">
                 <h3 class="report-section-title"><i class="fa-solid fa-list-ol"></i> Chi tiết Giao dịch (Top 15)</h3>
             </div>
-            <div class="overflow-hidden border border-[var(--border-color)] flex-1 transition-colors">
+            <div class="overflow-hidden border border-[var(--border-dim)] flex-1 transition-colors bg-[var(--card-bg)] rounded">
                 <table class="w-full text-left financial-table">
                     <thead>
                         <tr>
@@ -399,7 +441,7 @@
         </section>
 
         <!-- Footer -->
-        <footer class="mt-auto border-t border-[var(--border-color)] pt-2 transition-colors">
+        <footer class="mt-auto border-t border-[var(--border-dim)] pt-2 transition-colors relative z-10">
             <div class="flex justify-between items-start text-[9px] leading-relaxed text-muted-custom">
                 <div class="w-3/4 text-justify pr-4 italic font-serif">
                     <span class="font-bold text-accent-primary not-italic uppercase">Ghi chú:</span> Tất cả giao dịch trên Core được chia thành các nhóm: Thanh toán, Mobile + Internet, Batch + Lô, ATM POS Thẻ, Smart Counter Hub, Quầy, Chứng khoán bảo hiểm. CÁC KÊNH MOBILE VÀ INTERNET BANKING CHƯA CÓ CÁC GIAO DỊCH THANH TOÁN
@@ -440,11 +482,11 @@
         // Define Color Palettes for JS
         const PALETTE = {
             dark: {
-                primary: '#FFD700', // Gold
-                secondary: '#FFFFFF', // Silver
-                tertiary: '#b8860b', // Dark Gold
-                text: '#e0e0e0',
-                grid: '#444'
+                primary: '#F4C430',   // Brilliant Radiant Bronze
+                secondary: '#E6BE8A', // Polished Champagne Gold
+                tertiary: '#b0c4b1',  // Muted Emerald
+                text: '#E6BE8A',      // Text main color
+                grid: 'rgba(244, 196, 48, 0.1)'
             },
             brand: {
                 primary: '#006B68', // Green
@@ -577,7 +619,7 @@
             document.getElementById('lbl-top-oldest').innerText = fmtDate(d_oldest);
             
             // Colorize Legend Circles using inline styles for immediate update
-            document.getElementById('leg-old').style.backgroundColor = CONFIG.currentTheme === 'dark' ? '#808080' : '#94a3b8';
+            document.getElementById('leg-old').style.backgroundColor = CONFIG.currentTheme === 'dark' ? '#b0c4b1' : '#94a3b8'; // Silver/Emerald
             document.getElementById('leg-mid').style.backgroundColor = c.tertiary;
             document.getElementById('leg-new').style.backgroundColor = c.primary;
 
@@ -612,9 +654,10 @@
             const bgColors = [];
             
             // Gradients logic based on theme
-            const gradNew = createGradient(ctx, c.primary, CONFIG.currentTheme === 'dark' ? 'rgba(101, 67, 33, 0.4)' : 'rgba(0, 107, 104, 0.2)'); 
-            const gradMid = createGradient(ctx, c.tertiary, 'rgba(180, 180, 180, 0.2)');
-            const gradOld = createGradient(ctx, CONFIG.currentTheme === 'dark' ? '#C0C0C0' : '#94a3b8', 'rgba(100, 100, 100, 0.2)');
+            // Dark: Bronze/Gold vs Silver/Emerald
+            const gradNew = createGradient(ctx, c.primary, CONFIG.currentTheme === 'dark' ? 'rgba(244, 196, 48, 0.2)' : 'rgba(0, 107, 104, 0.2)'); 
+            const gradMid = createGradient(ctx, c.secondary, 'rgba(230, 190, 138, 0.2)');
+            const gradOld = createGradient(ctx, CONFIG.currentTheme === 'dark' ? '#b0c4b1' : '#94a3b8', 'rgba(176, 196, 177, 0.2)');
 
             const mapColors = [gradOld, gradMid, gradNew]; 
             
@@ -681,7 +724,7 @@
             const bgColors = values.map((val, i) => {
                 if(i === 0) return createGradient(ctx, c.primary, 'rgba(0,0,0,0.1)'); 
                 if(i === 1) return createGradient(ctx, c.secondary, 'rgba(0,0,0,0.1)'); 
-                return createGradient(ctx, CONFIG.currentTheme === 'dark' ? '#888' : '#cbd5e1', 'rgba(0,0,0,0.1)'); 
+                return createGradient(ctx, CONFIG.currentTheme === 'dark' ? '#b0c4b1' : '#cbd5e1', 'rgba(0,0,0,0.1)'); 
             });
 
             charts.channel = new Chart(ctx, {
@@ -744,14 +787,14 @@
                 gradNewest = c.primary;   // Solid Green
                 gradOldest = c.secondary; // Solid Yellow
             } else {
-                // Dark Theme Gradients - GOLD to BRONZE (Newest) & SILVER to GREY (Oldest)
+                // Dark Theme Gradients - BRONZE/GOLD to DARK vs SILVER/EMERALD to DARK
                 gradNewest = ctx.createLinearGradient(0, 0, 300, 0); 
                 gradNewest.addColorStop(0, c.primary); 
                 gradNewest.addColorStop(1, '#654321');
 
                 gradOldest = ctx.createLinearGradient(0, 0, 300, 0);
-                gradOldest.addColorStop(0, '#FFFFFF'); // Silver
-                gradOldest.addColorStop(1, '#808080');
+                gradOldest.addColorStop(0, '#b0c4b1'); // Muted Emerald/Silver
+                gradOldest.addColorStop(1, '#001A18');
             }
 
             charts.top10 = new Chart(ctx, {
@@ -786,7 +829,7 @@
                         datalabels: {
                             anchor: 'end',
                             align: 'right',
-                            color: (ctx) => ctx.datasetIndex === 0 ? c.primary : c.secondary,
+                            color: (ctx) => ctx.datasetIndex === 0 ? c.primary : (CONFIG.currentTheme === 'dark' ? '#b0c4b1' : c.secondary),
                             font: { weight: 'bold', size: 9 },
                             formatter: (val) => val > 0 ? fmtNum(val) : ''
                         }
