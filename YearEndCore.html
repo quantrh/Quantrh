@@ -23,7 +23,7 @@
 
     <style>
         :root {
-            /* --- THEME 1: OPULENT EMERALD & GOLD (Based on new prompt) --- */
+            /* --- THEME 1: OPULENT EMERALD & GOLD (Dark) --- */
             --bg-body-start: #001A18; /* Very Dark Deep Emerald */
             --bg-body-end: #000C0A;   /* Nearly Black */
             
@@ -43,10 +43,10 @@
             --accent-primary: #F4C430;   /* Bronze Gold */
             --accent-secondary: #E6BE8A; /* Champagne Gold */
             
-            /* Gradient for Title (Gold Leaf effect) */
-            --title-grad-start: #F4C430;
-            --title-grad-mid: #FFD700;
-            --title-grad-end: #E6BE8A;
+            /* Gradient for Title (Gold Leaf effect) - UPDATED FOR BRIGHTNESS */
+            --title-grad-start: #FFFACD; /* Lemon Chiffon (Very Bright) */
+            --title-grad-mid: #FFD700;   /* Gold (Bright) */
+            --title-grad-end: #F4C430;   /* Saffron (Rich) */
             
             --chart-grid: rgba(244, 196, 48, 0.1);
             --table-row-hover: rgba(244, 196, 48, 0.05);
@@ -116,7 +116,7 @@
             z-index: 0;
         }
 
-        /* Dynamic Text Gradient (Gold Leaf effect) */
+        /* Dynamic Text Gradient (Gold Leaf effect) - UPDATED */
         .text-gradient-dynamic {
             background: linear-gradient(to bottom, var(--title-grad-start), var(--title-grad-mid), var(--title-grad-end));
             -webkit-background-clip: text;
@@ -135,8 +135,9 @@
         }
 
         body:not(.theme-brand) .text-gradient-dynamic {
-             text-shadow: 0px 1px 3px rgba(0,0,0,0.8); /* Stronger shadow for metallic look */
-             filter: drop-shadow(0 0 2px rgba(244, 196, 48, 0.3)); /* Subtle glow */
+             /* Added explicit brighter glow for dark mode title */
+             text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.4), 0px 2px 4px rgba(0,0,0,0.8); 
+             filter: drop-shadow(0 0 5px rgba(255, 250, 205, 0.3)); 
         }
 
         /* A4 Page */
@@ -318,7 +319,7 @@
                     <i class="fa-solid fa-building-columns"></i>
                 </div>
                 <div>
-                    <!-- Gradient Text Title -->
+                    <!-- Gradient Text Title - BRIGHTER NOW -->
                     <h1 class="text-2xl font-extrabold text-gradient-dynamic uppercase leading-none tracking-wide whitespace-nowrap">Core Banking Monitor</h1>
                     <p class="text-[10px] text-muted-custom font-bold tracking-[0.2em] mt-1 uppercase font-serif">BC GIAO DỊCH TÀI CHÍNH HÀNG NGÀY</p>
                 </div>
@@ -475,7 +476,7 @@
         Chart.register(ChartDataLabels);
 
         const CONFIG = {
-            storageKey: 'monitor_db_dual_theme_v3_compact',
+            storageKey: 'monitor_db_dual_theme_v4_opulent_fix',
             currentTheme: 'brand' // DEFAULT TO BRAND LIGHT
         };
 
@@ -581,7 +582,19 @@
         }
 
         function renderAll() {
-            if (!appData || appData.length === 0) return;
+            // FIX: If appData is empty, reset display but don't return early to ensure charts are cleared or re-rendered blank
+            if (!appData || appData.length === 0) {
+                document.getElementById('report-date-display').innerText = "--/--/----";
+                document.getElementById('kpi-count').innerText = "0";
+                document.getElementById('kpi-value').innerHTML = `0 <span class="text-[9px] font-bold uppercase ml-1 align-baseline text-muted-custom">NGHÌN TỶ</span>`;
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Chưa có dữ liệu</td></tr>';
+                
+                // Clear charts
+                if (charts.trend) { charts.trend.destroy(); charts.trend = null; }
+                if (charts.channel) { charts.channel.destroy(); charts.channel = null; }
+                if (charts.top10) { charts.top10.destroy(); charts.top10 = null; }
+                return;
+            }
 
             const datesAsc = [...new Set(appData.map(d => d.date))].sort((a,b) => new Date(a) - new Date(b));
             const d_oldest = datesAsc[0];
@@ -940,18 +953,43 @@
         
         function deleteDate(d) {
             if(confirm(`Xóa dữ liệu ngày ${fmtDate(d)}?`)) {
+                // Filter out records matching the date
                 appData = appData.filter(i => i.date !== d);
+                
+                // Save to localStorage
                 localStorage.setItem(CONFIG.storageKey, JSON.stringify(appData));
-                renderDateList(); renderAll();
+                
+                // Re-render the list in the modal
+                renderDateList();
+                
+                // CRITICAL: Re-calculate and Re-render the main dashboard
+                renderAll();
+                
+                // Optional: Alert if data is empty now
+                if(appData.length === 0) {
+                    alert("Đã xóa hết dữ liệu. Hệ thống sẽ hiển thị trạng thái trống.");
+                }
             }
         }
         
         function deleteAllData() {
             if(confirm('Bạn có chắc muốn xóa tất cả dữ liệu không?')) {
+                // Clear storage
                 localStorage.removeItem(CONFIG.storageKey);
+                
+                // Reset appData to empty array (NOT default data, to show empty state)
                 appData = [];
-                renderDateList(); renderAll();
+                
+                // Re-render list
+                renderDateList();
+                
+                // Re-render dashboard
+                renderAll();
+                
+                // Close modal
                 toggleModal('dataModal');
+                
+                alert("Đã xóa toàn bộ dữ liệu thành công!");
             }
         }
 
