@@ -842,14 +842,14 @@
                 gradNewest = c.primary;   // Solid Green
                 gradOldest = c.secondary; // Solid Yellow
             } else {
-                // Dark Theme Gradients - BRONZE/GOLD to DARK vs SILVER/EMERALD to DARK
+                // Dark Theme
+                // Newest: Gold Gradient (Bronze to Dark Bronze)
                 gradNewest = ctx.createLinearGradient(0, 0, 300, 0); 
                 gradNewest.addColorStop(0, c.primary); 
                 gradNewest.addColorStop(1, '#654321');
 
-                gradOldest = ctx.createLinearGradient(0, 0, 300, 0);
-                gradOldest.addColorStop(0, '#b0c4b1'); // Muted Emerald/Silver
-                gradOldest.addColorStop(1, '#001A18');
+                // Oldest: Solid Color (Requested: remove gradient because it was too dark)
+                gradOldest = '#b0c4b1'; // Muted Emerald/Silver solid
             }
 
             charts.top10 = new Chart(ctx, {
