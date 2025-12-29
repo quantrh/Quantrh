@@ -330,6 +330,12 @@
                                 <option value="random">Ngẫu nhiên (Đề thi thử)</option>
                                 <option value="sequential">Theo thứ tự ID (Để xem lại)</option>
                             </select>
+                            
+                            <!-- BỔ SUNG: Ô nhập số câu bắt đầu (Mặc định ẩn) -->
+                            <div id="start-from-container" class="mt-2 hidden bg-gray-50 p-2 rounded border border-gray-200">
+                                <label for="start-from-question" class="block text-sm font-medium text-bidv-green mb-1">Bắt đầu từ câu số:</label>
+                                <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green" placeholder="Nhập ID câu bắt đầu">
+                            </div>
                         </div>
                         <!-- New element for timing mode -->
                         <div>
@@ -621,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
             numQuestions: document.getElementById('num-questions'),
             timePerQuestion: document.getElementById('time-per-question'),
             quizOrder: document.getElementById('quiz-order'),
+            startFromQuestion: document.getElementById('start-from-question'), // BỔ SUNG: Input câu bắt đầu
             timingMode: document.getElementById('timing-mode'), 
             searchInput: document.getElementById('search-input'), // Ô tìm kiếm
         },
@@ -915,6 +922,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timingMode.addEventListener('change', () => this.calculateTotalTime());
             
+            // BỔ SUNG: Lắng nghe sự kiện thay đổi thứ tự câu hỏi để hiện ô nhập liệu
+            this.inputs.quizOrder.addEventListener('change', (e) => {
+                const container = document.getElementById('start-from-container');
+                if (e.target.value === 'sequential') {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            });
+
             // Đóng modal khi click ra ngoài
             this.displays.reviewModalBackdrop.addEventListener('click', (e) => {
                 if (e.target === this.displays.reviewModalBackdrop) {
@@ -1038,6 +1055,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     return 0; 
                 });
+
+                // BỔ SUNG LOGIC: Xử lý bắt đầu từ câu số X
+                const startFromVal = parseInt(this.inputs.startFromQuestion.value);
+                if (!isNaN(startFromVal) && startFromVal > 1) {
+                    const startIndex = startFromVal - 1; // Array index starts at 0
+                    if (startIndex < selectedQuestions.length) {
+                        selectedQuestions = selectedQuestions.slice(startIndex);
+                    } else {
+                        alert(`Số câu bắt đầu (${startFromVal}) lớn hơn tổng số câu hỏi hiện có (${selectedQuestions.length})! Sẽ bắt đầu từ câu đầu tiên.`);
+                    }
+                }
             } else {
                 // Ngẫu nhiên (default)
                 selectedQuestions.sort(() => 0.5 - Math.random());
@@ -1045,6 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Select number of questions
             const num = parseInt(this.inputs.numQuestions.value);
+            // Lưu ý: selectedQuestions bây giờ có thể đã bị cắt ngắn nếu dùng tính năng "Bắt đầu từ câu..."
             if (num > 0 && num < selectedQuestions.length) {
                 this.quizQuestions = selectedQuestions.slice(0, num);
             } else {
@@ -1074,6 +1103,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.quizQuestions.forEach((q, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'q-nav-btn';
+                // Nếu đang dùng Sequential mode và có startFrom, số câu hiển thị có thể nên phản ánh ID gốc? 
+                // Tuy nhiên, để nhất quán với giao diện bài thi, ta vẫn dùng số thứ tự 1, 2, 3...
                 btn.textContent = index + 1;
                 btn.setAttribute('data-index', index);
 
