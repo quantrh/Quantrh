@@ -259,6 +259,21 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
+        /* Toolbar visibility toggling */
+        .toolbar-visible .cmd-btn {
+            display: flex;
+        }
+        .toolbar-hidden .cmd-btn {
+            display: none;
+        }
+        /* Toggle button always visible but dim when hidden */
+        .toggle-btn-dim {
+            opacity: 0.3;
+        }
+        .toggle-btn-dim:hover {
+            opacity: 1;
+        }
+
         /* Print */
         @media print {
             body { background: none; padding: 0; }
@@ -285,26 +300,33 @@
 <body class="theme-brand"> <!-- DEFAULT THEME IS BRAND LIGHT -->
 
     <!-- Toolbar -->
-    <div class="fixed top-4 right-4 flex flex-col gap-2 no-print z-50">
+    <div id="mainToolbar" class="fixed top-4 right-4 flex flex-col gap-2 no-print z-50 toolbar-visible transition-all">
+        
+        <!-- Toggle Visibility Button (Always Visible) -->
+        <button onclick="toggleToolbar()" id="btnToggleTools" class="bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-600 transition shadow-lg self-end" title="Ẩn/Hiện Công Cụ">
+            <i class="fa-solid fa-eye"></i>
+        </button>
+
+        <!-- Command Buttons -->
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" />
         
-        <button onclick="document.getElementById('excelFileInput').click()" class="bg-[#222] text-[#d4af37] border border-[#d4af37] px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md">
+        <button onclick="document.getElementById('excelFileInput').click()" class="cmd-btn bg-[#222] text-[#d4af37] border border-[#d4af37] px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md items-center gap-2">
             <i class="fa-solid fa-upload"></i> Upload
         </button>
         
-        <button onclick="downloadTemplate()" class="bg-[#222] text-gray-300 border border-gray-600 px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md">
+        <button onclick="downloadTemplate()" class="cmd-btn bg-[#222] text-gray-300 border border-gray-600 px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md items-center gap-2">
             <i class="fa-solid fa-download"></i> Template
         </button>
 
-        <button onclick="toggleModal('dataModal')" class="bg-[#222] text-gray-300 border border-gray-600 px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md">
+        <button onclick="toggleModal('dataModal')" class="cmd-btn bg-[#222] text-gray-300 border border-gray-600 px-4 py-2 rounded-md hover:bg-[#333] text-sm font-bold transition shadow-md items-center gap-2">
             <i class="fa-solid fa-database"></i> Data
         </button>
         
-        <button onclick="window.print()" class="bg-gradient-to-r from-[#FFD700] to-[#d4af37] text-black px-4 py-2 rounded-md hover:opacity-90 text-sm font-bold transition border border-yellow-600 shadow-lg">
+        <button onclick="window.print()" class="cmd-btn bg-gradient-to-r from-[#FFD700] to-[#d4af37] text-black px-4 py-2 rounded-md hover:opacity-90 text-sm font-bold transition border border-yellow-600 shadow-lg items-center gap-2">
             <i class="fa-solid fa-print"></i> Print
         </button>
 
-        <button onclick="toggleTheme()" class="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-600 text-sm font-bold transition border border-teal-500 shadow-lg flex items-center gap-2">
+        <button onclick="toggleTheme()" class="cmd-btn bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-600 text-sm font-bold transition border border-teal-500 shadow-lg flex items-center gap-2">
             <i class="fa-solid fa-palette"></i> Đổi Theme
         </button>
     </div>
@@ -575,6 +597,26 @@
             body.classList.toggle('theme-brand');
             CONFIG.currentTheme = body.classList.contains('theme-brand') ? 'brand' : 'dark';
             renderAll(); // Re-render charts with new colors
+        }
+        
+        // --- NEW: Toggle Toolbar Visibility ---
+        function toggleToolbar() {
+            const tb = document.getElementById('mainToolbar');
+            const btn = document.getElementById('btnToggleTools');
+            
+            if(tb.classList.contains('toolbar-visible')) {
+                // Hide
+                tb.classList.remove('toolbar-visible');
+                tb.classList.add('toolbar-hidden');
+                btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                btn.classList.add('toggle-btn-dim');
+            } else {
+                // Show
+                tb.classList.remove('toolbar-hidden');
+                tb.classList.add('toolbar-visible');
+                btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+                btn.classList.remove('toggle-btn-dim');
+            }
         }
 
         function getColors() {
