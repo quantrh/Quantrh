@@ -351,7 +351,7 @@
                                 <!-- Card 2: Phân tích chuyên sâu (Đã Sửa: Bóc phốt đề-soi cách ra đề) -->
                                 <div class="feature-card p-5 bg-bidv-green/5 border-l-4 border-bidv-green rounded-lg shadow-sm">
                                     <h3 class="text-xl font-semibold mb-2 text-bidv-green">2. Phân tích &amp; Giải thích chi tiết</h3>
-                                    <p class="text-sm text-gray-700">Sau khi nộp bài, xem lại đáp án đúng, câu trả lời của bạn, và nhận <strong>Giải thích chuyên sâu</strong> bao gồm <strong>Phân tích đáp án đúng/sai</strong> và <strong>Phân tích cách ra đề</strong>.</p>
+                                    <p class="text-sm text-gray-700">Sau khi nộp bài, xem lại đáp án đúng, câu trả lời của bạn, và nhận <strong>Giải thích chuyên sâu</strong> bao gồm <strong>Phân tích đáp án đúng/sai</strong> và <strong>Bóc phốt đề-soi cách ra đề</strong>.</p>
                                 </div>
 
                                 <!-- Card 3: Theo dõi tiến độ -->
@@ -860,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     card.innerHTML = `
-                        <p class="font-semibold text-gray-800 mb-2">Câu hỏi: ${highlight(q.question)}</p>
+                        <p class="font-semibold text-gray-800 mb-2">Câu hỏi ${q.id}: ${highlight(q.question)}</p>
                         <div class="space-y-1 mb-2">${optionsHtml}</div>
                         ${explanationHtml}
                     `;
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.explanation_question) {
                 explanationHtml += `
                     <div class="explanation-box explanation-question">
-                        <p class="explanation-title text-bidv-green">Phân tích cách ra đề:</p>
+                        <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
                         <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                     </div>
                 `;
@@ -1410,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (q.explanation_question) {
                     explanationHtml += `
                         <div class="explanation-box explanation-question">
-                            <p class="explanation-title text-bidv-green">Phân tích cách ra đề:</p>
+                            <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
                             <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                         </div>
                     `;
@@ -1594,4 +1594,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
