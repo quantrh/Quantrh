@@ -79,26 +79,31 @@
         .option-label {
             display: block;
             padding: 1rem;
-            border: 1px solid #d1d5db;
+            border: 1px solid #9ca3af; /* Viền đậm hơn (gray-400) */
             border-radius: 0.5rem;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            background-color: rgba(255, 255, 255, 0.4); 
+            background-color: rgba(255, 255, 255, 0.6); /* Nền đục hơn một chút để dễ đọc */
+            color: #111827; /* Chữ đen (gray-900) */
+            font-weight: 500;
         }
         .option-label:hover {
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(255, 255, 255, 0.9);
         }
         input[type="radio"]:checked + .option-label {
             background-color: var(--color-bidv-green-light);
             border-color: var(--color-bidv-green);
+            color: #004d4a; /* Xanh đậm */
         }
         .correct-answer {
             background-color: #dcfce7 !important; /* green-100 */
             border-color: #22c55e !important; /* green-500 */
+            color: #14532d !important; /* green-900 */
         }
         .wrong-answer {
             background-color: #fee2e2 !important; /* red-100 */
             border-color: #ef4444 !important; /* red-500 */
+            color: #7f1d1d !important; /* red-900 */
         }
         
         /* Explanation boxes */
@@ -108,52 +113,68 @@
             margin-top: 0.75rem;
         }
         .explanation-title {
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 0.5rem;
         }
         .explanation-right {
-            background-color: rgba(236, 253, 245, 0.8); 
+            background-color: rgba(236, 253, 245, 0.9); 
             border-left: 4px solid #10b981; 
+            color: #064e3b;
         }
         .explanation-wrong {
-            background-color: rgba(254, 242, 242, 0.8); 
+            background-color: rgba(254, 242, 242, 0.9); 
             border-left: 4px solid #ef4444; 
+            color: #7f1d1d;
         }
         .explanation-question {
-            background-color: rgba(240, 249, 255, 0.8); 
+            background-color: rgba(240, 249, 255, 0.9); 
             border-left: 4px solid #3b82f6; 
+            color: #1e3a8a;
         }
         
         /* Question Navigation Buttons */
         .q-nav-btn {
-            @apply w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer transition-colors;
+            @apply w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold cursor-pointer transition-colors shadow-sm;
         }
         .q-nav-btn.unanswered {
-            @apply bg-white/40 text-gray-800 hover:bg-white/60 border border-gray-300/50;
+            @apply bg-white text-gray-900 hover:bg-gray-100 border-2 border-gray-300;
         }
         .q-nav-btn.answered {
             background-color: var(--color-bidv-green);
             color: white;
+            border: 2px solid var(--color-bidv-green);
             @apply hover:opacity-90;
         }
         .q-nav-btn.active-q {
             background-color: var(--color-bidv-yellow);
             color: #000;
-            @apply ring-4 ring-yellow-400/50;
+            border: 2px solid #b45309; /* Viền nâu cam */
+            @apply ring-2 ring-yellow-400/50;
         }
         
         /* Result Navigation Buttons - Styles riêng cho phần kết quả */
         .result-nav-btn {
-            @apply w-8 h-8 flex items-center justify-center rounded text-xs font-bold cursor-pointer transition-colors text-white shadow-sm;
+            @apply w-8 h-8 flex items-center justify-center rounded text-xs font-bold cursor-pointer transition-colors text-white shadow-sm border border-gray-400;
         }
         .res-correct {
-            @apply bg-green-600 hover:bg-green-700;
+            @apply bg-green-600 hover:bg-green-700 border-green-800;
         }
         .res-wrong {
-            @apply bg-red-500 hover:bg-red-600;
+            @apply bg-red-600 hover:bg-red-700 border-red-800;
         }
         .res-unanswered {
-            @apply bg-gray-400 hover:bg-gray-500;
+            @apply bg-gray-500 hover:bg-gray-600 border-gray-700;
+        }
+        
+        /* Scroll to top button */
+        #scroll-to-top-btn {
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            visibility: hidden;
+        }
+        #scroll-to-top-btn.visible {
+            opacity: 1;
+            visibility: visible;
         }
         
         /* Modal Backdrop */
@@ -173,12 +194,13 @@
             display: flex;
         }
         .modal-content {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98); /* Nền modal đục hơn để dễ đọc */
             padding: 2rem;
             border-radius: 0.75rem;
             max-width: 90%;
             max-height: 90%;
             overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
         /* Dropdown Menu Styles */
@@ -189,7 +211,9 @@
         
         /* Quiz screen specific colors overrides */
         #quiz-screen #question-timer {
-            color: #ef4444; 
+            color: #dc2626; /* Đỏ đậm hơn */
+            font-weight: 800;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.8);
         }
         #quiz-screen #submit-btn {
             @apply bg-bidv-green hover:opacity-90;
@@ -220,9 +244,9 @@
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-900 font-medium">
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-6xl">
         
@@ -233,27 +257,27 @@
 
         <!-- Header -->
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 class="text-3xl font-bold text-bidv-green">Trắc nghiệm Pháp luật Đấu thầu</h1>
+            <h1 class="text-3xl font-bold text-bidv-green drop-shadow-sm bg-white/50 px-2 rounded">Trắc nghiệm Pháp luật Đấu thầu</h1>
             <div class="flex items-center space-x-2 relative">
-                <button id="home-btn" class="px-4 py-2 bg-bidv-green text-white rounded-lg shadow hover:opacity-90 transition-colors">Trang chủ</button>
-                <button id="history-btn" class="px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600 transition-colors">Lịch sử</button>
+                <button id="home-btn" class="px-4 py-2 bg-bidv-green text-white rounded-lg shadow hover:opacity-90 transition-colors font-bold">Trang chủ</button>
+                <button id="history-btn" class="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition-colors font-bold">Lịch sử</button>
                 
                 <!-- NÚT MÀU NỀN & DROPDOWN -->
                 <div class="relative inline-block text-left">
-                    <button id="bg-settings-btn" class="px-4 py-2 bg-bidv-yellow text-gray-900 rounded-lg shadow hover:opacity-90 transition-colors flex items-center">
+                    <button id="bg-settings-btn" class="px-4 py-2 bg-bidv-yellow text-gray-900 rounded-lg shadow hover:opacity-90 transition-colors flex items-center font-bold">
                         <span>Màu nền</span>
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <!-- Dropdown Menu -->
                     <div id="bg-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-50 ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1">
-                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-bidv-green" data-theme="theme-flower">
+                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 hover:text-bidv-green font-semibold" data-theme="theme-flower">
                                 🌹 Nền Hoa hồng
                             </button>
-                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-bidv-green" data-theme="theme-white">
+                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 hover:text-bidv-green font-semibold" data-theme="theme-white">
                                 ⚪ Nền Trắng
                             </button>
-                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-bidv-green" data-theme="theme-cream">
+                            <button class="bg-option w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 hover:text-bidv-green font-semibold" data-theme="theme-cream">
                                 🍦 Nền Kem
                             </button>
                         </div>
@@ -271,9 +295,9 @@
                 <div class="screen-content-wrapper"> <!-- Wrapper nền trắng mờ -->
 
                     <!-- KHỐI THỐNG KÊ TOÀN TRANG -->
-                    <div id="global-stats-section" class="mb-6 p-4 bg-white/10 rounded-lg shadow-inner backdrop-blur-sm border border-white/20">
-                        <h3 class="text-xl font-semibold text-bidv-green mb-4 border-b border-bidv-green/30 pb-2">Thống kê Toàn hệ thống</h3>
-                        <div id="stats-loading" class="text-center text-gray-600">
+                    <div id="global-stats-section" class="mb-6 p-4 bg-white/30 rounded-lg shadow-inner backdrop-blur-sm border border-white/40">
+                        <h3 class="text-xl font-bold text-bidv-green mb-4 border-b border-bidv-green/30 pb-2">Thống kê Toàn hệ thống</h3>
+                        <div id="stats-loading" class="text-center text-gray-800 font-semibold">
                             <svg class="animate-spin h-6 w-6 text-bidv-green mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -281,32 +305,32 @@
                             <p>Đang tải dữ liệu thống kê...</p>
                         </div>
                         <div id="stats-content" class="hidden grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                            <div>
+                            <div class="bg-white/40 p-2 rounded">
                                 <p class="text-2xl font-bold text-bidv-green" id="stats-total-visits">--</p>
-                                <p class="text-sm font-medium text-gray-800">Lượt truy cập</p>
+                                <p class="text-sm font-bold text-gray-900">Lượt truy cập</p>
                             </div>
-                            <div>
+                            <div class="bg-white/40 p-2 rounded">
                                 <p class="text-2xl font-bold text-bidv-green" id="stats-total-quizzes">--</p>
-                                <p class="text-sm font-medium text-gray-800">Lượt bài đã làm</p>
+                                <p class="text-sm font-bold text-gray-900">Lượt bài đã làm</p>
                             </div>
-                            <div>
+                            <div class="bg-white/40 p-2 rounded">
                                 <p class="text-2xl font-bold text-bidv-green" id="stats-avg-score">--</p>
-                                <p class="text-sm font-medium text-gray-800">Điểm bình quân</p>
+                                <p class="text-sm font-bold text-gray-900">Điểm bình quân</p>
                             </div>
-                            <div>
+                            <div class="bg-white/40 p-2 rounded">
                                 <p class="text-2xl font-bold text-bidv-green" id="stats-avg-questions">--</p>
-                                <p class="text-sm font-medium text-gray-800">Câu hỏi / Bài</p>
+                                <p class="text-sm font-bold text-gray-900">Câu hỏi / Bài</p>
                             </div>
-                            <div>
+                            <div class="bg-white/40 p-2 rounded">
                                 <p class="text-2xl font-bold text-bidv-green" id="stats-avg-time-per-q">--</p>
-                                <p class="text-sm font-medium text-gray-800">Giây / Câu</p>
+                                <p class="text-sm font-bold text-gray-900">Giây / Câu</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- KHỐI TÌM KIẾM TRA CỨU -->
-                    <div id="search-section" class="mb-8 p-6 bg-white/10 border-2 border-bidv-yellow/30 rounded-xl shadow-md backdrop-blur-sm">
-                        <div class="flex items-center mb-4 border-b border-gray-200/50 pb-2">
+                    <div id="search-section" class="mb-8 p-6 bg-white/30 border-2 border-bidv-yellow/50 rounded-xl shadow-md backdrop-blur-sm">
+                        <div class="flex items-center mb-4 border-b border-gray-400 pb-2">
                             <svg class="w-6 h-6 text-bidv-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -314,36 +338,37 @@
                         </div>
                         
                         <div class="relative group">
-                            <input type="text" id="search-input" class="w-full px-5 py-4 pl-12 bg-white/20 border border-gray-300/50 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-bidv-green focus:border-bidv-green focus:bg-white/40 transition-all text-gray-900 placeholder-gray-600 font-medium" placeholder="Nhập từ khóa bất kỳ để tìm kiếm trong câu hỏi, đáp án hoặc giải thích... (Ví dụ: 'gói thầu', '45 ngày', 'điều 22')">
+                            <input type="text" id="search-input" class="w-full px-5 py-4 pl-12 bg-white/70 border border-gray-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-bidv-green focus:border-bidv-green focus:bg-white transition-all text-black placeholder-gray-600 font-semibold" placeholder="Nhập từ khóa bất kỳ để tìm kiếm trong câu hỏi, đáp án hoặc giải thích... (Ví dụ: 'gói thầu', '45 ngày', 'điều 22')">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="h-6 w-6 text-gray-600 group-focus-within:text-bidv-green transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg class="h-6 w-6 text-gray-700 group-focus-within:text-bidv-green transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
-                            <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 hidden">
+                            <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-600 hover:text-black hidden">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
-                        <div id="search-status" class="mt-2 text-sm text-gray-700 italic hidden">Đang tìm kiếm...</div>
+                        <div id="search-status" class="mt-2 text-sm text-gray-900 font-bold italic hidden">Đang tìm kiếm...</div>
                         <div id="search-results" class="mt-4 space-y-4 max-h-[500px] overflow-y-auto hidden pr-2 custom-scrollbar">
                             <!-- Search results will appear here -->
                         </div>
                     </div>
 
-                    <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Cấu hình Bài thi</h2>
-                    <p class="text-center mb-6 text-gray-800 font-medium">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
+                    <h2 class="text-2xl font-bold mb-4 text-center text-bidv-green drop-shadow-sm">Cấu hình Bài thi</h2>
+                    <p class="text-center mb-6 text-black font-semibold text-lg">Vui lòng cấu hình bài thi và nhấn "Bắt đầu" để thử sức.</p>
+                    
                     <div class="space-y-6">
                         <div>
-                            <label for="student-name" class="block text-sm font-medium text-gray-800 mb-1">Nhập tên của bạn:</label>
-                            <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 backdrop-blur-sm text-gray-900 placeholder-gray-600 font-medium" placeholder="Ví dụ: Trương Hồng Quân">
+                            <label for="student-name" class="block text-sm font-bold text-gray-900 mb-1">Nhập tên của bạn:</label>
+                            <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black placeholder-gray-600 font-semibold" placeholder="Ví dụ: Trương Hồng Quân">
                         </div>
                     
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="num-questions" class="block text-sm font-medium text-gray-800 mb-1">Số câu hỏi:</label>
-                                <select id="num-questions" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 backdrop-blur-sm text-gray-900 font-medium">
+                                <label for="num-questions" class="block text-sm font-bold text-gray-900 mb-1">Số câu hỏi:</label>
+                                <select id="num-questions" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
                                     <option value="70">70 câu (Tiêu chuẩn)</option>
                                     <option value="1">1 câu</option>
                                     <option value="10">10 câu</option>
@@ -359,8 +384,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="time-per-question" class="block text-sm font-medium text-gray-800 mb-1">Thời gian mỗi câu (giây):</label>
-                                <select id="time-per-question" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 backdrop-blur-sm text-gray-900 font-medium">
+                                <label for="time-per-question" class="block text-sm font-bold text-gray-900 mb-1">Thời gian mỗi câu (giây):</label>
+                                <select id="time-per-question" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
                                     <option value="51">51 giây (cho 70 câu)</option>
                                     <option value="30">30 giây</option>
                                     <option value="60">60 giây</option>
@@ -372,20 +397,20 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="quiz-order" class="block text-sm font-medium text-gray-800 mb-1">Thứ tự câu hỏi:</label>
-                                <select id="quiz-order" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 backdrop-blur-sm text-gray-900 font-medium">
+                                <label for="quiz-order" class="block text-sm font-bold text-gray-900 mb-1">Thứ tự câu hỏi:</label>
+                                <select id="quiz-order" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
                                     <option value="sequential" selected>Theo thứ tự ID (Để xem lại)</option>
                                     <option value="random">Ngẫu nhiên (Đề thi thử)</option>
                                 </select>
                                 
-                                <div id="start-from-container" class="mt-2 bg-white/10 p-2 rounded border border-gray-200/50">
-                                    <label for="start-from-question" class="block text-sm font-medium text-bidv-green mb-1">Bắt đầu từ câu số:</label>
-                                    <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 text-gray-900" placeholder="Nhập ID câu bắt đầu">
+                                <div id="start-from-container" class="mt-2 bg-white/60 p-2 rounded border border-gray-400">
+                                    <label for="start-from-question" class="block text-sm font-bold text-bidv-green mb-1">Bắt đầu từ câu số:</label>
+                                    <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/80 text-black font-bold" placeholder="Nhập ID câu bắt đầu">
                                 </div>
                             </div>
                             <div>
-                                <label for="timing-mode" class="block text-sm font-medium text-gray-800 mb-1">Chế độ tính giờ:</label>
-                                <select id="timing-mode" class="w-full px-3 py-2 border border-gray-300/50 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/20 backdrop-blur-sm text-gray-900 font-medium">
+                                <label for="timing-mode" class="block text-sm font-bold text-gray-900 mb-1">Chế độ tính giờ:</label>
+                                <select id="timing-mode" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
                                     <option value="no_timer" selected>Không tính giờ (Thoải mái)</option>
                                     <option value="total">Tổng thời gian (Mặc định)</option>
                                     <option value="per_question">Tính giờ mỗi câu hỏi</option>
@@ -395,36 +420,36 @@
                         
                         <div class="md:grid md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-800 mb-1">Tổng thời gian làm bài:</label>
-                                <p id="total-quiz-time" class="w-full px-3 py-2 bg-white/20 border border-gray-300/50 rounded-md shadow-sm font-semibold text-gray-800 backdrop-blur-sm">
+                                <label class="block text-sm font-bold text-gray-900 mb-1">Tổng thời gian làm bài:</label>
+                                <p id="total-quiz-time" class="w-full px-3 py-2 bg-white/70 border border-gray-400 rounded-md shadow-sm font-bold text-black backdrop-blur-sm">
                                     -- phút
                                 </p>
                             </div>
                         </div>
 
-                        <p id="data-status" class="text-sm text-center text-gray-600">Đang tải dữ liệu câu hỏi...</p>
-                        <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed">Bắt đầu làm bài</button>
+                        <p id="data-status" class="text-sm text-center text-gray-800 font-semibold">Đang tải dữ liệu câu hỏi...</p>
+                        <button id="start-btn" class="w-full py-3 px-4 bg-bidv-green text-white font-bold text-lg rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-green disabled:bg-gray-400 disabled:cursor-not-allowed uppercase tracking-wide">Bắt đầu làm bài</button>
                         
-                        <div class="mt-8 pt-4 border-t border-gray-200/50">
-                            <button id="toggle-help-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-yellow">
+                        <div class="mt-8 pt-4 border-t border-gray-300">
+                            <button id="toggle-help-btn" class="w-full py-2 px-4 bg-bidv-yellow text-gray-900 font-bold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bidv-yellow">
                                 Hiển thị Hướng dẫn sử dụng
                             </button>
-                            <div id="help-content-container" class="mt-4 p-6 border border-gray-100/50 rounded-xl shadow-inner bg-white/10 help-content backdrop-blur-sm" style="display: none;">
+                            <div id="help-content-container" class="mt-4 p-6 border border-gray-300 rounded-xl shadow-inner bg-white/80 help-content backdrop-blur-sm" style="display: none;">
                                 <h2 class="text-2xl font-bold text-bidv-green mb-4">I. TÓM TẮT TÍNH NĂNG NỔI TRỘI</h2>
-                                <p class="mb-6 text-gray-800">Ứng dụng được thiết kế nhằm mô phỏng sát nhất kỳ thi thực tế, đồng thời cung cấp các công cụ phân tích sâu sắc giúp thí sinh dễ dàng ôn tập và cải thiện kiến thức một cách hiệu quả.</p>
+                                <p class="mb-6 text-black font-medium">Ứng dụng được thiết kế nhằm mô phỏng sát nhất kỳ thi thực tế, đồng thời cung cấp các công cụ phân tích sâu sắc giúp thí sinh dễ dàng ôn tập và cải thiện kiến thức một cách hiệu quả.</p>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <div class="feature-card p-5 bg-bidv-green/10 border-l-4 border-bidv-green rounded-lg shadow-sm">
-                                        <h3 class="text-xl font-semibold mb-2 text-bidv-green">1. Mô phỏng Thi thực tế</h3>
-                                        <p class="text-sm text-gray-800">Tùy chỉnh số lượng câu hỏi, thời gian và chế độ tính giờ (Tổng thời gian hoặc Tính giờ mỗi câu) để làm quen với áp lực phòng thi.</p>
+                                    <div class="feature-card p-5 bg-white/60 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                        <h3 class="text-xl font-bold mb-2 text-bidv-green">1. Mô phỏng Thi thực tế</h3>
+                                        <p class="text-sm text-black">Tùy chỉnh số lượng câu hỏi, thời gian và chế độ tính giờ.</p>
                                     </div>
-                                    <div class="feature-card p-5 bg-bidv-green/10 border-l-4 border-bidv-green rounded-lg shadow-sm">
-                                        <h3 class="text-xl font-semibold mb-2 text-bidv-green">2. Phân tích &amp; Giải thích chi tiết</h3>
-                                        <p class="text-sm text-gray-800">Sau khi nộp bài, xem lại đáp án đúng, câu trả lời của bạn, và nhận <strong>Giải thích chuyên sâu</strong> bao gồm <strong>Phân tích đáp án đúng/sai</strong> và <strong>Bóc phốt đề-soi cách ra đề</strong>.</p>
+                                    <div class="feature-card p-5 bg-white/60 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                        <h3 class="text-xl font-bold mb-2 text-bidv-green">2. Phân tích &amp; Giải thích</h3>
+                                        <p class="text-sm text-black">Giải thích chuyên sâu và "Bóc phốt đề".</p>
                                     </div>
-                                    <div class="feature-card p-5 bg-bidv-green/10 border-l-4 border-bidv-green rounded-lg shadow-sm">
-                                        <h3 class="text-xl font-semibold mb-2 text-bidv-green">3. Thống kê Lịch sử</h3>
-                                        <p class="text-sm text-gray-800">Lưu lại toàn bộ lịch sử làm bài. Đặc biệt là chức năng <strong>Thống kê các câu hay sai</strong> giúp bạn tập trung ôn luyện các điểm yếu.</p>
+                                    <div class="feature-card p-5 bg-white/60 border-l-4 border-bidv-green rounded-lg shadow-sm">
+                                        <h3 class="text-xl font-bold mb-2 text-bidv-green">3. Thống kê Lịch sử</h3>
+                                        <p class="text-sm text-black">Lưu lại lịch sử và thống kê câu hay sai.</p>
                                     </div>
                                 </div>
                             </div>
@@ -439,54 +464,54 @@
                     <div class="md:flex md:space-x-6">
                         
                         <div class="md:w-3/4 flex flex-col space-y-6">
-                            <div class="flex justify-between items-center p-4 bg-bidv-green/10 rounded-lg shadow backdrop-blur-sm border border-bidv-green/20">
+                            <div class="flex justify-between items-center p-4 bg-white/60 rounded-lg shadow backdrop-blur-sm border border-gray-300">
                                 <div class="text-left">
-                                    <span class="text-xs font-medium text-bidv-green">Thí sinh:</span>
-                                    <p id="student-name-display" class="text-lg font-semibold text-bidv-green"></p>
+                                    <span class="text-xs font-bold text-bidv-green uppercase">Thí sinh</span>
+                                    <p id="student-name-display" class="text-lg font-bold text-black"></p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-xs font-medium text-gray-600">Tổng thời gian:</span>
+                                    <span class="text-xs font-bold text-gray-700 uppercase">Tổng thời gian</span>
                                     <p id="total-timer" class="text-xl font-bold text-bidv-green">00:00</p>
                                 </div>
                             </div>
 
-                            <div id="question-card" class="p-6 border border-gray-200/50 rounded-lg shadow-md bg-white/10 backdrop-blur-sm">
-                                <div class="flex justify-between items-center mb-4 border-b border-gray-200/50 pb-2">
-                                    <div class="text-lg font-semibold text-gray-900">
+                            <div id="question-card" class="p-6 border border-gray-300 rounded-lg shadow-md bg-white/90 backdrop-blur-sm">
+                                <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                                    <div class="text-lg font-bold text-black">
                                         Câu <span id="current-q-num"></span> / <span id="total-q-num"></span>
                                     </div>
-                                    <div class="text-lg font-semibold text-right">
-                                        Thời gian còn lại: <span id="question-timer" class="text-red-500">00</span>s
+                                    <div class="text-lg font-bold text-right text-gray-800">
+                                        Còn lại: <span id="question-timer" class="text-red-600">00</span>s
                                     </div>
                                 </div>
                                 
                                 <div id="question-container" class="mb-6">
-                                    <p id="question-text" class="text-xl font-medium mb-4 text-gray-900"></p>
+                                    <p id="question-text" class="text-xl font-bold mb-4 text-black leading-relaxed"></p>
                                     <div id="options-container" class="space-y-3">
                                         <!-- Options will be generated here -->
                                     </div>
                                 </div>
                                 
                                 <div class="flex justify-between items-center mt-6">
-                                    <button id="prev-btn" class="py-2 px-6 bg-white/50 text-gray-800 border border-gray-300 rounded-lg hover:bg-white/80">Câu trước</button>
-                                    <button id="view-answer-btn" class="py-2 px-6 bg-bidv-yellow text-gray-900 rounded-lg hover:opacity-90">Xem đáp án</button>
+                                    <button id="prev-btn" class="py-2 px-6 bg-white text-gray-900 border-2 border-gray-300 rounded-lg hover:bg-gray-100 font-bold">Câu trước</button>
+                                    <button id="view-answer-btn" class="py-2 px-6 bg-bidv-yellow text-gray-900 rounded-lg hover:opacity-90 font-bold border-2 border-yellow-500">Xem đáp án</button>
                                     <div>
-                                        <button id="next-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90">Câu tiếp</button>
-                                        <button id="submit-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90" style="display: none;">Nộp bài</button>
+                                        <button id="next-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90 font-bold">Câu tiếp</button>
+                                        <button id="submit-btn" class="py-2 px-6 bg-bidv-green text-white rounded-lg hover:opacity-90 font-bold" style="display: none;">Nộp bài</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="md:w-1/4 mt-6 md:mt-0">
-                            <div class="sticky top-0 p-4 bg-white/10 border border-gray-200/50 rounded-lg shadow-md backdrop-blur-sm">
-                                <h3 class="text-lg font-semibold mb-3 border-b border-gray-200/50 pb-2 text-gray-900">Danh sách câu hỏi</h3>
+                            <div class="sticky top-0 p-4 bg-white/80 border border-gray-300 rounded-lg shadow-md backdrop-blur-sm">
+                                <h3 class="text-lg font-bold mb-3 border-b border-gray-300 pb-2 text-black">Danh sách câu hỏi</h3>
                                 <div id="question-nav-list" class="grid grid-cols-5 gap-3">
                                     <!-- Question number buttons go here -->
                                 </div>
-                                <div class="mt-4 pt-2 border-t border-gray-200/50 text-sm text-gray-700">
-                                    <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 answered"></span><span>Đã trả lời</span></p>
-                                    <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 unanswered"></span><span>Chưa trả lời</span></p>
+                                <div class="mt-4 pt-2 border-t border-gray-300 text-sm text-gray-900 font-medium">
+                                    <p class="flex items-center space-x-2 mb-1"><span class="q-nav-btn w-4 h-4 answered"></span><span>Đã trả lời</span></p>
+                                    <p class="flex items-center space-x-2 mb-1"><span class="q-nav-btn w-4 h-4 unanswered"></span><span>Chưa trả lời</span></p>
                                     <p class="flex items-center space-x-2"><span class="q-nav-btn w-4 h-4 active-q"></span><span>Đang xem</span></p>
                                 </div>
                             </div>
@@ -498,39 +523,38 @@
             <!-- Result Screen -->
             <div id="result-screen" class="screen">
                 <div class="screen-content-wrapper">
-                    <h2 class="text-2xl font-semibold mb-4 text-center text-bidv-green">Kết quả bài làm</h2>
-                    <div id="result-summary" class="text-center bg-white/10 p-6 rounded-lg mb-6 backdrop-blur-sm border border-white/20">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-bidv-green bg-white/60 py-2 rounded">Kết quả bài làm</h2>
+                    <div id="result-summary" class="text-center bg-white/80 p-6 rounded-lg mb-6 backdrop-blur-sm border border-gray-300 shadow-sm">
                         <!-- Summary here -->
                     </div>
                     
-                    <!-- THÊM MỚI: Bố cục 2 cột cho kết quả -->
                     <div class="md:flex md:space-x-6">
-                        <!-- Cột bên trái: Chi tiết từng câu hỏi -->
                         <div class="md:w-3/4">
-                            <h3 class="text-xl font-semibold mb-4 text-gray-900">Xem lại chi tiết:</h3>
+                            <h3 class="text-xl font-bold mb-4 text-black bg-white/40 inline-block px-2 rounded">Xem lại chi tiết:</h3>
                             <div id="result-details" class="space-y-6">
                                 <!-- Detailed results here -->
                             </div>
                         </div>
 
-                        <!-- Cột bên phải: Bảng điều hướng câu hỏi kết quả -->
                         <div class="md:w-1/4 mt-6 md:mt-0">
-                            <div class="sticky top-0 p-4 bg-white/10 border border-gray-200/50 rounded-lg shadow-md backdrop-blur-sm">
-                                <h3 class="text-lg font-semibold mb-3 border-b border-gray-200/50 pb-2 text-gray-900">Mục lục câu hỏi</h3>
+                            <!-- BẢNG ĐIỀU HƯỚNG MỚI: Màu chữ đen, nền trắng đục hơn -->
+                            <div class="sticky top-0 p-4 bg-white/80 border border-gray-300 rounded-lg shadow-md backdrop-blur-sm">
+                                <h3 class="text-lg font-bold mb-3 border-b border-gray-300 pb-2 text-black">Mục lục câu hỏi</h3>
                                 <div id="result-nav-list" class="grid grid-cols-5 gap-2">
                                     <!-- Result nav buttons go here -->
                                 </div>
-                                <div class="mt-4 pt-2 border-t border-gray-200/50 text-xs text-gray-700 space-y-1">
-                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-correct text-[8px] flex items-center justify-center">✓</span><span>Đúng</span></p>
-                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-wrong text-[8px] flex items-center justify-center">✕</span><span>Sai</span></p>
-                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-unanswered text-[8px] flex items-center justify-center">-</span><span>Chưa làm</span></p>
+                                <!-- CHÚ THÍCH MỚI -->
+                                <div class="mt-4 pt-2 border-t border-gray-300 text-xs text-black font-bold space-y-2">
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-correct text-[8px] flex items-center justify-center">✓</span><span>Đúng (Xanh)</span></p>
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-wrong text-[8px] flex items-center justify-center">✕</span><span>Sai (Đỏ)</span></p>
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-unanswered text-[8px] flex items-center justify-center">-</span><span>Chưa làm (Xám)</span></p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="text-center mt-8">
-                        <button id="back-to-home-btn" class="py-3 px-6 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90">Làm bài thi mới</button>
+                        <button id="back-to-home-btn" class="py-3 px-6 bg-bidv-green text-white font-bold rounded-lg shadow-md hover:opacity-90 text-lg">Làm bài thi mới</button>
                     </div>
                 </div>
             </div>
@@ -538,16 +562,16 @@
             <!-- History Screen -->
             <div id="history-screen" class="screen">
                 <div class="screen-content-wrapper">
-                    <h2 class="text-2xl font-semibold mb-4 text-bidv-green">Lịch sử làm bài</h2>
+                    <h2 class="text-2xl font-bold mb-4 text-bidv-green bg-white/50 inline-block px-2 rounded">Lịch sử làm bài</h2>
                     
                     <div class="text-right mb-4">
-                        <button id="clear-history-btn" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">Xóa tất cả lịch sử thi</button>
+                        <button id="clear-history-btn" class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition-colors">Xóa tất cả lịch sử thi</button>
                     </div>
                     
                     <div id="history-stats" class="mb-6">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-900">Thống kê các câu hay sai</h3>
-                        <p class="text-sm text-gray-600 mb-2 italic">Dữ liệu được tổng hợp từ các lần thi hiện có trong lịch sử.</p>
-                        <div id="missed-questions-stats" class="text-gray-800 p-4 bg-white/10 rounded border border-gray-200/50 backdrop-blur-sm">Chưa có dữ liệu.</div>
+                        <h3 class="text-xl font-bold mb-2 text-black bg-white/40 inline-block px-2 rounded">Thống kê các câu hay sai</h3>
+                        <p class="text-sm text-gray-900 font-semibold mb-2 italic">Dữ liệu được tổng hợp từ các lần thi hiện có trong lịch sử.</p>
+                        <div id="missed-questions-stats" class="text-black font-medium p-4 bg-white/60 rounded border border-gray-300 backdrop-blur-sm">Chưa có dữ liệu.</div>
                     </div>
                     <div id="history-list" class="space-y-4">
                         <p>Chưa có lịch sử làm bài.</p>
@@ -566,12 +590,19 @@
 
         </main>
         
-        <!-- Footer for Copyright -->
-        <footer class="mt-8 text-center text-gray-500 text-sm">
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-gray-900 font-bold text-sm bg-white/40 py-2 rounded">
             <p>Bản quyền thuộc về: Trương Hồng Quân</p>
             <p>Email: <a href="mailto:Quantrhvn@gmail.com" class="text-bidv-green hover:underline">Quantrhvn@gmail.com</a></p>
         </footer>
     </div>
+
+    <!-- NÚT SCROLL TO TOP -->
+    <button id="scroll-to-top-btn" class="fixed bottom-8 right-8 p-3 bg-bidv-green text-white rounded-full shadow-lg hover:bg-teal-700 focus:outline-none z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -611,8 +642,9 @@ document.addEventListener('DOMContentLoaded', () => {
             clearHistory: document.getElementById('clear-history-btn'),
             toggleHelp: document.getElementById('toggle-help-btn'),
             clearSearch: document.getElementById('clear-search-btn'),
-            // Nút cài đặt màu nền
             bgSettings: document.getElementById('bg-settings-btn'),
+            // Nút Scroll Top
+            scrollToTop: document.getElementById('scroll-to-top-btn'),
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -637,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             missedQuestionsStats: document.getElementById('missed-questions-stats'),
             totalQuizTime: document.getElementById('total-quiz-time'),
             questionNavList: document.getElementById('question-nav-list'),
-            resultNavList: document.getElementById('result-nav-list'), // Thêm mới cho result nav
+            resultNavList: document.getElementById('result-nav-list'),
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
@@ -668,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timingMode: 'total',
         visitorIP: null,
         searchDebounceTimer: null,
-        currentTheme: 'theme-flower', // Mặc định
+        currentTheme: 'theme-flower', 
         timers: {
             total: null,
             question: null,
@@ -678,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         init() {
-            this.loadTheme(); // Load theme đã lưu
+            this.loadTheme(); 
             this.addEventListeners();
             this.loadQuestions();
             this.showScreen('start');
@@ -694,11 +726,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         setTheme(themeName) {
-            // Xóa các class theme cũ
             this.displays.mainContainer.classList.remove('theme-flower', 'theme-white', 'theme-cream');
-            // Thêm class theme mới
             this.displays.mainContainer.classList.add(themeName);
-            // Lưu lại state và localStorage
             this.currentTheme = themeName;
             localStorage.setItem('quizTheme', themeName);
         },
@@ -834,15 +863,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultsContainer.innerHTML = '';
 
                 if (results.length === 0) {
-                    resultsContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Không tìm thấy kết quả nào phù hợp.</p>';
+                    resultsContainer.innerHTML = '<p class="text-center text-gray-800 font-semibold py-4">Không tìm thấy kết quả nào phù hợp.</p>';
                     resultsContainer.classList.remove('hidden');
                     return;
                 }
 
                 results.forEach(q => {
-                    // SỬA: bg-white/40 cho kết quả tìm kiếm để dễ đọc hơn
                     const card = document.createElement('div');
-                    card.className = 'search-result-item bg-white/40 p-4 rounded-lg border border-gray-200/50 hover:shadow-md transition-all';
+                    card.className = 'search-result-item bg-white/80 p-4 rounded-lg border border-gray-400 hover:shadow-md transition-all text-black';
                     
                     const highlight = (text) => {
                         if (!text) return '';
@@ -856,9 +884,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (q.options[key]) {
                             let classList = 'p-2 rounded mt-1 text-sm border border-transparent';
                             if (key === q.answer) {
-                                classList += ' bg-green-100 border-green-300 text-green-800 font-semibold';
+                                classList += ' bg-green-100 border-green-300 text-green-900 font-bold';
                             } else {
-                                classList += ' bg-white/60 border-gray-200 text-gray-600';
+                                classList += ' bg-white/60 border-gray-300 text-gray-800';
                             }
                             optionsHtml += `<div class="${classList}">${key}. ${highlight(q.options[key])}</div>`;
                         }
@@ -866,17 +894,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     let explanationHtml = '';
                     if (q.explanation_right) {
-                        explanationHtml += `<div class="mt-2 text-xs text-green-700 bg-green-50/80 p-2 rounded border-l-2 border-green-500"><strong>Giải thích đúng:</strong> ${highlight(q.explanation_right)}</div>`;
+                        explanationHtml += `<div class="mt-2 text-xs text-green-900 bg-green-100 p-2 rounded border-l-4 border-green-600"><strong>Giải thích đúng:</strong> ${highlight(q.explanation_right)}</div>`;
                     }
                     if (q.explanation_wrong) {
-                         explanationHtml += `<div class="mt-2 text-xs text-red-700 bg-red-50/80 p-2 rounded border-l-2 border-red-500"><strong>Giải thích sai:</strong> ${highlight(q.explanation_wrong)}</div>`;
+                         explanationHtml += `<div class="mt-2 text-xs text-red-900 bg-red-100 p-2 rounded border-l-4 border-red-600"><strong>Giải thích sai:</strong> ${highlight(q.explanation_wrong)}</div>`;
                     }
                      if (q.explanation_question) {
-                         explanationHtml += `<div class="mt-2 text-xs text-blue-700 bg-blue-50/80 p-2 rounded border-l-2 border-blue-500"><strong>Phân tích đề:</strong> ${highlight(q.explanation_question)}</div>`;
+                         explanationHtml += `<div class="mt-2 text-xs text-blue-900 bg-blue-100 p-2 rounded border-l-4 border-blue-600"><strong>Phân tích đề:</strong> ${highlight(q.explanation_question)}</div>`;
                     }
 
                     card.innerHTML = `
-                        <p class="font-semibold text-gray-800 mb-2">Câu hỏi ${q.id}: ${highlight(q.question)}</p>
+                        <p class="font-bold text-gray-900 mb-2">Câu hỏi ${q.id}: ${highlight(q.question)}</p>
                         <div class="space-y-1 mb-2">${optionsHtml}</div>
                         ${explanationHtml}
                     `;
@@ -932,20 +960,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.inputs.searchInput.focus();
             });
 
-            // --- Xử lý sự kiện cho Nút Màu nền ---
             this.buttons.bgSettings.addEventListener('click', (e) => {
-                e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                e.stopPropagation(); 
                 this.displays.bgDropdown.classList.toggle('hidden');
             });
 
-            // Đóng menu khi click ra ngoài
             document.addEventListener('click', (e) => {
                 if (!this.buttons.bgSettings.contains(e.target) && !this.displays.bgDropdown.contains(e.target)) {
                     this.displays.bgDropdown.classList.add('hidden');
                 }
             });
 
-            // Xử lý chọn màu nền
             const bgOptions = document.querySelectorAll('.bg-option');
             bgOptions.forEach(option => {
                 option.addEventListener('click', (e) => {
@@ -953,6 +978,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.setTheme(theme);
                     this.displays.bgDropdown.classList.add('hidden');
                 });
+            });
+
+            // --- Scroll to Top Logic ---
+            this.buttons.scrollToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    this.buttons.scrollToTop.classList.add('visible');
+                } else {
+                    this.buttons.scrollToTop.classList.remove('visible');
+                }
             });
         },
         
@@ -971,7 +1009,6 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotalTime() {
             const timingMode = this.inputs.timingMode.value;
 
-            // Xử lý hiển thị khi chế độ là "Không tính giờ"
             if (timingMode === 'no_timer') {
                 this.displays.totalQuizTime.textContent = 'Không giới hạn';
                 return;
@@ -998,6 +1035,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.screens[screenId]) {
                 this.screens[screenId].classList.add('active');
             }
+            // Scroll to top when switching screens
+            window.scrollTo(0, 0);
         },
 
         async loadQuestions() {
@@ -1091,7 +1130,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.displays.questionNavList.innerHTML = '';
             this.quizQuestions.forEach((q, index) => {
                 const btn = document.createElement('button');
-                // SỬA: Điều chỉnh style cho nút điều hướng trong suốt hơn
                 btn.className = 'q-nav-btn';
                 btn.textContent = index + 1;
                 btn.setAttribute('data-index', index);
@@ -1278,8 +1316,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.explanation_right) {
                 explanationHtml += `
                     <div class="explanation-box explanation-right">
-                        <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
-                        <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                        <p class="explanation-title text-green-900">Giải thích đáp án đúng (${q.answer}):</p>
+                        <p class="text-sm text-green-800 font-medium">${q.explanation_right.replace(/\n/g, '<br>')}</p>
                     </div>
                 `;
             }
@@ -1287,8 +1325,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.explanation_wrong) {
                 explanationHtml += `
                     <div class="explanation-box explanation-wrong">
-                        <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
-                        <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                        <p class="explanation-title text-red-900">Giải thích các phương án sai:</p>
+                        <p class="text-sm text-red-800 font-medium">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
                     </div>
                 `;
             }
@@ -1296,8 +1334,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.explanation_question) {
                 explanationHtml += `
                     <div class="explanation-box explanation-question">
-                        <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
-                        <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                        <p class="explanation-title text-blue-900">Bóc phốt đề (Phân tích cách ra đề):</p>
+                        <p class="text-sm text-blue-800 font-medium">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                     </div>
                 `;
             }
@@ -1307,11 +1345,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="text-xl font-bold text-bidv-green">Đáp án và Giải thích (Câu ${index + 1})</h3>
                     <button id="modal-close-btn" class="text-gray-500 hover:text-gray-900 font-bold text-2xl leading-none">&times;</button>
                 </div>
-                <p class="font-semibold mb-3">${q.question}</p>
+                <p class="font-bold mb-3 text-black text-lg">${q.question}</p>
                 <div class="mb-4">
-                    <p class="text-sm text-gray-700 mb-2">
+                    <p class="text-sm text-gray-800 mb-2 font-semibold">
                         Câu trả lời của bạn: <strong>${userAnswer ? userAnswer : 'Chưa trả lời'}</strong>. 
-                        Đáp án đúng: <strong class="text-green-700">${q.answer}</strong>
+                        Đáp án đúng: <strong class="text-green-800">${q.answer}</strong>
                     </p>
                     ${optionsHtml}
                 </div>
@@ -1352,29 +1390,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedTime = this.formatTime(timeTaken);
 
             this.displays.resultSummary.innerHTML = `
-                <p class="text-lg mb-2">Thí sinh: <span class="font-bold text-bidv-green">${name}</span></p>
-                <p class="text-4xl font-bold my-4 ${percentage >= 50 ? 'text-green-600' : 'text-red-600'}">
+                <p class="text-lg mb-2 text-black font-semibold">Thí sinh: <span class="font-bold text-bidv-green">${name}</span></p>
+                <p class="text-4xl font-bold my-4 ${percentage >= 50 ? 'text-green-700' : 'text-red-700'}">
                     ${score} / ${totalQuestions} (${percentage}%)
                 </p>
-                <div class="flex justify-center space-x-6 text-gray-600">
+                <div class="flex justify-center space-x-6 text-gray-900 font-bold">
                      <p>Thời gian làm bài: <strong>${formattedTime}</strong></p>
                      <p>Ngày làm: <strong>${new Date(date).toLocaleString('vi-VN')}</strong></p>
                 </div>
             `;
             
             this.displays.resultDetails.innerHTML = '';
-            this.displays.resultNavList.innerHTML = ''; // Clear previous nav list
+            this.displays.resultNavList.innerHTML = '';
 
             result.questions.forEach((q, index) => {
                 const userAnswer = result.userAnswers[index];
                 const isCorrect = q.answer === userAnswer;
                 
-                // --- THÊM: Tạo Navigation Button cho Result ---
                 const navBtn = document.createElement('button');
                 navBtn.textContent = index + 1;
                 navBtn.className = 'result-nav-btn';
                 
-                // Logic màu sắc
                 if (!userAnswer) {
                     navBtn.classList.add('res-unanswered');
                 } else if (isCorrect) {
@@ -1383,28 +1419,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     navBtn.classList.add('res-wrong');
                 }
 
-                // Sự kiện click để cuộn
                 navBtn.addEventListener('click', () => {
                     const targetElement = document.getElementById(`result-q-${index}`);
                     if (targetElement) {
                         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Optional: Highlight effect temporary
-                        targetElement.classList.add('ring-2', 'ring-blue-500');
-                        setTimeout(() => targetElement.classList.remove('ring-2', 'ring-blue-500'), 2000);
+                        targetElement.classList.add('ring-4', 'ring-blue-500');
+                        setTimeout(() => targetElement.classList.remove('ring-4', 'ring-blue-500'), 2000);
                     }
                 });
                 this.displays.resultNavList.appendChild(navBtn);
-                // ---------------------------------------------
 
                 const card = document.createElement('div');
-                // SỬA: Thay đổi màu nền câu sai thành màu vàng (yellow-100) và viền vàng (yellow-400)
-                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/80' : 'border-yellow-400 bg-yellow-100/90'} backdrop-blur-sm transition-all duration-300`;
-                card.id = `result-q-${index}`; // THÊM ID để scroll tới
+                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/90' : 'border-yellow-500 bg-yellow-100/95'} backdrop-blur-sm transition-all duration-300 shadow-sm`;
+                card.id = `result-q-${index}`; 
                 
                 let optionsHtml = '';
                 ['A', 'B', 'C', 'D'].forEach(key => {
                     if (q.options[key]) {
-                        let classList = 'option-label mt-2';
+                        let classList = 'option-label mt-2 text-black font-medium';
                         if (key === q.answer) {
                             classList += ' correct-answer';
                         }
@@ -1419,37 +1451,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (q.explanation_right) {
                     explanationHtml += `
                         <div class="explanation-box explanation-right">
-                            <p class="explanation-title text-green-700">Giải thích đáp án đúng (${q.answer}):</p>
-                            <p class="text-sm text-gray-700">${q.explanation_right.replace(/\n/g, '<br>')}</p>
+                            <p class="explanation-title text-green-900">Giải thích đáp án đúng (${q.answer}):</p>
+                            <p class="text-sm text-green-800 font-medium">${q.explanation_right.replace(/\n/g, '<br>')}</p>
                         </div>
                     `;
                 }
                 if (q.explanation_wrong) {
                     explanationHtml += `
                         <div class="explanation-box explanation-wrong">
-                            <p class="explanation-title text-red-700">Giải thích các phương án sai:</p>
-                            <p class="text-sm text-gray-700">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
+                            <p class="explanation-title text-red-900">Giải thích các phương án sai:</p>
+                            <p class="text-sm text-red-800 font-medium">${q.explanation_wrong.replace(/\n/g, '<br>')}</p>
                         </div>
                     `;
                 }
                 if (q.explanation_question) {
                     explanationHtml += `
                         <div class="explanation-box explanation-question">
-                            <p class="explanation-title text-bidv-green">Bóc phốt đề (Phân tích cách ra đề):</p>
-                            <p class="text-sm text-gray-700">${q.explanation_question.replace(/\n/g, '<br>')}</p>
+                            <p class="explanation-title text-blue-900">Bóc phốt đề (Phân tích cách ra đề):</p>
+                            <p class="text-sm text-blue-800 font-medium">${q.explanation_question.replace(/\n/g, '<br>')}</p>
                         </div>
                     `;
                 }
 
                 card.innerHTML = `
-                    <p class="font-semibold">Câu ${index + 1}: ${q.question}</p>
-                    <p class="text-sm text-gray-700 mt-2">
-                        Bạn đã chọn: <strong class="${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAnswer ? userAnswer : 'Chưa trả lời'}</strong>. 
-                        Đáp án đúng: <strong class="text-green-700">${q.answer}</strong>
+                    <p class="font-bold text-black text-lg">Câu ${index + 1}: ${q.question}</p>
+                    <p class="text-sm text-gray-900 mt-2 font-semibold">
+                        Bạn đã chọn: <strong class="${isCorrect ? 'text-green-800' : 'text-red-700'}">${userAnswer ? userAnswer : 'Chưa trả lời'}</strong>. 
+                        Đáp án đúng: <strong class="text-green-800">${q.answer}</strong>
                     </p>
                     <div class="mt-3">${optionsHtml}</div>
-                    <div class="mt-4 p-3 bg-gray-50/50 rounded-md">
-                        <p class="font-semibold text-sm mb-2">Phân tích chuyên sâu:</p>
+                    <div class="mt-4 p-3 bg-white/60 rounded-md border border-gray-300">
+                        <p class="font-bold text-sm mb-2 text-black">Phân tích chuyên sâu:</p>
                         ${explanationHtml}
                     </div>
                 `;
@@ -1470,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.buttons.clearHistory.disabled = (history.length === 0);
 
             if (history.length === 0) {
-                this.displays.historyList.innerHTML = '<p class="text-center text-gray-500 italic">Chưa có lịch sử làm bài.</p>';
+                this.displays.historyList.innerHTML = '<p class="text-center text-gray-800 font-semibold italic">Chưa có lịch sử làm bài.</p>';
                 this.displays.missedQuestionsStats.innerHTML = 'Chưa có dữ liệu.';
                 this.showScreen('history');
                 return;
@@ -1478,26 +1510,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.displays.historyList.innerHTML = '';
             history.forEach((result, index) => {
-                // SỬA: bg-white/20
                 const item = document.createElement('div');
-                item.className = 'p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-center bg-white/20 shadow-sm backdrop-blur-sm border-white/30';
+                item.className = 'p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-center bg-white/40 shadow-sm backdrop-blur-sm border-gray-400';
                 item.innerHTML = `
                     <div class="flex-1 mb-2 sm:mb-0">
-                        <p class="font-semibold text-lg text-bidv-green">${result.name}</p>
-                        <p class="text-sm text-gray-700">${new Date(result.date).toLocaleString('vi-VN')}</p>
+                        <p class="font-bold text-lg text-bidv-green">${result.name}</p>
+                        <p class="text-sm text-black font-semibold">${new Date(result.date).toLocaleString('vi-VN')}</p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="text-center mr-4">
-                            <span class="block text-xl font-bold ${result.score / result.totalQuestions >= 0.5 ? 'text-green-600' : 'text-red-600'}">
+                            <span class="block text-xl font-bold ${result.score / result.totalQuestions >= 0.5 ? 'text-green-800' : 'text-red-700'}">
                                 ${result.score}/${result.totalQuestions}
                             </span>
-                            <span class="text-xs text-gray-600">Điểm số</span>
+                            <span class="text-xs text-black font-bold">Điểm số</span>
                         </div>
                         <div class="flex space-x-2">
-                            <button data-history-index="${index}" class="view-result-btn px-3 py-2 bg-bidv-green text-white text-sm rounded hover:opacity-90 transition-colors flex items-center">
+                            <button data-history-index="${index}" class="view-result-btn px-3 py-2 bg-bidv-green text-white text-sm rounded hover:opacity-90 transition-colors flex items-center font-bold shadow">
                                 Xem
                             </button>
-                            <button data-history-index="${index}" class="delete-result-btn px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors flex items-center">
+                            <button data-history-index="${index}" class="delete-result-btn px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors flex items-center font-bold shadow">
                                 Xóa
                             </button>
                         </div>
@@ -1506,10 +1537,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.displays.historyList.appendChild(item);
             });
             
-            // Event Listeners cho nút Xem
             document.querySelectorAll('.view-result-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Dùng currentTarget để đảm bảo lấy đúng attribute nếu click vào icon bên trong
                     const index = e.currentTarget.getAttribute('data-history-index');
                     const selectedResult = history[index];
                     if (selectedResult) {
@@ -1519,7 +1548,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Event Listeners cho nút Xóa từng mục
             document.querySelectorAll('.delete-result-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const index = e.currentTarget.getAttribute('data-history-index');
@@ -1531,14 +1559,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.showScreen('history');
         },
         
-        // Hàm xóa một mục lịch sử
         deleteHistoryItem(index) {
             if(confirm('Bạn có chắc muốn xóa kết quả thi này? Hành động này sẽ cập nhật lại bảng thống kê câu sai.')) {
                 let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
-                // Xóa phần tử tại index
                 history.splice(index, 1);
                 localStorage.setItem('quizHistory', JSON.stringify(history));
-                // Tải lại màn hình lịch sử (sẽ tự động tính toán lại thống kê)
                 this.showHistory();
             }
         },
@@ -1578,7 +1603,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
-        // Timer Functions
         startTimers() {
             this.stopTimers();
             this.timers.totalSeconds = 0;
@@ -1586,16 +1610,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.timers.total = setInterval(() => {
                 this.timers.totalSeconds++;
                 
-                // THÊM MỚI: Xử lý hiển thị cho từng chế độ
                 if (this.timingMode === 'no_timer') {
-                    // Chế độ không tính giờ: Đếm xuôi, hiển thị thời gian đã làm
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
-                    // Không có điều kiện dừng tự động
                 } else if (this.timingMode === 'per_question') {
-                    // Chế độ tính giờ mỗi câu: Hiển thị tổng thời gian đã trôi qua (đếm xuôi)
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
                 } else {
-                    // Chế độ tổng thời gian: Đếm ngược
                     this.timers.remainingTotalSeconds--;
                     this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
                     if (this.timers.remainingTotalSeconds <= 0) {
