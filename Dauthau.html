@@ -442,7 +442,7 @@
                                         Câu <span id="current-q-num"></span> / <span id="total-q-num"></span>
                                     </div>
                                     <div class="text-lg font-semibold text-right">
-                                        Thời gian còn lại: <span id="question-timer" class="text-red-500">00</span>
+                                        Thời gian còn lại: <span id="question-timer" class="text-red-500">00</span>s
                                     </div>
                                 </div>
                                 
@@ -1330,7 +1330,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isCorrect = q.answer === userAnswer;
                 
                 const card = document.createElement('div');
-                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/80' : 'border-red-300 bg-red-50/80'} backdrop-blur-sm`;
+                // SỬA: Thay đổi màu nền câu sai thành màu vàng (yellow-100) và viền vàng (yellow-400)
+                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/80' : 'border-yellow-400 bg-yellow-100/90'} backdrop-blur-sm`;
                 
                 let optionsHtml = '';
                 ['A', 'B', 'C', 'D'].forEach(key => {
@@ -1582,5 +1583,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-
