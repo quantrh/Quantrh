@@ -142,6 +142,20 @@
             @apply ring-4 ring-yellow-400/50;
         }
         
+        /* Result Navigation Buttons - Styles riêng cho phần kết quả */
+        .result-nav-btn {
+            @apply w-8 h-8 flex items-center justify-center rounded text-xs font-bold cursor-pointer transition-colors text-white shadow-sm;
+        }
+        .res-correct {
+            @apply bg-green-600 hover:bg-green-700;
+        }
+        .res-wrong {
+            @apply bg-red-500 hover:bg-red-600;
+        }
+        .res-unanswered {
+            @apply bg-gray-400 hover:bg-gray-500;
+        }
+        
         /* Modal Backdrop */
         .modal-backdrop {
             position: fixed;
@@ -488,10 +502,33 @@
                     <div id="result-summary" class="text-center bg-white/10 p-6 rounded-lg mb-6 backdrop-blur-sm border border-white/20">
                         <!-- Summary here -->
                     </div>
-                    <h3 class="text-xl font-semibold mb-4 text-gray-900">Xem lại chi tiết:</h3>
-                    <div id="result-details" class="space-y-6">
-                        <!-- Detailed results here -->
+                    
+                    <!-- THÊM MỚI: Bố cục 2 cột cho kết quả -->
+                    <div class="md:flex md:space-x-6">
+                        <!-- Cột bên trái: Chi tiết từng câu hỏi -->
+                        <div class="md:w-3/4">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-900">Xem lại chi tiết:</h3>
+                            <div id="result-details" class="space-y-6">
+                                <!-- Detailed results here -->
+                            </div>
+                        </div>
+
+                        <!-- Cột bên phải: Bảng điều hướng câu hỏi kết quả -->
+                        <div class="md:w-1/4 mt-6 md:mt-0">
+                            <div class="sticky top-0 p-4 bg-white/10 border border-gray-200/50 rounded-lg shadow-md backdrop-blur-sm">
+                                <h3 class="text-lg font-semibold mb-3 border-b border-gray-200/50 pb-2 text-gray-900">Mục lục câu hỏi</h3>
+                                <div id="result-nav-list" class="grid grid-cols-5 gap-2">
+                                    <!-- Result nav buttons go here -->
+                                </div>
+                                <div class="mt-4 pt-2 border-t border-gray-200/50 text-xs text-gray-700 space-y-1">
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-correct text-[8px] flex items-center justify-center">✓</span><span>Đúng</span></p>
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-wrong text-[8px] flex items-center justify-center">✕</span><span>Sai</span></p>
+                                    <p class="flex items-center space-x-2"><span class="result-nav-btn w-4 h-4 res-unanswered text-[8px] flex items-center justify-center">-</span><span>Chưa làm</span></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="text-center mt-8">
                         <button id="back-to-home-btn" class="py-3 px-6 bg-bidv-green text-white font-semibold rounded-lg shadow-md hover:opacity-90">Làm bài thi mới</button>
                     </div>
@@ -600,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
             missedQuestionsStats: document.getElementById('missed-questions-stats'),
             totalQuizTime: document.getElementById('total-quiz-time'),
             questionNavList: document.getElementById('question-nav-list'),
+            resultNavList: document.getElementById('result-nav-list'), // Thêm mới cho result nav
             studentNameDisplay: document.getElementById('student-name-display'),
             reviewModalBackdrop: document.getElementById('review-modal-backdrop'),
             modalContentPlaceholder: document.getElementById('modal-content-placeholder'),
@@ -1325,13 +1363,43 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             
             this.displays.resultDetails.innerHTML = '';
+            this.displays.resultNavList.innerHTML = ''; // Clear previous nav list
+
             result.questions.forEach((q, index) => {
                 const userAnswer = result.userAnswers[index];
                 const isCorrect = q.answer === userAnswer;
                 
+                // --- THÊM: Tạo Navigation Button cho Result ---
+                const navBtn = document.createElement('button');
+                navBtn.textContent = index + 1;
+                navBtn.className = 'result-nav-btn';
+                
+                // Logic màu sắc
+                if (!userAnswer) {
+                    navBtn.classList.add('res-unanswered');
+                } else if (isCorrect) {
+                    navBtn.classList.add('res-correct');
+                } else {
+                    navBtn.classList.add('res-wrong');
+                }
+
+                // Sự kiện click để cuộn
+                navBtn.addEventListener('click', () => {
+                    const targetElement = document.getElementById(`result-q-${index}`);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Optional: Highlight effect temporary
+                        targetElement.classList.add('ring-2', 'ring-blue-500');
+                        setTimeout(() => targetElement.classList.remove('ring-2', 'ring-blue-500'), 2000);
+                    }
+                });
+                this.displays.resultNavList.appendChild(navBtn);
+                // ---------------------------------------------
+
                 const card = document.createElement('div');
                 // SỬA: Thay đổi màu nền câu sai thành màu vàng (yellow-100) và viền vàng (yellow-400)
-                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/80' : 'border-yellow-400 bg-yellow-100/90'} backdrop-blur-sm`;
+                card.className = `p-4 border rounded-lg ${isCorrect ? 'border-green-300 bg-green-50/80' : 'border-yellow-400 bg-yellow-100/90'} backdrop-blur-sm transition-all duration-300`;
+                card.id = `result-q-${index}`; // THÊM ID để scroll tới
                 
                 let optionsHtml = '';
                 ['A', 'B', 'C', 'D'].forEach(key => {
