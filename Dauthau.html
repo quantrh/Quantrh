@@ -840,12 +840,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async getVisitorIP() {
             try {
-                const response = await fetch('https://api.ipify.org?format=json');
+                // Thêm timeout để tránh treo nếu mạng chậm
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const response = await fetch('https://api.ipify.org?format=json', { 
+                    signal: controller.signal 
+                }).catch(err => {
+                    // Bắt lỗi network (như ERR_BLOCKED_BY_CLIENT) ngay tại đây
+                    throw new Error('Network blocked or failed');
+                });
+                
+                clearTimeout(timeoutId);
+
                 if (!response.ok) throw new Error('Không thể lấy IP');
                 const data = await response.json();
                 this.visitorIP = data.ip;
             } catch (error) {
-                console.error('Lỗi khi lấy IP:', error);
+                // Chỉ log warning thay vì error đỏ để tránh gây hoang mang
+                console.warn('Hệ thống không lấy được IP (có thể do AdBlock hoặc mạng):', error.message);
                 this.visitorIP = 'unknown';
             }
         },
@@ -858,7 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     .insert({ ip_address: this.visitorIP });
                 if (error) throw error;
             } catch (error) {
-                console.error('Lỗi ghi nhận lượt truy cập:', error.message);
+                // Log lỗi nhẹ nhàng hơn
+                console.warn('Không thể ghi log truy cập (Supabase):', error.message);
             }
         },
         
@@ -1156,13 +1170,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const data = await response.json();
                 
-                this.allQuestions = data.filter(q => q.question && q.answer);
+                // CẬP NHẬT SỬA LỖI: Lọc bỏ các câu hỏi thiếu options để tránh crash
+                this.allQuestions = data.filter(q => q.question && q.answer && q.options);
                 
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.calculateTotalTime(); 
                 } else {
-                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ hoặc định dạng sai.");
                 }
 
             } catch (error) {
@@ -1548,6 +1563,59 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 this.resetQuestionTimer();
             }
+        },
+
+        startTimers() {
+            this.stopTimers();
+            this.timers.totalSeconds = 0;
+            
+            this.timers.total = setInterval(() => {
+                this.timers.totalSeconds++;
+                
+                if (this.timingMode === 'no_timer') {
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                } else if (this.timingMode === 'per_question') {
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.totalSeconds);
+                } else {
+                    this.timers.remainingTotalSeconds--;
+                    this.displays.totalTimer.textContent = this.formatTime(this.timers.remainingTotalSeconds);
+                    if (this.timers.remainingTotalSeconds <= 0) {
+                        this.stopTimers();
+                        this.submitQuiz();
+                    }
+                }
+            }, 1000);
+            
+            this.resetQuestionTimer();
+        },
+        
+        resetQuestionTimer() {
+            clearInterval(this.timers.question);
+            
+            if (this.timingMode === 'per_question') {
+                this.timers.questionSeconds = this.timePerQuestion;
+                this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                
+                this.timers.question = setInterval(() => {
+                    this.timers.questionSeconds--;
+                    this.displays.questionTimer.textContent = this.timers.questionSeconds.toString().padStart(2, '0') + 's';
+                    
+                    if (this.timers.questionSeconds <= 0) {
+                        if (this.currentQuestionIndex === this.quizQuestions.length - 1) {
+                            this.submitQuiz(); 
+                        } else {
+                            this.navigateQuestion(1); 
+                        }
+                    }
+                }, 1000);
+            } else {
+                this.displays.questionTimer.textContent = '---';
+            }
+        },
+
+        stopTimers() {
+            clearInterval(this.timers.total);
+            clearInterval(this.timers.question);
         },
         
         formatTime(seconds) {
