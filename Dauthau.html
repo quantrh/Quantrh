@@ -405,16 +405,16 @@
                             <div>
                                 <label for="quiz-order" class="block text-sm font-bold text-gray-900 mb-1">Thứ tự câu hỏi:</label>
                                 <select id="quiz-order" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
-                                    <option value="sequential" selected>Theo thứ tự ID (Để xem lại)</option>
                                     <option value="random">Ngẫu nhiên (Đề thi thử)</option>
+                                    <option value="sequential">Theo thứ tự ID (Để xem lại)</option>
                                 </select>
                                 
-                                <div id="start-from-container" class="mt-2 bg-white/60 p-2 rounded border border-gray-400">
+                                <div id="start-from-container" class="mt-2 bg-white/60 p-2 rounded border border-gray-400 hidden">
                                     <label for="start-from-question" class="block text-sm font-bold text-bidv-green mb-1">Bắt đầu từ câu số:</label>
                                     <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/80 text-black font-bold" placeholder="Nhập ID câu bắt đầu">
                                 </div>
 
-                                <!-- THÊM MỚI: Checkbox xáo trộn đáp án -->
+                                <!-- Checkbox xáo trộn đáp án -->
                                 <div class="flex items-center mt-3 bg-white/60 p-2 rounded border border-gray-400">
                                     <input type="checkbox" id="shuffle-answers" class="w-5 h-5 text-bidv-green border-gray-300 rounded focus:ring-bidv-green cursor-pointer">
                                     <label for="shuffle-answers" class="ml-2 text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D)</label>
@@ -423,9 +423,9 @@
                             <div>
                                 <label for="timing-mode" class="block text-sm font-bold text-gray-900 mb-1">Chế độ tính giờ:</label>
                                 <select id="timing-mode" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/70 backdrop-blur-sm text-black font-semibold">
-                                    <option value="no_timer" selected>Không tính giờ (Thoải mái)</option>
                                     <option value="total">Tổng thời gian (Mặc định)</option>
                                     <option value="per_question">Tính giờ mỗi câu hỏi</option>
+                                    <option value="no_timer">Không tính giờ (Thoải mái)</option>
                                    </select>
                             </div>
                         </div>
@@ -1016,57 +1016,64 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         addEventListeners() {
-            this.buttons.home.addEventListener('click', () => this.showScreen('start'));
-            this.buttons.history.addEventListener('click', () => this.showHistory());
-            this.buttons.start.addEventListener('click', () => this.startQuiz());
-            this.buttons.next.addEventListener('click', () => this.navigateQuestion(1));
-            this.buttons.prev.addEventListener('click', () => this.navigateQuestion(-1));
-            this.buttons.submit.addEventListener('click', () => this.confirmSubmit());
-            this.buttons.viewAnswer.addEventListener('click', () => this.showCurrentAnswer());
-            this.buttons.backToHome.addEventListener('click', () => this.showScreen('start'));
-            this.buttons.clearHistory.addEventListener('click', () => this.clearHistory());
+            // SỬA LỖI: Dùng optional chaining (?.) để tránh crash nếu element không tồn tại
+            this.buttons.home?.addEventListener('click', () => this.showScreen('start'));
+            this.buttons.history?.addEventListener('click', () => this.showHistory());
+            this.buttons.start?.addEventListener('click', () => this.startQuiz());
+            this.buttons.next?.addEventListener('click', () => this.navigateQuestion(1));
+            this.buttons.prev?.addEventListener('click', () => this.navigateQuestion(-1));
+            this.buttons.submit?.addEventListener('click', () => this.confirmSubmit());
+            this.buttons.viewAnswer?.addEventListener('click', () => this.showCurrentAnswer());
+            this.buttons.backToHome?.addEventListener('click', () => this.showScreen('start'));
+            this.buttons.clearHistory?.addEventListener('click', () => this.clearHistory());
             
-            this.buttons.toggleHelp.addEventListener('click', () => this.toggleHelpContent());
+            this.buttons.toggleHelp?.addEventListener('click', () => this.toggleHelpContent());
             
-            this.inputs.numQuestions.addEventListener('change', () => this.calculateTotalTime());
-            this.inputs.timePerQuestion.addEventListener('change', () => this.calculateTotalTime());
-            this.inputs.timingMode.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.numQuestions?.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.timePerQuestion?.addEventListener('change', () => this.calculateTotalTime());
+            this.inputs.timingMode?.addEventListener('change', () => this.calculateTotalTime());
             
-            this.inputs.quizOrder.addEventListener('change', (e) => {
+            this.inputs.quizOrder?.addEventListener('change', (e) => {
                 const container = document.getElementById('start-from-container');
-                if (e.target.value === 'sequential') {
-                    container.classList.remove('hidden');
-                } else {
-                    container.classList.add('hidden');
+                if (container) {
+                    if (e.target.value === 'sequential') {
+                        container.classList.remove('hidden');
+                    } else {
+                        container.classList.add('hidden');
+                    }
                 }
             });
 
-            this.displays.reviewModalBackdrop.addEventListener('click', (e) => {
+            this.displays.reviewModalBackdrop?.addEventListener('click', (e) => {
                 if (e.target === this.displays.reviewModalBackdrop) {
                     this.closeModal();
                 }
             });
 
-            this.inputs.searchInput.addEventListener('input', (e) => {
+            this.inputs.searchInput?.addEventListener('input', (e) => {
                 clearTimeout(this.searchDebounceTimer);
                 this.searchDebounceTimer = setTimeout(() => {
                     this.handleSearch(e.target.value);
                 }, 400);
             });
 
-            this.buttons.clearSearch.addEventListener('click', () => {
-                this.inputs.searchInput.value = '';
-                this.handleSearch('');
-                this.inputs.searchInput.focus();
+            this.buttons.clearSearch?.addEventListener('click', () => {
+                if (this.inputs.searchInput) {
+                    this.inputs.searchInput.value = '';
+                    this.handleSearch('');
+                    this.inputs.searchInput.focus();
+                }
             });
 
-            this.buttons.bgSettings.addEventListener('click', (e) => {
+            this.buttons.bgSettings?.addEventListener('click', (e) => {
                 e.stopPropagation(); 
-                this.displays.bgDropdown.classList.toggle('hidden');
+                this.displays.bgDropdown?.classList.toggle('hidden');
             });
 
             document.addEventListener('click', (e) => {
-                if (!this.buttons.bgSettings.contains(e.target) && !this.displays.bgDropdown.contains(e.target)) {
+                if (this.buttons.bgSettings && this.displays.bgDropdown && 
+                    !this.buttons.bgSettings.contains(e.target) && 
+                    !this.displays.bgDropdown.contains(e.target)) {
                     this.displays.bgDropdown.classList.add('hidden');
                 }
             });
@@ -1076,20 +1083,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.addEventListener('click', (e) => {
                     const theme = e.currentTarget.getAttribute('data-theme');
                     this.setTheme(theme);
-                    this.displays.bgDropdown.classList.add('hidden');
+                    this.displays.bgDropdown?.classList.add('hidden');
                 });
             });
 
             // --- Scroll to Top Logic ---
-            this.buttons.scrollToTop.addEventListener('click', () => {
+            this.buttons.scrollToTop?.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
             window.addEventListener('scroll', () => {
                 if (window.pageYOffset > 300) {
-                    this.buttons.scrollToTop.classList.add('visible');
+                    this.buttons.scrollToTop?.classList.add('visible');
                 } else {
-                    this.buttons.scrollToTop.classList.remove('visible');
+                    this.buttons.scrollToTop?.classList.remove('visible');
                 }
             });
         },
@@ -1149,14 +1156,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const data = await response.json();
                 
-                // CẬP NHẬT SỬA LỖI: Lọc bỏ các câu hỏi thiếu options để tránh crash
-                this.allQuestions = data.filter(q => q.question && q.answer && q.options);
+                this.allQuestions = data.filter(q => q.question && q.answer);
                 
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.calculateTotalTime(); 
                 } else {
-                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ hoặc định dạng sai.");
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
                 }
 
             } catch (error) {
@@ -1167,130 +1173,123 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         startQuiz() {
-            try {
-                if (this.allQuestions.length === 0) {
-                    alert('Dữ liệu câu hỏi chưa sẵn sàng. Vui lòng kiểm tra lỗi ở mục "data-status".');
-                    return;
-                }
-                
-                if (this.inputs.studentName.value.trim() === '') {
-                    alert('Vui lòng nhập tên của bạn.'); 
-                    return;
-                }
-                
-                this.timingMode = this.inputs.timingMode.value;
-
-                let selectedQuestions = [...this.allQuestions];
-                const order = this.inputs.quizOrder.value;
-                
-                if (order === 'sequential') {
-                    selectedQuestions.sort((a, b) => {
-                        const idA = parseInt(a.id);
-                        const idB = parseInt(b.id);
-                        if (!isNaN(idA) && !isNaN(idB)) {
-                            return idA - idB;
-                        }
-                        return 0; 
-                    });
-
-                    const startFromVal = parseInt(this.inputs.startFromQuestion.value);
-                    if (!isNaN(startFromVal) && startFromVal > 1) {
-                        const startIndex = startFromVal - 1;
-                        if (startIndex < selectedQuestions.length) {
-                            selectedQuestions = selectedQuestions.slice(startIndex);
-                        } else {
-                            alert(`Số câu bắt đầu (${startFromVal}) lớn hơn tổng số câu hỏi hiện có (${selectedQuestions.length})! Sẽ bắt đầu từ câu đầu tiên.`);
-                        }
-                    }
-                } else {
-                    selectedQuestions.sort(() => 0.5 - Math.random());
-                }
-
-                const num = parseInt(this.inputs.numQuestions.value);
-                
-                // Tạo deep copy để không ảnh hưởng dữ liệu gốc khi xáo trộn đáp án
-                let questionsToUse = [];
-                if (num > 0 && num < selectedQuestions.length) {
-                    questionsToUse = selectedQuestions.slice(0, num);
-                } else {
-                    questionsToUse = selectedQuestions;
-                }
-                this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
-
-                // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
-                // CẬP NHẬT SỬA LỖI: Thêm kiểm tra null cho shuffleAnswers để tránh lỗi
-                if (this.inputs.shuffleAnswers && this.inputs.shuffleAnswers.checked) {
-                    // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án
-                    const fixedQuestionIDs = [
-                        2,6,9,10,11,17,18,20,21,27,29,30,41,43,44,45,46,59,65,66,67,71,73,74,85,87,89,90,92,93,94,95,
-                        100,101,103,107,108,110,113,115,118,120,123,125,131,132,135,138,139,148,149,165,170,174,176,
-                        178,183,184,186,193,201,209,211,213,214,215,221,222,224,230,231,232,233,234,237,238,241,242,
-                        243,247,250,252,253,254,255,256,260,261,262,265,269,272,273,274,275,276,277,286,293,294,295,
-                        296,299,300,301,312,314,318,339
-                    ];
-
-                    this.quizQuestions.forEach(q => {
-                        // SỬA LỖI: Kiểm tra options tồn tại trước khi xử lý
-                        if (!q.options) return;
-
-                        // Nếu ID câu hỏi nằm trong danh sách cố định, BỎ QUA việc xáo trộn
-                        if (fixedQuestionIDs.includes(parseInt(q.id))) {
-                            return;
-                        }
-
-                        // 1. Lấy danh sách các lựa chọn hiện có (Content + flag isCorrect)
-                        let optionsArr = [];
-                        ['A', 'B', 'C', 'D'].forEach(key => {
-                            if (q.options[key]) {
-                                optionsArr.push({
-                                    content: q.options[key],
-                                    isCorrect: (key === q.answer)
-                                });
-                            }
-                        });
-
-                        // 2. Xáo trộn mảng optionsArr
-                        for (let i = optionsArr.length - 1; i > 0; i--) {
-                            const j = Math.floor(Math.random() * (i + 1));
-                            [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
-                        }
-
-                        // 3. Gán lại vào A, B, C, D
-                        const newOptions = {};
-                        let newAnswer = '';
-                        const keys = ['A', 'B', 'C', 'D'];
-                        
-                        optionsArr.forEach((item, index) => {
-                            const newKey = keys[index];
-                            newOptions[newKey] = item.content;
-                            if (item.isCorrect) {
-                                newAnswer = newKey;
-                            }
-                        });
-
-                        // 4. Cập nhật câu hỏi
-                        q.options = newOptions;
-                        q.answer = newAnswer;
-                    });
-                }
-
-                this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
-                this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
-
-                this.userAnswers = new Array(this.quizQuestions.length).fill(null);
-                this.currentQuestionIndex = 0;
-                
-                this.displays.totalQNum.textContent = this.quizQuestions.length;
-                this.displays.studentNameDisplay.textContent = this.inputs.studentName.value.trim();
-                
-                this.startTimers();
-                this.displayQuestion();
-                this.renderQuestionNav();
-                this.showScreen('quiz');
-            } catch (error) {
-                console.error("Critical error in startQuiz:", error);
-                alert("Đã xảy ra lỗi khi khởi tạo bài thi. Vui lòng tải lại trang và thử lại. \nChi tiết lỗi: " + error.message);
+            if (this.allQuestions.length === 0) {
+                alert('Dữ liệu câu hỏi chưa sẵn sàng. Vui lòng kiểm tra lỗi ở mục "data-status".');
+                return;
             }
+            
+            if (this.inputs.studentName.value.trim() === '') {
+                alert('Vui lòng nhập tên của bạn.'); 
+                return;
+            }
+            
+            this.timingMode = this.inputs.timingMode.value;
+
+            let selectedQuestions = [...this.allQuestions];
+            const order = this.inputs.quizOrder.value;
+            
+            if (order === 'sequential') {
+                selectedQuestions.sort((a, b) => {
+                    const idA = parseInt(a.id);
+                    const idB = parseInt(b.id);
+                    if (!isNaN(idA) && !isNaN(idB)) {
+                        return idA - idB;
+                    }
+                    return 0; 
+                });
+
+                const startFromVal = parseInt(this.inputs.startFromQuestion.value);
+                if (!isNaN(startFromVal) && startFromVal > 1) {
+                    const startIndex = startFromVal - 1;
+                    if (startIndex < selectedQuestions.length) {
+                        selectedQuestions = selectedQuestions.slice(startIndex);
+                    } else {
+                        alert(`Số câu bắt đầu (${startFromVal}) lớn hơn tổng số câu hỏi hiện có (${selectedQuestions.length})! Sẽ bắt đầu từ câu đầu tiên.`);
+                    }
+                }
+            } else {
+                selectedQuestions.sort(() => 0.5 - Math.random());
+            }
+
+            const num = parseInt(this.inputs.numQuestions.value);
+            
+            // CẬP NHẬT: Tạo deep copy để không ảnh hưởng dữ liệu gốc khi xáo trộn đáp án
+            let questionsToUse = [];
+            if (num > 0 && num < selectedQuestions.length) {
+                questionsToUse = selectedQuestions.slice(0, num);
+            } else {
+                questionsToUse = selectedQuestions;
+            }
+            this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
+
+            // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
+            // SỬA LỖI: Kiểm tra an toàn cho shuffleAnswers
+            if (this.inputs.shuffleAnswers && this.inputs.shuffleAnswers.checked) {
+                // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án (theo yêu cầu của người dùng)
+                // Cập nhật danh sách đầy đủ hơn 100 câu
+                const fixedQuestionIDs = [
+                    2,6,9,10,11,17,18,20,21,27,29,30,41,43,44,45,46,59,65,66,67,71,73,74,85,87,89,90,92,93,94,95,
+                    100,101,103,107,108,110,113,115,118,120,123,125,131,132,135,138,139,148,149,165,170,174,176,
+                    178,183,184,186,193,201,209,211,213,214,215,221,222,224,230,231,232,233,234,237,238,241,242,
+                    243,247,250,252,253,254,255,256,260,261,262,265,269,272,273,274,275,276,277,286,293,294,295,
+                    296,299,300,301,312,314,318,339
+                ];
+
+                this.quizQuestions.forEach(q => {
+                    // Nếu ID câu hỏi nằm trong danh sách cố định, BỎ QUA việc xáo trộn
+                    if (fixedQuestionIDs.includes(parseInt(q.id))) {
+                        return;
+                    }
+
+                    // 1. Lấy danh sách các lựa chọn hiện có (Content + flag isCorrect)
+                    let optionsArr = [];
+                    ['A', 'B', 'C', 'D'].forEach(key => {
+                        if (q.options[key]) {
+                            optionsArr.push({
+                                content: q.options[key],
+                                isCorrect: (key === q.answer)
+                            });
+                        }
+                    });
+
+                    // 2. Xáo trộn mảng optionsArr
+                    for (let i = optionsArr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
+                    }
+
+                    // 3. Gán lại vào A, B, C, D
+                    const newOptions = {};
+                    let newAnswer = '';
+                    const keys = ['A', 'B', 'C', 'D'];
+                    
+                    optionsArr.forEach((item, index) => {
+                        const newKey = keys[index];
+                        newOptions[newKey] = item.content;
+                        if (item.isCorrect) {
+                            newAnswer = newKey;
+                        }
+                    });
+
+                    // 4. Cập nhật câu hỏi
+                    q.options = newOptions;
+                    q.answer = newAnswer;
+                });
+            }
+
+            this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+            this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
+
+            this.userAnswers = new Array(this.quizQuestions.length).fill(null);
+            this.currentQuestionIndex = 0;
+            
+            this.displays.totalQNum.textContent = this.quizQuestions.length;
+            this.displays.studentNameDisplay.textContent = this.inputs.studentName.value.trim();
+            
+            this.startTimers();
+            this.displayQuestion();
+            this.renderQuestionNav();
+            this.showScreen('quiz');
         },
 
         renderQuestionNav() {
@@ -1341,14 +1340,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const q = this.quizQuestions[this.currentQuestionIndex];
-            
-            // CẬP NHẬT SỬA LỖI: Kiểm tra q.options tồn tại
-            if (!q || !q.options) {
-                this.displays.questionText.textContent = "Lỗi: Dữ liệu câu hỏi này không hợp lệ.";
-                this.displays.optionsContainer.innerHTML = "";
-                return;
-            }
-
             this.displays.currentQNum.textContent = this.currentQuestionIndex + 1;
             this.displays.questionText.textContent = q.question;
 
