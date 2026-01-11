@@ -413,6 +413,12 @@
                                     <label for="start-from-question" class="block text-sm font-bold text-bidv-green mb-1">Bắt đầu từ câu số:</label>
                                     <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/80 text-black font-bold" placeholder="Nhập ID câu bắt đầu">
                                 </div>
+
+                                <!-- THÊM MỚI: Checkbox xáo trộn đáp án -->
+                                <div class="flex items-center mt-3 bg-white/60 p-2 rounded border border-gray-400">
+                                    <input type="checkbox" id="shuffle-answers" class="w-5 h-5 text-bidv-green border-gray-300 rounded focus:ring-bidv-green cursor-pointer">
+                                    <label for="shuffle-answers" class="ml-2 text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D)</label>
+                                </div>
                             </div>
                             <div>
                                 <label for="timing-mode" class="block text-sm font-bold text-gray-900 mb-1">Chế độ tính giờ:</label>
@@ -483,8 +489,14 @@
                                     <p><strong><span class="text-bidv-yellow mr-2">•</span> Thời gian mỗi câu (giây):</strong> Dùng để tính <strong>Tổng thời gian làm bài</strong>. Mặc định <strong>51 giây</strong> (tương đương 60 phút cho 70 câu).</p>
                                     <p><strong><span class="text-bidv-yellow mr-2">•</span> Thứ tự câu hỏi:</strong> 
                                         <ul class="list-disc list-inside ml-6 space-y-1 mt-1">
-                                            <li><strong>Ngẫu nhiên:</strong> Đề thi thử, câu hỏi được xáo trộn ngẫu nhiên. <span class="text-red-600 font-bold">Lưu ý:</span> Hệ thống sẽ <strong>xáo trộn cả thứ tự đáp án (A, B, C, D)</strong> để tăng tính thử thách và tránh học vẹt vị trí đáp án.</li>
+                                            <li><strong>Ngẫu nhiên:</strong> Đề thi thử, câu hỏi được xáo trộn ngẫu nhiên.</li>
                                             <li><strong>Theo thứ tự ID:</strong> Dùng khi bạn muốn ôn tập theo tài liệu gốc. Khi chọn chế độ này, ô <strong>"Bắt đầu từ câu số"</strong> sẽ hiện ra, cho phép bạn nhập ID câu hỏi muốn bắt đầu làm ngay (Ví dụ: Nhập 100 để bắt đầu từ câu 100).</li>
+                                        </ul>
+                                    </p>
+                                    <p><strong><span class="text-bidv-yellow mr-2">•</span> Xáo trộn đáp án:</strong> 
+                                        <ul class="list-disc list-inside ml-6 space-y-1 mt-1">
+                                            <li>Nếu được tích chọn, hệ thống sẽ <strong>xáo trộn thứ tự các phương án (A, B, C, D)</strong> trong từng câu hỏi để tăng tính thử thách và tránh học vẹt.</li>
+                                            <li><span class="text-red-600 font-bold">Lưu ý:</span> Hệ thống tự động phát hiện và giữ nguyên thứ tự đáp án cho các câu hỏi logic đặc biệt (Ví dụ: câu có đáp án "Cả A và B đều đúng").</li>
                                         </ul>
                                     </p>
                                     <p><strong><span class="text-bidv-yellow mr-2">•</span> Chế độ tính giờ:</strong> 
@@ -737,6 +749,8 @@ document.addEventListener('DOMContentLoaded', () => {
             timePerQuestion: document.getElementById('time-per-question'),
             quizOrder: document.getElementById('quiz-order'),
             startFromQuestion: document.getElementById('start-from-question'),
+            // THÊM MỚI: Checkbox xáo trộn đáp án
+            shuffleAnswers: document.getElementById('shuffle-answers'),
             timingMode: document.getElementById('timing-mode'), 
             searchInput: document.getElementById('search-input'),
         },
@@ -1200,8 +1214,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
 
-            // THÊM MỚI: Xử lý xáo trộn đáp án nếu chọn chế độ ngẫu nhiên
-            if (this.inputs.quizOrder.value === 'random') {
+            // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
+            if (this.inputs.shuffleAnswers.checked) {
                 // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án (theo yêu cầu của người dùng)
                 // Cập nhật danh sách đầy đủ hơn 100 câu
                 const fixedQuestionIDs = [
