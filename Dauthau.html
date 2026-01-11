@@ -1149,13 +1149,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const data = await response.json();
                 
-                this.allQuestions = data.filter(q => q.question && q.answer);
+                // CẬP NHẬT SỬA LỖI: Lọc bỏ các câu hỏi thiếu options để tránh crash
+                this.allQuestions = data.filter(q => q.question && q.answer && q.options);
                 
                 if (this.allQuestions.length > 0) {
                     this.displays.dataStatus.textContent = `Sẵn sàng! Tải thành công ${this.allQuestions.length} câu hỏi.`;
                     this.calculateTotalTime(); 
                 } else {
-                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ.");
+                    throw new Error("Tệp JSON không chứa câu hỏi hợp lệ hoặc định dạng sai.");
                 }
 
             } catch (error) {
@@ -1166,122 +1167,130 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         startQuiz() {
-            if (this.allQuestions.length === 0) {
-                alert('Dữ liệu câu hỏi chưa sẵn sàng. Vui lòng kiểm tra lỗi ở mục "data-status".');
-                return;
-            }
-            
-            if (this.inputs.studentName.value.trim() === '') {
-                alert('Vui lòng nhập tên của bạn.'); 
-                return;
-            }
-            
-            this.timingMode = this.inputs.timingMode.value;
-
-            let selectedQuestions = [...this.allQuestions];
-            const order = this.inputs.quizOrder.value;
-            
-            if (order === 'sequential') {
-                selectedQuestions.sort((a, b) => {
-                    const idA = parseInt(a.id);
-                    const idB = parseInt(b.id);
-                    if (!isNaN(idA) && !isNaN(idB)) {
-                        return idA - idB;
-                    }
-                    return 0; 
-                });
-
-                const startFromVal = parseInt(this.inputs.startFromQuestion.value);
-                if (!isNaN(startFromVal) && startFromVal > 1) {
-                    const startIndex = startFromVal - 1;
-                    if (startIndex < selectedQuestions.length) {
-                        selectedQuestions = selectedQuestions.slice(startIndex);
-                    } else {
-                        alert(`Số câu bắt đầu (${startFromVal}) lớn hơn tổng số câu hỏi hiện có (${selectedQuestions.length})! Sẽ bắt đầu từ câu đầu tiên.`);
-                    }
+            try {
+                if (this.allQuestions.length === 0) {
+                    alert('Dữ liệu câu hỏi chưa sẵn sàng. Vui lòng kiểm tra lỗi ở mục "data-status".');
+                    return;
                 }
-            } else {
-                selectedQuestions.sort(() => 0.5 - Math.random());
-            }
+                
+                if (this.inputs.studentName.value.trim() === '') {
+                    alert('Vui lòng nhập tên của bạn.'); 
+                    return;
+                }
+                
+                this.timingMode = this.inputs.timingMode.value;
 
-            const num = parseInt(this.inputs.numQuestions.value);
-            
-            // CẬP NHẬT: Tạo deep copy để không ảnh hưởng dữ liệu gốc khi xáo trộn đáp án
-            let questionsToUse = [];
-            if (num > 0 && num < selectedQuestions.length) {
-                questionsToUse = selectedQuestions.slice(0, num);
-            } else {
-                questionsToUse = selectedQuestions;
-            }
-            this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
-
-            // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
-            if (this.inputs.shuffleAnswers.checked) {
-                // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án (theo yêu cầu của người dùng)
-                // Cập nhật danh sách đầy đủ hơn 100 câu
-                const fixedQuestionIDs = [
-                    2,6,9,10,11,17,18,20,21,27,29,30,41,43,44,45,46,59,65,66,67,71,73,74,85,87,89,90,92,93,94,95,
-                    100,101,103,107,108,110,113,115,118,120,123,125,131,132,135,138,139,148,149,165,170,174,176,
-                    178,183,184,186,193,201,209,211,213,214,215,221,222,224,230,231,232,233,234,237,238,241,242,
-                    243,247,250,252,253,254,255,256,260,261,262,265,269,272,273,274,275,276,277,286,293,294,295,
-                    296,299,300,301,312,314,318,339
-                ];
-
-                this.quizQuestions.forEach(q => {
-                    // Nếu ID câu hỏi nằm trong danh sách cố định, BỎ QUA việc xáo trộn
-                    if (fixedQuestionIDs.includes(parseInt(q.id))) {
-                        return;
-                    }
-
-                    // 1. Lấy danh sách các lựa chọn hiện có (Content + flag isCorrect)
-                    let optionsArr = [];
-                    ['A', 'B', 'C', 'D'].forEach(key => {
-                        if (q.options[key]) {
-                            optionsArr.push({
-                                content: q.options[key],
-                                isCorrect: (key === q.answer)
-                            });
+                let selectedQuestions = [...this.allQuestions];
+                const order = this.inputs.quizOrder.value;
+                
+                if (order === 'sequential') {
+                    selectedQuestions.sort((a, b) => {
+                        const idA = parseInt(a.id);
+                        const idB = parseInt(b.id);
+                        if (!isNaN(idA) && !isNaN(idB)) {
+                            return idA - idB;
                         }
+                        return 0; 
                     });
 
-                    // 2. Xáo trộn mảng optionsArr
-                    for (let i = optionsArr.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
-                    }
-
-                    // 3. Gán lại vào A, B, C, D
-                    const newOptions = {};
-                    let newAnswer = '';
-                    const keys = ['A', 'B', 'C', 'D'];
-                    
-                    optionsArr.forEach((item, index) => {
-                        const newKey = keys[index];
-                        newOptions[newKey] = item.content;
-                        if (item.isCorrect) {
-                            newAnswer = newKey;
+                    const startFromVal = parseInt(this.inputs.startFromQuestion.value);
+                    if (!isNaN(startFromVal) && startFromVal > 1) {
+                        const startIndex = startFromVal - 1;
+                        if (startIndex < selectedQuestions.length) {
+                            selectedQuestions = selectedQuestions.slice(startIndex);
+                        } else {
+                            alert(`Số câu bắt đầu (${startFromVal}) lớn hơn tổng số câu hỏi hiện có (${selectedQuestions.length})! Sẽ bắt đầu từ câu đầu tiên.`);
                         }
+                    }
+                } else {
+                    selectedQuestions.sort(() => 0.5 - Math.random());
+                }
+
+                const num = parseInt(this.inputs.numQuestions.value);
+                
+                // Tạo deep copy để không ảnh hưởng dữ liệu gốc khi xáo trộn đáp án
+                let questionsToUse = [];
+                if (num > 0 && num < selectedQuestions.length) {
+                    questionsToUse = selectedQuestions.slice(0, num);
+                } else {
+                    questionsToUse = selectedQuestions;
+                }
+                this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
+
+                // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
+                // CẬP NHẬT SỬA LỖI: Thêm kiểm tra null cho shuffleAnswers để tránh lỗi
+                if (this.inputs.shuffleAnswers && this.inputs.shuffleAnswers.checked) {
+                    // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án
+                    const fixedQuestionIDs = [
+                        2,6,9,10,11,17,18,20,21,27,29,30,41,43,44,45,46,59,65,66,67,71,73,74,85,87,89,90,92,93,94,95,
+                        100,101,103,107,108,110,113,115,118,120,123,125,131,132,135,138,139,148,149,165,170,174,176,
+                        178,183,184,186,193,201,209,211,213,214,215,221,222,224,230,231,232,233,234,237,238,241,242,
+                        243,247,250,252,253,254,255,256,260,261,262,265,269,272,273,274,275,276,277,286,293,294,295,
+                        296,299,300,301,312,314,318,339
+                    ];
+
+                    this.quizQuestions.forEach(q => {
+                        // SỬA LỖI: Kiểm tra options tồn tại trước khi xử lý
+                        if (!q.options) return;
+
+                        // Nếu ID câu hỏi nằm trong danh sách cố định, BỎ QUA việc xáo trộn
+                        if (fixedQuestionIDs.includes(parseInt(q.id))) {
+                            return;
+                        }
+
+                        // 1. Lấy danh sách các lựa chọn hiện có (Content + flag isCorrect)
+                        let optionsArr = [];
+                        ['A', 'B', 'C', 'D'].forEach(key => {
+                            if (q.options[key]) {
+                                optionsArr.push({
+                                    content: q.options[key],
+                                    isCorrect: (key === q.answer)
+                                });
+                            }
+                        });
+
+                        // 2. Xáo trộn mảng optionsArr
+                        for (let i = optionsArr.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
+                        }
+
+                        // 3. Gán lại vào A, B, C, D
+                        const newOptions = {};
+                        let newAnswer = '';
+                        const keys = ['A', 'B', 'C', 'D'];
+                        
+                        optionsArr.forEach((item, index) => {
+                            const newKey = keys[index];
+                            newOptions[newKey] = item.content;
+                            if (item.isCorrect) {
+                                newAnswer = newKey;
+                            }
+                        });
+
+                        // 4. Cập nhật câu hỏi
+                        q.options = newOptions;
+                        q.answer = newAnswer;
                     });
+                }
 
-                    // 4. Cập nhật câu hỏi
-                    q.options = newOptions;
-                    q.answer = newAnswer;
-                });
+                this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
+                this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
+
+                this.userAnswers = new Array(this.quizQuestions.length).fill(null);
+                this.currentQuestionIndex = 0;
+                
+                this.displays.totalQNum.textContent = this.quizQuestions.length;
+                this.displays.studentNameDisplay.textContent = this.inputs.studentName.value.trim();
+                
+                this.startTimers();
+                this.displayQuestion();
+                this.renderQuestionNav();
+                this.showScreen('quiz');
+            } catch (error) {
+                console.error("Critical error in startQuiz:", error);
+                alert("Đã xảy ra lỗi khi khởi tạo bài thi. Vui lòng tải lại trang và thử lại. \nChi tiết lỗi: " + error.message);
             }
-
-            this.timePerQuestion = parseInt(this.inputs.timePerQuestion.value);
-            this.timers.remainingTotalSeconds = this.quizQuestions.length * this.timePerQuestion;
-
-            this.userAnswers = new Array(this.quizQuestions.length).fill(null);
-            this.currentQuestionIndex = 0;
-            
-            this.displays.totalQNum.textContent = this.quizQuestions.length;
-            this.displays.studentNameDisplay.textContent = this.inputs.studentName.value.trim();
-            
-            this.startTimers();
-            this.displayQuestion();
-            this.renderQuestionNav();
-            this.showScreen('quiz');
         },
 
         renderQuestionNav() {
@@ -1332,6 +1341,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const q = this.quizQuestions[this.currentQuestionIndex];
+            
+            // CẬP NHẬT SỬA LỖI: Kiểm tra q.options tồn tại
+            if (!q || !q.options) {
+                this.displays.questionText.textContent = "Lỗi: Dữ liệu câu hỏi này không hợp lệ.";
+                this.displays.optionsContainer.innerHTML = "";
+                return;
+            }
+
             this.displays.currentQNum.textContent = this.currentQuestionIndex + 1;
             this.displays.questionText.textContent = q.question;
 
