@@ -1488,9 +1488,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- KHÔI PHỤC CÁC HÀM BỊ THIẾU ---
         saveResult(result) {
-            let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
-            history.unshift(result);
-            localStorage.setItem('quizHistory', JSON.stringify(history));
+            try {
+                let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+                
+                // Thêm kết quả mới vào đầu danh sách
+                history.unshift(result);
+                
+                // GIẢI PHÁP 1: Giới hạn lưu tối đa 20 kết quả gần nhất để tiết kiệm bộ nhớ
+                if (history.length > 20) {
+                    history = history.slice(0, 20);
+                }
+
+                localStorage.setItem('quizHistory', JSON.stringify(history));
+            } catch (e) {
+                // GIẢI PHÁP 2: Xử lý lỗi QuotaExceededError (Bộ nhớ đầy)
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('LocalStorage đầy. Đang thử xóa bớt lịch sử cũ...');
+                    try {
+                        // Thử lại lần 2: Chỉ giữ lại 5 kết quả mới nhất
+                        let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+                        history.unshift(result);
+                        
+                        // Cắt giảm mạnh tay hơn, chỉ giữ 5 item
+                        const trimmedHistory = history.slice(0, 5);
+                        
+                        localStorage.setItem('quizHistory', JSON.stringify(trimmedHistory));
+                        alert('Cảnh báo: Bộ nhớ lịch sử trên trình duyệt đã đầy. Hệ thống đã tự động xóa các bài thi cũ và chỉ giữ lại 5 bài gần nhất.');
+                    } catch (retryError) {
+                        console.error('Không thể lưu kết quả ngay cả khi đã dọn dẹp:', retryError);
+                        alert('Lỗi: Không thể lưu kết quả thi do bộ nhớ trình duyệt đã quá đầy. Vui lòng vào mục Lịch sử và xóa bớt các bài thi cũ.');
+                    }
+                } else {
+                    console.error('Lỗi không xác định khi lưu kết quả:', e);
+                }
+            }
         },
 
         displayResult(result) {
