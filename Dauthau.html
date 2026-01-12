@@ -1377,21 +1377,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.buttons.toggleHelp?.addEventListener('click', () => this.toggleHelpContent());
             
-            // DASHBOARD EVENTS
-            this.buttons.openDashboard?.addEventListener('click', () => this.loadDashboardData());
-            this.buttons.closeDashboard?.addEventListener('click', () => {
-                this.displays.dashboardBackdrop.classList.remove('active');
-            });
-            this.buttons.exportExcel?.addEventListener('click', () => this.exportDashboardToExcel());
-            // Close dashboard when clicking backdrop
-            this.displays.dashboardBackdrop?.addEventListener('click', (e) => {
-                if (e.target === this.displays.dashboardBackdrop) {
-                    this.displays.dashboardBackdrop.classList.remove('active');
-                }
-            });
-            // Lắng nghe sự kiện thay đổi filter dashboard
-            this.inputs.dashboardFilter?.addEventListener('change', () => this.filterAndRenderDashboard());
-
             this.inputs.numQuestions?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timingMode?.addEventListener('change', () => this.calculateTotalTime());
@@ -2235,4 +2220,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
