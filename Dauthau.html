@@ -8,6 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- THÊM MỚI: Thư viện Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- THÊM MỚI: Thư viện Chart.js cho biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- THÊM MỚI: Thư viện SheetJS để xuất Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <style>
         /* Custom Tailwind Configuration (BIDV Colors) */
@@ -302,7 +306,16 @@
 
                     <!-- KHỐI THỐNG KÊ TOÀN TRANG -->
                     <div id="global-stats-section" class="mb-6 p-4 bg-white/30 rounded-lg shadow-inner backdrop-blur-sm border border-white/40">
-                        <h3 class="text-xl font-bold text-bidv-green mb-4 border-b border-bidv-green/30 pb-2">Thống kê Toàn hệ thống</h3>
+                        <div class="flex justify-between items-center mb-4 border-b border-bidv-green/30 pb-2">
+                            <h3 class="text-xl font-bold text-bidv-green">Thống kê Toàn hệ thống</h3>
+                            <!-- NÚT MỞ DASHBOARD PHỔ ĐIỂM -->
+                            <button id="open-dashboard-btn" class="px-3 py-1 bg-bidv-green text-white text-sm rounded shadow hover:opacity-90 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                Xem Phổ điểm
+                            </button>
+                        </div>
                         <div id="stats-loading" class="text-center text-gray-800 font-semibold">
                             <svg class="animate-spin h-6 w-6 text-bidv-green mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -686,6 +699,89 @@
                 </div>
             </div>
 
+            <!-- MODAL DASHBOARD PHỔ ĐIỂM -->
+            <div id="dashboard-modal-backdrop" class="modal-backdrop">
+                <div class="modal-content w-full md:max-w-4xl bg-white rounded-lg shadow-2xl relative">
+                    <button id="dashboard-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold">&times;</button>
+                    <h2 class="text-2xl font-bold text-bidv-green mb-6 text-center border-b pb-4">Phổ điểm thi (Bộ đề 70 câu)</h2>
+                    
+                    <!-- THÊM MỚI: BỘ LỌC DASHBOARD -->
+                    <div class="mb-4 flex justify-end">
+                        <div class="relative inline-block text-left w-64">
+                            <label for="dashboard-filter" class="block text-sm font-medium text-gray-700 mb-1">Lọc theo loại đề:</label>
+                            <select id="dashboard-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green text-sm font-semibold">
+                                <option value="all">Tất cả (Random & Sequential)</option>
+                                <option value="random">Chỉ Ngẫu nhiên (Random)</option>
+                                <option value="sequential">Chỉ Theo thứ tự (Sequential)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div id="dashboard-loading" class="text-center py-10">
+                        <svg class="animate-spin h-8 w-8 text-bidv-green mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-gray-600 font-medium">Đang tải dữ liệu phổ điểm...</p>
+                    </div>
+
+                    <!-- Content -->
+                    <div id="dashboard-content" class="hidden">
+                        <!-- Chart Container -->
+                        <div class="relative h-80 w-full mb-6">
+                            <canvas id="scoreDistributionChart"></canvas>
+                        </div>
+
+                        <!-- Stats Summary -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                            <div class="bg-gray-100 p-3 rounded">
+                                <p class="text-sm text-gray-600">Tổng số bài thi</p>
+                                <p class="text-xl font-bold text-bidv-green" id="dash-total-exams">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-3 rounded">
+                                <p class="text-sm text-gray-600">Điểm trung bình</p>
+                                <p class="text-xl font-bold text-bidv-yellow" id="dash-avg-score">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-3 rounded">
+                                <p class="text-sm text-gray-600">Cao nhất</p>
+                                <p class="text-xl font-bold text-green-600" id="dash-max-score">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-3 rounded">
+                                <p class="text-sm text-gray-600">Thấp nhất</p>
+                                <p class="text-xl font-bold text-red-600" id="dash-min-score">0</p>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="overflow-x-auto mb-6">
+                            <table class="min-w-full bg-white border border-gray-300 text-sm">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 border text-left">Nhóm điểm</th>
+                                        <th class="py-2 px-4 border text-center">Số lượng</th>
+                                        <th class="py-2 px-4 border text-center">Tỷ lệ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-table-body">
+                                    <!-- Rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Export Button -->
+                        <div class="text-center">
+                            <button id="export-excel-btn" class="px-6 py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 transition flex items-center justify-center gap-2 mx-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
         
         <!-- Footer -->
@@ -741,8 +837,12 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleHelp: document.getElementById('toggle-help-btn'),
             clearSearch: document.getElementById('clear-search-btn'),
             bgSettings: document.getElementById('bg-settings-btn'),
-            // Nút Scroll Top
             scrollToTop: document.getElementById('scroll-to-top-btn'),
+            
+            // DASHBOARD BUTTONS
+            openDashboard: document.getElementById('open-dashboard-btn'),
+            closeDashboard: document.getElementById('dashboard-close-btn'),
+            exportExcel: document.getElementById('export-excel-btn'),
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -750,10 +850,11 @@ document.addEventListener('DOMContentLoaded', () => {
             timePerQuestion: document.getElementById('time-per-question'),
             quizOrder: document.getElementById('quiz-order'),
             startFromQuestion: document.getElementById('start-from-question'),
-            // THÊM MỚI: Checkbox xáo trộn đáp án
             shuffleAnswers: document.getElementById('shuffle-answers'),
             timingMode: document.getElementById('timing-mode'), 
             searchInput: document.getElementById('search-input'),
+            // DASHBOARD FILTER
+            dashboardFilter: document.getElementById('dashboard-filter'),
         },
         displays: {
             dataStatus: document.getElementById('data-status'),
@@ -789,6 +890,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Search
             searchResults: document.getElementById('search-results'),
             searchStatus: document.getElementById('search-status'),
+
+            // Dashboard
+            dashboardBackdrop: document.getElementById('dashboard-modal-backdrop'),
+            dashboardLoading: document.getElementById('dashboard-loading'),
+            dashboardContent: document.getElementById('dashboard-content'),
+            dashboardTableBody: document.getElementById('dashboard-table-body'),
+            dashTotalExams: document.getElementById('dash-total-exams'),
+            dashAvgScore: document.getElementById('dash-avg-score'),
+            dashMaxScore: document.getElementById('dash-max-score'),
+            dashMinScore: document.getElementById('dash-min-score'),
         },
 
         // State
@@ -800,7 +911,10 @@ document.addEventListener('DOMContentLoaded', () => {
         timingMode: 'total',
         visitorIP: null,
         searchDebounceTimer: null,
-        currentTheme: 'theme-flower', 
+        currentTheme: 'theme-flower',
+        dashboardChartInstance: null, // Lưu instance của biểu đồ
+        dashboardDataCache: null, // Lưu dữ liệu dashboard để xuất Excel
+        dashboardRawData: null, // THÊM MỚI: Cache dữ liệu gốc từ DB
         timers: {
             total: null,
             question: null,
@@ -819,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loadGlobalStats();
         },
 
-        // --- BACKGROUND THEME LOGIC ---
+        // ... existing tracking functions ...
         loadTheme() {
             const savedTheme = localStorage.getItem('quizTheme') || 'theme-flower';
             this.setTheme(savedTheme);
@@ -832,7 +946,6 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('quizTheme', themeName);
         },
 
-        // --- Tracking ---
         async initializeTracking() {
             await this.getVisitorIP();
             await this.logPageVisit();
@@ -840,14 +953,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async getVisitorIP() {
             try {
-                // Thêm timeout để tránh treo nếu mạng chậm
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
 
                 const response = await fetch('https://api.ipify.org?format=json', { 
                     signal: controller.signal 
                 }).catch(err => {
-                    // Bắt lỗi network (như ERR_BLOCKED_BY_CLIENT) ngay tại đây
                     throw new Error('Network blocked or failed');
                 });
                 
@@ -857,8 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 this.visitorIP = data.ip;
             } catch (error) {
-                // Chỉ log warning thay vì error đỏ để tránh gây hoang mang
-                console.warn('Hệ thống không lấy được IP (có thể do AdBlock hoặc mạng):', error.message);
+                console.warn('Hệ thống không lấy được IP:', error.message);
                 this.visitorIP = 'unknown';
             }
         },
@@ -871,7 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     .insert({ ip_address: this.visitorIP });
                 if (error) throw error;
             } catch (error) {
-                // Log lỗi nhẹ nhàng hơn
                 console.warn('Không thể ghi log truy cập (Supabase):', error.message);
             }
         },
@@ -935,9 +1044,235 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Lỗi lưu kết quả thi:', error.message);
             }
         },
-        
-        // --- SEARCH ---
+
+        // --- DASHBOARD FUNCTIONS ---
+        async loadDashboardData() {
+            if (!supabaseClient) {
+                alert("Chức năng này cần kết nối CSDL Supabase.");
+                return;
+            }
+
+            this.displays.dashboardBackdrop.classList.add('active');
+            this.displays.dashboardLoading.style.display = 'block';
+            this.displays.dashboardContent.classList.add('hidden');
+
+            try {
+                // Fetch data từ Supabase
+                // Lấy thêm trường config_quiz_order để lọc
+                const { data, error } = await supabaseClient
+                    .from('quiz_results')
+                    .select('score, student_name, quiz_date, config_quiz_order')
+                    .or('total_questions.eq.70,config_num_questions.eq.70 câu (Tiêu chuẩn)')
+                    .order('created_at', { ascending: false })
+                    .limit(2000);
+
+                if (error) throw error;
+
+                // Lưu raw data vào biến state để dùng lại khi lọc
+                this.dashboardRawData = data;
+
+                // Gọi hàm lọc và hiển thị lần đầu (mặc định là 'all')
+                this.filterAndRenderDashboard();
+
+                this.displays.dashboardLoading.style.display = 'none';
+                this.displays.dashboardContent.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Lỗi tải dashboard:", error);
+                alert("Không thể tải dữ liệu phổ điểm: " + error.message);
+                this.displays.dashboardBackdrop.classList.remove('active');
+            }
+        },
+
+        // Hàm mới: Lọc và hiển thị dữ liệu
+        filterAndRenderDashboard() {
+            const filterValue = this.inputs.dashboardFilter.value; // 'all', 'random', 'sequential'
+            let filteredData = this.dashboardRawData;
+
+            // Lọc dữ liệu
+            if (filterValue !== 'all') {
+                filteredData = this.dashboardRawData.filter(item => item.config_quiz_order === filterValue);
+            }
+
+            // Xử lý dữ liệu đã lọc
+            const scores = filteredData.map(item => item.score);
+            const totalExams = scores.length;
+            
+            if (totalExams === 0) {
+                // Xử lý trường hợp không có dữ liệu sau khi lọc
+                this.displays.dashTotalExams.textContent = 0;
+                this.displays.dashAvgScore.textContent = 0;
+                this.displays.dashMaxScore.textContent = 0;
+                this.displays.dashMinScore.textContent = 0;
+                
+                // Clear chart & table
+                if (this.dashboardChartInstance) {
+                    this.dashboardChartInstance.destroy();
+                    this.dashboardChartInstance = null;
+                }
+                this.displays.dashboardTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">Không có dữ liệu phù hợp.</td></tr>';
+                return;
+            }
+
+            const sumScore = scores.reduce((a, b) => a + b, 0);
+            const avgScore = (sumScore / totalExams).toFixed(2);
+            const maxScore = Math.max(...scores);
+            const minScore = Math.min(...scores);
+
+            // Phân nhóm (Distribution)
+            const distribution = {
+                '0-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, 
+                '41-50': 0, '51-60': 0, '61-70': 0
+            };
+
+            scores.forEach(s => {
+                if (s <= 10) distribution['0-10']++;
+                else if (s <= 20) distribution['11-20']++;
+                else if (s <= 30) distribution['21-30']++;
+                else if (s <= 40) distribution['31-40']++;
+                else if (s <= 50) distribution['41-50']++;
+                else if (s <= 60) distribution['51-60']++;
+                else distribution['61-70']++;
+            });
+
+            // Cập nhật Cache để dùng cho export Excel
+            this.dashboardDataCache = {
+                stats: { totalExams, avgScore, maxScore, minScore },
+                distribution,
+                rawData: filteredData // Lưu data ĐÃ LỌC để export đúng cái đang xem
+            };
+
+            // Render UI
+            this.displays.dashTotalExams.textContent = totalExams;
+            this.displays.dashAvgScore.textContent = avgScore;
+            this.displays.dashMaxScore.textContent = maxScore;
+            this.displays.dashMinScore.textContent = minScore;
+
+            this.renderDashboardTable(distribution, totalExams);
+            this.renderDashboardChart(distribution);
+        },
+
+        renderDashboardTable(distribution, total) {
+            const tbody = this.displays.dashboardTableBody;
+            tbody.innerHTML = '';
+            
+            const labels = ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70'];
+            
+            labels.forEach(range => {
+                const count = distribution[range];
+                const percentage = ((count / total) * 100).toFixed(1);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-4 border font-bold text-gray-700">${range} câu</td>
+                    <td class="py-2 px-4 border text-center font-medium">${count}</td>
+                    <td class="py-2 px-4 border text-center text-gray-600">${percentage}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        },
+
+        renderDashboardChart(distribution) {
+            const ctx = document.getElementById('scoreDistributionChart').getContext('2d');
+            
+            if (this.dashboardChartInstance) {
+                this.dashboardChartInstance.destroy();
+            }
+
+            this.dashboardChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70'],
+                    datasets: [{
+                        label: 'Số lượng bài thi',
+                        data: Object.values(distribution),
+                        backgroundColor: [
+                            '#ef4444', // 0-10 (Red)
+                            '#f97316', // 11-20 (Orange)
+                            '#f59e0b', // 21-30 (Amber)
+                            '#eab308', // 31-40 (Yellow)
+                            '#84cc16', // 41-50 (Lime)
+                            '#22c55e', // 51-60 (Green)
+                            '#15803d'  // 61-70 (Dark Green)
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Số lượng người' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Khoảng điểm (Số câu đúng)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Biểu đồ Phân bố Điểm số (Bộ đề 70 câu)',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+        },
+
+        exportDashboardToExcel() {
+            if (!this.dashboardDataCache) return;
+
+            const wb = XLSX.utils.book_new();
+            
+            // Sheet 1: Tổng hợp
+            const summaryData = [
+                ['THỐNG KÊ PHỔ ĐIỂM THI TRẮC NGHIỆM (ĐỀ 70 CÂU)'],
+                ['Ngày xuất báo cáo', new Date().toLocaleString('vi-VN')],
+                ['Loại đề thi', this.inputs.dashboardFilter.options[this.inputs.dashboardFilter.selectedIndex].text], // Thêm dòng này
+                [''],
+                ['Tổng số bài thi', this.dashboardDataCache.stats.totalExams],
+                ['Điểm trung bình', this.dashboardDataCache.stats.avgScore],
+                ['Điểm cao nhất', this.dashboardDataCache.stats.maxScore],
+                ['Điểm thấp nhất', this.dashboardDataCache.stats.minScore],
+                [''],
+                ['PHÂN BỐ ĐIỂM SỐ'],
+                ['Nhóm điểm', 'Số lượng', 'Tỷ lệ (%)']
+            ];
+
+            const dist = this.dashboardDataCache.distribution;
+            const total = this.dashboardDataCache.stats.totalExams;
+            const labels = ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70'];
+            
+            labels.forEach(range => {
+                const count = dist[range];
+                const pct = ((count / total) * 100).toFixed(2);
+                summaryData.push([`Từ ${range} câu`, count, pct]);
+            });
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Tong_hop");
+
+            // Sheet 2: Chi tiết (Danh sách điểm)
+            const detailData = this.dashboardDataCache.rawData.map(item => ({
+                "Tên thí sinh": item.student_name,
+                "Điểm số": item.score,
+                "Ngày thi": new Date(item.quiz_date).toLocaleString('vi-VN'),
+                "Loại đề": item.config_quiz_order === 'random' ? 'Ngẫu nhiên' : 'Theo thứ tự'
+            }));
+            const wsDetail = XLSX.utils.json_to_sheet(detailData);
+            XLSX.utils.book_append_sheet(wb, wsDetail, "Chi_tiet");
+
+            // Xuất file
+            XLSX.writeFile(wb, "Pho_diem_Dau_thau.xlsx");
+        },
+        // --- END DASHBOARD FUNCTIONS ---
+
+        // ... existing helper functions (handleSearch, etc) ...
         handleSearch(query) {
+            // (Giữ nguyên logic cũ)
             const resultsContainer = this.displays.searchResults;
             const statusContainer = this.displays.searchStatus;
             const clearBtn = this.buttons.clearSearch;
@@ -1030,7 +1365,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         addEventListeners() {
-            // SỬA LỖI: Dùng optional chaining (?.) để tránh crash nếu element không tồn tại
             this.buttons.home?.addEventListener('click', () => this.showScreen('start'));
             this.buttons.history?.addEventListener('click', () => this.showHistory());
             this.buttons.start?.addEventListener('click', () => this.startQuiz());
@@ -1043,6 +1377,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.buttons.toggleHelp?.addEventListener('click', () => this.toggleHelpContent());
             
+            // DASHBOARD EVENTS
+            this.buttons.openDashboard?.addEventListener('click', () => this.loadDashboardData());
+            this.buttons.closeDashboard?.addEventListener('click', () => {
+                this.displays.dashboardBackdrop.classList.remove('active');
+            });
+            this.buttons.exportExcel?.addEventListener('click', () => this.exportDashboardToExcel());
+            // Close dashboard when clicking backdrop
+            this.displays.dashboardBackdrop?.addEventListener('click', (e) => {
+                if (e.target === this.displays.dashboardBackdrop) {
+                    this.displays.dashboardBackdrop.classList.remove('active');
+                }
+            });
+            // Lắng nghe sự kiện thay đổi filter dashboard
+            this.inputs.dashboardFilter?.addEventListener('change', () => this.filterAndRenderDashboard());
+
             this.inputs.numQuestions?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timingMode?.addEventListener('change', () => this.calculateTotalTime());
@@ -1101,7 +1450,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // --- Scroll to Top Logic ---
             this.buttons.scrollToTop?.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -1156,7 +1504,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.screens[screenId]) {
                 this.screens[screenId].classList.add('active');
             }
-            // Scroll to top when switching screens
             window.scrollTo(0, 0);
         },
 
@@ -1170,7 +1517,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const data = await response.json();
                 
-                // CẬP NHẬT SỬA LỖI: Lọc bỏ các câu hỏi thiếu options để tránh crash
                 this.allQuestions = data.filter(q => q.question && q.answer && q.options);
                 
                 if (this.allQuestions.length > 0) {
@@ -1229,7 +1575,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const num = parseInt(this.inputs.numQuestions.value);
                 
-                // Tạo deep copy để không ảnh hưởng dữ liệu gốc khi xáo trộn đáp án
                 let questionsToUse = [];
                 if (num > 0 && num < selectedQuestions.length) {
                     questionsToUse = selectedQuestions.slice(0, num);
@@ -1238,11 +1583,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 this.quizQuestions = JSON.parse(JSON.stringify(questionsToUse));
 
-                // THÊM MỚI: Xử lý xáo trộn đáp án nếu checkbox được chọn
-                // SỬA LỖI: Kiểm tra an toàn cho shuffleAnswers
                 if (this.inputs.shuffleAnswers && this.inputs.shuffleAnswers.checked) {
-                    // Danh sách ID câu hỏi KHÔNG được xáo trộn đáp án (theo yêu cầu của người dùng)
-                    // Cập nhật danh sách đầy đủ hơn 100 câu
                     const fixedQuestionIDs = [
                         2,6,9,10,11,17,18,20,21,27,29,30,41,43,44,45,46,59,65,66,67,71,73,74,85,87,89,90,92,93,94,95,
                         100,101,103,107,108,110,113,115,118,120,123,125,131,132,135,138,139,148,149,165,170,174,176,
@@ -1252,15 +1593,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     ];
 
                     this.quizQuestions.forEach(q => {
-                        // SỬA LỖI: Kiểm tra options tồn tại trước khi xử lý
                         if (!q.options) return;
 
-                        // Nếu ID câu hỏi nằm trong danh sách cố định, BỎ QUA việc xáo trộn
                         if (fixedQuestionIDs.includes(parseInt(q.id))) {
                             return;
                         }
 
-                        // 1. Lấy danh sách các lựa chọn hiện có (Content + flag isCorrect)
                         let optionsArr = [];
                         ['A', 'B', 'C', 'D'].forEach(key => {
                             if (q.options[key]) {
@@ -1271,13 +1609,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        // 2. Xáo trộn mảng optionsArr
                         for (let i = optionsArr.length - 1; i > 0; i--) {
                             const j = Math.floor(Math.random() * (i + 1));
                             [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
                         }
 
-                        // 3. Gán lại vào A, B, C, D
                         const newOptions = {};
                         let newAnswer = '';
                         const keys = ['A', 'B', 'C', 'D'];
@@ -1290,7 +1626,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        // 4. Cập nhật câu hỏi
                         q.options = newOptions;
                         q.answer = newAnswer;
                     });
@@ -1364,7 +1699,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const q = this.quizQuestions[this.currentQuestionIndex];
             
-            // CẬP NHẬT SỬA LỖI: Kiểm tra q.options tồn tại
             if (!q || !q.options) {
                 this.displays.questionText.textContent = "Lỗi: Dữ liệu câu hỏi này không hợp lệ.";
                 this.displays.optionsContainer.innerHTML = "";
