@@ -428,9 +428,9 @@
                                 </div>
 
                                 <!-- Checkbox xáo trộn đáp án -->
-                                <div class="flex items-center mt-3 bg-white/60 p-2 rounded border border-gray-400">
+                                <div class="flex items-center mt-3 bg-white/60 p-2 rounded border border-gray-400 relative">
                                     <input type="checkbox" id="shuffle-answers" class="w-5 h-5 text-bidv-green border-gray-300 rounded focus:ring-bidv-green cursor-pointer">
-                                    <label for="shuffle-answers" class="ml-2 text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D)</label>
+                                    <label for="shuffle-answers" class="ml-2 text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D) <span class="text-xs text-red-600 font-normal italic">(Cần mật khẩu)</span></label>
                                 </div>
                             </div>
                             <div>
@@ -782,6 +782,20 @@
                 </div>
             </div>
 
+            <!-- MODAL PASSWORD (THÊM MỚI) -->
+            <div id="password-modal-backdrop" class="modal-backdrop">
+                <div class="modal-content max-w-md w-full bg-white rounded-lg shadow-xl relative p-6">
+                    <h3 class="text-xl font-bold text-bidv-green mb-4 border-b pb-2">Xác thực quyền quản trị</h3>
+                    <p class="text-gray-700 mb-4 text-sm font-medium">Tính năng "Xáo trộn thứ tự đáp án" yêu cầu quyền quản trị viên để kích hoạt.</p>
+                    <input type="password" id="admin-password-input" class="w-full px-3 py-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-bidv-green font-bold text-lg" placeholder="Nhập mật khẩu...">
+                    <p id="password-error" class="text-red-600 text-sm font-bold mb-4 hidden bg-red-100 p-2 rounded border border-red-200">Mật khẩu không đúng! Vui lòng thử lại.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button id="cancel-password-btn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded font-bold hover:bg-gray-400 transition">Hủy bỏ</button>
+                        <button id="confirm-password-btn" class="px-4 py-2 bg-bidv-green text-white rounded font-bold hover:opacity-90 transition">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+
         </main>
         
         <!-- Footer -->
@@ -843,6 +857,10 @@ document.addEventListener('DOMContentLoaded', () => {
             openDashboard: document.getElementById('open-dashboard-btn'),
             closeDashboard: document.getElementById('dashboard-close-btn'),
             exportExcel: document.getElementById('export-excel-btn'),
+
+            // PASSWORD BUTTONS
+            confirmPassword: document.getElementById('confirm-password-btn'),
+            cancelPassword: document.getElementById('cancel-password-btn'),
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -900,6 +918,11 @@ document.addEventListener('DOMContentLoaded', () => {
             dashAvgScore: document.getElementById('dash-avg-score'),
             dashMaxScore: document.getElementById('dash-max-score'),
             dashMinScore: document.getElementById('dash-min-score'),
+
+            // Password Modal
+            passwordModalBackdrop: document.getElementById('password-modal-backdrop'),
+            passwordInput: document.getElementById('admin-password-input'),
+            passwordError: document.getElementById('password-error'),
         },
 
         // State
@@ -914,7 +937,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTheme: 'theme-flower',
         dashboardChartInstance: null, // Lưu instance của biểu đồ
         dashboardDataCache: null, // Lưu dữ liệu dashboard để xuất Excel
-        dashboardRawData: null, // THÊM MỚI: Cache dữ liệu gốc từ DB
+        dashboardRawData: null, // Cache dữ liệu gốc từ DB
+        pendingPasswordCallback: null, // Callback sau khi nhập pass đúng
         timers: {
             total: null,
             question: null,
@@ -1057,8 +1081,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.displays.dashboardContent.classList.add('hidden');
 
             try {
-                // Fetch data từ Supabase
-                // Lấy thêm trường config_quiz_order để lọc
                 const { data, error } = await supabaseClient
                     .from('quiz_results')
                     .select('score, student_name, quiz_date, config_quiz_order')
@@ -1068,10 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
-                // Lưu raw data vào biến state để dùng lại khi lọc
                 this.dashboardRawData = data;
-
-                // Gọi hàm lọc và hiển thị lần đầu (mặc định là 'all')
                 this.filterAndRenderDashboard();
 
                 this.displays.dashboardLoading.style.display = 'none';
@@ -1084,28 +1103,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
-        // Hàm mới: Lọc và hiển thị dữ liệu
         filterAndRenderDashboard() {
             const filterValue = this.inputs.dashboardFilter.value; // 'all', 'random', 'sequential'
             let filteredData = this.dashboardRawData;
 
-            // Lọc dữ liệu
             if (filterValue !== 'all') {
                 filteredData = this.dashboardRawData.filter(item => item.config_quiz_order === filterValue);
             }
 
-            // Xử lý dữ liệu đã lọc
             const scores = filteredData.map(item => item.score);
             const totalExams = scores.length;
             
             if (totalExams === 0) {
-                // Xử lý trường hợp không có dữ liệu sau khi lọc
                 this.displays.dashTotalExams.textContent = 0;
                 this.displays.dashAvgScore.textContent = 0;
                 this.displays.dashMaxScore.textContent = 0;
                 this.displays.dashMinScore.textContent = 0;
                 
-                // Clear chart & table
                 if (this.dashboardChartInstance) {
                     this.dashboardChartInstance.destroy();
                     this.dashboardChartInstance = null;
@@ -1119,7 +1133,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const maxScore = Math.max(...scores);
             const minScore = Math.min(...scores);
 
-            // Phân nhóm (Distribution)
             const distribution = {
                 '0-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, 
                 '41-50': 0, '51-60': 0, '61-70': 0
@@ -1135,14 +1148,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 else distribution['61-70']++;
             });
 
-            // Cập nhật Cache để dùng cho export Excel
             this.dashboardDataCache = {
                 stats: { totalExams, avgScore, maxScore, minScore },
                 distribution,
-                rawData: filteredData // Lưu data ĐÃ LỌC để export đúng cái đang xem
+                rawData: filteredData
             };
 
-            // Render UI
             this.displays.dashTotalExams.textContent = totalExams;
             this.displays.dashAvgScore.textContent = avgScore;
             this.displays.dashMaxScore.textContent = maxScore;
@@ -1187,13 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: 'Số lượng bài thi',
                         data: Object.values(distribution),
                         backgroundColor: [
-                            '#ef4444', // 0-10 (Red)
-                            '#f97316', // 11-20 (Orange)
-                            '#f59e0b', // 21-30 (Amber)
-                            '#eab308', // 31-40 (Yellow)
-                            '#84cc16', // 41-50 (Lime)
-                            '#22c55e', // 51-60 (Green)
-                            '#15803d'  // 61-70 (Dark Green)
+                            '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#15803d'
                         ],
                         borderWidth: 1
                     }]
@@ -1227,11 +1232,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const wb = XLSX.utils.book_new();
             
-            // Sheet 1: Tổng hợp
             const summaryData = [
                 ['THỐNG KÊ PHỔ ĐIỂM THI TRẮC NGHIỆM (ĐỀ 70 CÂU)'],
                 ['Ngày xuất báo cáo', new Date().toLocaleString('vi-VN')],
-                ['Loại đề thi', this.inputs.dashboardFilter.options[this.inputs.dashboardFilter.selectedIndex].text], // Thêm dòng này
+                ['Loại đề thi', this.inputs.dashboardFilter.options[this.inputs.dashboardFilter.selectedIndex].text],
                 [''],
                 ['Tổng số bài thi', this.dashboardDataCache.stats.totalExams],
                 ['Điểm trung bình', this.dashboardDataCache.stats.avgScore],
@@ -1255,7 +1259,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
             XLSX.utils.book_append_sheet(wb, wsSummary, "Tong_hop");
 
-            // Sheet 2: Chi tiết (Danh sách điểm)
             const detailData = this.dashboardDataCache.rawData.map(item => ({
                 "Tên thí sinh": item.student_name,
                 "Điểm số": item.score,
@@ -1265,12 +1268,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const wsDetail = XLSX.utils.json_to_sheet(detailData);
             XLSX.utils.book_append_sheet(wb, wsDetail, "Chi_tiet");
 
-            // Xuất file
             XLSX.writeFile(wb, "Pho_diem_Dau_thau.xlsx");
         },
         // --- END DASHBOARD FUNCTIONS ---
 
-        // ... existing helper functions (handleSearch, etc) ...
+        // --- PASSWORD FUNCTIONS ---
+        showPasswordModal(callback = null) {
+            this.pendingPasswordCallback = callback;
+            this.displays.passwordInput.value = '';
+            this.displays.passwordError.classList.add('hidden');
+            this.displays.passwordModalBackdrop.classList.add('active');
+            setTimeout(() => this.displays.passwordInput.focus(), 100);
+        },
+
+        hidePasswordModal() {
+            this.displays.passwordModalBackdrop.classList.remove('active');
+            this.pendingPasswordCallback = null;
+        },
+
+        verifyPassword() {
+            const password = this.displays.passwordInput.value;
+            // Mật khẩu mặc định là 'admin'
+            if (password === 'admin') {
+                this.displays.passwordError.classList.add('hidden');
+                if (this.pendingPasswordCallback) {
+                    this.pendingPasswordCallback();
+                }
+                this.hidePasswordModal();
+            } else {
+                this.displays.passwordError.classList.remove('hidden');
+                this.displays.passwordInput.value = '';
+                this.displays.passwordInput.focus();
+            }
+        },
+        // --- END PASSWORD FUNCTIONS ---
+
         handleSearch(query) {
             // (Giữ nguyên logic cũ)
             const resultsContainer = this.displays.searchResults;
@@ -1377,6 +1409,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             this.buttons.toggleHelp?.addEventListener('click', () => this.toggleHelpContent());
             
+            this.buttons.openDashboard?.addEventListener('click', () => this.loadDashboardData());
+            this.buttons.closeDashboard?.addEventListener('click', () => this.displays.dashboardBackdrop.classList.remove('active'));
+            this.buttons.exportExcel?.addEventListener('click', () => this.exportDashboardToExcel());
+            this.inputs.dashboardFilter?.addEventListener('change', () => this.filterAndRenderDashboard());
+
             this.inputs.numQuestions?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timePerQuestion?.addEventListener('change', () => this.calculateTotalTime());
             this.inputs.timingMode?.addEventListener('change', () => this.calculateTotalTime());
@@ -1389,6 +1426,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         container.classList.add('hidden');
                     }
+                }
+            });
+
+            // PASSWORD LISTENERS
+            // Sự kiện khi click vào checkbox shuffle
+            this.inputs.shuffleAnswers?.addEventListener('click', (e) => {
+                // Nếu đang cố gắng check (tức là muốn bật tính năng)
+                if (e.target.checked) {
+                    e.preventDefault(); // Ngăn không cho check ngay
+                    this.showPasswordModal(() => {
+                        e.target.checked = true; // Callback nếu pass đúng
+                    });
+                }
+                // Nếu uncheck (bỏ chọn) thì cho phép thoải mái không cần pass
+            });
+
+            this.buttons.confirmPassword?.addEventListener('click', () => this.verifyPassword());
+            
+            this.buttons.cancelPassword?.addEventListener('click', () => this.hidePasswordModal());
+            
+            // Allow Enter key in password input
+            this.displays.passwordInput?.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    this.verifyPassword();
+                }
+            });
+            
+            // Close password modal when clicking outside
+            this.displays.passwordModalBackdrop?.addEventListener('click', (e) => {
+                if (e.target === this.displays.passwordModalBackdrop) {
+                    this.hidePasswordModal();
                 }
             });
 
@@ -1810,27 +1878,20 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
                 
-                // Thêm kết quả mới vào đầu danh sách
                 history.unshift(result);
                 
-                // GIẢI PHÁP 1: Giới hạn lưu tối đa 20 kết quả gần nhất để tiết kiệm bộ nhớ
                 if (history.length > 20) {
                     history = history.slice(0, 20);
                 }
 
                 localStorage.setItem('quizHistory', JSON.stringify(history));
             } catch (e) {
-                // GIẢI PHÁP 2: Xử lý lỗi QuotaExceededError (Bộ nhớ đầy)
                 if (e.name === 'QuotaExceededError' || e.code === 22) {
                     console.warn('LocalStorage đầy. Đang thử xóa bớt lịch sử cũ...');
                     try {
-                        // Thử lại lần 2: Chỉ giữ lại 5 kết quả mới nhất
                         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
                         history.unshift(result);
-                        
-                        // Cắt giảm mạnh tay hơn, chỉ giữ 5 item
                         const trimmedHistory = history.slice(0, 5);
-                        
                         localStorage.setItem('quizHistory', JSON.stringify(trimmedHistory));
                         alert('Cảnh báo: Bộ nhớ lịch sử trên trình duyệt đã đầy. Hệ thống đã tự động xóa các bài thi cũ và chỉ giữ lại 5 bài gần nhất.');
                     } catch (retryError) {
