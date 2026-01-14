@@ -427,10 +427,13 @@
                                     <input type="number" id="start-from-question" min="1" value="1" class="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-bidv-green focus:border-bidv-green bg-white/80 text-black font-bold" placeholder="Nhập ID câu bắt đầu">
                                 </div>
 
-                                <!-- Checkbox xáo trộn đáp án -->
-                                <div class="flex items-center mt-3 bg-white/60 p-2 rounded border border-gray-400 relative">
-                                    <input type="checkbox" id="shuffle-answers" class="w-5 h-5 text-bidv-green border-gray-300 rounded focus:ring-bidv-green cursor-pointer">
-                                    <label for="shuffle-answers" class="ml-2 text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D) <span class="text-xs text-red-600 font-normal italic">(Cần mật khẩu)</span></label>
+                                <!-- Checkbox xáo trộn đáp án - CẬP NHẬT: BỎ MẬT KHẨU, THÊM CẢNH BÁO -->
+                                <div class="flex items-start mt-3 bg-white/60 p-2 rounded border border-gray-400 relative">
+                                    <input type="checkbox" id="shuffle-answers" class="w-5 h-5 text-bidv-green border-gray-300 rounded focus:ring-bidv-green cursor-pointer mt-0.5">
+                                    <div class="ml-2">
+                                        <label for="shuffle-answers" class="text-sm font-bold text-gray-900 cursor-pointer select-none">Xáo trộn thứ tự đáp án (A, B, C, D)</label>
+                                        <p class="text-xs text-red-600 font-normal italic mt-1">⚠️ Lưu ý: Phần giải thích không xáo trộn, vẫn giải thích theo tên phương án trả lời gốc.</p>
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -723,7 +726,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-gray-600 font-medium">Đang tải dữ liệu phổ điểm...</p>
+                        <p class="text-gray-600 font-medium">Đang tải dữ liệu phổ điểm (có thể mất vài giây)...</p>
                     </div>
 
                     <!-- Content -->
@@ -778,20 +781,6 @@
                                 Xuất Excel
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL PASSWORD (THÊM MỚI) -->
-            <div id="password-modal-backdrop" class="modal-backdrop">
-                <div class="modal-content max-w-md w-full bg-white rounded-lg shadow-xl relative p-6">
-                    <h3 class="text-xl font-bold text-bidv-green mb-4 border-b pb-2">Xác thực quyền quản trị</h3>
-                    <p class="text-gray-700 mb-4 text-sm font-medium">Tính năng "Xáo trộn thứ tự đáp án" yêu cầu quyền quản trị viên để kích hoạt.</p>
-                    <input type="password" id="admin-password-input" class="w-full px-3 py-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-bidv-green font-bold text-lg" placeholder="Nhập mật khẩu...">
-                    <p id="password-error" class="text-red-600 text-sm font-bold mb-4 hidden bg-red-100 p-2 rounded border border-red-200">Mật khẩu không đúng! Vui lòng thử lại.</p>
-                    <div class="flex justify-end space-x-3">
-                        <button id="cancel-password-btn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded font-bold hover:bg-gray-400 transition">Hủy bỏ</button>
-                        <button id="confirm-password-btn" class="px-4 py-2 bg-bidv-green text-white rounded font-bold hover:opacity-90 transition">Xác nhận</button>
                     </div>
                 </div>
             </div>
@@ -857,10 +846,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openDashboard: document.getElementById('open-dashboard-btn'),
             closeDashboard: document.getElementById('dashboard-close-btn'),
             exportExcel: document.getElementById('export-excel-btn'),
-
-            // PASSWORD BUTTONS
-            confirmPassword: document.getElementById('confirm-password-btn'),
-            cancelPassword: document.getElementById('cancel-password-btn'),
         },
         inputs: {
             studentName: document.getElementById('student-name'),
@@ -918,11 +903,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dashAvgScore: document.getElementById('dash-avg-score'),
             dashMaxScore: document.getElementById('dash-max-score'),
             dashMinScore: document.getElementById('dash-min-score'),
-
-            // Password Modal
-            passwordModalBackdrop: document.getElementById('password-modal-backdrop'),
-            passwordInput: document.getElementById('admin-password-input'),
-            passwordError: document.getElementById('password-error'),
         },
 
         // State
@@ -938,7 +918,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardChartInstance: null, // Lưu instance của biểu đồ
         dashboardDataCache: null, // Lưu dữ liệu dashboard để xuất Excel
         dashboardRawData: null, // Cache dữ liệu gốc từ DB
-        pendingPasswordCallback: null, // Callback sau khi nhập pass đúng
         timers: {
             total: null,
             question: null,
@@ -1069,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
-        // --- DASHBOARD FUNCTIONS ---
+        // --- DASHBOARD FUNCTIONS (UPDATED: PAGINATION SUPPORT) ---
         async loadDashboardData() {
             if (!supabaseClient) {
                 alert("Chức năng này cần kết nối CSDL Supabase.");
@@ -1081,16 +1060,42 @@ document.addEventListener('DOMContentLoaded', () => {
             this.displays.dashboardContent.classList.add('hidden');
 
             try {
-                const { data, error } = await supabaseClient
-                    .from('quiz_results')
-                    .select('score, student_name, quiz_date, config_quiz_order')
-                    .or('total_questions.eq.70,config_num_questions.eq.70 câu (Tiêu chuẩn)')
-                    .order('created_at', { ascending: false })
-                    .limit(2000);
+                let allData = [];
+                let from = 0;
+                let step = 1000;
+                let keepFetching = true;
 
-                if (error) throw error;
+                // Loop to fetch all pages
+                while(keepFetching) {
+                    const { data, error } = await supabaseClient
+                        .from('quiz_results')
+                        .select('score, student_name, quiz_date, config_quiz_order')
+                        .or('total_questions.eq.70,config_num_questions.eq.70 câu (Tiêu chuẩn)')
+                        .order('created_at', { ascending: false })
+                        .range(from, from + step - 1);
 
-                this.dashboardRawData = data;
+                    if (error) throw error;
+
+                    if (data && data.length > 0) {
+                        allData = allData.concat(data);
+                        from += step;
+                        
+                        // Nếu số lượng data trả về nhỏ hơn step, tức là đã hết dữ liệu
+                        if (data.length < step) {
+                            keepFetching = false;
+                        }
+                    } else {
+                        keepFetching = false;
+                    }
+                    
+                    // Safety break (VD: giới hạn 20k dòng để tránh treo trình duyệt)
+                    if (allData.length > 20000) {
+                        console.warn("Dữ liệu quá lớn, dừng tải tại 20,000 dòng.");
+                        keepFetching = false;
+                    }
+                }
+
+                this.dashboardRawData = allData;
                 this.filterAndRenderDashboard();
 
                 this.displays.dashboardLoading.style.display = 'none';
@@ -1272,37 +1277,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         // --- END DASHBOARD FUNCTIONS ---
 
-        // --- PASSWORD FUNCTIONS ---
-        showPasswordModal(callback = null) {
-            this.pendingPasswordCallback = callback;
-            this.displays.passwordInput.value = '';
-            this.displays.passwordError.classList.add('hidden');
-            this.displays.passwordModalBackdrop.classList.add('active');
-            setTimeout(() => this.displays.passwordInput.focus(), 100);
-        },
-
-        hidePasswordModal() {
-            this.displays.passwordModalBackdrop.classList.remove('active');
-            this.pendingPasswordCallback = null;
-        },
-
-        verifyPassword() {
-            const password = this.displays.passwordInput.value;
-            // Mật khẩu mặc định là 'admin'
-            if (password === 'admin') {
-                this.displays.passwordError.classList.add('hidden');
-                if (this.pendingPasswordCallback) {
-                    this.pendingPasswordCallback();
-                }
-                this.hidePasswordModal();
-            } else {
-                this.displays.passwordError.classList.remove('hidden');
-                this.displays.passwordInput.value = '';
-                this.displays.passwordInput.focus();
-            }
-        },
-        // --- END PASSWORD FUNCTIONS ---
-
         handleSearch(query) {
             // (Giữ nguyên logic cũ)
             const resultsContainer = this.displays.searchResults;
@@ -1429,36 +1403,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // PASSWORD LISTENERS
-            // Sự kiện khi click vào checkbox shuffle
-            this.inputs.shuffleAnswers?.addEventListener('click', (e) => {
-                // Nếu đang cố gắng check (tức là muốn bật tính năng)
-                if (e.target.checked) {
-                    e.preventDefault(); // Ngăn không cho check ngay
-                    this.showPasswordModal(() => {
-                        e.target.checked = true; // Callback nếu pass đúng
-                    });
-                }
-                // Nếu uncheck (bỏ chọn) thì cho phép thoải mái không cần pass
-            });
-
-            this.buttons.confirmPassword?.addEventListener('click', () => this.verifyPassword());
-            
-            this.buttons.cancelPassword?.addEventListener('click', () => this.hidePasswordModal());
-            
-            // Allow Enter key in password input
-            this.displays.passwordInput?.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') {
-                    this.verifyPassword();
-                }
-            });
-            
-            // Close password modal when clicking outside
-            this.displays.passwordModalBackdrop?.addEventListener('click', (e) => {
-                if (e.target === this.displays.passwordModalBackdrop) {
-                    this.hidePasswordModal();
-                }
-            });
+            // PASSWORD LISTENERS (ĐÃ XÓA/VÔ HIỆU HÓA vì bỏ chức năng mật khẩu)
+            // Không cần event listener chặn click nữa
 
             this.displays.reviewModalBackdrop?.addEventListener('click', (e) => {
                 if (e.target === this.displays.reviewModalBackdrop) {
