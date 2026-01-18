@@ -3,15 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.3</title>
+    <title>CBAP Master - Cloud Sync v8.4 (OneDrive Video)</title>
     
-    <!-- PDF.js Library (New) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        // Configure PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-
     <!-- Tailwind Config -->
     <script>
         window.tailwind = {
@@ -36,6 +29,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
@@ -78,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.3...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.4...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -143,7 +141,7 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.3</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.4</div>
             <div class="text-[10px] font-bold text-navy mt-1">Cloud Sync Active</div>
         </div>
     </aside>
@@ -425,7 +423,6 @@
                 this.pdfState.pageNum = 1;
                 this.pdfState.scale = 1.0;
                 
-                // Clear and show loading
                 this.pdfState.ctx.clearRect(0, 0, this.pdfState.canvas.width, this.pdfState.canvas.height);
                 this.pdfState.ctx.font = "14px Helvetica";
                 this.pdfState.ctx.fillText("Loading PDF...", 20, 50);
@@ -588,7 +585,7 @@
             prevQuestion() { if (examState.currentQ > 0) { examState.currentQ--; this.renderActiveQuiz(document.getElementById('app-container')); } },
             finishExam() { let correctCount = 0; DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; }); const container = document.getElementById('app-container'); container.innerHTML = `<div class="max-w-xl mx-auto text-center bg-white p-10 border border-gray-200 shadow-lg mt-10"><h2 class="text-3xl font-bold text-navy mb-4">Exam Completed</h2><div class="text-6xl font-bold text-orange mb-2">${Math.round(correctCount/DB.state.questions.length * 100)}%</div><p class="text-gray-500 mb-8">You answered ${correctCount} out of ${DB.state.questions.length} correctly.</p><button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-primary px-8 py-3">Return to Menu</button></div>`; },
 
-            // --- LIBRARY ---
+            // --- LIBRARY (Updated mapping) ---
             renderLibrary(container, params) {
                 const curriculum = DB.state.curriculum || [];
                 if(curriculum.length === 0) { app.nav('admin'); return; }
@@ -596,6 +593,26 @@
                 const activeCode = params?.code || curriculum[0].code;
                 const type = params?.type || 'textbook'; 
                 const mediaPath = 'CbapMedia/';
+                
+                // USER CONFIGURATION: VIDEO LINKS
+                // Add your OneDrive embed links here.
+                // Leave empty to fall back to local file path CbapMedia/[Code]_Video.mp4
+                const videoMapping = {
+                    'INTRO': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQC8uBzgO4jbRqYSlo7pOAc8AXtVz8WVnivHRQhm-pp6cqM?e=2DCc2Y', 
+                    'BACCM': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQC8uBzgO4jbRqYSlo7pOAc8AXtVz8WVnivHRQhm-pp6cqM?e=2DCc2Y',
+                    'BAPM': '',
+                    'ELIC': '',
+                    'RLCM': '',
+                    'SA': '',
+                    'RADD': '',
+                    'SE': '',
+                    'COMP': '',
+                    'TECH': '',
+                    'PERSP': ''
+                };
+                
+                const externalVideoUrl = videoMapping[activeCode];
+                
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
                 
@@ -626,7 +643,18 @@
                     setTimeout(() => app.loadPDF(src), 0);
                 }
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
-                else if(type === 'video') { viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`; }
+                else if(type === 'video') { 
+                     if (externalVideoUrl) {
+                         // Use Iframe for OneDrive Embed or similar
+                         viewer = `<div class="h-full flex flex-col bg-black">
+                                     <iframe src="${externalVideoUrl}" class="w-full h-full border-none" allowfullscreen></iframe>
+                                     <div class="p-2 text-center text-gray-500 text-xs bg-gray-900">Source: External Video</div>
+                                   </div>`;
+                     } else {
+                         // Fallback to local file
+                         viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
+                     }
+                }
                 
                 container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
             },
