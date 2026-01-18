@@ -3,295 +3,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBAP Master - v6.0 Diagnostic</title>
+    <title>CBAP Master - Swiss Style</title>
     
-    <!-- Visual Debug Console (Hiển thị log lỗi trực tiếp lên màn hình) -->
-    <style>
-        #debug-console {
-            position: fixed; top: 0; left: 0; width: 100%; height: 120px;
-            background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
-            font-size: 11px; padding: 10px; z-index: 9999; overflow-y: auto;
-            border-bottom: 2px solid #0f0; display: block; pointer-events: none;
-        }
-        /* Ẩn console sau khi load thành công */
-        body.loaded #debug-console { display: none; }
-        
-        /* Loading Overlay */
-        #loading-overlay { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; top: 120px; /* Make space for console */ }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-
-    <!-- Script ghi log ngay lập tức -->
+    <!-- Tailwind Config -->
     <script>
-        function log(msg, type='info') {
-            const c = document.getElementById('debug-console');
-            if(c) {
-                const time = new Date().toLocaleTimeString();
-                const color = type === 'error' ? 'red' : (type === 'success' ? '#0f0' : '#ccc');
-                c.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
-                c.scrollTop = c.scrollHeight;
+        window.tailwind = {
+            config: {
+                theme: {
+                    extend: {
+                        colors: {
+                            navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
+                            orange: { DEFAULT: '#FF6600', light: '#FF8533' },
+                            grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#666666' },
+                            white: '#FFFFFF'
+                        },
+                        fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
+                        borderRadius: { 'swiss': '0px' }, // No radius for Swiss Style
+                        spacing: {
+                            '128': '32rem',
+                        }
+                    }
+                }
             }
-            console.log(msg);
         }
-        window.onerror = function(msg, url, line) {
-            log(`CRITICAL ERROR: ${msg} (Line ${line})`, 'error');
-            document.getElementById('manual-entry-btn').style.display = 'block';
-        };
     </script>
-
-    <!-- External Libs (Load async to prevent blocking) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
+        
+        /* Swiss Design Utilities - STRICT FLAT STYLE */
+        .swiss-card { 
+            background: #FFFFFF; 
+            border: 1px solid #E5E5E5; 
+            border-radius: 0px; 
+            box-shadow: none !important; /* No shadows allowed */
+        }
+        
+        .swiss-btn { 
+            border-radius: 0px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            font-size: 0.75rem; 
+            transition: all 0.2s ease; 
+            cursor: pointer; 
+            border: 1px solid transparent;
+        }
 
-    <script>
-        // Tailwind config
-        window.tailwind = { config: { theme: { extend: { colors: { navy: '#003366', orange: '#FF6600' } } } } };
-    </script>
+        .swiss-btn-primary { background-color: #003366; color: white; border-color: #003366; }
+        .swiss-btn-primary:hover { background-color: #002244; border-color: #002244; }
+        
+        .swiss-btn-accent { background-color: #FF6600; color: white; border-color: #FF6600; }
+        .swiss-btn-accent:hover { background-color: #E65C00; border-color: #E65C00; }
+        
+        .swiss-btn-outline { background-color: transparent; color: #003366; border: 1px solid #003366; }
+        .swiss-btn-outline:hover { background-color: #003366; color: white; }
+        
+        /* Navigation & Tabs */
+        .nav-item { transition: all 0.2s ease-in-out; border-left: 4px solid transparent; }
+        .nav-item:hover { background-color: #F5F5F5; border-left-color: #FF6600; }
+        .nav-item.active { background-color: #F0F4F8; border-left-color: #003366; color: #003366; font-weight: bold; }
+        
+        .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; }
+        .lib-tab:hover { color: #003366; }
+        .lib-tab.active { border-bottom: 2px solid #FF6600; color: #003366; font-weight: bold; }
+
+        /* Mobile Sidebar Transition */
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+        
+        /* Flip Card 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        
+        /* Loading & Utility */
+        #loading-overlay { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #E5E5E5; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 250px; background: white; border: 1px solid #003366; border-left: 6px solid #FF6600; padding: 16px; animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        h1, h2, h3, h4, h5, h6 { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: -0.02em; color: #003366; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        
+        /* Grid Background Pattern */
+        .grid-bg { 
+            background-color: #FFFFFF;
+            background-image: 
+                linear-gradient(#E5E5E5 1px, transparent 1px),
+                linear-gradient(90deg, #E5E5E5 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: -1px -1px;
+        }
+    </style>
 </head>
-<body class="h-screen flex overflow-hidden text-slate-800 bg-white">
-
-    <!-- DEBUG CONSOLE -->
-    <div id="debug-console">Waiting for JS engine...</div>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-800 bg-white font-sans">
 
     <!-- LOADING SCREEN -->
     <div id="loading-overlay">
-        <div class="spinner mb-4"></div>
-        <h2 class="text-xl font-bold text-[#003366]">CBAP Master v6.0</h2>
-        <p id="loading-status" class="text-sm text-gray-500 mt-2">Initializing...</p>
+        <div class="spinner mb-6"></div>
+        <h2 class="text-2xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
+        <p id="loading-status" class="text-xs text-gray-400 mt-2 font-mono uppercase tracking-wide">Initializing System...</p>
+        <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-8 swiss-btn swiss-btn-outline px-6 py-3">Manual Mode</button>
+    </div>
+
+    <!-- MOBILE HEADER -->
+    <header class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40 flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <button onclick="app.toggleSidebar()" class="text-navy text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
+            <div class="font-bold text-navy tracking-tight text-lg">CBAP<span class="text-orange">.PRO</span></div>
+        </div>
+        <div class="w-8 h-8 border border-navy text-navy flex items-center justify-center font-bold text-xs">U</div>
+    </header>
+
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div id="mobile-overlay" onclick="app.toggleSidebar()" class="fixed inset-0 bg-white bg-opacity-90 z-30 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform -translate-x-full md:relative md:translate-x-0 sidebar-transition flex flex-col">
+        <div class="h-20 hidden md:flex items-center px-6 border-b border-gray-200">
+            <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-sm mr-3 rounded-none">C</div>
+            <div class="font-bold text-navy text-xl tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
+        </div>
         
-        <!-- Emergency Button -->
-        <button id="manual-entry-btn" onclick="app.emergencyEnter()" style="display:none; margin-top:20px; padding:10px 20px; background:#FF6600; color:white; border:none; cursor:pointer;">
-            Force Enter Dashboard (Skip Load)
-        </button>
-    </div>
+        <nav class="flex-1 overflow-y-auto py-6 space-y-px">
+            <button onclick="app.nav('dashboard')" id="nav-dashboard" class="nav-item w-full text-left px-6 py-4 flex items-center group">
+                <i class="fa-solid fa-chart-pie w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i> 
+                <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Dashboard</span>
+            </button>
+            
+            <div class="px-6 mt-8 mb-3"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest border-b border-gray-100 pb-1 block">Learning Modules</span></div>
+            
+            <button onclick="app.nav('learn')" id="nav-learn" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-book w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Knowledge Hub</span>
+            </button>
+            <button onclick="app.nav('library')" id="nav-library" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-book-journal-whills w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Library</span>
+            </button>
+            
+            <div class="px-6 mt-8 mb-3"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest border-b border-gray-100 pb-1 block">Drills</span></div>
+            
+            <button onclick="app.nav('exam')" id="nav-exam" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-pen-ruler w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Exam Engine</span>
+            </button>
+            <button onclick="app.nav('flashcards')" id="nav-flashcards" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-clone w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Flashcards</span>
+            </button>
+            
+            <div class="mt-auto border-t border-gray-200 pt-2">
+                <button onclick="app.nav('help')" id="nav-help" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                    <i class="fa-solid fa-circle-question w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                    <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Guide</span>
+                </button>
+                <button onclick="app.nav('admin')" id="nav-admin" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                    <i class="fa-solid fa-gear w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i>
+                    <span class="text-xs font-bold uppercase text-gray-500 group-hover:text-navy ml-4 tracking-widest">Settings</span>
+                </button>
+            </div>
+        </nav>
+        
+        <div class="p-6 border-t border-gray-200 hidden md:block bg-white">
+            <div class="flex justify-between items-end">
+                <div>
+                    <div class="text-[9px] text-gray-400 uppercase tracking-widest">System</div>
+                    <div class="text-xs font-bold text-navy mt-1">v7.1 Stable</div>
+                </div>
+                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+        </div>
+    </aside>
 
-    <!-- MAIN UI (Hidden initially) -->
-    <div id="main-layout" class="flex h-full w-full opacity-0 transition-opacity duration-500">
-        <!-- SIDEBAR -->
-        <aside class="w-64 bg-white border-r flex-shrink-0 flex flex-col">
-            <div class="h-16 flex items-center px-6 border-b font-bold text-[#003366] text-xl">CBAP.PRO</div>
-            <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
-                <button onclick="app.nav('dashboard')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-chart-pie w-8 text-center"></i> Dashboard</button>
-                <button onclick="app.nav('learn')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-book w-8 text-center"></i> Knowledge Hub</button>
-                <button onclick="app.nav('library')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-book-open w-8 text-center"></i> Library</button>
-                <button onclick="app.nav('exam')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-pen-ruler w-8 text-center"></i> Exam Engine</button>
-                <button onclick="app.nav('flashcards')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-clone w-8 text-center"></i> Flashcards</button>
-                <button onclick="app.nav('admin')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-gear w-8 text-center"></i> Settings</button>
-            </nav>
-        </aside>
+    <!-- CONTENT -->
+    <main class="flex-1 flex flex-col bg-white w-full overflow-hidden relative">
+        <!-- Grid Background Layer -->
+        <div class="absolute inset-0 grid-bg pointer-events-none z-0"></div>
 
-        <!-- CONTENT -->
-        <main class="flex-1 flex flex-col bg-gray-50">
-            <header class="h-16 bg-white border-b px-8 flex items-center justify-between">
-                <h2 id="page-title" class="text-xl font-bold text-[#003366]">Overview</h2>
-            </header>
-            <div id="app-container" class="flex-1 p-8 overflow-y-auto"></div>
-        </main>
-    </div>
+        <!-- Desktop Header -->
+        <header class="h-20 bg-white border-b border-gray-200 px-8 hidden md:flex items-center justify-between z-10 relative">
+            <div>
+                <h2 id="page-title" class="text-3xl font-bold text-navy uppercase tracking-tighter">Overview</h2>
+                <div class="h-1 w-12 bg-orange mt-2"></div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-right">
+                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Candidate ID</div>
+                    <div class="font-bold text-navy text-sm font-mono">USR-8821</div>
+                </div>
+                <div class="w-10 h-10 border border-navy text-navy flex items-center justify-center font-bold text-sm hover:bg-navy hover:text-white transition cursor-pointer">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Mobile Page Title -->
+        <div class="md:hidden bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between z-10 relative">
+            <h2 id="mobile-page-title" class="text-xl font-bold text-navy uppercase tracking-tight">Dashboard</h2>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div id="app-container" class="flex-1 p-4 md:p-10 overflow-y-auto z-10 relative"></div>
+    </main>
+
+    <div id="toast-container"></div>
 
     <!-- APP LOGIC -->
     <script>
-        log("Script execution started...");
+        const Toast = {
+            show(msg, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const div = document.createElement('div');
+                div.className = 'toast';
+                const icon = type === 'success' ? '<i class="fa-solid fa-check text-orange"></i>' : (type === 'error' ? '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>' : '<i class="fa-solid fa-info text-navy"></i>');
+                div.innerHTML = `${icon} <span class="text-xs font-bold text-navy uppercase tracking-widest">${msg}</span>`;
+                container.appendChild(div);
+                setTimeout(() => { div.style.opacity = '0'; div.style.transform = 'translateX(100%)'; setTimeout(() => div.remove(), 300); }, 3000);
+            }
+        };
 
         const DB = {
-            key: 'CBAP_V6_DATA',
+            key: 'CBAP_V7_1_DATA',
             state: { user: {}, curriculum: [], questions: [], flashcards: [] },
 
             async init() {
-                log("DB.init() called");
-                // Reset flag for debugging
-                // localStorage.removeItem(this.key); 
-
                 const data = localStorage.getItem(this.key);
                 if (data) {
                     try {
                         this.state = JSON.parse(data);
-                        log(`Found local data: ${this.state.curriculum?.length || 0} KA chapters`);
-                        if (this.state.curriculum && this.state.curriculum.length > 0) {
-                            return true; // Data ready
-                        }
-                    } catch (e) {
-                        log("Local data corrupted", "error");
-                    }
+                        if (this.state.curriculum && this.state.curriculum.length > 0) return true;
+                    } catch (e) { localStorage.removeItem(this.key); }
                 }
-                
-                log("No valid local data. Starting fetch sequence...");
                 return await this.fetchData();
             },
 
             async fetchData() {
                 const files = ['curriculum.json', 'questions.json', 'flashcards.json'];
-                // Try subfolder first, then root
                 const paths = ['CbapMedia/', '']; 
                 let successCount = 0;
 
                 for (let file of files) {
-                    let loaded = false;
                     for (let pathPrefix of paths) {
-                        const url = `${pathPrefix}${file}?t=${Date.now()}`; // Anti-cache
-                        log(`Trying to fetch: ${url}`);
+                        const url = `${pathPrefix}${file}?t=${Date.now()}`;
                         try {
                             const res = await fetch(url);
                             if (res.ok) {
                                 let text = await res.text();
-                                // Clean BOM
                                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                                
-                                const json = JSON.parse(text);
-                                const key = file.replace('.json', '');
-                                this.state[key] = json;
-                                log(`✅ Loaded ${file} from ${pathPrefix || 'root'}`, 'success');
-                                loaded = true;
+                                if(text.trim().startsWith('<')) throw new Error("HTML");
+                                this.state[file.replace('.json', '')] = JSON.parse(text);
                                 successCount++;
-                                break; // Stop trying paths for this file
-                            } else {
-                                log(`Failed ${url}: ${res.status}`);
+                                break;
                             }
-                        } catch (e) {
-                            log(`Error fetching ${url}: ${e.message}`, 'error');
-                        }
+                        } catch (e) { }
                     }
-                    if (!loaded) log(`❌ Could not load ${file}`, 'error');
                 }
-
                 this.save();
                 return successCount > 0;
             },
-
-            save() {
-                localStorage.setItem(this.key, JSON.stringify(this.state));
-            }
+            save() { localStorage.setItem(this.key, JSON.stringify(this.state)); }
         };
 
+        let examState = { active: false, currentQ: 0, answers: {}, score: 0 };
+        let flashcardState = { index: 0, flipped: false };
+
         const app = {
+            isSidebarOpen: false,
+
             async start() {
-                log("App starting...");
-                try {
-                    const ready = await DB.init();
-                    if (ready) {
-                        log("System ready. Launching UI...", 'success');
-                        this.launch();
-                    } else {
-                        log("Initialization incomplete. Please import manually.", 'error');
-                        document.getElementById('loading-status').innerText = "Data missing. Please manual import.";
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if(overlay.style.display !== 'none') {
                         document.getElementById('manual-entry-btn').style.display = 'block';
+                        document.getElementById('loading-status').innerText = "Data load timed out.";
                     }
-                } catch (e) {
-                    log(`Fatal crash: ${e.message}`, 'error');
-                    document.getElementById('manual-entry-btn').style.display = 'block';
-                }
+                }, 4000);
+
+                try {
+                    await DB.init();
+                    this.launch();
+                } catch (e) { this.launch(); }
             },
 
             launch() {
                 document.getElementById('loading-overlay').style.display = 'none';
-                document.getElementById('main-layout').classList.remove('opacity-0');
-                document.body.classList.add('loaded'); // Hides debug console
-                this.nav('dashboard');
+                if(!DB.state.curriculum || DB.state.curriculum.length === 0) {
+                    this.nav('admin');
+                } else {
+                    this.nav('dashboard');
+                }
             },
 
-            emergencyEnter() {
-                document.getElementById('loading-overlay').style.display = 'none';
-                document.getElementById('main-layout').classList.remove('opacity-0');
-                this.nav('admin');
-                alert("Please use the Import buttons to load your JSON files.");
+            emergencyEnter() { this.launch(); },
+
+            toggleSidebar() {
+                this.isSidebarOpen = !this.isSidebarOpen;
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobile-overlay');
+                
+                if (this.isSidebarOpen) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
             },
 
             nav(view, params) {
+                if(window.innerWidth < 768 && this.isSidebarOpen) this.toggleSidebar();
+
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const activeBtn = document.getElementById(`nav-${view}`);
+                if(activeBtn) activeBtn.classList.add('active');
+
+                const title = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', help: 'User Guide', admin: 'Settings' }[view] || 'CBAP Master';
+                document.getElementById('page-title').innerText = title;
+                const mobileTitle = document.getElementById('mobile-page-title');
+                if(mobileTitle) mobileTitle.innerText = title;
+
                 const container = document.getElementById('app-container');
-                document.getElementById('page-title').innerText = view.toUpperCase();
                 container.innerHTML = '';
 
-                switch(view) {
-                    case 'dashboard': this.renderDashboard(container); break;
-                    case 'library': this.renderLibrary(container, params); break;
-                    case 'learn': this.renderLearn(container); break;
-                    case 'admin': this.renderAdmin(container); break;
-                    default: container.innerHTML = `<div class="p-4">View: ${view} (Coming soon)</div>`;
+                try {
+                    switch(view) {
+                        case 'dashboard': this.renderDashboard(container); break;
+                        case 'library': this.renderLibrary(container, params); break;
+                        case 'learn': this.renderLearn(container); break;
+                        case 'task_detail': this.renderTaskDetail(container, params); break;
+                        case 'exam': this.renderExam(container); break;
+                        case 'flashcards': this.renderFlashcards(container); break;
+                        case 'help': this.renderHelp(container); break;
+                        case 'admin': this.renderAdmin(container); break;
+                    }
+                } catch(e) {
+                    console.error("Render Error:", e);
+                    container.innerHTML = `<div class="p-8 text-red-600 font-mono">Error: ${e.message}</div>`;
                 }
             },
+
+            // --- VIEW RENDERERS ---
 
             renderDashboard(container) {
-                const qs = DB.state.questions?.length || 0;
                 const cs = DB.state.curriculum?.length || 0;
+                const qs = DB.state.questions?.length || 0;
                 container.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 shadow border-t-4 border-navy">
-                            <h3 class="font-bold text-gray-500 text-sm">Knowledge Areas</h3>
-                            <div class="text-3xl font-bold text-navy mt-2">${cs}</div>
-                        </div>
-                        <div class="bg-white p-6 shadow border-t-4 border-orange">
-                            <h3 class="font-bold text-gray-500 text-sm">Question Bank</h3>
-                            <div class="text-3xl font-bold text-orange mt-2">${qs}</div>
-                        </div>
-                        <div class="bg-white p-6 shadow">
-                            <h3 class="font-bold text-gray-500 text-sm">Action</h3>
-                            <button onclick="app.nav('library')" class="mt-2 w-full bg-navy text-white py-2 px-4 rounded">Go to Library</button>
-                        </div>
-                    </div>
-                `;
-            },
-
-            renderLibrary(container, params) {
-                const curriculum = DB.state.curriculum || [];
-                if(curriculum.length === 0) {
-                    container.innerHTML = `<div class="text-center p-10">No data. Go to <button onclick="app.nav('admin')" class="text-blue-600 underline">Settings</button> to import.</div>`;
-                    return;
-                }
-
-                const activeCode = params?.code || curriculum[0].code;
-                const activeItem = curriculum.find(c => c.code === activeCode) || curriculum[0];
-                const type = params?.type || 'pdf'; // pdf, video, image
-
-                // File Path Logic
-                const basePath = 'CbapMedia/';
-                const fileMap = {
-                    pdf: `${basePath}${activeCode}_Textbook.pdf`,
-                    video: `${basePath}${activeCode}_Video.mp4`,
-                    image: `${basePath}${activeCode}_Info.png`
-                };
-
-                let content = '';
-                if(type === 'pdf') content = `<iframe src="${fileMap.pdf}" class="w-full h-[600px] border"></iframe>`;
-                else if(type === 'image') content = `<img src="${fileMap.image}" class="max-w-full border">`;
-                else if(type === 'video') content = `<video controls class="w-full"><source src="${fileMap.video}"></video>`;
-
-                container.innerHTML = `
-                    <div class="flex flex-col md:flex-row h-full gap-4">
-                        <div class="w-full md:w-64 bg-white shadow overflow-y-auto h-[600px]">
-                            ${curriculum.map(c => `
-                                <div onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" 
-                                     class="p-3 border-b cursor-pointer hover:bg-gray-50 ${c.code === activeCode ? 'bg-blue-50 font-bold text-navy' : ''}">
-                                    ${c.name}
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="flex-1 bg-white shadow p-4">
-                            <div class="flex gap-2 mb-4 border-b pb-2">
-                                <button onclick="app.nav('library', {code:'${activeCode}', type:'pdf'})" class="px-4 py-1 rounded ${type==='pdf'?'bg-navy text-white':'bg-gray-200'}">Textbook</button>
-                                <button onclick="app.nav('library', {code:'${activeCode}', type:'image'})" class="px-4 py-1 rounded ${type==='image'?'bg-navy text-white':'bg-gray-200'}">Infographic</button>
-                                <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-4 py-1 rounded ${type==='video'?'bg-navy text-white':'bg-gray-200'}">Video</button>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="swiss-card p-8 col-span-1 lg:col-span-2 relative overflow-hidden">
+                            <div class="absolute inset-0 z-0 opacity-10">
+                                <canvas id="activityCanvas"></canvas>
                             </div>
-                            ${content}
-                            <div class="mt-2 text-xs text-gray-400">File: ${fileMap[type]}</div>
+                            <div class="relative z-10 flex flex-col h-full justify-between">
+                                <div>
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Cognitive Load</h3>
+                                    <div class="text-5xl font-bold text-navy tracking-tighter">OPTIMAL</div>
+                                    <div class="text-xs font-bold text-orange uppercase tracking-wide mt-2">System Active • Ready</div>
+                                </div>
+                                <div class="mt-8 flex gap-8 border-t border-gray-200 pt-6">
+                                    <div><div class="text-3xl font-bold text-navy">${cs}</div><div class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Modules</div></div>
+                                    <div><div class="text-3xl font-bold text-navy">${qs}</div><div class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Questions</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-navy p-8 text-white flex flex-col justify-between swiss-card border-none">
+                            <div>
+                                <h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Quick Access</h3>
+                                <p class="text-sm leading-relaxed text-white opacity-80">Resume your study session directly.</p>
+                            </div>
+                            <div class="space-y-4 mt-8">
+                                <button onclick="app.nav('library')" class="w-full bg-white text-navy py-4 px-4 text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white transition">Read Library</button>
+                                <button onclick="app.nav('exam')" class="w-full border border-white text-white py-4 px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-navy transition">Start Exam</button>
+                            </div>
                         </div>
                     </div>
                 `;
+                setTimeout(() => { 
+                    const canvas = document.getElementById('activityCanvas');
+                    if(canvas) {
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = canvas.parentElement.offsetWidth;
+                        canvas.height = canvas.parentElement.offsetHeight;
+                        
+                        // Geometric Network Visualization (Swiss Style)
+                        const nodes = Array.from({length: 15}, () => ({x: Math.random()*canvas.width, y: Math.random()*canvas.height}));
+                        ctx.strokeStyle = '#003366';
+                        ctx.fillStyle = '#003366';
+                        ctx.lineWidth = 0.5;
+                        
+                        // Draw connections
+                        nodes.forEach((node, i) => {
+                            // Draw Node
+                            ctx.beginPath(); ctx.arc(node.x, node.y, 2, 0, Math.PI*2); ctx.fill();
+                            
+                            // Draw Lines
+                            nodes.slice(i+1).forEach(other => {
+                                const dist = Math.hypot(node.x - other.x, node.y - other.y);
+                                if(dist < 150) {
+                                    ctx.beginPath();
+                                    ctx.moveTo(node.x, node.y);
+                                    ctx.lineTo(other.x, other.y);
+                                    ctx.stroke();
+                                }
+                            });
+                        });
+                    }
+                }, 100);
             },
 
             renderLearn(container) {
-                // Simple list view for now
                 const curriculum = DB.state.curriculum || [];
+                if(curriculum.length === 0) { app.nav('admin'); return; }
                 container.innerHTML = `
-                    <div class="space-y-4">
-                        <h2 class="text-2xl font-bold mb-4">Knowledge Hub</h2>
-                        ${curriculum.map(c => `
-                            <div class="bg-white p-4 shadow rounded">
-                                <h3 class="font-bold text-lg text-navy">${c.code}: ${c.name}</h3>
-                                <p class="text-gray-600">${c.desc || 'No description'}</p>
-                                <div class="mt-2 pl-4 border-l-2 border-orange">
-                                    ${(c.tasks || []).map(t => `<div class="text-sm py-1">${t.id} - ${t.name}</div>`).join('')}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${curriculum.map((c, i) => `
+                            <div class="swiss-card p-8 hover:border-orange transition cursor-pointer group flex flex-col justify-between h-full" onclick="app.nav('task_detail', {code:'${c.code}'})">
+                                <div>
+                                    <div class="flex justify-between items-start mb-6">
+                                        <span class="text-4xl font-bold text-gray-200 group-hover:text-navy transition font-mono">${(i+1).toString().padStart(2,'0')}</span>
+                                        <span class="border border-navy text-navy text-[9px] font-bold px-2 py-1 uppercase tracking-widest">${c.code}</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-navy mb-3 group-hover:text-orange transition">${c.name}</h3>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">View Details</span>
+                                    <i class="fa-solid fa-arrow-right text-navy text-sm group-hover:text-orange"></i>
                                 </div>
                             </div>
                         `).join('')}
@@ -299,29 +443,276 @@
                 `;
             },
 
-            renderAdmin(container) {
+            renderTaskDetail(container, params) {
+                const item = DB.state.curriculum.find(c => c.code === params.code);
+                if(!item) return;
                 container.innerHTML = `
-                    <div class="max-w-xl mx-auto bg-white p-8 shadow">
-                        <h3 class="text-xl font-bold mb-6">Manual Data Import</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-bold mb-1">Curriculum.json</label>
-                                <input type="file" onchange="app.importFile(this, 'curriculum')" class="w-full border p-2">
+                    <div class="max-w-4xl mx-auto">
+                        <button onclick="app.nav('learn')" class="mb-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2 transition"><i class="fa-solid fa-arrow-left"></i> Return to Hub</button>
+                        <div class="swiss-card p-10 border-t-4 border-navy">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="bg-navy text-white px-3 py-1 text-xs font-bold font-mono">${item.code}</span>
+                                <h1 class="text-3xl font-bold text-navy">${item.name}</h1>
                             </div>
-                            <div>
-                                <label class="block text-sm font-bold mb-1">Questions.json</label>
-                                <input type="file" onchange="app.importFile(this, 'questions')" class="w-full border p-2">
+                            <p class="text-gray-600 mb-10 leading-relaxed border-l-2 border-orange pl-4 text-sm md:text-base">${item.desc}</p>
+                            
+                            <h3 class="text-xs font-bold text-navy uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Tasks Breakdown</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${(item.tasks || []).map(t => `
+                                    <div class="p-4 border border-gray-200 hover:border-navy transition bg-gray-50 hover:bg-white">
+                                        <div class="text-[10px] font-bold text-orange mb-1 font-mono">${t.id}</div>
+                                        <div class="text-sm font-bold text-navy">${t.name}</div>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div>
-                                <label class="block text-sm font-bold mb-1">Flashcards.json</label>
-                                <input type="file" onchange="app.importFile(this, 'flashcards')" class="w-full border p-2">
-                            </div>
-                        </div>
-                        <div class="mt-8 pt-4 border-t">
-                            <button onclick="location.reload()" class="bg-navy text-white px-4 py-2 rounded hover:bg-blue-800">Reload App</button>
                         </div>
                     </div>
                 `;
+            },
+
+            renderLibrary(container, params) {
+                const curriculum = DB.state.curriculum || [];
+                if(curriculum.length === 0) { app.nav('admin'); return; }
+
+                const activeCode = params?.code || curriculum[0].code;
+                const type = params?.type || 'textbook'; 
+                const mediaPath = 'CbapMedia/';
+                
+                const files = {
+                    textbook: `${mediaPath}${activeCode}_Textbook.pdf`,
+                    slide: `${mediaPath}${activeCode}_Slide.pdf`,
+                    info: `${mediaPath}${activeCode}_Info.png`,
+                    mindmap: `${mediaPath}${activeCode}_Mindmap.png`,
+                    video: `${mediaPath}${activeCode}_Video.mp4`
+                };
+
+                let viewer = '';
+                if(type === 'textbook' || type === 'slide') {
+                    const src = type === 'textbook' ? files.textbook : files.slide;
+                    viewer = `<iframe src="${src}" class="w-full h-full border-none bg-gray-50"></iframe>`;
+                } else if(type === 'info' || type === 'mindmap') {
+                    const src = type === 'info' ? files.info : files.mindmap;
+                    viewer = `<div class="h-full overflow-auto flex justify-center items-center bg-gray-50 p-8"><img src="${src}" class="max-w-full shadow-none border border-gray-200" onerror="this.src='https://via.placeholder.com/800x600?text=NO+IMAGE+FOUND'"></div>`;
+                } else if(type === 'video') {
+                    viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
+                }
+
+                container.innerHTML = `
+                    <div class="flex flex-col lg:flex-row h-full gap-8">
+                        <div class="w-full lg:w-64 swiss-card h-48 lg:h-full overflow-y-auto flex-shrink-0">
+                            <div class="p-4 border-b border-gray-100 sticky top-0 bg-white"><span class="text-[10px] font-bold text-navy uppercase tracking-widest">Select Chapter</span></div>
+                            ${curriculum.map(c => `
+                                <button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>
+                                        ${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}
+                                    </div>
+                                    <div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-400'}">${c.name}</div>
+                                </button>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="flex-1 swiss-card flex flex-col h-[600px] lg:h-full">
+                            <div class="flex border-b border-gray-200 bg-white overflow-x-auto whitespace-nowrap">
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-gray-50 text-navy border-b-2 border-orange':'text-gray-400 hover:text-navy'}">Textbook</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-gray-50 text-navy border-b-2 border-orange':'text-gray-400 hover:text-navy'}">Slide</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-gray-50 text-navy border-b-2 border-orange':'text-gray-400 hover:text-navy'}">Mindmap</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-gray-50 text-navy border-b-2 border-orange':'text-gray-400 hover:text-navy'}">Infographic</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-gray-50 text-navy border-b-2 border-orange':'text-gray-400 hover:text-navy'}">Video</button>
+                            </div>
+                            <div class="flex-1 relative bg-gray-50 overflow-hidden">
+                                ${viewer}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderExam(container) {
+                if(!DB.state.questions || DB.state.questions.length === 0) {
+                    container.innerHTML = `<div class="text-center p-12 swiss-card"><h3 class="font-bold text-navy text-lg mb-2">DATABASE EMPTY</h3><p class="text-gray-500 text-sm mb-6">No questions loaded.</p><button onclick="app.nav('admin')" class="swiss-btn swiss-btn-outline px-6 py-3">Import Data</button></div>`;
+                    return;
+                }
+
+                if (!examState.active) {
+                    container.innerHTML = `
+                        <div class="max-w-xl mx-auto mt-12 text-center swiss-card p-10">
+                            <div class="w-16 h-16 border border-navy text-navy flex items-center justify-center mx-auto mb-8"><i class="fa-solid fa-pen-nib text-2xl"></i></div>
+                            <h2 class="text-3xl font-bold text-navy mb-2 tracking-tight">EXAM SIMULATION</h2>
+                            <p class="text-gray-500 mb-10 text-sm">Pool Size: <strong>${DB.state.questions.length}</strong> items</p>
+                            <button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-10 py-4 w-full md:w-auto">INITIATE DRILL</button>
+                        </div>
+                    `;
+                } else {
+                    this.renderActiveQuiz(container);
+                }
+            },
+
+            startQuiz() {
+                examState = { active: true, currentQ: 0, answers: {}, score: 0 };
+                this.renderActiveQuiz(document.getElementById('app-container'));
+            },
+
+            renderActiveQuiz(container) {
+                const qIndex = examState.currentQ;
+                const question = DB.state.questions[qIndex];
+                const total = DB.state.questions.length;
+                const isAnswered = examState.answers[question.id] !== undefined;
+                const userAns = examState.answers[question.id];
+
+                let html = `
+                    <div class="max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} / ${total}</span>
+                            <span class="text-[10px] font-bold text-white bg-navy px-2 py-1 uppercase tracking-widest">${question.ka || 'General'}</span>
+                        </div>
+                        
+                        <div class="swiss-card p-8 md:p-10 mb-8">
+                            <h3 class="text-xl font-bold text-navy mb-8 leading-relaxed">${question.stem}</h3>
+                            <div class="space-y-4">
+                                ${question.options.map((opt, idx) => {
+                                    let btnClass = "border-gray-200 hover:border-navy";
+                                    let indicator = "";
+                                    
+                                    if (isAnswered) {
+                                        if (idx === question.correct[0]) {
+                                            btnClass = "border-green-600 bg-green-50 text-green-900";
+                                            indicator = `<span class="text-xs font-bold uppercase tracking-widest text-green-600 float-right">Correct</span>`;
+                                        } else if (idx === userAns) {
+                                            btnClass = "border-red-600 bg-red-50 text-red-900";
+                                            indicator = `<span class="text-xs font-bold uppercase tracking-widest text-red-600 float-right">Selected</span>`;
+                                        } else {
+                                            btnClass = "border-gray-100 opacity-40";
+                                        }
+                                    } else if (userAns === idx) {
+                                        btnClass = "border-navy bg-gray-50";
+                                    }
+                                    
+                                    return `
+                                    <div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" 
+                                         class="p-5 border ${btnClass} cursor-pointer transition-all">
+                                        <span class="font-bold mr-3 font-mono text-sm">${String.fromCharCode(65 + idx)}.</span> ${opt} ${indicator}
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                            
+                            ${isAnswered ? `
+                                <div class="mt-8 p-6 bg-gray-50 border-t border-gray-200 text-sm text-navy leading-relaxed">
+                                    <strong class="uppercase text-xs tracking-widest block mb-2 text-orange">Analysis</strong>
+                                    ${question.explanation}
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-6 py-3">Previous</button>
+                            ${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-8 py-3">Next Question</button>` : ''}
+                            ${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-8 py-3">Submit Exam</button>` : ''}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            },
+
+            submitAnswer(ansIdx) {
+                const q = DB.state.questions[examState.currentQ];
+                examState.answers[q.id] = ansIdx;
+                this.renderActiveQuiz(document.getElementById('app-container'));
+            },
+
+            nextQuestion() {
+                if (examState.currentQ < DB.state.questions.length - 1) {
+                    examState.currentQ++;
+                    this.renderActiveQuiz(document.getElementById('app-container'));
+                }
+            },
+
+            prevQuestion() {
+                if (examState.currentQ > 0) {
+                    examState.currentQ--;
+                    this.renderActiveQuiz(document.getElementById('app-container'));
+                }
+            },
+
+            finishExam() {
+                let correctCount = 0;
+                DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; });
+                
+                document.getElementById('app-container').innerHTML = `
+                    <div class="max-w-xl mx-auto text-center swiss-card p-12 mt-10">
+                        <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Assessment Result</h2>
+                        <div class="text-7xl font-bold text-navy mb-4">${Math.round(correctCount/DB.state.questions.length * 100)}%</div>
+                        <p class="text-navy font-bold mb-10 text-sm uppercase tracking-wide">Accuracy: ${correctCount} / ${DB.state.questions.length}</p>
+                        <button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-outline px-8 py-3">Close Report</button>
+                    </div>
+                `;
+            },
+
+            renderFlashcards(container) {
+                if(!DB.state.flashcards || DB.state.flashcards.length === 0) {
+                    container.innerHTML = `<div class="text-center p-12 swiss-card"><h3 class="font-bold text-navy text-lg mb-2">INDEX EMPTY</h3><p class="text-gray-500 text-sm mb-6">No cards loaded.</p></div>`;
+                    return;
+                }
+
+                const card = DB.state.flashcards[flashcardState.index];
+                const total = DB.state.flashcards.length;
+
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center max-w-xl mx-auto min-h-[500px]">
+                        <div class="w-full flex justify-between mb-6 border-b border-gray-200 pb-2">
+                            <span class="text-[10px] font-bold text-navy uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span>
+                            <span class="text-[10px] font-bold text-orange uppercase tracking-widest">Memory Matrix</span>
+                        </div>
+                        
+                        <div class="card-container w-full h-96 relative perspective-1000 cursor-pointer group" onclick="app.flipFlashcard()">
+                            <div class="card-inner w-full h-full transform-style-3d transition-transform duration-500 swiss-card ${flashcardState.flipped ? 'rotate-y-180' : ''}" id="flashcard-inner">
+                                <div class="absolute w-full h-full backface-hidden bg-white flex flex-col items-center justify-center p-10 text-center">
+                                    <div class="w-10 h-1 bg-navy mb-8"></div>
+                                    <h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3>
+                                    <p class="mt-auto text-[9px] text-gray-400 font-bold uppercase tracking-widest">Click to Reveal</p>
+                                </div>
+                                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-navy text-white flex flex-col items-center justify-center p-10 text-center">
+                                    <div class="w-10 h-1 bg-orange mb-8"></div>
+                                    <h3 class="text-xl font-medium leading-relaxed">${card.back}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-0 mt-10 w-full border border-gray-200 bg-white">
+                            <button onclick="app.prevFlashcard()" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-navy hover:bg-gray-50 border-r border-gray-200">Previous</button>
+                            <button onclick="app.nextFlashcard()" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest text-navy hover:bg-gray-50">Next Card</button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            flipFlashcard() {
+                flashcardState.flipped = !flashcardState.flipped;
+                const el = document.getElementById('flashcard-inner');
+                if (flashcardState.flipped) el.classList.add('rotate-y-180');
+                else el.classList.remove('rotate-y-180');
+            },
+
+            nextFlashcard() {
+                if (flashcardState.index < DB.state.flashcards.length - 1) {
+                    flashcardState.index++;
+                    flashcardState.flipped = false;
+                    this.renderFlashcards(document.getElementById('app-container'));
+                }
+            },
+
+            prevFlashcard() {
+                if (flashcardState.index > 0) {
+                    flashcardState.index--;
+                    flashcardState.flipped = false;
+                    this.renderFlashcards(document.getElementById('app-container'));
+                }
+            },
+
+            renderHelp(container) { container.innerHTML = `<div class="max-w-2xl mx-auto swiss-card p-10"><h2 class="text-2xl font-bold text-navy mb-6">User Guide</h2><p class="text-sm text-gray-600 leading-relaxed mb-4">Ensure all data files (curriculum.json, questions.json, flashcards.json) are placed in the <strong>CbapMedia</strong> folder relative to this HTML file.</p></div>`; },
+
+            renderAdmin(container) {
+                container.innerHTML = `<div class="max-w-xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="swiss-card p-8"><h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Manual Import</h3><div class="space-y-6"><div><label class="block text-[9px] font-bold text-navy uppercase tracking-widest mb-2">Curriculum.json</label><input type="file" onchange="app.importFile(this, 'curriculum')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[9px] file:tracking-widest hover:file:bg-orange cursor-pointer"></div><div><label class="block text-[9px] font-bold text-navy uppercase tracking-widest mb-2">Questions.json</label><input type="file" onchange="app.importFile(this, 'questions')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[9px] file:tracking-widest hover:file:bg-orange cursor-pointer"></div><div><label class="block text-[9px] font-bold text-navy uppercase tracking-widest mb-2">Flashcards.json</label><input type="file" onchange="app.importFile(this, 'flashcards')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[9px] file:tracking-widest hover:file:bg-orange cursor-pointer"></div></div><div class="mt-8 pt-6 border-t border-gray-100 flex justify-end"><button onclick="location.reload()" class="text-navy text-[10px] font-bold uppercase tracking-widest hover:text-orange">Reload System</button></div></div></div>`;
             },
 
             importFile(input, key) {
@@ -332,27 +723,14 @@
                     try {
                         DB.state[key] = JSON.parse(e.target.result);
                         DB.save();
-                        alert(`Imported ${key} successfully!`);
-                    } catch(err) { alert("Invalid JSON file"); }
+                        Toast.show(`Imported ${key}`);
+                    } catch(err) { alert("Invalid JSON"); }
                 };
                 reader.readAsText(file);
             }
         };
 
-        // Run when DOM ready
-        document.addEventListener('DOMContentLoaded', () => {
-            log("DOM Ready. Calling app.start()...");
-            // Safety timeout to force show controls if JS hangs
-            setTimeout(() => {
-                const btn = document.getElementById('manual-entry-btn');
-                if(btn && document.getElementById('loading-overlay').style.display !== 'none') {
-                    btn.style.display = 'block';
-                    document.getElementById('loading-status').innerText = "Loading took too long.";
-                }
-            }, 5000);
-            
-            app.start();
-        });
+        document.addEventListener('DOMContentLoaded', () => app.start());
     </script>
 </body>
 </html>
