@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.9 (Dual PDF Viewer)</title>
+    <title>CBAP Master - Cloud Sync v9.0 (Multi-Video Playlist)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.9...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.0...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.9</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Dual PDF Viewer</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.0</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Multi-Video Playlist</div>
         </div>
     </aside>
 
@@ -607,9 +607,13 @@
                 const mediaPath = 'CbapMedia/';
                 
                 // USER CONFIGURATION: VIDEO LINKS
+                // Support single string (URL) or Array of objects [{title: "Title", url: "URL"}]
                 const videoMapping = {
-                    'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1', 
-                    'BACCM': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc',
+                    'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1',
+                    'BACCM': [
+                         { title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" },
+                         { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=2" }
+                    ],
                     'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
                     'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
                     'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
@@ -633,7 +637,15 @@
                     return url;
                 };
 
-                const externalVideoUrl = getEmbedLink(videoMapping[activeCode]);
+                // Normalize video config to array
+                let videoConfig = videoMapping[activeCode];
+                let videoList = [];
+                
+                if (Array.isArray(videoConfig)) {
+                    videoList = videoConfig;
+                } else if (typeof videoConfig === 'string' && videoConfig.trim() !== '') {
+                    videoList = [{ title: "Main Video", url: videoConfig }];
+                }
                 
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
@@ -680,20 +692,33 @@
                     }
                 }
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
-                else if(type === 'video') { 
-                     if (externalVideoUrl) {
-                         viewer = `<div class="h-full flex flex-col bg-black relative">
-                                     <iframe src="${externalVideoUrl}" class="w-full h-full border-none" allowfullscreen></iframe>
-                                     <div class="absolute bottom-4 right-4 z-10">
-                                        <a href="${externalVideoUrl}" target="_blank" class="swiss-btn swiss-btn-accent px-4 py-2 text-xs shadow-lg opacity-90 hover:opacity-100 flex items-center gap-2">
-                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở trong Tab mới
-                                        </a>
-                                     </div>
-                                     <div class="p-2 text-center text-gray-500 text-xs bg-gray-900">Nếu video không chạy, hãy bấm nút ở góc phải.</div>
-                                   </div>`;
-                     } else {
+                else if(type === 'video') {
+                    if (videoList.length > 0) {
+                        // Render list of videos
+                        viewer = `<div class="h-full w-full overflow-y-auto bg-gray-900 p-4 md:p-8 space-y-8">`;
+                        videoList.forEach((v, index) => {
+                             const embedUrl = getEmbedLink(v.url);
+                             if(embedUrl) {
+                                viewer += `
+                                   <div class="max-w-4xl mx-auto bg-black border border-gray-800 rounded-lg overflow-hidden shadow-lg">
+                                        <div class="p-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+                                            <h4 class="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                                <i class="fa-solid fa-play-circle text-orange"></i> ${v.title || `Video ${index + 1}`}
+                                            </h4>
+                                            <a href="${embedUrl}" target="_blank" class="text-[10px] text-gray-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open External</a>
+                                        </div>
+                                        <div class="relative w-full" style="padding-bottom: 56.25%;"> <!-- 16:9 Aspect Ratio -->
+                                            <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none" allowfullscreen></iframe>
+                                        </div>
+                                   </div>
+                                `;
+                             }
+                        });
+                        viewer += `</div>`;
+                    } else {
+                        // Fallback to local
                          viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
-                     }
+                    }
                 }
                 
                 container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
