@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBAP Master - Swiss Design Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>CBAP Master - GitHub Edition</title>
+    <!-- Tailwind Config -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
-                        orange: { DEFAULT: '#FF6600', light: '#FF8533' },
-                        grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#666666' }
-                    },
-                    fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
-                    borderRadius: { 'swiss': '2px' },
-                    boxShadow: { 'swiss': '0 1px 2px rgba(0,0,0,0.05)' }
+        window.tailwind = {
+            config: {
+                theme: {
+                    extend: {
+                        colors: {
+                            navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
+                            orange: { DEFAULT: '#FF6600', light: '#FF8533' },
+                            grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#666666' }
+                        },
+                        fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
+                        borderRadius: { 'swiss': '2px' },
+                        boxShadow: { 'swiss': '0 1px 2px rgba(0,0,0,0.05)' }
+                    }
                 }
             }
         }
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
         .swiss-card { background: #FFFFFF; border: 1px solid #E5E5E5; border-radius: 0px; }
-        .swiss-btn { border-radius: 0px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; transition: all 0.2s ease; }
+        .swiss-btn { border-radius: 0px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; transition: all 0.2s ease; cursor: pointer; }
         .swiss-btn-primary { background-color: #003366; color: white; border: 1px solid #003366; }
         .swiss-btn-primary:hover { background-color: #002244; }
         .swiss-btn-accent { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
@@ -53,19 +56,23 @@
         :-webkit-full-screen { background: white; padding: 20px; overflow-y: auto; }
         
         /* Loading Overlay */
-        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        #error-log { display: none; margin-top: 20px; padding: 15px; background: #FFF0F0; border: 1px solid #FFCDCD; color: #D8000C; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-width: 80%; text-align: left; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800 bg-white">
 
-    <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" class="hidden">
-        <div class="w-12 h-12 border-4 border-navy border-t-orange rounded-full animate-spin mb-4"></div>
-        <h2 class="text-navy font-bold text-xl">Loading Data...</h2>
-        <p class="text-gray-500 text-sm mt-2">Fetching from CbapMedia/</p>
+    <!-- LOADING OVERLAY WITH DIAGNOSTICS -->
+    <div id="loading-overlay">
+        <div class="w-12 h-12 border-4 border-navy border-t-orange rounded-full animate-spin mb-4" id="spinner"></div>
+        <h2 class="text-navy font-bold text-xl" id="loading-title">Connecting to Server...</h2>
+        <p class="text-gray-500 text-sm mt-2" id="loading-text">Fetching CbapMedia resources</p>
+        <div id="error-log"></div>
+        <button id="retry-btn" onclick="location.reload()" class="hidden mt-6 swiss-btn swiss-btn-primary px-6 py-2">Retry</button>
+        <button id="manual-btn" onclick="app.closeLoadingAndGoAdmin()" class="hidden mt-2 swiss-btn swiss-btn-outline px-6 py-2">Upload Manually</button>
     </div>
 
-    <!-- SIDEBAR (Responsive) -->
+    <!-- SIDEBAR -->
     <aside class="w-16 lg:w-64 bg-white border-r border-grey-line flex flex-col z-20 transition-all duration-300 flex-shrink-0">
         <div class="h-16 lg:h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-grey-line">
             <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-lg rounded-none">C</div>
@@ -104,7 +111,7 @@
         </nav>
         
         <div class="p-6 border-t border-grey-line hidden lg:block">
-            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v3.4</div>
+            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v3.6</div>
             <div class="text-xs font-bold text-navy mt-1">BABOK® Aligned</div>
         </div>
     </aside>
@@ -152,17 +159,20 @@
         };
 
         const DB = {
-            // Using a new key to ensure clean slate if needed
-            key: 'CBAP_CANVAS_V3_NO_BACKUP',
+            key: 'CBAP_CANVAS_V3_GITHUB_FIX',
             state: { user: { name: 'User', xp: 0 }, questions: [], flashcards: [], attempts: [], curriculum: [] },
             
             async init() {
                 const data = localStorage.getItem(this.key);
                 if (data) {
                     this.state = JSON.parse(data);
-                    // If no curriculum, try to load
+                    // Check valid data
                     if(!this.state.curriculum || this.state.curriculum.length === 0) {
                         await this.seedFromJSON();
+                    } else {
+                        // Data exists, verify files check isn't needed
+                        // Just hide overlay
+                        document.getElementById('loading-overlay').classList.add('hidden');
                     }
                 } else {
                     await this.seedFromJSON();
@@ -171,36 +181,63 @@
 
             async seedFromJSON() {
                 const overlay = document.getElementById('loading-overlay');
-                overlay.classList.remove('hidden');
+                const loadingText = document.getElementById('loading-text');
+                const errorLog = document.getElementById('error-log');
                 
+                overlay.classList.remove('hidden');
+                loadingText.innerText = "Đang tải dữ liệu từ CbapMedia...";
+                
+                // Define files with EXACT case expected on GitHub
+                const files = [
+                    { name: 'curriculum.json', path: 'CbapMedia/curriculum.json' },
+                    { name: 'questions.json', path: 'CbapMedia/questions.json' },
+                    { name: 'flashcards.json', path: 'CbapMedia/flashcards.json' }
+                ];
+
                 try {
-                    // Attempt to fetch files. This requires a local server or proper file structure.
-                    // Directly opening index.html via file:// protocol usually blocks this due to CORS.
-                    const [currRes, questRes, flashRes] = await Promise.all([
-                        fetch('CbapMedia/curriculum.json'),
-                        fetch('CbapMedia/questions.json'),
-                        fetch('CbapMedia/flashcards.json')
-                    ]);
+                    // Fetch sequentially to identify exactly which one fails
+                    let loadedData = {};
+                    
+                    for (const file of files) {
+                        loadingText.innerText = `Fetching ${file.name}...`;
+                        const response = await fetch(file.path, { cache: "no-cache" });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Lỗi tải ${file.path}: HTTP Status ${response.status} (${response.statusText}).`);
+                        }
+                        
+                        // Try parsing JSON immediately to catch syntax errors
+                        try {
+                            loadedData[file.name] = await response.json();
+                        } catch (parseErr) {
+                            throw new Error(`Lỗi đọc file ${file.name}: Sai định dạng JSON.\n${parseErr.message}`);
+                        }
+                    }
 
-                    if(!currRes.ok || !questRes.ok || !flashRes.ok) throw new Error("File not found or HTTP error");
-
-                    this.state.curriculum = await currRes.json();
-                    this.state.questions = await questRes.json();
-                    this.state.flashcards = await flashRes.json();
+                    // Assign to state
+                    this.state.curriculum = loadedData['curriculum.json'];
+                    this.state.questions = loadedData['questions.json'];
+                    this.state.flashcards = loadedData['flashcards.json'];
                     
                     this.save();
-                    Toast.show("Data Loaded Successfully", "success");
-                } catch (error) {
-                    console.error("Data Load Error:", error);
-                    // BACKUP DISABLED: We do NOT load backup data here anymore.
-                    Toast.show("Failed to load JSON data. Check console & CbapMedia folder.", "error");
-                    
-                    // Clear state to avoid stale/partial data if load fails
-                    this.state.curriculum = [];
-                    this.state.questions = [];
-                    this.state.flashcards = [];
-                } finally {
                     overlay.classList.add('hidden');
+                    Toast.show("Đã tải xong dữ liệu!", "success");
+                    app.navigate('dashboard');
+
+                } catch (error) {
+                    console.error("Critical Load Error:", error);
+                    
+                    // Show error UI
+                    document.getElementById('spinner').classList.add('hidden');
+                    document.getElementById('loading-title').innerText = "Kết nối thất bại";
+                    document.getElementById('loading-title').classList.add('text-red-600');
+                    loadingText.innerText = "Không thể tải dữ liệu tự động. Vui lòng kiểm tra:";
+                    
+                    errorLog.style.display = 'block';
+                    errorLog.innerText = `${error.message}\n\nLưu ý quan trọng trên GitHub:\n1. Thư mục phải tên chính xác là 'CbapMedia' (C và M viết hoa).\n2. File phải là .json\n3. Đường dẫn hiện tại: ${window.location.href}`;
+                    
+                    document.getElementById('retry-btn').classList.remove('hidden');
+                    document.getElementById('manual-btn').classList.remove('hidden');
                 }
             },
 
@@ -237,7 +274,17 @@
             view: 'dashboard',
             async start() {
                 await DB.init();
-                this.navigate('dashboard');
+                // If loaded successfully, navigate based on data
+                if(DB.state.curriculum && DB.state.curriculum.length > 0) {
+                    this.navigate('dashboard');
+                }
+                // If failed, the overlay stays open with options
+            },
+
+            closeLoadingAndGoAdmin() {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                this.navigate('admin');
+                Toast.show("Please upload files manually", "info");
             },
 
             navigate(target, param = null) {
@@ -268,9 +315,22 @@
             },
 
             renderDashboard(container) {
-                const totalCards = DB.state.flashcards.length || 0;
-                const totalQ = DB.state.questions.length || 0;
-                const attempts = DB.state.attempts.length || 0;
+                const totalCards = DB.state.flashcards ? DB.state.flashcards.length : 0;
+                const totalQ = DB.state.questions ? DB.state.questions.length : 0;
+                const attempts = DB.state.attempts ? DB.state.attempts.length : 0;
+                
+                if (totalQ === 0) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-8">
+                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 text-gray-400 text-3xl"><i class="fa-solid fa-database"></i></div>
+                            <h2 class="text-2xl font-bold text-navy mb-2">No Data Available</h2>
+                            <p class="text-gray-500 max-w-md mb-8">Database is empty. Please import JSON files via Settings.</p>
+                            <button onclick="app.navigate('admin')" class="swiss-btn swiss-btn-primary px-8 py-3">Go to Settings</button>
+                        </div>
+                    `;
+                    return;
+                }
+
                 container.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
                         <div class="swiss-card lg:col-span-2 relative h-[250px] lg:h-[300px] flex flex-col">
@@ -292,7 +352,7 @@
             },
 
             renderLibrary(container, params) {
-                if(!DB.state.curriculum.length) { container.innerHTML = '<div class="p-8 text-center text-gray-500"><i class="fa-solid fa-triangle-exclamation text-4xl mb-4 text-orange"></i><br><b>No Data Loaded</b><br>Please ensure JSON files are in CbapMedia/ and you are running via a local server.<br>Go to Settings > Reload to try again.</div>'; return; }
+                if(!DB.state.curriculum || !DB.state.curriculum.length) { container.innerHTML = '<div class="p-12 text-center text-gray-500"><i class="fa-solid fa-triangle-exclamation text-4xl mb-4 text-orange"></i><h3 class="text-xl font-bold text-navy mb-2">No Curriculum Data</h3><p class="mb-6">Please import <b>curriculum.json</b> in Settings.</p><button onclick="app.navigate(\'admin\')" class="swiss-btn swiss-btn-outline px-6 py-2">Go to Settings</button></div>'; return; }
                 const activeCode = (params && params.code) ? params.code : DB.state.curriculum[0].code;
                 const activeTab = (params && params.tab) ? params.tab : 'textbook';
                 const chapters = DB.state.curriculum;
@@ -323,7 +383,7 @@
             },
 
             renderLearn(container) {
-                if(!DB.state.curriculum.length) { container.innerHTML = '<div class="p-8 text-center text-gray-500">No Curriculum Data found.</div>'; return; }
+                if(!DB.state.curriculum || !DB.state.curriculum.length) { container.innerHTML = '<div class="p-12 text-center text-gray-500"><i class="fa-solid fa-book-open text-4xl mb-4 text-orange"></i><h3 class="text-xl font-bold text-navy mb-2">Knowledge Hub Empty</h3><p class="mb-6">Please import <b>curriculum.json</b> in Settings.</p><button onclick="app.navigate(\'admin\')" class="swiss-btn swiss-btn-outline px-6 py-2">Go to Settings</button></div>'; return; }
                 let html = `<div class="max-w-5xl mx-auto"><div class="mb-8 flex items-end justify-between border-b border-navy pb-4"><div><h2 class="text-3xl font-bold text-navy">Knowledge Map</h2><p class="text-gray-500 mt-2 text-sm">BABOK® Guide v3 Structure</p></div><div class="text-right hidden sm:block"><div class="text-4xl font-bold text-orange leading-none">${DB.state.curriculum.length}</div><div class="text-xs font-bold text-navy uppercase tracking-widest">Areas</div></div></div><div class="grid grid-cols-1 gap-px bg-grey-line border border-grey-line">`;
                 DB.state.curriculum.forEach((ka, idx) => {
                     html += `<div class="bg-white p-6 group hover:bg-gray-50 transition-colors"><div class="flex items-start justify-between cursor-pointer" onclick="document.getElementById('ka-content-${idx}').classList.toggle('hidden');"><div class="flex gap-6"><div class="text-2xl font-bold text-gray-200 group-hover:text-orange transition-colors font-mono">${(idx+1).toString().padStart(2, '0')}</div><div><div class="flex items-center gap-3 mb-2"><span class="bg-navy text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">${ka.code}</span></div><h3 class="text-xl font-bold text-navy mb-2">${ka.name}</h3><p class="text-sm text-gray-500 max-w-2xl">${ka.desc}</p></div></div><button class="swiss-btn-outline h-8 w-8 flex items-center justify-center border border-gray-200 text-gray-400 group-hover:border-navy group-hover:text-navy"><i class="fa-solid fa-plus text-xs"></i></button></div><div id="ka-content-${idx}" class="hidden mt-6 pl-14 pt-6 border-t border-dashed border-gray-200"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${ka.tasks.map(t => `<div onclick="app.navigate('task_detail', {kaId: '${ka.code}', taskId: '${t.id}'})" class="border border-gray-200 p-4 hover:border-orange cursor-pointer transition-colors bg-white hover:shadow-sm"><div class="text-xs font-bold text-gray-400 mb-2 uppercase">Task ${t.id}</div><h4 class="font-bold text-navy text-sm leading-tight">${t.name}</h4></div>`).join('')}</div></div></div>`;
@@ -338,11 +398,11 @@
                 container.innerHTML = `<div class="max-w-5xl mx-auto"><button onclick="app.navigate('learn')" class="mb-4 text-xs font-bold text-gray-500 hover:text-navy uppercase tracking-widest"><i class="fa-solid fa-arrow-left"></i> Back</button><div class="swiss-card p-10 border-t-4 border-t-navy"><h1 class="text-3xl font-bold text-navy mb-4">${task.name}</h1><p class="text-gray-600">Task details loaded dynamically from curriculum.json</p></div></div>`;
             },
             
-            renderExam(container) { container.innerHTML = `<div class="max-w-xl mx-auto mt-12 text-center"><h2 class="text-3xl font-bold text-navy mb-2">Exam Simulation</h2><p class="text-gray-500 mb-6">Questions Loaded: ${DB.state.questions.length}</p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3">Start Random Drill</button></div>`; },
+            renderExam(container) { container.innerHTML = `<div class="max-w-xl mx-auto mt-12 text-center"><h2 class="text-3xl font-bold text-navy mb-2">Exam Simulation</h2><p class="text-gray-500 mb-6">Questions Loaded: ${DB.state.questions ? DB.state.questions.length : 0}</p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3">Start Random Drill</button></div>`; },
             
             startQuiz() { 
-                const questions = DB.state.questions.slice(0, 5);
-                if(!questions.length) { document.getElementById('app-container').innerHTML = `<div class="text-center p-8">No questions loaded. Check CbapMedia/questions.json</div>`; return; }
+                const questions = DB.state.questions ? DB.state.questions.slice(0, 5) : [];
+                if(!questions.length) { document.getElementById('app-container').innerHTML = `<div class="text-center p-8">No questions loaded. Please import <b>questions.json</b> in Settings.</div>`; return; }
                 const container = document.getElementById('app-container');
                 let html = `<div class="max-w-3xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Quick Drill</h2>`;
                 questions.forEach((q, i) => {
@@ -352,9 +412,61 @@
                 container.innerHTML = html;
             },
 
-            renderFlashcards(container) { container.innerHTML = `<div class="p-8 text-center text-gray-400">Flashcards Loaded: ${DB.state.flashcards.length}<br>SRS Module Ready</div>`; },
-            renderHelp(container) { container.innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-navy mb-6">User Guide</h2><div class="swiss-card p-8 border-l-4 border-orange"><h3 class="font-bold text-navy mb-2">Data Loading</h3><p class="text-sm text-gray-600">The app requires <b>curriculum.json</b>, <b>questions.json</b>, and <b>flashcards.json</b> in the <b>CbapMedia</b> folder. If data is not appearing, ensure you are running this page via a Local Server (localhost) to avoid CORS restrictions.</p></div></div>`; },
-            renderAdmin(container) { container.innerHTML = `<div class="max-w-2xl mx-auto"><h2 class="text-3xl font-bold text-navy mb-6">Settings</h2><div class="swiss-card p-6 flex justify-between items-center"><div><h3 class="font-bold text-navy">Reload Data</h3><p class="text-xs text-gray-500">Attempt to fetch external JSONs</p></div><button onclick="DB.seedFromJSON()" class="swiss-btn swiss-btn-outline px-4 py-2">Reload</button></div></div>`; }
+            renderFlashcards(container) { container.innerHTML = `<div class="p-8 text-center text-gray-400">Flashcards Loaded: ${DB.state.flashcards ? DB.state.flashcards.length : 0}<br>SRS Module Ready</div>`; },
+            renderHelp(container) { container.innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-navy mb-6">User Guide</h2><div class="swiss-card p-8 border-l-4 border-orange"><h3 class="font-bold text-navy mb-2">Data Loading</h3><p class="text-sm text-gray-600">The app attempts to load files from <b>CbapMedia/</b> folder. If this fails (due to browser security), use the <b>Settings</b> tab to manually import your JSON files.</p></div></div>`; },
+            
+            renderAdmin(container) { 
+                container.innerHTML = `
+                    <div class="max-w-2xl mx-auto">
+                        <h2 class="text-3xl font-bold text-navy mb-6">Settings & Data</h2>
+                        
+                        <!-- Manual Import Section -->
+                        <div class="swiss-card p-8 mb-6 border-l-4 border-navy">
+                            <h3 class="font-bold text-navy mb-4 flex items-center"><i class="fa-solid fa-file-import mr-2"></i> Manual Data Import</h3>
+                            <p class="text-sm text-gray-500 mb-6">Use this if auto-loading from folder fails (e.g. CORS error).</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Curriculum File (curriculum.json)</label>
+                                    <input type="file" id="file-curriculum" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'curriculum')">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Questions File (questions.json)</label>
+                                    <input type="file" id="file-questions" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'questions')">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Flashcards File (flashcards.json)</label>
+                                    <input type="file" id="file-flashcards" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'flashcards')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="swiss-card p-6 flex justify-between items-center">
+                            <div><h3 class="font-bold text-navy">Retry Auto-Load</h3><p class="text-xs text-gray-500">Attempt to fetch from CbapMedia folder</p></div>
+                            <button onclick="DB.seedFromJSON()" class="swiss-btn swiss-btn-outline px-4 py-2">Reload</button>
+                        </div>
+                    </div>
+                `; 
+            },
+
+            handleFileSelect(input, type) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        DB.state[type] = json;
+                        DB.save();
+                        Toast.show(`Imported ${type} successfully!`, "success");
+                    } catch(err) {
+                        alert("Invalid JSON file");
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+            }
         };
 
         app.start();
