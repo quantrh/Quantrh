@@ -57,7 +57,7 @@
         
         /* Loading Overlay & Animations */
         #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        #error-log { display: none; margin-top: 20px; padding: 15px; background: #FFF0F0; border: 1px solid #FFCDCD; color: #D8000C; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-width: 80%; text-align: left; overflow-x: auto; }
+        #error-log { display: none; margin-top: 20px; padding: 15px; background: #FFF0F0; border: 1px solid #FFCDCD; color: #D8000C; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-width: 80%; text-align: left; overflow-x: auto; max-height: 200px; overflow-y: auto; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -117,7 +117,7 @@
         </nav>
         
         <div class="p-6 border-t border-grey-line hidden lg:block">
-            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v3.7</div>
+            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v3.8</div>
             <div class="text-xs font-bold text-navy mt-1">BABOK® Aligned</div>
         </div>
     </aside>
@@ -165,7 +165,7 @@
         };
 
         const DB = {
-            key: 'CBAP_CANVAS_V3_DEBUG',
+            key: 'CBAP_CANVAS_V3_DEBUG_V2',
             state: { user: { name: 'User', xp: 0 }, questions: [], flashcards: [], attempts: [], curriculum: [] },
             
             async init() {
@@ -213,21 +213,43 @@
                     
                     for (const file of files) {
                         loadingText.innerText = `Fetching ${file.name}...`;
-                        const response = await fetch(file.path, { cache: "no-cache" });
+                        let response = await fetch(file.path, { cache: "no-cache" });
                         
+                        // Auto-retry with Capitalized filename (GitHub Case Sensitivity Fix)
+                        if (!response.ok && response.status === 404) {
+                            const parts = file.path.split('/');
+                            const filename = parts.pop();
+                            const capFilename = filename.charAt(0).toUpperCase() + filename.slice(1);
+                            const newPath = parts.join('/') + '/' + capFilename;
+                            
+                            console.log(`Auto-retry: 404 on ${file.path}, trying ${newPath}`);
+                            const retryResponse = await fetch(newPath, { cache: "no-cache" });
+                            if (retryResponse.ok) {
+                                response = retryResponse;
+                            }
+                        }
+
                         if (!response.ok) {
-                            throw new Error(`Error ${response.status} fetching ${file.path}`);
+                            throw new Error(`Failed to load ${file.path} (Status ${response.status}). File missing or CORS block?`);
                         }
                         
-                        const text = await response.text();
+                        let text = await response.text();
+                        
+                        // Strip BOM (Byte Order Mark) if present (common Windows Notepad issue)
+                        if (text.charCodeAt(0) === 0xFEFF) {
+                            text = text.slice(1);
+                        }
+
                         try {
                             loadedData[file.name] = JSON.parse(text);
                         } catch (e) {
-                            // Detect if response is HTML (GitHub 404 page)
-                            if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                                throw new Error(`File ${file.name} is HTML (404 Page), not JSON. Check path case sensitivity.`);
+                            // Detect if response is HTML (GitHub 404 page masquerading as 200 OK sometimes)
+                            if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                                throw new Error(`File ${file.name} content is HTML (likely 404), not JSON. Check path case sensitivity.`);
                             }
-                            throw new Error(`Invalid JSON in ${file.name}: ${e.message}`);
+                            // Show first 50 chars of invalid content for debugging
+                            const snippet = text.substring(0, 50).replace(/\n/g, ' ');
+                            throw new Error(`Invalid JSON in ${file.name}: ${e.message}. Content start: "${snippet}..."`);
                         }
                     }
 
