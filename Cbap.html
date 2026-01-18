@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.2</title>
+    <title>CBAP Master - Cloud Sync v8.3</title>
     
+    <!-- PDF.js Library (New) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configure PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <!-- Tailwind Config -->
     <script>
         window.tailwind = {
@@ -71,7 +78,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">CONNECTING TO CLOUD...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.3...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -136,7 +143,7 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.2</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.3</div>
             <div class="text-[10px] font-bold text-navy mt-1">Cloud Sync Active</div>
         </div>
     </aside>
@@ -257,32 +264,16 @@
             // --- CLOUD SYNC LOGIC (CUSTOM TABLES) ---
             async pushToCloud() {
                 if (!this.state.user.id) return;
-                
-                // Only sync essential user progress to save bandwidth
-                // We don't sync static content (curriculum/questions) unless user customizes them
-                const payload = {
-                    completedTasks: this.state.completedTasks
-                };
-
-                const { error } = await sb
-                    .from('user_progress')
-                    .upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
-                
+                const payload = { completedTasks: this.state.completedTasks };
+                const { error } = await sb.from('user_progress').upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
                 if (error) console.error("Cloud Save Error:", error);
             },
 
             async pullFromCloud() {
                 if (!this.state.user.id) return;
-                
-                const { data, error } = await sb
-                    .from('user_progress')
-                    .select('data')
-                    .eq('user_id', this.state.user.id)
-                    .single();
-
+                const { data, error } = await sb.from('user_progress').select('data').eq('user_id', this.state.user.id).single();
                 if (data && data.data) {
                     this.state.completedTasks = data.data.completedTasks || [];
-                    // Update local storage but don't trigger push again
                     localStorage.setItem(this.key, JSON.stringify(this.state));
                     Toast.show("Sync complete from Cloud", "success");
                 }
@@ -292,17 +283,8 @@
         const Auth = {
             async login(username, password) {
                 const hashed = await Crypto.hash(password);
-                
-                // Custom Auth Logic: Query 'custom_users' table
-                const { data, error } = await sb
-                    .from('custom_users')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', hashed)
-                    .single();
-
+                const { data, error } = await sb.from('custom_users').select('*').eq('username', username).eq('password', hashed).single();
                 if (error || !data) return { error: "Invalid username or password" };
-                
                 DB.state.user = { id: data.id, username: data.username, loggedIn: true };
                 await DB.pullFromCloud(); 
                 DB.save();
@@ -312,25 +294,12 @@
 
             async register(username, password) {
                 const hashed = await Crypto.hash(password);
-                
-                // Check exist
                 const { data: existing } = await sb.from('custom_users').select('id').eq('username', username).single();
                 if (existing) return { error: "Username already taken" };
-
-                // Insert into custom_users
-                const { data, error } = await sb
-                    .from('custom_users')
-                    .insert([{ username, password: hashed }])
-                    .select()
-                    .single();
-
+                const { data, error } = await sb.from('custom_users').insert([{ username, password: hashed }]).select().single();
                 if (error) return { error: error.message };
-                
-                // Login immediately
                 DB.state.user = { id: data.id, username: data.username, loggedIn: true };
-                // Init progress record
                 await sb.from('user_progress').insert({ user_id: data.id, data: { completedTasks: [] } });
-                
                 DB.save();
                 app.updateUserUI();
                 return { success: true };
@@ -338,7 +307,7 @@
 
             logout() {
                 DB.state.user = { id: null, username: 'Guest', loggedIn: false };
-                DB.state.completedTasks = []; // Clear local progress for security
+                DB.state.completedTasks = []; 
                 DB.save();
                 app.updateUserUI();
                 Toast.show("Logged out");
@@ -354,6 +323,7 @@
             isSidebarOpen: false,
             isLibraryMenuOpen: true,
             zoomLevel: 1,
+            pdfState: { pdfDoc: null, pageNum: 1, pageRendering: false, pageNumPending: null, scale: 1.0, canvas: null, ctx: null },
 
             async start() {
                 setTimeout(() => {
@@ -447,30 +417,103 @@
                 }
             },
 
-            // --- AUTH VIEW ---
-            renderAuth(container) {
-                if (DB.state.user.loggedIn) {
-                    container.innerHTML = `<div class="max-w-md mx-auto text-center mt-10"><div class="w-20 h-20 bg-navy text-white text-4xl font-bold rounded-full flex items-center justify-center mx-auto mb-6">${DB.state.user.username.charAt(0)}</div><h2 class="text-2xl font-bold text-navy mb-2">Welcome, ${DB.state.user.username}</h2><p class="text-gray-500 mb-8">Your progress is being synced.</p><button onclick="Auth.logout()" class="swiss-btn swiss-btn-outline px-8 py-3 hover:bg-red-50 hover:text-red-600 hover:border-red-600">Log Out</button></div>`;
-                    return;
+            // --- PDF.js Logic ---
+            async loadPDF(url) {
+                this.pdfState.canvas = document.getElementById('the-canvas');
+                if(!this.pdfState.canvas) return;
+                this.pdfState.ctx = this.pdfState.canvas.getContext('2d');
+                this.pdfState.pageNum = 1;
+                this.pdfState.scale = 1.0;
+                
+                // Clear and show loading
+                this.pdfState.ctx.clearRect(0, 0, this.pdfState.canvas.width, this.pdfState.canvas.height);
+                this.pdfState.ctx.font = "14px Helvetica";
+                this.pdfState.ctx.fillText("Loading PDF...", 20, 50);
+
+                try {
+                    const loadingTask = pdfjsLib.getDocument(url);
+                    this.pdfState.pdfDoc = await loadingTask.promise;
+                    document.getElementById('page-count').textContent = this.pdfState.pdfDoc.numPages;
+                    this.renderPDFPage(this.pdfState.pageNum);
+                } catch (error) {
+                    console.error('Error loading PDF: ' + error);
+                    const container = document.getElementById('pdf-wrapper');
+                    if(container) container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl text-gray-300 mb-4"></i><div class="text-red-500 font-bold">PDF Load Error</div><div class="text-xs text-gray-500 mt-2">${url}<br>Check file existence and format.</div></div>`;
                 }
-                container.innerHTML = `<div class="max-w-md mx-auto bg-white p-8 border border-gray-200 shadow-lg mt-8"><div class="flex border-b border-gray-200 mb-6"><button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.nextElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-navy border-b-2 border-orange">Login</button><button onclick="document.getElementById('form-register').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.previousElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-gray-400">Register</button></div><div id="form-login"><input type="text" id="login-user" placeholder="Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="login-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3">Sign In</button><p class="text-xs text-center text-gray-400 mt-4">Uses custom cloud database</p></div><div id="form-register" class="hidden"><input type="text" id="reg-user" placeholder="Choose Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="reg-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-accent py-3">Create Account</button><p class="text-xs text-center text-gray-400 mt-4">Passwords are hashed before sending</p></div></div>`;
             },
-            async handleLogin() {
-                const user = document.getElementById('login-user').value;
-                const pass = document.getElementById('login-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-login button'); btn.innerText = "Verifying...";
-                const res = await Auth.login(user, pass);
-                if(res.success) { Toast.show("Welcome back!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Sign In"; }
+
+            renderPDFPage(num) {
+                this.pdfState.pageRendering = true;
+                this.pdfState.pdfDoc.getPage(num).then((page) => {
+                    const viewport = page.getViewport({scale: this.pdfState.scale});
+                    this.pdfState.canvas.height = viewport.height;
+                    this.pdfState.canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: this.pdfState.ctx,
+                        viewport: viewport
+                    };
+                    const renderTask = page.render(renderContext);
+
+                    renderTask.promise.then(() => {
+                        this.pdfState.pageRendering = false;
+                        if (this.pdfState.pageNumPending !== null) {
+                            this.renderPDFPage(this.pdfState.pageNumPending);
+                            this.pdfState.pageNumPending = null;
+                        }
+                    });
+                });
+
+                document.getElementById('page-num').textContent = num;
+                const input = document.getElementById('pdf-page-input');
+                if(input) input.value = num;
+                
+                const btnPrev = document.getElementById('prev-pdf');
+                if(btnPrev) btnPrev.disabled = num <= 1;
+                const btnNext = document.getElementById('next-pdf');
+                if(btnNext) btnNext.disabled = num >= this.pdfState.pdfDoc.numPages;
             },
-            async handleRegister() {
-                const user = document.getElementById('reg-user').value;
-                const pass = document.getElementById('reg-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-register button'); btn.innerText = "Creating...";
-                const res = await Auth.register(user, pass);
-                if(res.success) { Toast.show("Account created!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Create Account"; }
+
+            queueRenderPage(num) {
+                if (this.pdfState.pageRendering) {
+                    this.pdfState.pageNumPending = num;
+                } else {
+                    this.renderPDFPage(num);
+                }
             },
+
+            prevPDFPage() {
+                if (this.pdfState.pageNum <= 1) return;
+                this.pdfState.pageNum--;
+                this.queueRenderPage(this.pdfState.pageNum);
+            },
+
+            nextPDFPage() {
+                if (this.pdfState.pageNum >= this.pdfState.pdfDoc.numPages) return;
+                this.pdfState.pageNum++;
+                this.queueRenderPage(this.pdfState.pageNum);
+            },
+            
+            zoomPDFIn() {
+                this.pdfState.scale += 0.2;
+                this.renderPDFPage(this.pdfState.pageNum);
+            },
+
+            zoomPDFOut() {
+                if(this.pdfState.scale <= 0.4) return;
+                this.pdfState.scale -= 0.2;
+                this.renderPDFPage(this.pdfState.pageNum);
+            },
+            
+            goToPDFPage(val) {
+                let num = parseInt(val);
+                if(!num) return;
+                if(num < 1) num = 1;
+                if(num > this.pdfState.pdfDoc.numPages) num = this.pdfState.pdfDoc.numPages;
+                this.pdfState.pageNum = num;
+                this.queueRenderPage(num);
+            },
+
 
             // --- UTILS ---
             toggleFullscreen(elementId) {
@@ -508,6 +551,7 @@
                             <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span>
                             <span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span>
                         </div>
+                        
                         <div class="flip-container w-full h-80 relative cursor-pointer group" onclick="app.flipFlashcard()">
                             <div class="flip-inner border border-gray-200 shadow-md bg-white" id="flashcard-inner">
                                 <div class="flip-front p-8 text-center"><span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span><h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3><p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p></div>
@@ -554,9 +598,36 @@
                 const mediaPath = 'CbapMedia/';
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
-                if(type === 'textbook' || type === 'slide') { viewer = `<iframe src="${type==='textbook'?files.textbook:files.slide}" class="w-full h-full border-none bg-gray-100"></iframe>`; }
+                
+                if(type === 'textbook' || type === 'slide') { 
+                    // PDF VIEW USING PDF.JS RENDERER
+                    const src = type === 'textbook' ? files.textbook : files.slide;
+                    viewer = `
+                        <div class="flex flex-col h-full bg-gray-100" id="pdf-wrapper">
+                            <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
+                                <div class="flex items-center gap-2">
+                                    <button id="prev-pdf" onclick="app.prevPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <span class="text-xs font-bold text-gray-500">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
+                                    <button id="next-pdf" onclick="app.nextPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>
+                                    <input type="number" id="pdf-page-input" class="w-12 text-center border border-gray-300 rounded text-xs py-1" onchange="app.goToPDFPage(this.value)">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="app.zoomPDFOut()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                                    <span id="pdf-zoom-level" class="text-xs font-bold text-navy w-10 text-center">100%</span>
+                                    <button onclick="app.zoomPDFIn()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-200 relative">
+                                <canvas id="the-canvas" class="shadow-lg bg-white"></canvas>
+                            </div>
+                        </div>
+                    `;
+                    // Load PDF after render
+                    setTimeout(() => app.loadPDF(src), 0);
+                }
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
                 else if(type === 'video') { viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`; }
+                
                 container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
             },
 
