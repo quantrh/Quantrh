@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.7 (OneDrive Updated)</title>
+    <title>CBAP Master - Cloud Sync v8.9 (Dual PDF Viewer)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.7...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.9...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.7</div>
-            <div class="text-[10px] font-bold text-navy mt-1">OneDrive Fix</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.9</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Dual PDF Viewer</div>
         </div>
     </aside>
 
@@ -319,6 +319,7 @@
             isSidebarOpen: false,
             isLibraryMenuOpen: true,
             zoomLevel: 1,
+            pdfMode: 'canvas', // 'canvas' or 'iframe'
             pdfState: { pdfDoc: null, pageNum: 1, pageRendering: false, pageNumPending: null, scale: 1.0, canvas: null, ctx: null },
 
             async start() {
@@ -380,6 +381,13 @@
                 const container = document.getElementById('app-container');
                 this.renderLibrary(container, this.lastLibraryParams || {}); 
             },
+            
+            togglePDFMode(container) {
+                this.pdfMode = this.pdfMode === 'canvas' ? 'iframe' : 'canvas';
+                // Re-render library with new mode
+                this.renderLibrary(container, this.lastLibraryParams || {});
+                Toast.show(`Switched to ${this.pdfMode === 'canvas' ? 'Canvas' : 'Browser'} Viewer`, 'info');
+            },
 
             nav(view, params) {
                 if(window.innerWidth < 768 && this.isSidebarOpen) this.toggleSidebar();
@@ -440,12 +448,18 @@
             renderPDFPage(num) {
                 this.pdfState.pageRendering = true;
                 this.pdfState.pdfDoc.getPage(num).then((page) => {
+                    const outputScale = window.devicePixelRatio || 1;
                     const viewport = page.getViewport({scale: this.pdfState.scale});
-                    this.pdfState.canvas.height = viewport.height;
-                    this.pdfState.canvas.width = viewport.width;
+
+                    this.pdfState.canvas.width = Math.floor(viewport.width * outputScale);
+                    this.pdfState.canvas.height = Math.floor(viewport.height * outputScale);
+                    
+                    this.pdfState.canvas.style.width = Math.floor(viewport.width) + "px";
+                    this.pdfState.canvas.style.height = Math.floor(viewport.height) + "px";
 
                     const renderContext = {
                         canvasContext: this.pdfState.ctx,
+                        transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
                         viewport: viewport
                     };
                     const renderTask = page.render(renderContext);
@@ -490,13 +504,13 @@
             },
             
             zoomPDFIn() {
-                this.pdfState.scale += 0.2;
+                this.pdfState.scale += 0.25;
                 this.renderPDFPage(this.pdfState.pageNum);
             },
 
             zoomPDFOut() {
-                if(this.pdfState.scale <= 0.4) return;
-                this.pdfState.scale -= 0.2;
+                if(this.pdfState.scale <= 0.5) return;
+                this.pdfState.scale -= 0.25;
                 this.renderPDFPage(this.pdfState.pageNum);
             },
             
@@ -624,29 +638,46 @@
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
                 
-                if(type === 'textbook' || type === 'slide') { 
+                if(type === 'textbook' || type === 'slide') {
                     const src = type === 'textbook' ? files.textbook : files.slide;
-                    viewer = `
-                        <div class="flex flex-col h-full bg-gray-100" id="pdf-wrapper">
-                            <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
-                                <div class="flex items-center gap-2">
-                                    <button id="prev-pdf" onclick="app.prevPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <span class="text-xs font-bold text-gray-500">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
-                                    <button id="next-pdf" onclick="app.nextPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>
-                                    <input type="number" id="pdf-page-input" class="w-12 text-center border border-gray-300 rounded text-xs py-1" onchange="app.goToPDFPage(this.value)">
+                    
+                    if (this.pdfMode === 'iframe') {
+                         // IFRAME MODE (BROWSER DEFAULT)
+                         viewer = `
+                             <div class="flex flex-col h-full bg-gray-100">
+                                 <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
+                                     <span class="text-xs font-bold text-gray-500">Browser Viewer Active</span>
+                                     <button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Switch to Custom Viewer</button>
+                                 </div>
+                                 <iframe src="${src}" class="w-full h-full border-none"></iframe>
+                             </div>
+                         `;
+                    } else {
+                        // CANVAS MODE (PDF.JS)
+                        viewer = `
+                            <div class="flex flex-col h-full bg-gray-100" id="pdf-wrapper">
+                                <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
+                                    <div class="flex items-center gap-2">
+                                        <button id="prev-pdf" onclick="app.prevPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>
+                                        <span class="text-xs font-bold text-gray-500">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
+                                        <button id="next-pdf" onclick="app.nextPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>
+                                        <input type="number" id="pdf-page-input" class="w-12 text-center border border-gray-300 rounded text-xs py-1" onchange="app.goToPDFPage(this.value)">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="app.zoomPDFOut()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                                        <span id="pdf-zoom-level" class="text-xs font-bold text-navy w-10 text-center">100%</span>
+                                        <button onclick="app.zoomPDFIn()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                                        <div class="h-4 w-px bg-gray-300 mx-2"></div>
+                                        <button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="text-[10px] font-bold text-orange hover:underline uppercase" title="Switch Viewer">Switch Viewer</button>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="app.zoomPDFOut()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
-                                    <span id="pdf-zoom-level" class="text-xs font-bold text-navy w-10 text-center">100%</span>
-                                    <button onclick="app.zoomPDFIn()" class="p-2 text-navy hover:bg-gray-100 rounded" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                                <div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-200 relative">
+                                    <canvas id="the-canvas" class="shadow-lg bg-white"></canvas>
                                 </div>
                             </div>
-                            <div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-200 relative">
-                                <canvas id="the-canvas" class="shadow-lg bg-white"></canvas>
-                            </div>
-                        </div>
-                    `;
-                    setTimeout(() => app.loadPDF(src), 0);
+                        `;
+                        setTimeout(() => app.loadPDF(src), 0);
+                    }
                 }
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
                 else if(type === 'video') { 
