@@ -3,489 +3,356 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBAP Master - GitHub Edition v5.0</title>
-    <!-- Tailwind Config -->
-    <script>
-        window.tailwind = {
-            config: {
-                theme: {
-                    extend: {
-                        colors: {
-                            navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
-                            orange: { DEFAULT: '#FF6600', light: '#FF8533' },
-                            grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#666666' }
-                        },
-                        fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
-                        borderRadius: { 'swiss': '2px' },
-                        boxShadow: { 'swiss': '0 1px 2px rgba(0,0,0,0.05)' }
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>CBAP Master - v6.0 Diagnostic</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    
+    <!-- Visual Debug Console (Hiển thị log lỗi trực tiếp lên màn hình) -->
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
-        .swiss-card { background: #FFFFFF; border: 1px solid #E5E5E5; border-radius: 0px; }
-        .swiss-btn { border-radius: 0px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; transition: all 0.2s ease; cursor: pointer; }
-        .swiss-btn-primary { background-color: #003366; color: white; border: 1px solid #003366; }
-        .swiss-btn-primary:hover { background-color: #002244; }
-        .swiss-btn-accent { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
-        .swiss-btn-outline { background-color: transparent; color: #003366; border: 1px solid #003366; }
-        .swiss-btn-outline:hover { background-color: #F0F4F8; }
-        .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; }
-        .lib-tab:hover { color: #003366; }
-        .lib-tab.active { border-bottom: 2px solid #FF6600; color: #003366; font-weight: bold; }
-        .nav-item { border-left: 4px solid transparent; color: #666; }
-        .nav-item.active { background-color: #F8F9FA; color: #003366; border-left: 4px solid #FF6600; font-weight: bold; }
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-        .card-container.flipped .card-inner { transform: rotateY(180deg); }
-        #activityCanvas { width: 100%; height: 100%; background: #FFFFFF; }
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 250px; background: white; border: 1px solid #003366; border-left: 6px solid #FF6600; padding: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        h1, h2, h3, h4, h5, h6 { font-weight: 700; letter-spacing: -0.5px; color: #003366; }
-        .grid-bg { background-size: 40px 40px; background-image: linear-gradient(to right, #f0f0f0 1px, transparent 1px), linear-gradient(to bottom, #f0f0f0 1px, transparent 1px); }
+        #debug-console {
+            position: fixed; top: 0; left: 0; width: 100%; height: 120px;
+            background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
+            font-size: 11px; padding: 10px; z-index: 9999; overflow-y: auto;
+            border-bottom: 2px solid #0f0; display: block; pointer-events: none;
+        }
+        /* Ẩn console sau khi load thành công */
+        body.loaded #debug-console { display: none; }
         
         /* Loading Overlay */
-        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        #error-log { display: none; margin-top: 20px; padding: 15px; background: #FFF0F0; border: 1px solid #FFCDCD; color: #D8000C; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-width: 90%; text-align: left; overflow-x: auto; max-height: 250px; overflow-y: auto; width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .log-success { color: #008000; font-weight: bold; }
+        #loading-overlay { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; top: 120px; /* Make space for console */ }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
+
+    <!-- Script ghi log ngay lập tức -->
+    <script>
+        function log(msg, type='info') {
+            const c = document.getElementById('debug-console');
+            if(c) {
+                const time = new Date().toLocaleTimeString();
+                const color = type === 'error' ? 'red' : (type === 'success' ? '#0f0' : '#ccc');
+                c.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+                c.scrollTop = c.scrollHeight;
+            }
+            console.log(msg);
+        }
+        window.onerror = function(msg, url, line) {
+            log(`CRITICAL ERROR: ${msg} (Line ${line})`, 'error');
+            document.getElementById('manual-entry-btn').style.display = 'block';
+        };
+    </script>
+
+    <!-- External Libs (Load async to prevent blocking) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Tailwind config
+        window.tailwind = { config: { theme: { extend: { colors: { navy: '#003366', orange: '#FF6600' } } } } };
+    </script>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800 bg-white">
 
-    <!-- LOADING OVERLAY -->
+    <!-- DEBUG CONSOLE -->
+    <div id="debug-console">Waiting for JS engine...</div>
+
+    <!-- LOADING SCREEN -->
     <div id="loading-overlay">
-        <div class="w-12 h-12 border-4 border-navy border-t-orange rounded-full animate-spin mb-4" id="spinner"></div>
-        <h2 class="text-navy font-bold text-xl" id="loading-title">System Initializing</h2>
-        <p class="text-gray-500 text-sm mt-2 font-mono" id="loading-text">Starting application...</p>
-        <div id="error-log"></div>
+        <div class="spinner mb-4"></div>
+        <h2 class="text-xl font-bold text-[#003366]">CBAP Master v6.0</h2>
+        <p id="loading-status" class="text-sm text-gray-500 mt-2">Initializing...</p>
         
-        <div id="loading-controls" class="hidden flex gap-4 mt-6">
-            <button onclick="location.reload()" class="swiss-btn swiss-btn-primary px-6 py-2">Retry</button>
-            <button onclick="app.closeLoading()" class="swiss-btn swiss-btn-accent px-6 py-2">Force Enter (Manual Upload)</button>
-        </div>
+        <!-- Emergency Button -->
+        <button id="manual-entry-btn" onclick="app.emergencyEnter()" style="display:none; margin-top:20px; padding:10px 20px; background:#FF6600; color:white; border:none; cursor:pointer;">
+            Force Enter Dashboard (Skip Load)
+        </button>
     </div>
 
-    <!-- SIDEBAR -->
-    <aside class="w-16 lg:w-64 bg-white border-r border-grey-line flex flex-col z-20 transition-all duration-300 flex-shrink-0">
-        <div class="h-16 lg:h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-grey-line">
-            <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-lg rounded-none">C</div>
-            <span class="ml-3 font-bold text-xl hidden lg:block tracking-tight text-navy">CBAP<span class="text-orange">.PRO</span></span>
-        </div>
-        
-        <nav class="flex-1 py-4 lg:py-6 space-y-1 overflow-y-auto">
-            <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-chart-pie text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Dashboard</span>
-            </button>
-            <button onclick="app.navigate('learn')" id="nav-learn" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-book-open text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Knowledge Hub</span>
-            </button>
-            <button onclick="app.navigate('library')" id="nav-library" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-book-journal-whills text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Library</span>
-            </button>
-            <button onclick="app.navigate('exam')" id="nav-exam" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-pen-ruler text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Exam Engine</span>
-            </button>
-            <button onclick="app.navigate('flashcards')" id="nav-flashcards" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-clone text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Flashcards</span>
-            </button>
-            <button onclick="app.navigate('help')" id="nav-help" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-circle-question text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Guide</span>
-            </button>
-             <button onclick="app.navigate('admin')" id="nav-admin" class="nav-item w-full flex items-center justify-center lg:justify-start p-3 lg:p-4 transition-all group hover:bg-gray-50">
-                <i class="fa-solid fa-sliders text-lg w-6 text-center"></i><span class="hidden lg:block font-medium text-sm uppercase tracking-wide ml-3">Settings</span>
-            </button>
-        </nav>
-        
-        <div class="p-6 border-t border-grey-line hidden lg:block">
-            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v5.0</div>
-            <div class="text-xs font-bold text-navy mt-1">BABOK® Aligned</div>
-        </div>
-    </aside>
+    <!-- MAIN UI (Hidden initially) -->
+    <div id="main-layout" class="flex h-full w-full opacity-0 transition-opacity duration-500">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white border-r flex-shrink-0 flex flex-col">
+            <div class="h-16 flex items-center px-6 border-b font-bold text-[#003366] text-xl">CBAP.PRO</div>
+            <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
+                <button onclick="app.nav('dashboard')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-chart-pie w-8 text-center"></i> Dashboard</button>
+                <button onclick="app.nav('learn')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-book w-8 text-center"></i> Knowledge Hub</button>
+                <button onclick="app.nav('library')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-book-open w-8 text-center"></i> Library</button>
+                <button onclick="app.nav('exam')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-pen-ruler w-8 text-center"></i> Exam Engine</button>
+                <button onclick="app.nav('flashcards')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-clone w-8 text-center"></i> Flashcards</button>
+                <button onclick="app.nav('admin')" class="w-full text-left p-3 hover:bg-gray-100 rounded flex items-center"><i class="fa-solid fa-gear w-8 text-center"></i> Settings</button>
+            </nav>
+        </aside>
 
-    <!-- MAIN VIEW -->
-    <main class="flex-1 flex flex-col relative overflow-hidden bg-white w-full">
-        <!-- Header -->
-        <header class="h-16 lg:h-20 bg-white border-b border-grey-line flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10 flex-shrink-0">
-            <div>
-                <h2 id="page-title" class="text-lg lg:text-2xl font-bold text-navy uppercase tracking-tight">Overview</h2>
-                <div class="h-1 w-8 lg:w-12 bg-orange mt-1"></div>
-            </div>
-            <div class="flex items-center gap-3 lg:gap-6">
-                <div class="text-right hidden sm:block">
-                    <div class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Candidate Profile</div>
-                    <div class="font-bold text-navy text-sm lg:text-base">User</div>
-                </div>
-                <div class="w-8 h-8 lg:w-10 lg:h-10 border border-navy flex items-center justify-center text-navy font-bold hover:bg-navy hover:text-white transition cursor-pointer">
-                    <i class="fa-solid fa-user text-sm"></i>
-                </div>
-            </div>
-        </header>
+        <!-- CONTENT -->
+        <main class="flex-1 flex flex-col bg-gray-50">
+            <header class="h-16 bg-white border-b px-8 flex items-center justify-between">
+                <h2 id="page-title" class="text-xl font-bold text-[#003366]">Overview</h2>
+            </header>
+            <div id="app-container" class="flex-1 p-8 overflow-y-auto"></div>
+        </main>
+    </div>
 
-        <!-- Dynamic Content -->
-        <div id="app-container" class="flex-1 overflow-y-auto p-4 lg:p-8 grid-bg w-full"></div>
-    </main>
-
-    <div id="toast-container"></div>
-
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- APP LOGIC -->
     <script>
-        // Global Error Handler to catch startup crashes
-        window.onerror = function(msg, url, line, col, error) {
-            const errorLog = document.getElementById('error-log');
-            if(errorLog) {
-                errorLog.style.display = 'block';
-                errorLog.innerHTML += `<div class="mb-2 text-red-600 font-bold">Runtime Error: ${msg}</div>`;
-                document.getElementById('loading-controls').classList.remove('hidden');
-            }
-            return false;
-        };
-
-        const Toast = {
-            show(msg, type = 'info') {
-                const container = document.getElementById('toast-container');
-                const div = document.createElement('div');
-                div.className = 'toast';
-                const icon = type === 'success' ? '<i class="fa-solid fa-check text-orange"></i>' : (type === 'error' ? '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>' : '<i class="fa-solid fa-info text-navy"></i>');
-                div.innerHTML = `${icon} <span class="text-sm font-bold text-navy uppercase tracking-wide">${msg}</span>`;
-                container.appendChild(div);
-                setTimeout(() => { div.style.opacity = '0'; div.style.transform = 'translateX(100%)'; setTimeout(() => div.remove(), 300); }, 3000);
-            }
-        };
+        log("Script execution started...");
 
         const DB = {
-            key: 'CBAP_CANVAS_V5_CLEAN',
-            state: { user: { name: 'User', xp: 0 }, questions: [], flashcards: [], attempts: [], curriculum: [] },
-            
+            key: 'CBAP_V6_DATA',
+            state: { user: {}, curriculum: [], questions: [], flashcards: [] },
+
             async init() {
-                try {
-                    const data = localStorage.getItem(this.key);
-                    if (data) {
-                        try {
-                            this.state = JSON.parse(data);
-                        } catch(e) {
-                            console.error("Local data corrupted, resetting.");
-                            localStorage.removeItem(this.key);
-                        }
-                        
-                        // Verify critical data exists
-                        if(!this.state.curriculum || this.state.curriculum.length === 0) {
-                            await this.seedFromJSON();
-                        } else {
-                            // Data OK, remove loading and go
-                            this.finishLoading(true);
-                        }
-                    } else {
-                        await this.seedFromJSON();
-                    }
-                } catch (e) {
-                    console.error("DB Init Error:", e);
-                    throw e; // Pass to global handler
-                }
-            },
+                log("DB.init() called");
+                // Reset flag for debugging
+                // localStorage.removeItem(this.key); 
 
-            finishLoading(success) {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                app.navigate('dashboard');
-                if(success) Toast.show("System Ready", "success");
-            },
-
-            async seedFromJSON() {
-                const loadingText = document.getElementById('loading-text');
-                const errorLog = document.getElementById('error-log');
-                const controls = document.getElementById('loading-controls');
-                
-                loadingText.innerText = "Scanning for data files...";
-                
-                // Show controls if it takes too long (Fail-safe)
-                setTimeout(() => {
-                    const overlay = document.getElementById('loading-overlay');
-                    if(!overlay.classList.contains('hidden')) {
-                        controls.classList.remove('hidden');
-                        if(loadingText.innerText.includes("Scanning")) {
-                            loadingText.innerText = "Initialization timed out. Click 'Force Enter'.";
-                        }
-                    }
-                }, 4000);
-
-                // Try to detect folder. We prioritize 'CbapMedia'
-                let folderName = 'CbapMedia';
-                
-                // Note: HEAD requests can fail on some servers/local setups. 
-                // We will try GET directly.
-                const filesToLoad = ['curriculum.json', 'questions.json', 'flashcards.json'];
-                
-                let loadedCount = 0;
-
-                for (let file of filesToLoad) {
-                    loadingText.innerText = `Loading ${file}...`;
-                    const path = `${folderName}/${file}`;
-                    const cacheBuster = `?v=${new Date().getTime()}`; // Prevent caching
-                    
+                const data = localStorage.getItem(this.key);
+                if (data) {
                     try {
-                        const res = await fetch(path + cacheBuster);
-                        
-                        if (!res.ok) {
-                            throw new Error(`HTTP ${res.status}`);
+                        this.state = JSON.parse(data);
+                        log(`Found local data: ${this.state.curriculum?.length || 0} KA chapters`);
+                        if (this.state.curriculum && this.state.curriculum.length > 0) {
+                            return true; // Data ready
                         }
-                        
-                        let text = await res.text();
-                        // Strip BOM
-                        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                        
-                        // Check if HTML (404 page often returns HTML)
-                        if (text.trim().startsWith('<')) throw new Error("Received HTML instead of JSON");
-
-                        const json = JSON.parse(text);
-                        const key = file.replace('.json', '');
-                        this.state[key] = json;
-                        
-                        loadedCount++;
-                        errorLog.style.display = 'block';
-                        errorLog.innerHTML += `<div class="mb-1 log-success">✅ Loaded ${file}</div>`;
-                        
-                    } catch (err) {
-                        const msg = `Failed to load ${file}`;
-                        console.warn(msg, err);
-                        errorLog.style.display = 'block';
-                        errorLog.innerHTML += `<div class="mb-1 text-red-600">❌ ${msg}: ${err.message}</div>`;
-                        // Initialize empty to prevent null pointer errors later
-                        this.state[file.replace('.json', '')] = [];
+                    } catch (e) {
+                        log("Local data corrupted", "error");
                     }
+                }
+                
+                log("No valid local data. Starting fetch sequence...");
+                return await this.fetchData();
+            },
+
+            async fetchData() {
+                const files = ['curriculum.json', 'questions.json', 'flashcards.json'];
+                // Try subfolder first, then root
+                const paths = ['CbapMedia/', '']; 
+                let successCount = 0;
+
+                for (let file of files) {
+                    let loaded = false;
+                    for (let pathPrefix of paths) {
+                        const url = `${pathPrefix}${file}?t=${Date.now()}`; // Anti-cache
+                        log(`Trying to fetch: ${url}`);
+                        try {
+                            const res = await fetch(url);
+                            if (res.ok) {
+                                let text = await res.text();
+                                // Clean BOM
+                                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                                
+                                const json = JSON.parse(text);
+                                const key = file.replace('.json', '');
+                                this.state[key] = json;
+                                log(`✅ Loaded ${file} from ${pathPrefix || 'root'}`, 'success');
+                                loaded = true;
+                                successCount++;
+                                break; // Stop trying paths for this file
+                            } else {
+                                log(`Failed ${url}: ${res.status}`);
+                            }
+                        } catch (e) {
+                            log(`Error fetching ${url}: ${e.message}`, 'error');
+                        }
+                    }
+                    if (!loaded) log(`❌ Could not load ${file}`, 'error');
                 }
 
                 this.save();
-                
-                // If curriculum loaded, we consider it a success enough to start
-                if (this.state.curriculum && this.state.curriculum.length > 0) {
-                    this.finishLoading(true);
-                } else {
-                    loadingText.innerText = "Critical Data Missing";
-                    errorLog.innerHTML += `<div class="mt-2 text-red-600 font-bold">Curriculum data failed to load.</div>`;
-                    controls.classList.remove('hidden');
-                }
+                return successCount > 0;
             },
 
-            save() { localStorage.setItem(this.key, JSON.stringify(this.state)); }
+            save() {
+                localStorage.setItem(this.key, JSON.stringify(this.state));
+            }
         };
 
         const app = {
-            view: 'dashboard',
-            
-            // Start app when DOM is ready
-            start() {
-                // Ensure UI is ready
-                DB.init().catch(err => {
-                    document.getElementById('loading-text').innerText = "Initialization Crashed";
-                    document.getElementById('loading-controls').classList.remove('hidden');
-                });
-            },
-
-            closeLoading() {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                if(!DB.state.curriculum || DB.state.curriculum.length === 0) {
-                    this.navigate('admin');
-                    Toast.show("Please Import Data Manually", "info");
-                } else {
-                    this.navigate('dashboard');
-                }
-            },
-
-            forceManualMode() {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                this.navigate('admin');
-                Toast.show("Manual Mode Activated", "info");
-            },
-
-            navigate(target, param = null) {
-                this.view = target;
-                document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active'); if(el.id === `nav-${target}`) el.classList.add('active'); });
-                const titles = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', help: 'User Guide', admin: 'Data Admin' };
-                document.getElementById('page-title').innerText = titles[target] || 'CBAP Master';
-                const container = document.getElementById('app-container');
-                container.innerHTML = '';
-                
+            async start() {
+                log("App starting...");
                 try {
-                    switch(target) {
-                        case 'dashboard': this.renderDashboard(container); break;
-                        case 'learn': this.renderLearn(container); break;
-                        case 'library': this.renderLibrary(container, param); break;
-                        case 'task_detail': this.renderTaskDetail(container, param); break;
-                        case 'exam': this.renderExam(container); break;
-                        case 'flashcards': this.renderFlashcards(container); break;
-                        case 'help': this.renderHelp(container); break;
-                        case 'admin': this.renderAdmin(container); break;
+                    const ready = await DB.init();
+                    if (ready) {
+                        log("System ready. Launching UI...", 'success');
+                        this.launch();
+                    } else {
+                        log("Initialization incomplete. Please import manually.", 'error');
+                        document.getElementById('loading-status').innerText = "Data missing. Please manual import.";
+                        document.getElementById('manual-entry-btn').style.display = 'block';
                     }
-                } catch(e) {
-                    console.error("Render Error:", e);
-                    container.innerHTML = `<div class="p-8 text-red-600">Error rendering view: ${e.message}</div>`;
+                } catch (e) {
+                    log(`Fatal crash: ${e.message}`, 'error');
+                    document.getElementById('manual-entry-btn').style.display = 'block';
                 }
             },
 
-            toggleFullscreen(elementId) {
-                const elem = document.getElementById(elementId);
-                if (!elem) return;
-                if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen(); } 
-                else { if (document.exitFullscreen) document.exitFullscreen(); }
+            launch() {
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('main-layout').classList.remove('opacity-0');
+                document.body.classList.add('loaded'); // Hides debug console
+                this.nav('dashboard');
+            },
+
+            emergencyEnter() {
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('main-layout').classList.remove('opacity-0');
+                this.nav('admin');
+                alert("Please use the Import buttons to load your JSON files.");
+            },
+
+            nav(view, params) {
+                const container = document.getElementById('app-container');
+                document.getElementById('page-title').innerText = view.toUpperCase();
+                container.innerHTML = '';
+
+                switch(view) {
+                    case 'dashboard': this.renderDashboard(container); break;
+                    case 'library': this.renderLibrary(container, params); break;
+                    case 'learn': this.renderLearn(container); break;
+                    case 'admin': this.renderAdmin(container); break;
+                    default: container.innerHTML = `<div class="p-4">View: ${view} (Coming soon)</div>`;
+                }
             },
 
             renderDashboard(container) {
-                const totalCards = DB.state.flashcards ? DB.state.flashcards.length : 0;
-                const totalQ = DB.state.questions ? DB.state.questions.length : 0;
-                
-                // Safe Chart Init (fixes chart.js storage error crash)
-                setTimeout(() => { 
-                    const canvas = document.getElementById('activityCanvas');
-                    if(canvas) {
-                        const ctx = canvas.getContext('2d');
-                        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,canvas.width,canvas.height); 
-                        // Simple Visualizer Logic
-                        const particles = Array.from({length: 15}, () => ({x: Math.random()*canvas.width, y: Math.random()*canvas.height}));
-                        ctx.fillStyle = '#FF6600';
-                        particles.forEach(p => ctx.fillRect(p.x, p.y, 3, 3));
-                    }
-                }, 100);
-
-                if (totalQ === 0) {
-                    container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-8"><div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 text-gray-400 text-3xl"><i class="fa-solid fa-database"></i></div><h2 class="text-2xl font-bold text-navy mb-2">No Data Available</h2><p class="text-gray-500 max-w-md mb-8">Data load failed or blocked. Please import manually.</p><button onclick="app.navigate('admin')" class="swiss-btn swiss-btn-primary px-8 py-3">Go to Settings</button></div>`;
-                    return;
-                }
-
+                const qs = DB.state.questions?.length || 0;
+                const cs = DB.state.curriculum?.length || 0;
                 container.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
-                        <div class="swiss-card lg:col-span-2 relative h-[250px] lg:h-[300px] flex flex-col">
-                            <div class="absolute inset-0 z-0"><canvas id="activityCanvas"></canvas></div>
-                            <div class="relative z-10 p-6 pointer-events-none"><h3 class="font-bold text-navy uppercase text-xs tracking-widest mb-2">System Status</h3><div class="text-3xl lg:text-4xl font-bold text-navy mb-4">ACTIVE</div><div class="inline-block border border-orange text-orange px-2 py-1 text-xs font-bold uppercase bg-white">Ready</div></div>
-                            <div class="relative z-10 mt-auto p-4 lg:p-6 grid grid-cols-3 gap-4 border-t border-grey-line bg-white/90">
-                                <div class="text-center border-r border-grey-line last:border-0"><div class="text-2xl lg:text-3xl font-bold text-navy">${totalCards}</div><div class="text-[9px] lg:text-[10px] text-gray-500 uppercase tracking-wider mt-1">Cards</div></div>
-                                <div class="text-center border-r border-grey-line last:border-0"><div class="text-2xl lg:text-3xl font-bold text-navy">${totalQ}</div><div class="text-[9px] lg:text-[10px] text-gray-500 uppercase tracking-wider mt-1">Questions</div></div>
-                                <div class="text-center"><div class="text-2xl lg:text-3xl font-bold text-navy">--</div><div class="text-[9px] lg:text-[10px] text-gray-500 uppercase tracking-wider mt-1">Sessions</div></div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 shadow border-t-4 border-navy">
+                            <h3 class="font-bold text-gray-500 text-sm">Knowledge Areas</h3>
+                            <div class="text-3xl font-bold text-navy mt-2">${cs}</div>
                         </div>
-                        <div class="swiss-card p-6 flex flex-col justify-between">
-                            <div><h3 class="font-bold text-navy uppercase text-xs tracking-widest mb-6">Quick Actions</h3><div class="w-full bg-gray-100 h-1 mb-6"><div class="bg-navy h-1" style="width: 100%"></div></div></div>
-                            <div class="space-y-3 mt-6"><button onclick="app.navigate('library')" class="swiss-btn swiss-btn-accent w-full py-3 lg:py-4">Library <i class="fa-solid fa-book ml-2"></i></button><button onclick="app.navigate('exam')" class="swiss-btn swiss-btn-outline w-full py-3 lg:py-4">Start Quiz</button></div>
+                        <div class="bg-white p-6 shadow border-t-4 border-orange">
+                            <h3 class="font-bold text-gray-500 text-sm">Question Bank</h3>
+                            <div class="text-3xl font-bold text-orange mt-2">${qs}</div>
+                        </div>
+                        <div class="bg-white p-6 shadow">
+                            <h3 class="font-bold text-gray-500 text-sm">Action</h3>
+                            <button onclick="app.nav('library')" class="mt-2 w-full bg-navy text-white py-2 px-4 rounded">Go to Library</button>
                         </div>
                     </div>
                 `;
             },
 
             renderLibrary(container, params) {
-                if(!DB.state.curriculum || !DB.state.curriculum.length) { app.navigate('admin'); return; }
-                const activeCode = (params && params.code) ? params.code : DB.state.curriculum[0].code;
-                const activeTab = (params && params.tab) ? params.tab : 'textbook';
-                const chapters = DB.state.curriculum;
-                const activeChapter = chapters.find(c => c.code === activeCode) || chapters[0];
-                const mediaPath = 'CbapMedia/'; // Standardize path
-                const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, info: `${mediaPath}${activeCode}_Info.png`, video: `${mediaPath}${activeCode}_Video.mp4`, mindmap: `${mediaPath}${activeCode}_Mindmap.png` };
-                
-                let contentHtml = '';
-                if(activeTab === 'textbook') contentHtml = `<div class="h-full flex flex-col"><div class="flex-1 bg-gray-100 border border-grey-line flex items-center justify-center relative"><iframe src="${files.textbook}" class="w-full h-full" onerror="this.style.display='none'; document.getElementById('pdf-error').style.display='flex'"></iframe><div id="pdf-error" class="hidden absolute inset-0 flex flex-col items-center justify-center p-8 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl text-gray-300 mb-4"></i><h4 class="font-bold text-gray-500">PDF Not Found</h4><p class="text-sm text-gray-400 mt-2">${files.textbook}<br>Ensure file exists in CbapMedia/</p></div></div></div>`;
-                else if(activeTab === 'info' || activeTab === 'mindmap') contentHtml = `<div class="h-full overflow-y-auto bg-white flex items-center justify-center"><img src="${activeTab === 'info' ? files.info : files.mindmap}" class="max-w-full max-h-full border border-grey-line" alt="Image" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`;
-                else if(activeTab === 'video') contentHtml = `<div class="h-full flex flex-col items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
+                const curriculum = DB.state.curriculum || [];
+                if(curriculum.length === 0) {
+                    container.innerHTML = `<div class="text-center p-10">No data. Go to <button onclick="app.nav('admin')" class="text-blue-600 underline">Settings</button> to import.</div>`;
+                    return;
+                }
+
+                const activeCode = params?.code || curriculum[0].code;
+                const activeItem = curriculum.find(c => c.code === activeCode) || curriculum[0];
+                const type = params?.type || 'pdf'; // pdf, video, image
+
+                // File Path Logic
+                const basePath = 'CbapMedia/';
+                const fileMap = {
+                    pdf: `${basePath}${activeCode}_Textbook.pdf`,
+                    video: `${basePath}${activeCode}_Video.mp4`,
+                    image: `${basePath}${activeCode}_Info.png`
+                };
+
+                let content = '';
+                if(type === 'pdf') content = `<iframe src="${fileMap.pdf}" class="w-full h-[600px] border"></iframe>`;
+                else if(type === 'image') content = `<img src="${fileMap.image}" class="max-w-full border">`;
+                else if(type === 'video') content = `<video controls class="w-full"><source src="${fileMap.video}"></video>`;
 
                 container.innerHTML = `
-                    <div class="flex flex-col lg:flex-row h-full lg:h-[calc(100vh-140px)] gap-6">
-                        <div class="w-full lg:w-64 flex-shrink-0 overflow-y-auto swiss-card h-48 lg:h-full">
-                            <div class="p-4 border-b border-grey-line bg-gray-50 sticky top-0 z-10"><div class="text-xs font-bold text-gray-400 uppercase tracking-widest">Index</div></div>
-                            <div>${chapters.map(c => `<button onclick="app.navigate('library', {code: '${c.code}', tab: '${activeTab}'})" class="w-full text-left p-4 border-b border-grey-line hover:bg-gray-50 transition-colors ${c.code === activeCode ? 'bg-navy text-white hover:bg-navy' : 'text-gray-600'}"><div class="flex items-center justify-between"><span class="font-bold text-sm">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-xs"></i>' : ''}</div><div class="text-xs mt-1 ${c.code === activeCode ? 'text-blue-200' : 'text-gray-400'} truncate">${c.name}</div></button>`).join('')}</div>
+                    <div class="flex flex-col md:flex-row h-full gap-4">
+                        <div class="w-full md:w-64 bg-white shadow overflow-y-auto h-[600px]">
+                            ${curriculum.map(c => `
+                                <div onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" 
+                                     class="p-3 border-b cursor-pointer hover:bg-gray-50 ${c.code === activeCode ? 'bg-blue-50 font-bold text-navy' : ''}">
+                                    ${c.name}
+                                </div>
+                            `).join('')}
                         </div>
-                        <div class="flex-1 flex flex-col swiss-card h-[500px] lg:h-full">
-                            <div class="flex border-b border-grey-line items-center justify-between pr-4 bg-gray-50 overflow-x-auto">
-                                <div class="flex flex-nowrap"><button onclick="app.navigate('library', {code: '${activeCode}', tab: 'textbook'})" class="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold uppercase tracking-widest lib-tab ${activeTab === 'textbook' ? 'active' : ''} whitespace-nowrap"><i class="fa-solid fa-book mr-2"></i> PDF</button><button onclick="app.navigate('library', {code: '${activeCode}', tab: 'info'})" class="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold uppercase tracking-widest lib-tab ${activeTab === 'info' ? 'active' : ''} whitespace-nowrap"><i class="fa-solid fa-image mr-2"></i> Info</button><button onclick="app.navigate('library', {code: '${activeCode}', tab: 'video'})" class="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold uppercase tracking-widest lib-tab ${activeTab === 'video' ? 'active' : ''} whitespace-nowrap"><i class="fa-solid fa-video mr-2"></i> Video</button><button onclick="app.navigate('library', {code: '${activeCode}', tab: 'mindmap'})" class="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold uppercase tracking-widest lib-tab ${activeTab === 'mindmap' ? 'active' : ''} whitespace-nowrap"><i class="fa-solid fa-sitemap mr-2"></i> Map</button></div>
-                                <div class="flex items-center gap-3"><a href="${files.textbook}" target="_blank" class="text-xs font-bold text-gray-500 hover:text-navy" title="Open External"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs font-bold text-gray-500 hover:text-navy" title="Fullscreen"><i class="fa-solid fa-expand text-lg"></i></button></div>
+                        <div class="flex-1 bg-white shadow p-4">
+                            <div class="flex gap-2 mb-4 border-b pb-2">
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'pdf'})" class="px-4 py-1 rounded ${type==='pdf'?'bg-navy text-white':'bg-gray-200'}">Textbook</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'image'})" class="px-4 py-1 rounded ${type==='image'?'bg-navy text-white':'bg-gray-200'}">Infographic</button>
+                                <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-4 py-1 rounded ${type==='video'?'bg-navy text-white':'bg-gray-200'}">Video</button>
                             </div>
-                            <div id="lib-viewer" class="flex-1 p-0 overflow-hidden bg-white relative">${contentHtml}</div>
+                            ${content}
+                            <div class="mt-2 text-xs text-gray-400">File: ${fileMap[type]}</div>
                         </div>
                     </div>
                 `;
             },
 
             renderLearn(container) {
-                if(!DB.state.curriculum || !DB.state.curriculum.length) { app.navigate('admin'); return; }
-                let html = `<div class="max-w-5xl mx-auto"><div class="mb-8 flex items-end justify-between border-b border-navy pb-4"><div><h2 class="text-3xl font-bold text-navy">Knowledge Map</h2><p class="text-gray-500 mt-2 text-sm">BABOK® Guide v3 Structure</p></div><div class="text-right hidden sm:block"><div class="text-4xl font-bold text-orange leading-none">${DB.state.curriculum.length}</div><div class="text-xs font-bold text-navy uppercase tracking-widest">Areas</div></div></div><div class="grid grid-cols-1 gap-px bg-grey-line border border-grey-line">`;
-                DB.state.curriculum.forEach((ka, idx) => {
-                    html += `<div class="bg-white p-6 group hover:bg-gray-50 transition-colors"><div class="flex items-start justify-between cursor-pointer" onclick="document.getElementById('ka-content-${idx}').classList.toggle('hidden');"><div class="flex gap-6"><div class="text-2xl font-bold text-gray-200 group-hover:text-orange transition-colors font-mono">${(idx+1).toString().padStart(2, '0')}</div><div><div class="flex items-center gap-3 mb-2"><span class="bg-navy text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">${ka.code}</span></div><h3 class="text-xl font-bold text-navy mb-2">${ka.name}</h3><p class="text-sm text-gray-500 max-w-2xl">${ka.desc}</p></div></div><button class="swiss-btn-outline h-8 w-8 flex items-center justify-center border border-gray-200 text-gray-400 group-hover:border-navy group-hover:text-navy"><i class="fa-solid fa-plus text-xs"></i></button></div><div id="ka-content-${idx}" class="hidden mt-6 pl-14 pt-6 border-t border-dashed border-gray-200"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${ka.tasks.map(t => `<div onclick="app.navigate('task_detail', {kaId: '${ka.code}', taskId: '${t.id}'})" class="border border-gray-200 p-4 hover:border-orange cursor-pointer transition-colors bg-white hover:shadow-sm"><div class="text-xs font-bold text-gray-400 mb-2 uppercase">Task ${t.id}</div><h4 class="font-bold text-navy text-sm leading-tight">${t.name}</h4></div>`).join('')}</div></div></div>`;
-                });
-                html += `</div></div>`;
-                container.innerHTML = html;
-            },
-
-            renderTaskDetail(container, param) {
-                const ka = DB.state.curriculum.find(k => k.code === param.kaId);
-                const task = ka.tasks.find(t => t.id === param.taskId);
-                container.innerHTML = `<div class="max-w-5xl mx-auto"><button onclick="app.navigate('learn')" class="mb-4 text-xs font-bold text-gray-500 hover:text-navy uppercase tracking-widest"><i class="fa-solid fa-arrow-left"></i> Back</button><div class="swiss-card p-10 border-t-4 border-t-navy"><h1 class="text-3xl font-bold text-navy mb-4">${task.name}</h1><p class="text-gray-600">Detailed content maps would appear here.</p></div></div>`;
-            },
-            
-            renderExam(container) { container.innerHTML = `<div class="max-w-xl mx-auto mt-12 text-center"><h2 class="text-3xl font-bold text-navy mb-2">Exam Simulation</h2><p class="text-gray-500 mb-6">Questions Loaded: ${DB.state.questions ? DB.state.questions.length : 0}</p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3">Start Random Drill</button></div>`; },
-            
-            startQuiz() { 
-                const questions = DB.state.questions ? DB.state.questions.slice(0, 5) : [];
-                if(!questions.length) { document.getElementById('app-container').innerHTML = `<div class="text-center p-8">No questions loaded. Please import <b>questions.json</b> in Settings.</div>`; return; }
-                const container = document.getElementById('app-container');
-                let html = `<div class="max-w-3xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Quick Drill</h2>`;
-                questions.forEach((q, i) => {
-                    html += `<div class="swiss-card p-6 mb-4"><div class="text-xs font-bold text-gray-400 mb-2">Q${i+1} (${q.ka})</div><div class="font-bold text-navy mb-4">${q.stem}</div><div class="space-y-2">${q.options.map(o => `<div class="p-3 border border-gray-200 hover:bg-gray-50 cursor-pointer">${o}</div>`).join('')}</div></div>`;
-                });
-                html += `<div class="text-center mt-6"><button onclick="app.navigate('dashboard')" class="swiss-btn swiss-btn-accent px-8 py-3">Finish & Review</button></div></div>`;
-                container.innerHTML = html;
-            },
-
-            renderFlashcards(container) { container.innerHTML = `<div class="p-8 text-center text-gray-400">Flashcards Loaded: ${DB.state.flashcards ? DB.state.flashcards.length : 0}<br>SRS Module Ready</div>`; },
-            
-            renderHelp(container) { container.innerHTML = `<div class="max-w-4xl mx-auto"><h2 class="text-3xl font-bold text-navy mb-6">User Guide</h2><div class="swiss-card p-8 border-l-4 border-orange"><h3 class="font-bold text-navy mb-2">Troubleshooting Load Errors</h3><p class="text-sm text-gray-600">If auto-loading fails, check: <br>1. Folder <b>CbapMedia</b> exists in the same place as Cbap.html.<br>2. JSON files are valid.<br>3. Try using the <b>Settings > Manual Import</b> feature.</p></div></div>`; },
-            
-            renderAdmin(container) { 
+                // Simple list view for now
+                const curriculum = DB.state.curriculum || [];
                 container.innerHTML = `
-                    <div class="max-w-2xl mx-auto">
-                        <h2 class="text-3xl font-bold text-navy mb-6">Settings & Data</h2>
-                        
-                        <div class="swiss-card p-8 mb-6 border-l-4 border-navy">
-                            <h3 class="font-bold text-navy mb-4 flex items-center"><i class="fa-solid fa-file-import mr-2"></i> Manual Data Import</h3>
-                            <p class="text-sm text-gray-500 mb-6">Use this if auto-loading from folder fails (e.g. CORS error).</p>
-                            
-                            <div class="space-y-4">
-                                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Curriculum</label><input type="file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'curriculum')"></div>
-                                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Questions</label><input type="file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'questions')"></div>
-                                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Flashcards</label><input type="file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white hover:file:bg-opacity-90" accept=".json" onchange="app.handleFileSelect(this, 'flashcards')"></div>
+                    <div class="space-y-4">
+                        <h2 class="text-2xl font-bold mb-4">Knowledge Hub</h2>
+                        ${curriculum.map(c => `
+                            <div class="bg-white p-4 shadow rounded">
+                                <h3 class="font-bold text-lg text-navy">${c.code}: ${c.name}</h3>
+                                <p class="text-gray-600">${c.desc || 'No description'}</p>
+                                <div class="mt-2 pl-4 border-l-2 border-orange">
+                                    ${(c.tasks || []).map(t => `<div class="text-sm py-1">${t.id} - ${t.name}</div>`).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            renderAdmin(container) {
+                container.innerHTML = `
+                    <div class="max-w-xl mx-auto bg-white p-8 shadow">
+                        <h3 class="text-xl font-bold mb-6">Manual Data Import</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-1">Curriculum.json</label>
+                                <input type="file" onchange="app.importFile(this, 'curriculum')" class="w-full border p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-1">Questions.json</label>
+                                <input type="file" onchange="app.importFile(this, 'questions')" class="w-full border p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-1">Flashcards.json</label>
+                                <input type="file" onchange="app.importFile(this, 'flashcards')" class="w-full border p-2">
                             </div>
                         </div>
-
-                        <div class="swiss-card p-6 flex justify-between items-center">
-                            <div><h3 class="font-bold text-navy">Retry Auto-Load</h3><p class="text-xs text-gray-500">Attempt to fetch from CbapMedia folder</p></div>
-                            <button onclick="DB.seedFromJSON()" class="swiss-btn swiss-btn-outline px-4 py-2">Reload</button>
+                        <div class="mt-8 pt-4 border-t">
+                            <button onclick="location.reload()" class="bg-navy text-white px-4 py-2 rounded hover:bg-blue-800">Reload App</button>
                         </div>
                     </div>
-                `; 
+                `;
             },
 
-            handleFileSelect(input, type) {
+            importFile(input, key) {
                 const file = input.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = e => {
                     try {
-                        const json = JSON.parse(e.target.result);
-                        DB.state[type] = json;
+                        DB.state[key] = JSON.parse(e.target.result);
                         DB.save();
-                        Toast.show(`Imported ${type} successfully!`, "success");
-                    } catch(err) { alert("Invalid JSON file"); console.error(err); }
+                        alert(`Imported ${key} successfully!`);
+                    } catch(err) { alert("Invalid JSON file"); }
                 };
                 reader.readAsText(file);
             }
         };
 
-        // Initialize App
-        app.start();
+        // Run when DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            log("DOM Ready. Calling app.start()...");
+            // Safety timeout to force show controls if JS hangs
+            setTimeout(() => {
+                const btn = document.getElementById('manual-entry-btn');
+                if(btn && document.getElementById('loading-overlay').style.display !== 'none') {
+                    btn.style.display = 'block';
+                    document.getElementById('loading-status').innerText = "Loading took too long.";
+                }
+            }, 5000);
+            
+            app.start();
+        });
     </script>
 </body>
 </html>
