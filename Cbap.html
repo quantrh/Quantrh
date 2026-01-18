@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBAP Master - Swiss Design v7.2 (Zoom & Fullscreen)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CBAP Master - Swiss Design v7.6</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -44,7 +44,7 @@
         .nav-item { transition: all 0.2s ease-in-out; border-left: 4px solid transparent; }
         .nav-item:hover { background-color: #F9FAFB; border-left-color: #FF6600; }
         .nav-item.active { background-color: #F0F9FF; border-left-color: #003366; }
-        .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; }
+        .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; white-space: nowrap; }
         .lib-tab:hover { color: #003366; }
         .lib-tab.active { border-bottom: 2px solid #FF6600; color: #003366; font-weight: bold; }
 
@@ -69,6 +69,9 @@
         /* Fullscreen overrides */
         :fullscreen { background: white; overflow: auto; }
         :-webkit-full-screen { background: white; overflow: auto; }
+        
+        /* Progress Bar Animation */
+        .progress-bar { transition: width 1s ease-in-out; }
     </style>
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-800 bg-white font-sans">
@@ -77,7 +80,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V7.2...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V7.6...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -132,7 +135,7 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 7.2</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 7.6</div>
             <div class="text-[10px] font-bold text-navy mt-1">Mobile Optimized</div>
         </div>
     </aside>
@@ -180,14 +183,15 @@
         };
 
         const DB = {
-            key: 'CBAP_V7_2_DATA',
-            state: { user: {}, curriculum: [], questions: [], flashcards: [] },
+            key: 'CBAP_V7_6_DATA',
+            state: { user: {}, curriculum: [], questions: [], flashcards: [], completedTasks: [] },
 
             async init() {
                 const data = localStorage.getItem(this.key);
                 if (data) {
                     try {
                         this.state = JSON.parse(data);
+                        if (!this.state.completedTasks) this.state.completedTasks = [];
                         if (this.state.curriculum && this.state.curriculum.length > 0) return true;
                     } catch (e) { localStorage.removeItem(this.key); }
                 }
@@ -200,23 +204,21 @@
                 let successCount = 0;
 
                 for (let file of files) {
-                    let loaded = false;
                     for (let pathPrefix of paths) {
-                        const url = `${pathPrefix}${file}?t=${Date.now()}`;
                         try {
-                            const res = await fetch(url);
+                            const res = await fetch(`${pathPrefix}${file}?t=${Date.now()}`);
                             if (res.ok) {
                                 let text = await res.text();
                                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
                                 if(text.trim().startsWith('<')) throw new Error("Is HTML");
                                 this.state[file.replace('.json', '')] = JSON.parse(text);
-                                loaded = true;
                                 successCount++;
                                 break;
                             }
                         } catch (e) { /* continue */ }
                     }
                 }
+                this.state.completedTasks = [];
                 this.save();
                 return successCount > 0;
             },
@@ -229,6 +231,7 @@
 
         const app = {
             isSidebarOpen: false,
+            isLibraryMenuOpen: true,
             zoomLevel: 1,
 
             async start() {
@@ -270,6 +273,12 @@
                 }
             },
 
+            toggleLibraryMenu() {
+                this.isLibraryMenuOpen = !this.isLibraryMenuOpen;
+                const container = document.getElementById('app-container');
+                this.renderLibrary(container, this.lastLibraryParams || {}); 
+            },
+
             nav(view, params) {
                 if(window.innerWidth < 768 && this.isSidebarOpen) this.toggleSidebar();
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -287,7 +296,7 @@
                 try {
                     switch(view) {
                         case 'dashboard': this.renderDashboard(container); break;
-                        case 'library': this.renderLibrary(container, params); break;
+                        case 'library': this.lastLibraryParams = params; this.renderLibrary(container, params); break;
                         case 'learn': this.renderLearn(container); break;
                         case 'task_detail': this.renderTaskDetail(container, params); break;
                         case 'exam': this.renderExam(container); break;
@@ -301,7 +310,7 @@
                 }
             },
 
-            // --- FULLSCREEN & ZOOM UTILS ---
+            // --- UTILS ---
             toggleFullscreen(elementId) {
                 const elem = document.getElementById(elementId);
                 if (!elem) return;
@@ -315,20 +324,271 @@
                 if(this.zoomLevel > 3.0) this.zoomLevel = 3.0;
                 
                 const img = document.getElementById('zoomable-image');
-                const label = document.getElementById('zoom-label');
                 if(img) img.style.transform = `scale(${this.zoomLevel})`;
-                if(label) label.innerText = `${Math.round(this.zoomLevel * 100)}%`;
             },
             
             resetZoom() {
                 this.zoomLevel = 1;
                 const img = document.getElementById('zoomable-image');
-                const label = document.getElementById('zoom-label');
                 if(img) img.style.transform = `scale(1)`;
-                if(label) label.innerText = `100%`;
             },
 
-            // --- EXAM & FLASHCARD LOGIC ---
+            // --- DASHBOARD (WITH RADAR CHART) ---
+            renderDashboard(container) {
+                const curriculum = DB.state.curriculum || [];
+                const completedTasks = DB.state.completedTasks || [];
+                
+                // Calculate Data for Radar Chart & Progress Bars
+                const labels = [];
+                const dataPoints = [];
+                
+                const progressData = curriculum.map(ka => {
+                    const kaTasks = ka.tasks || [];
+                    const kaTotal = kaTasks.length;
+                    const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length;
+                    const percent = kaTotal > 0 ? Math.round((kaCompleted / kaTotal) * 100) : 0;
+                    
+                    // Add to chart data (Only top-level KAs usually)
+                    if (['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'].includes(ka.code)) {
+                        labels.push(ka.code);
+                        dataPoints.push(percent);
+                    }
+                    
+                    return { ...ka, percent };
+                });
+
+                // Calculate Total Progress
+                const totalTasksCount = curriculum.reduce((acc, ka) => acc + (ka.tasks?.length || 0), 0);
+                const totalCompleted = completedTasks.length;
+                const totalPercent = totalTasksCount > 0 ? Math.round((totalCompleted / totalTasksCount) * 100) : 0;
+
+                // Fallback chart data if empty (for visual demo)
+                const chartLabels = labels.length > 0 ? labels : ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
+                const chartData = dataPoints.length > 0 ? dataPoints : [0, 0, 0, 0, 0, 0];
+
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <!-- Chart & Progress Section -->
+                        <div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm col-span-1 lg:col-span-2">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Domain Proficiency & Progress</h3>
+                            
+                            <div class="flex flex-col md:flex-row gap-8 items-center">
+                                <!-- Radar Chart -->
+                                <div class="relative h-64 w-full md:w-1/2">
+                                    <canvas id="proficiencyChart"></canvas>
+                                </div>
+                                
+                                <!-- Overall Stats -->
+                                <div class="w-full md:w-1/2 space-y-6">
+                                    <div>
+                                        <div class="flex items-baseline justify-between mb-2">
+                                            <span class="text-xs font-bold text-navy uppercase">Total Completion</span>
+                                            <span class="text-3xl font-bold text-orange">${totalPercent}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                                            <div class="bg-navy h-full progress-bar" style="width: ${totalPercent}%"></div>
+                                        </div>
+                                        <p class="text-xs text-gray-400 mt-2 text-right">${totalCompleted} / ${totalTasksCount} Tasks Done</p>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 text-center">
+                                        <div>
+                                            <div class="text-xl font-bold text-navy">${DB.state.questions?.length || 0}</div>
+                                            <div class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Questions</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-xl font-bold text-navy">${DB.state.flashcards?.length || 0}</div>
+                                            <div class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Flashcards</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Side Action Panel -->
+                        <div class="flex flex-col gap-6">
+                             <div class="bg-navy p-6 md:p-8 text-white flex flex-col justify-between h-full shadow-sm">
+                                <div>
+                                    <h3 class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-4">Detailed Progress</h3>
+                                    <div class="space-y-3 overflow-y-auto max-h-60 pr-2 custom-scrollbar">
+                                        ${progressData.map(p => `
+                                            <div>
+                                                <div class="flex justify-between text-[10px] text-blue-100 mb-1">
+                                                    <span>${p.code}</span>
+                                                    <span>${p.percent}%</span>
+                                                </div>
+                                                <div class="w-full bg-blue-900 h-1 rounded-full overflow-hidden">
+                                                    <div class="bg-orange h-full progress-bar" style="width: ${p.percent}%"></div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div class="space-y-3 mt-6 pt-6 border-t border-blue-800">
+                                    <button onclick="app.nav('library')" class="w-full bg-white text-navy py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white transition">Read Library</button>
+                                    <button onclick="app.nav('exam')" class="w-full border border-white text-white py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-navy transition">Start Exam</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Render Chart
+                setTimeout(() => {
+                    const ctx = document.getElementById('proficiencyChart');
+                    if(ctx) {
+                        new Chart(ctx, {
+                            type: 'radar',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [{
+                                    label: 'Completion %',
+                                    data: chartData,
+                                    backgroundColor: 'rgba(255, 102, 0, 0.2)',
+                                    borderColor: '#FF6600',
+                                    pointBackgroundColor: '#003366',
+                                    pointBorderColor: '#fff',
+                                    pointHoverBackgroundColor: '#fff',
+                                    pointHoverBorderColor: '#FF6600',
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    r: {
+                                        angleLines: { color: '#f0f0f0' },
+                                        grid: { color: '#f0f0f0' },
+                                        pointLabels: { 
+                                            font: { size: 10, family: 'Helvetica Neue', weight: 'bold' }, 
+                                            color: '#003366' 
+                                        },
+                                        suggestedMin: 0, 
+                                        suggestedMax: 100,
+                                        ticks: { backdropColor: 'transparent', stepSize: 20 }
+                                    }
+                                },
+                                plugins: { legend: { display: false } }
+                            }
+                        });
+                    }
+                }, 100);
+            },
+
+            // --- USER GUIDE (UPDATED & EXPANDED) ---
+            renderHelp(container) {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto space-y-8 pb-10">
+                        <div class="border-b border-gray-200 pb-6">
+                            <h2 class="text-3xl font-bold text-navy mb-2">User Guide & Documentation</h2>
+                            <p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng CBAP Master App.</p>
+                        </div>
+
+                        <!-- 1. Cài đặt dữ liệu -->
+                        <div class="swiss-card p-8 border-l-4 border-orange">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 
+                                Cài đặt & Dữ liệu (Setup)
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                                Ứng dụng hoạt động offline hoặc trên GitHub Pages. Để ứng dụng hiển thị nội dung, bạn cần chuẩn bị cấu trúc thư mục dữ liệu như sau:
+                            </p>
+                            <div class="bg-gray-50 p-5 border border-gray-200 text-sm rounded mb-4 font-mono text-xs">
+                                <div>📁 [Root Folder]</div>
+                                <div class="ml-4">📄 index.html (File này)</div>
+                                <div class="ml-4">📂 <strong>CbapMedia</strong> (Thư mục bắt buộc, chính xác tên)</div>
+                                <div class="ml-8 text-gray-500">
+                                    <div>📄 curriculum.json (Cấu trúc bài học)</div>
+                                    <div>📄 questions.json (Ngân hàng câu hỏi)</div>
+                                    <div>📄 flashcards.json (Thẻ ôn tập)</div>
+                                    <div class="mt-2 text-orange">-- Tài liệu học (Đặt tên theo Mã chương) --</div>
+                                    <div>📄 BAPM_Textbook.pdf (Sách PDF)</div>
+                                    <div>📄 BAPM_Slide.pdf (Slide bài giảng)</div>
+                                    <div>📄 BAPM_Info.png (Ảnh Infographic)</div>
+                                    <div>📄 BAPM_Mindmap.png (Ảnh Sơ đồ tư duy)</div>
+                                    <div>🎥 BAPM_Video.mp4 (Video bài giảng)</div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 italic">
+                                * Lưu ý: Nếu App không tự động tải được dữ liệu (do lỗi bảo mật trình duyệt), hãy vào menu <strong>Settings</strong> và sử dụng tính năng <strong>Manual Data Import</strong> để chọn file thủ công.
+                            </p>
+                        </div>
+
+                        <!-- 2. Dashboard -->
+                        <div class="swiss-card p-8 border-l-4 border-navy">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                                Dashboard (Bảng điều khiển)
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-2">Nơi tổng hợp toàn bộ tiến độ học tập của bạn:</p>
+                            <ul class="list-disc ml-5 space-y-2 text-sm text-gray-600">
+                                <li><strong>Biểu đồ Radar:</strong> Hiển thị mức độ hoàn thành của 6 Knowledge Areas chính (BAPM, ELIC, RLCM, SA, RADD, SE). Giúp bạn nhận diện vùng kiến thức yếu/mạnh.</li>
+                                <li><strong>Overall Status:</strong> % tổng thể các Task bạn đã đánh dấu hoàn thành.</li>
+                                <li><strong>Quick Action:</strong> Lối tắt để vào nhanh Thư viện hoặc Luyện thi.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 3. Learning & Library -->
+                        <div class="swiss-card p-8 border-l-4 border-navy">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                                Học tập & Thư viện
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2">Knowledge Hub</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Liệt kê toàn bộ các Chương (Chapters) và Nhiệm vụ (Tasks). Bấm vào từng Task để xem chi tiết.
+                                        Tại đây, bạn có nút <strong>"Mark as Complete"</strong> để đánh dấu đã học xong, hệ thống sẽ cập nhật % vào Dashboard.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2">Study Library</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Trung tâm tài liệu đa phương tiện. Chọn Chương bên trái, sau đó chọn loại tài liệu ở thanh trên cùng (Textbook, Slide, Mindmap...).
+                                        <br><strong>Tính năng:</strong>
+                                        <br>- Nút <i class="fa-solid fa-bars"></i>: Ẩn/Hiện danh sách chương.
+                                        <br>- Nút <i class="fa-solid fa-expand"></i>: Xem toàn màn hình.
+                                        <br>- Zoom (+/-): Phóng to ảnh Mindmap/Info.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Practice -->
+                        <div class="swiss-card p-8 border-l-4 border-navy">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span>
+                                Luyện thi (Exam & Flashcards)
+                            </h3>
+                            <ul class="list-disc ml-5 space-y-2 text-sm text-gray-600">
+                                <li><strong>Exam Engine:</strong> Chế độ thi thử trắc nghiệm. Hệ thống lấy câu hỏi ngẫu nhiên. Khi chọn đáp án, bạn sẽ biết ngay Đúng/Sai và xem giải thích chi tiết. Bấm nút <i class="fa-solid fa-right-from-bracket"></i> để thoát bài thi giữa chừng.</li>
+                                <li><strong>Flashcards:</strong> Công cụ ôn tập nhanh các định nghĩa/thuật ngữ. Bấm vào thẻ để lật mặt sau xem đáp án. Bấm "NEXT" để chuyển thẻ tiếp theo.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // --- Other Logic (Library, Exam, Admin...) Remains the same ---
+            renderLearn(container) {
+                const curriculum = DB.state.curriculum || [];
+                const completedTasks = DB.state.completedTasks || [];
+                if(curriculum.length === 0) { app.nav('admin'); return; }
+                container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">${curriculum.map((c, i) => { const kaTasks = c.tasks || []; const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length; const percent = kaTasks.length > 0 ? Math.round((kaCompleted / kaTasks.length) * 100) : 0; return `<div class="bg-white p-6 border border-gray-200 hover:border-orange transition cursor-pointer group flex flex-col h-full" onclick="app.nav('task_detail', {code:'${c.code}'})"><div class="flex justify-between items-start mb-4"><span class="text-3xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span><span class="bg-navy text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">${c.code}</span></div><h3 class="text-md font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3><div class="mt-auto pt-4"><div class="flex justify-between text-[10px] text-gray-400 mb-1 uppercase tracking-wider"><span>Progress</span><span>${percent}%</span></div><div class="w-full bg-gray-100 h-1 rounded-full"><div class="bg-orange h-full" style="width: ${percent}%"></div></div></div></div>`; }).join('')}</div>`;
+            },
+            renderTaskDetail(container, params) {
+                const item = DB.state.curriculum.find(c => c.code === params.code);
+                if(!item) return;
+                const isComplete = (tid) => (DB.state.completedTasks || []).includes(tid);
+                container.innerHTML = `<div class="max-w-4xl mx-auto"><button onclick="app.nav('learn')" class="mb-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Back to Hub</button><div class="bg-white p-8 border-t-4 border-navy shadow-sm"><h1 class="text-2xl md:text-3xl font-bold text-navy mb-2">${item.name}</h1><p class="text-gray-600 mb-8">${item.desc}</p><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Tasks / Topics</h3><div class="space-y-3">${(item.tasks || []).map(t => { const done = isComplete(t.id); return `<div class="p-4 border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition"><div><span class="text-sm font-bold ${done ? 'text-green-600 line-through' : 'text-navy'}">${t.name}</span><div class="text-xs text-gray-400 font-mono">${t.id}</div></div><button onclick="app.toggleTask('${t.id}', '${params.code}')" class="text-xs font-bold uppercase tracking-widest px-3 py-1 border ${done ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-400 border-gray-200 hover:border-orange hover:text-orange'}">${done ? '<i class="fa-solid fa-check mr-1"></i> Done' : 'Mark Complete'}</button></div>`; }).join('')}</div></div></div>`;
+            },
+            toggleTask(taskId, code) { if (!DB.state.completedTasks) DB.state.completedTasks = []; const idx = DB.state.completedTasks.indexOf(taskId); if (idx > -1) { DB.state.completedTasks.splice(idx, 1); } else { DB.state.completedTasks.push(taskId); } DB.save(); this.renderTaskDetail(document.getElementById('app-container'), { code: code }); Toast.show("Progress Updated", "success"); },
+            renderAdmin(container) { container.innerHTML = `<div class="max-w-xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-8 border border-gray-200 shadow-sm"><h3 class="text-sm font-bold text-navy uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Manual Data Import</h3><div class="space-y-4"><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Curriculum.json</label><input type="file" onchange="app.importFile(this, 'curriculum')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Questions.json</label><input type="file" onchange="app.importFile(this, 'questions')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Flashcards.json</label><input type="file" onchange="app.importFile(this, 'flashcards')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div></div><div class="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center"><button onclick="location.reload()" class="text-navy text-xs font-bold uppercase tracking-widest hover:text-orange">Reload App</button></div></div></div>`; },
+            importFile(input, key) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { try { DB.state[key] = JSON.parse(e.target.result); DB.save(); Toast.show(`Imported ${key}`); } catch(err) { alert("Invalid JSON"); } }; reader.readAsText(file); },
+            
+            // --- RENDER EXAM & FLASHCARDS & LIBRARY ---
             renderExam(container) {
                 if(!DB.state.questions || DB.state.questions.length === 0) {
                     container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">Question Bank Empty</h3><button onclick="app.nav('admin')" class="mt-4 swiss-btn swiss-btn-outline px-4 py-2">Go to Settings</button></div>`;
@@ -339,15 +599,29 @@
                 } else { this.renderActiveQuiz(container); }
             },
             startQuiz() { examState = { active: true, currentQ: 0, answers: {}, score: 0, finished: false }; this.renderActiveQuiz(document.getElementById('app-container')); },
+            quitExam() { 
+                if(confirm("Exit exam? Progress will be lost.")) {
+                    examState.active = false;
+                    app.nav('exam');
+                }
+            },
             renderActiveQuiz(container) {
                 const qIndex = examState.currentQ;
                 const question = DB.state.questions[qIndex];
                 const total = DB.state.questions.length;
                 const isAnswered = examState.answers[question.id] !== undefined;
                 const userAns = examState.answers[question.id];
-                const isCorrect = userAns === question.correct[0]; 
                 
-                let html = `<div class="max-w-3xl mx-auto"><div class="flex justify-between items-center mb-6"><span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} of ${total}</span><span class="text-xs font-bold text-navy bg-blue-50 px-2 py-1">${question.ka || 'General'}</span></div><div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm mb-6"><h3 class="text-lg md:text-xl font-bold text-navy mb-6 leading-relaxed">${question.stem}</h3><div class="space-y-3">${question.options.map((opt, idx) => { let btnClass = "border-gray-200 hover:bg-gray-50"; let icon = ""; if (isAnswered) { if (idx === question.correct[0]) { btnClass = "border-green-500 bg-green-50 text-green-800"; icon = '<i class="fa-solid fa-check text-green-600 float-right mt-1"></i>'; } else if (idx === userAns) { btnClass = "border-red-500 bg-red-50 text-red-800"; icon = '<i class="fa-solid fa-xmark text-red-600 float-right mt-1"></i>'; } else { btnClass = "border-gray-100 opacity-50"; } } return `<div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" class="p-4 border ${btnClass} cursor-pointer transition text-sm md:text-base"><span class="font-bold mr-2">${String.fromCharCode(65 + idx)}.</span> ${opt} ${icon}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 border-l-4 border-navy text-sm text-navy"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-4 py-2">Previous</button>${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-6 py-2">Next Question</button>` : ''}${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-6 py-2">Finish Exam</button>` : ''}</div></div>`;
+                let html = `
+                    <div class="max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} of ${total}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-navy bg-blue-50 px-2 py-1">${question.ka || 'General'}</span>
+                                <button onclick="app.quitExam()" class="text-gray-400 hover:text-red-500" title="Exit Exam"><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm mb-6"><h3 class="text-lg md:text-xl font-bold text-navy mb-6 leading-relaxed">${question.stem}</h3><div class="space-y-3">${question.options.map((opt, idx) => { let btnClass = "border-gray-200 hover:bg-gray-50"; let icon = ""; if (isAnswered) { if (idx === question.correct[0]) { btnClass = "border-green-500 bg-green-50 text-green-800"; icon = '<i class="fa-solid fa-check text-green-600 float-right mt-1"></i>'; } else if (idx === userAns) { btnClass = "border-red-500 bg-red-50 text-red-800"; icon = '<i class="fa-solid fa-xmark text-red-600 float-right mt-1"></i>'; } else { btnClass = "border-gray-100 opacity-50"; } } return `<div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" class="p-4 border ${btnClass} cursor-pointer transition text-sm md:text-base"><span class="font-bold mr-2">${String.fromCharCode(65 + idx)}.</span> ${opt} ${icon}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 border-l-4 border-navy text-sm text-navy"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-4 py-2">Previous</button>${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-6 py-2">Next Question</button>` : ''}${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-6 py-2">Finish Exam</button>` : ''}</div></div>`;
                 container.innerHTML = html;
             },
             submitAnswer(ansIdx) { const q = DB.state.questions[examState.currentQ]; examState.answers[q.id] = ansIdx; this.renderActiveQuiz(document.getElementById('app-container')); },
@@ -363,18 +637,18 @@
                 if(!DB.state.flashcards || DB.state.flashcards.length === 0) { container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">No Flashcards</h3></div>`; return; }
                 const card = DB.state.flashcards[flashcardState.index];
                 const total = DB.state.flashcards.length;
-                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center max-w-xl mx-auto min-h-[400px]"><div class="w-full flex justify-between mb-4 px-2"><span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span><span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span></div><div class="card-container w-full h-80 relative perspective-1000 cursor-pointer group" onclick="app.flipFlashcard()"><div class="card-inner w-full h-full transform-style-3d transition-transform duration-500 shadow-md border border-gray-200 bg-white ${flashcardState.flipped ? 'rotate-y-180' : ''}" id="flashcard-inner"><div class="absolute w-full h-full backface-hidden bg-white flex flex-col items-center justify-center p-8 text-center"><span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span><h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3><p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p></div><div class="absolute w-full h-full backface-hidden rotate-y-180 bg-navy text-white flex flex-col items-center justify-center p-8 text-center"><span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest mb-4">Back</span><h3 class="text-xl font-medium leading-relaxed">${card.back}</h3></div></div></div><div class="flex gap-4 mt-8 w-full"><button onclick="app.prevFlashcard()" class="flex-1 py-3 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase hover:bg-gray-50">Previous</button><button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-orange text-white text-xs font-bold uppercase hover:bg-orange/90 shadow-md">Next Card</button></div></div>`;
+                const backContent = card.back && card.back.trim() !== "" ? card.back : "No Content Available";
+                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center max-w-xl mx-auto min-h-[400px]"><div class="w-full flex justify-between mb-4 px-2"><span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span><span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span></div><div class="card-container w-full h-80 relative perspective-1000 cursor-pointer group" onclick="app.flipFlashcard()"><div class="card-inner w-full h-full transform-style-3d transition-transform duration-500 shadow-md border border-gray-200 bg-white ${flashcardState.flipped ? 'rotate-y-180' : ''}" id="flashcard-inner"><div class="absolute w-full h-full backface-hidden bg-white flex flex-col items-center justify-center p-8 text-center"><span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span><h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3><p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p></div><div class="absolute w-full h-full backface-hidden rotate-y-180 bg-navy text-white flex flex-col items-center justify-center p-8 text-center"><span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest mb-4">Back</span><h3 class="text-xl font-medium leading-relaxed">${backContent}</h3></div></div></div><div class="flex gap-4 mt-8 w-full"><button onclick="app.prevFlashcard()" class="flex-1 py-3 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase hover:bg-gray-50">Previous</button><button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-orange text-white text-xs font-bold uppercase hover:bg-orange/90 shadow-md">NEXT</button></div></div>`;
             },
             flipFlashcard() { flashcardState.flipped = !flashcardState.flipped; const el = document.getElementById('flashcard-inner'); if (flashcardState.flipped) el.classList.add('rotate-y-180'); else el.classList.remove('rotate-y-180'); },
             nextFlashcard() { if (flashcardState.index < DB.state.flashcards.length - 1) { flashcardState.index++; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
             prevFlashcard() { if (flashcardState.index > 0) { flashcardState.index--; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
 
-            // --- LIBRARY FUNCTIONALITY (WITH ZOOM & FULLSCREEN) ---
             renderLibrary(container, params) {
                 const curriculum = DB.state.curriculum || [];
                 if(curriculum.length === 0) { app.nav('admin'); return; }
 
-                this.zoomLevel = 1; // Reset zoom on new render
+                this.zoomLevel = 1;
                 const activeCode = params?.code || curriculum[0].code;
                 const type = params?.type || 'textbook'; 
                 const mediaPath = 'CbapMedia/';
@@ -387,7 +661,6 @@
                     video: `${mediaPath}${activeCode}_Video.mp4`
                 };
 
-                // Determine viewer content
                 let viewer = '';
                 let showZoomControls = false;
 
@@ -397,18 +670,14 @@
                 } else if(type === 'info' || type === 'mindmap') {
                     const src = type === 'info' ? files.info : files.mindmap;
                     showZoomControls = true;
-                    // Wrapper allows image to be zoomed without overflowing incorrectly
-                    viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper">
-                        <img id="zoomable-image" src="${src}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'">
-                    </div>`;
+                    viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${src}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`;
                 } else if(type === 'video') {
                     viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
                 }
 
                 container.innerHTML = `
-                    <div class="flex flex-col lg:flex-row h-full gap-6">
-                        <!-- Chapter List -->
-                        <div class="w-full lg:w-64 bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0">
+                    <div class="flex flex-col lg:flex-row h-full gap-4">
+                        <div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all">
                             <div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>
                             ${curriculum.map(c => `
                                 <button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}">
@@ -421,29 +690,24 @@
                             `).join('')}
                         </div>
                         
-                        <!-- Content Area -->
                         <div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer">
-                            <!-- Tabs & Controls -->
-                            <div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between">
-                                <div class="flex overflow-x-auto whitespace-nowrap">
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-4 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-4 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-4 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-4 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Infographic</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-4 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button>
+                            <div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1">
+                                <button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+                                <div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0">
+                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button>
+                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button>
+                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button>
+                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button>
+                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button>
                                 </div>
-                                <div class="flex items-center gap-2 pr-4">
+                                <div class="flex items-center gap-2 px-2 flex-shrink-0">
                                     ${showZoomControls ? `
-                                        <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden mr-2">
-                                            <button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
-                                            <span id="zoom-label" class="px-2 text-xs font-bold text-navy w-12 text-center">100%</span>
-                                            <button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
-                                            <button onclick="app.resetZoom()" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+                                        <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden">
+                                            <button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button>
+                                            <button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button>
                                         </div>
                                     ` : ''}
-                                    <button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs font-bold text-gray-500 hover:text-navy uppercase tracking-widest flex items-center gap-1" title="Fullscreen">
-                                        <i class="fa-solid fa-expand text-lg"></i>
-                                    </button>
+                                    <button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button>
                                 </div>
                             </div>
                             <div class="flex-1 relative bg-white overflow-hidden">
@@ -452,115 +716,6 @@
                         </div>
                     </div>
                 `;
-            },
-
-            // --- OTHER VIEWS ---
-            renderDashboard(container) {
-                const cs = DB.state.curriculum?.length || 0;
-                const qs = DB.state.questions?.length || 0;
-                const fs = DB.state.flashcards?.length || 0;
-
-                container.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                        <div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm col-span-1 lg:col-span-2">
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Domain Proficiency</h3>
-                            <!-- Radar Chart Container -->
-                            <div class="relative h-64 w-full mb-6">
-                                <canvas id="proficiencyChart"></canvas>
-                            </div>
-                            <div class="grid grid-cols-3 gap-4 border-t border-gray-100 pt-6 text-center">
-                                <div><div class="text-xl md:text-2xl font-bold text-navy">${cs}</div><div class="text-[9px] md:text-[10px] uppercase font-bold text-gray-400 tracking-wider">Chapters</div></div>
-                                <div><div class="text-xl md:text-2xl font-bold text-navy">${qs}</div><div class="text-[9px] md:text-[10px] uppercase font-bold text-gray-400 tracking-wider">Questions</div></div>
-                                <div><div class="text-xl md:text-2xl font-bold text-navy">${fs}</div><div class="text-[9px] md:text-[10px] uppercase font-bold text-gray-400 tracking-wider">Flashcards</div></div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex flex-col gap-6">
-                             <div class="bg-navy p-6 md:p-8 text-white flex flex-col justify-between h-full shadow-sm">
-                                <div><h3 class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-4">Quick Action</h3><p class="text-xs md:text-sm leading-relaxed text-blue-100">Resume your study session.</p></div>
-                                <div class="space-y-3 mt-6"><button onclick="app.nav('library')" class="w-full bg-white text-navy py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white transition">Read Library</button><button onclick="app.nav('exam')" class="w-full border border-white text-white py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-navy transition">Start Exam</button></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                setTimeout(() => {
-                    const ctx = document.getElementById('proficiencyChart');
-                    if(ctx) {
-                        new Chart(ctx, {
-                            type: 'radar',
-                            data: {
-                                labels: ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'],
-                                datasets: [{
-                                    label: 'Skill Level',
-                                    data: [65, 59, 80, 81, 56, 55],
-                                    backgroundColor: 'rgba(255, 102, 0, 0.2)',
-                                    borderColor: '#FF6600',
-                                    pointBackgroundColor: '#003366',
-                                    borderWidth: 2
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    r: {
-                                        angleLines: { color: '#eee' },
-                                        grid: { color: '#eee' },
-                                        pointLabels: { font: { size: 10, family: 'Helvetica' }, color: '#666' },
-                                        suggestedMin: 0, suggestedMax: 100
-                                    }
-                                },
-                                plugins: { legend: { display: false } }
-                            }
-                        });
-                    }
-                }, 100);
-            },
-
-            renderLearn(container) {
-                const curriculum = DB.state.curriculum || [];
-                if(curriculum.length === 0) { app.nav('admin'); return; }
-                container.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        ${curriculum.map((c, i) => `
-                            <div class="bg-white p-6 border border-gray-200 hover:border-orange transition cursor-pointer group" onclick="app.nav('task_detail', {code:'${c.code}'})">
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="text-3xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span>
-                                    <span class="bg-navy text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">${c.code}</span>
-                                </div>
-                                <h3 class="text-md font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3>
-                                <p class="text-xs text-gray-500 line-clamp-2">${c.desc || 'No description available.'}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            },
-
-            renderTaskDetail(container, params) {
-                const item = DB.state.curriculum.find(c => c.code === params.code);
-                if(!item) return;
-                container.innerHTML = `<div class="max-w-4xl mx-auto"><button onclick="app.nav('learn')" class="mb-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Back to Hub</button><div class="bg-white p-8 border-t-4 border-navy shadow-sm"><h1 class="text-2xl md:text-3xl font-bold text-navy mb-2">${item.name}</h1><p class="text-gray-600 mb-8">${item.desc}</p><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Tasks / Topics</h3><div class="space-y-2">${(item.tasks || []).map(t => `<div class="p-4 border border-gray-100 flex justify-between items-center hover:bg-gray-50"><span class="text-sm font-bold text-navy">${t.name}</span><span class="text-xs text-gray-400 font-mono">${t.id}</span></div>`).join('')}</div></div></div>`;
-            },
-
-            renderAdmin(container) {
-                container.innerHTML = `<div class="max-w-xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-8 border border-gray-200 shadow-sm"><h3 class="text-sm font-bold text-navy uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Manual Data Import</h3><div class="space-y-4"><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Curriculum.json</label><input type="file" onchange="app.importFile(this, 'curriculum')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Questions.json</label><input type="file" onchange="app.importFile(this, 'questions')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Flashcards.json</label><input type="file" onchange="app.importFile(this, 'flashcards')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div></div><div class="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center"><button onclick="location.reload()" class="text-navy text-xs font-bold uppercase tracking-widest hover:text-orange">Reload App</button></div></div></div>`;
-            },
-            
-            renderHelp(c) { c.innerHTML = `<div class="p-10 text-center text-gray-400">USER GUIDE: Upload JSON files in Settings first. Use Sidebar to navigate.</div>`; },
-
-            importFile(input, key) {
-                const file = input.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = e => {
-                    try {
-                        DB.state[key] = JSON.parse(e.target.result);
-                        DB.save();
-                        Toast.show(`Imported ${key}`);
-                    } catch(err) { alert("Invalid JSON"); }
-                };
-                reader.readAsText(file);
             }
         };
 
