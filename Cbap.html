@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Swiss Design v8.0</title>
+    <title>CBAP Master - Cloud Sync v8.2</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -27,11 +27,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
-        
-        /* Swiss Design Utilities */
         .swiss-card { background: #FFFFFF; border: 1px solid #E5E5E5; border-radius: 0px; }
         .swiss-btn { border-radius: 0px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; transition: all 0.2s ease; cursor: pointer; }
         .swiss-btn-primary { background-color: #003366; color: white; border: 1px solid #003366; }
@@ -39,69 +39,29 @@
         .swiss-btn-accent { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
         .swiss-btn-outline { background-color: transparent; color: #003366; border: 1px solid #003366; }
         .swiss-btn-outline:hover { background-color: #F0F4F8; }
-        
-        /* Navigation & Tabs */
         .nav-item { transition: all 0.2s ease-in-out; border-left: 4px solid transparent; }
         .nav-item:hover { background-color: #F9FAFB; border-left-color: #FF6600; }
         .nav-item.active { background-color: #F0F9FF; border-left-color: #003366; }
         .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; white-space: nowrap; }
         .lib-tab:hover { color: #003366; }
         .lib-tab.active { border-bottom: 2px solid #FF6600; color: #003366; font-weight: bold; }
-
-        /* Mobile Sidebar Transition */
         .sidebar-transition { transition: transform 0.3s ease-in-out; }
         
-        /* FLIP CARD FIXED FOR EDGE/SAFARI */
-        .flip-container {
-            perspective: 1000px;
-        }
-        .flip-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-        .flip-container.flipped .flip-inner {
-            transform: rotateY(180deg);
-        }
-        .flip-front, .flip-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        .flip-front {
-            background-color: #ffffff;
-            color: #003366;
-            z-index: 2;
-        }
-        .flip-back {
-            background-color: #003366;
-            color: #ffffff; /* Explicit white text */
-            transform: rotateY(180deg);
-            z-index: 1;
-        }
-        
-        /* Loading & Utility */
+        /* Flip Card Fixes */
+        .flip-container { perspective: 1000px; }
+        .flip-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
+        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .flip-front { background-color: #ffffff; color: #003366; z-index: 2; }
+        .flip-back { background-color: #003366; color: #ffffff; transform: rotateY(180deg); z-index: 1; }
+
         #loading-overlay { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; background: white; border: 1px solid #003366; border-left: 6px solid #FF6600; padding: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        /* Fullscreen overrides */
-        :fullscreen { background: white; overflow: auto; }
-        :-webkit-full-screen { background: white; overflow: auto; }
-        
-        /* Progress Bar Animation */
+        :fullscreen { background: white; overflow: auto; } :-webkit-full-screen { background: white; overflow: auto; }
         .progress-bar { transition: width 1s ease-in-out; }
     </style>
 </head>
@@ -111,7 +71,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.0...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">CONNECTING TO CLOUD...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -121,7 +81,7 @@
             <button onclick="app.toggleSidebar()" class="text-navy text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
             <div class="font-bold text-navy tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
         </div>
-        <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-xs">U</div>
+        <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-xs" id="mobile-user-avatar">U</div>
     </header>
 
     <!-- MOBILE SIDEBAR OVERLAY -->
@@ -134,21 +94,28 @@
             <div class="font-bold text-navy text-lg tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
         </div>
         
-        <nav class="flex-1 overflow-y-auto py-6 space-y-1">
+        <!-- User Info -->
+        <div class="px-6 py-4 border-b border-gray-50 flex items-center gap-3 cursor-pointer hover:bg-gray-50" onclick="app.nav('auth')">
+            <div class="w-8 h-8 rounded-full bg-orange text-white flex items-center justify-center font-bold text-xs" id="sidebar-avatar">G</div>
+            <div class="overflow-hidden">
+                <div class="text-xs font-bold text-navy truncate" id="sidebar-username">Guest User</div>
+                <div class="text-[9px] text-gray-400 uppercase tracking-wider" id="sidebar-status">Click to Login</div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-2 space-y-1">
             <button onclick="app.nav('dashboard')" id="nav-dashboard" class="nav-item w-full text-left px-6 py-4 flex items-center group">
                 <i class="fa-solid fa-chart-pie w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i> 
                 <span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Dashboard</span>
             </button>
             
-            <div class="px-6 mt-6 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Learning</span></div>
+            <div class="px-6 mt-4 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Modules</span></div>
             <button onclick="app.nav('learn')" id="nav-learn" class="nav-item w-full text-left px-6 py-3 flex items-center group">
                 <i class="fa-solid fa-book w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Knowledge Hub</span>
             </button>
             <button onclick="app.nav('library')" id="nav-library" class="nav-item w-full text-left px-6 py-3 flex items-center group">
                 <i class="fa-solid fa-book-journal-whills w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Study Library</span>
             </button>
-            
-            <div class="px-6 mt-6 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Practice</span></div>
             <button onclick="app.nav('exam')" id="nav-exam" class="nav-item w-full text-left px-6 py-3 flex items-center group">
                 <i class="fa-solid fa-pen-ruler w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Exam Engine</span>
             </button>
@@ -156,7 +123,10 @@
                 <i class="fa-solid fa-clone w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Flashcards</span>
             </button>
             
-            <div class="px-6 mt-6 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">System</span></div>
+            <div class="px-6 mt-4 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">System</span></div>
+            <button onclick="app.nav('auth')" id="nav-auth" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-user-lock w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Login / Cloud</span>
+            </button>
             <button onclick="app.nav('help')" id="nav-help" class="nav-item w-full text-left px-6 py-3 flex items-center group">
                 <i class="fa-solid fa-circle-question w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">User Guide</span>
             </button>
@@ -166,8 +136,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.0</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Mobile Optimized</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.2</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Cloud Sync Active</div>
         </div>
     </aside>
 
@@ -181,10 +151,10 @@
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-right">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Candidate</div>
-                    <div class="font-bold text-navy text-sm">Active User</div>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</div>
+                    <div class="font-bold text-navy text-sm" id="header-status">Local Mode</div>
                 </div>
-                <div class="w-10 h-10 bg-navy text-white flex items-center justify-center font-bold">U</div>
+                <div class="w-10 h-10 bg-navy text-white flex items-center justify-center font-bold cursor-pointer hover:bg-orange transition" onclick="app.nav('auth')" id="header-avatar">G</div>
             </div>
         </header>
         
@@ -201,6 +171,13 @@
 
     <!-- APP LOGIC -->
     <script>
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y';
+        
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- UTILS ---
         const Toast = {
             show(msg, type = 'info') {
                 const container = document.getElementById('toast-container');
@@ -213,27 +190,47 @@
             }
         };
 
+        const Crypto = {
+            async hash(str) {
+                const msgBuffer = new TextEncoder().encode(str);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        };
+
+        // --- DATA & AUTH SERVICE ---
         const DB = {
-            key: 'CBAP_V8_0_DATA',
-            state: { user: {}, curriculum: [], questions: [], flashcards: [], completedTasks: [] },
+            key: 'CBAP_V8_2_DATA',
+            state: { 
+                user: { id: null, username: 'Guest', loggedIn: false }, 
+                curriculum: [], questions: [], flashcards: [], completedTasks: [] 
+            },
 
             async init() {
                 const data = localStorage.getItem(this.key);
                 if (data) {
                     try {
-                        this.state = JSON.parse(data);
-                        if (!this.state.completedTasks) this.state.completedTasks = [];
-                        if (this.state.curriculum && this.state.curriculum.length > 0) return true;
+                        const parsed = JSON.parse(data);
+                        this.state = { ...this.state, ...parsed };
                     } catch (e) { localStorage.removeItem(this.key); }
                 }
-                return await this.fetchData();
+
+                // If logged in, fetch fresh data from cloud
+                if (this.state.user.loggedIn) {
+                    await this.pullFromCloud();
+                }
+
+                if (!this.state.curriculum || this.state.curriculum.length === 0) {
+                    await this.fetchLocalData();
+                }
+                
+                return true;
             },
 
-            async fetchData() {
+            async fetchLocalData() {
                 const files = ['curriculum.json', 'questions.json', 'flashcards.json'];
                 const paths = ['CbapMedia/', '']; 
-                let successCount = 0;
-
                 for (let file of files) {
                     for (let pathPrefix of paths) {
                         try {
@@ -241,22 +238,115 @@
                             if (res.ok) {
                                 let text = await res.text();
                                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                                if(text.trim().startsWith('<')) throw new Error("Is HTML");
-                                this.state[file.replace('.json', '')] = JSON.parse(text);
-                                successCount++;
-                                break;
+                                if (!text.trim().startsWith('<')) {
+                                    this.state[file.replace('.json', '')] = JSON.parse(text);
+                                    break;
+                                }
                             }
-                        } catch (e) { /* continue */ }
+                        } catch (e) {}
                     }
                 }
-                this.state.completedTasks = [];
                 this.save();
-                return successCount > 0;
             },
-            save() { localStorage.setItem(this.key, JSON.stringify(this.state)); }
+
+            save() {
+                localStorage.setItem(this.key, JSON.stringify(this.state));
+                if (this.state.user.loggedIn) this.pushToCloud();
+            },
+
+            // --- CLOUD SYNC LOGIC (CUSTOM TABLES) ---
+            async pushToCloud() {
+                if (!this.state.user.id) return;
+                
+                // Only sync essential user progress to save bandwidth
+                // We don't sync static content (curriculum/questions) unless user customizes them
+                const payload = {
+                    completedTasks: this.state.completedTasks
+                };
+
+                const { error } = await sb
+                    .from('user_progress')
+                    .upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
+                
+                if (error) console.error("Cloud Save Error:", error);
+            },
+
+            async pullFromCloud() {
+                if (!this.state.user.id) return;
+                
+                const { data, error } = await sb
+                    .from('user_progress')
+                    .select('data')
+                    .eq('user_id', this.state.user.id)
+                    .single();
+
+                if (data && data.data) {
+                    this.state.completedTasks = data.data.completedTasks || [];
+                    // Update local storage but don't trigger push again
+                    localStorage.setItem(this.key, JSON.stringify(this.state));
+                    Toast.show("Sync complete from Cloud", "success");
+                }
+            }
         };
 
-        // --- GLOBAL STATE ---
+        const Auth = {
+            async login(username, password) {
+                const hashed = await Crypto.hash(password);
+                
+                // Custom Auth Logic: Query 'custom_users' table
+                const { data, error } = await sb
+                    .from('custom_users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', hashed)
+                    .single();
+
+                if (error || !data) return { error: "Invalid username or password" };
+                
+                DB.state.user = { id: data.id, username: data.username, loggedIn: true };
+                await DB.pullFromCloud(); 
+                DB.save();
+                app.updateUserUI();
+                return { success: true };
+            },
+
+            async register(username, password) {
+                const hashed = await Crypto.hash(password);
+                
+                // Check exist
+                const { data: existing } = await sb.from('custom_users').select('id').eq('username', username).single();
+                if (existing) return { error: "Username already taken" };
+
+                // Insert into custom_users
+                const { data, error } = await sb
+                    .from('custom_users')
+                    .insert([{ username, password: hashed }])
+                    .select()
+                    .single();
+
+                if (error) return { error: error.message };
+                
+                // Login immediately
+                DB.state.user = { id: data.id, username: data.username, loggedIn: true };
+                // Init progress record
+                await sb.from('user_progress').insert({ user_id: data.id, data: { completedTasks: [] } });
+                
+                DB.save();
+                app.updateUserUI();
+                return { success: true };
+            },
+
+            logout() {
+                DB.state.user = { id: null, username: 'Guest', loggedIn: false };
+                DB.state.completedTasks = []; // Clear local progress for security
+                DB.save();
+                app.updateUserUI();
+                Toast.show("Logged out");
+                app.nav('auth');
+            }
+        };
+
+        // --- CONTROLLER ---
         let examState = { active: false, currentQ: 0, answers: {}, score: 0, finished: false };
         let flashcardState = { index: 0, flipped: false };
 
@@ -276,6 +366,7 @@
 
                 try {
                     await DB.init();
+                    this.updateUserUI();
                     this.launch();
                 } catch (e) { this.launch(); }
             },
@@ -290,6 +381,20 @@
             },
 
             emergencyEnter() { this.launch(); },
+            
+            updateUserUI() {
+                const user = DB.state.user;
+                const name = user.loggedIn ? user.username : 'Guest User';
+                const status = user.loggedIn ? 'Online • Synced' : 'Local Mode';
+                const avatar = name.charAt(0).toUpperCase();
+
+                document.getElementById('sidebar-username').innerText = name;
+                document.getElementById('sidebar-status').innerText = status;
+                document.getElementById('sidebar-avatar').innerText = avatar;
+                document.getElementById('header-status').innerText = status;
+                document.getElementById('header-avatar').innerText = avatar;
+                document.getElementById('mobile-user-avatar').innerText = avatar;
+            },
 
             toggleSidebar() {
                 this.isSidebarOpen = !this.isSidebarOpen;
@@ -316,7 +421,7 @@
                 const activeBtn = document.getElementById(`nav-${view}`);
                 if(activeBtn) activeBtn.classList.add('active');
 
-                const title = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', help: 'User Guide', admin: 'Settings' }[view] || 'CBAP Master';
+                const title = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', help: 'User Guide', admin: 'Settings', auth: 'Authentication' }[view] || 'CBAP Master';
                 document.getElementById('page-title').innerText = title;
                 const mobileTitle = document.getElementById('mobile-page-title');
                 if(mobileTitle) mobileTitle.innerText = title;
@@ -327,6 +432,7 @@
                 try {
                     switch(view) {
                         case 'dashboard': this.renderDashboard(container); break;
+                        case 'auth': this.renderAuth(container); break;
                         case 'library': this.lastLibraryParams = params; this.renderLibrary(container, params); break;
                         case 'learn': this.renderLearn(container); break;
                         case 'task_detail': this.renderTaskDetail(container, params); break;
@@ -341,6 +447,31 @@
                 }
             },
 
+            // --- AUTH VIEW ---
+            renderAuth(container) {
+                if (DB.state.user.loggedIn) {
+                    container.innerHTML = `<div class="max-w-md mx-auto text-center mt-10"><div class="w-20 h-20 bg-navy text-white text-4xl font-bold rounded-full flex items-center justify-center mx-auto mb-6">${DB.state.user.username.charAt(0)}</div><h2 class="text-2xl font-bold text-navy mb-2">Welcome, ${DB.state.user.username}</h2><p class="text-gray-500 mb-8">Your progress is being synced.</p><button onclick="Auth.logout()" class="swiss-btn swiss-btn-outline px-8 py-3 hover:bg-red-50 hover:text-red-600 hover:border-red-600">Log Out</button></div>`;
+                    return;
+                }
+                container.innerHTML = `<div class="max-w-md mx-auto bg-white p-8 border border-gray-200 shadow-lg mt-8"><div class="flex border-b border-gray-200 mb-6"><button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.nextElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-navy border-b-2 border-orange">Login</button><button onclick="document.getElementById('form-register').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.previousElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-gray-400">Register</button></div><div id="form-login"><input type="text" id="login-user" placeholder="Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="login-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3">Sign In</button><p class="text-xs text-center text-gray-400 mt-4">Uses custom cloud database</p></div><div id="form-register" class="hidden"><input type="text" id="reg-user" placeholder="Choose Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="reg-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-accent py-3">Create Account</button><p class="text-xs text-center text-gray-400 mt-4">Passwords are hashed before sending</p></div></div>`;
+            },
+            async handleLogin() {
+                const user = document.getElementById('login-user').value;
+                const pass = document.getElementById('login-pass').value;
+                if(!user || !pass) return Toast.show("Please fill all fields", "error");
+                const btn = document.querySelector('#form-login button'); btn.innerText = "Verifying...";
+                const res = await Auth.login(user, pass);
+                if(res.success) { Toast.show("Welcome back!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Sign In"; }
+            },
+            async handleRegister() {
+                const user = document.getElementById('reg-user').value;
+                const pass = document.getElementById('reg-pass').value;
+                if(!user || !pass) return Toast.show("Please fill all fields", "error");
+                const btn = document.querySelector('#form-register button'); btn.innerText = "Creating...";
+                const res = await Auth.register(user, pass);
+                if(res.success) { Toast.show("Account created!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Create Account"; }
+            },
+
             // --- UTILS ---
             toggleFullscreen(elementId) {
                 const elem = document.getElementById(elementId);
@@ -348,23 +479,20 @@
                 if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen(); } 
                 else { if (document.exitFullscreen) document.exitFullscreen(); }
             },
-
             adjustZoom(amount) {
                 this.zoomLevel = parseFloat((this.zoomLevel + amount).toFixed(1));
                 if(this.zoomLevel < 0.5) this.zoomLevel = 0.5;
                 if(this.zoomLevel > 3.0) this.zoomLevel = 3.0;
-                
                 const img = document.getElementById('zoomable-image');
                 if(img) img.style.transform = `scale(${this.zoomLevel})`;
             },
-            
             resetZoom() {
                 this.zoomLevel = 1;
                 const img = document.getElementById('zoomable-image');
                 if(img) img.style.transform = `scale(1)`;
             },
 
-            // --- FLASHCARDS LOGIC (UPDATED BUTTON STYLE) ---
+            // --- FLASHCARDS LOGIC ---
             renderFlashcards(container) {
                 if(!DB.state.flashcards || DB.state.flashcards.length === 0) { 
                     container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">No Flashcards</h3></div>`; 
@@ -380,29 +508,15 @@
                             <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span>
                             <span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span>
                         </div>
-                        
                         <div class="flip-container w-full h-80 relative cursor-pointer group" onclick="app.flipFlashcard()">
                             <div class="flip-inner border border-gray-200 shadow-md bg-white" id="flashcard-inner">
-                                <!-- Front -->
-                                <div class="flip-front p-8 text-center">
-                                    <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span>
-                                    <h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3>
-                                    <p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p>
-                                </div>
-                                <!-- Back -->
-                                <div class="flip-back p-8 text-center bg-navy" style="color: #FFFFFF !important;">
-                                    <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-4">Back</span>
-                                    <h3 class="text-xl font-medium leading-relaxed text-white" style="color: #FFFFFF !important;">${backContent}</h3>
-                                </div>
+                                <div class="flip-front p-8 text-center"><span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span><h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3><p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p></div>
+                                <div class="flip-back p-8 text-center bg-navy" style="color: #FFFFFF !important;"><span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-4">Back</span><h3 class="text-xl font-medium leading-relaxed text-white" style="color: #FFFFFF !important;">${backContent}</h3></div>
                             </div>
                         </div>
-
                         <div class="flex gap-4 mt-8 w-full">
                             <button onclick="app.prevFlashcard()" class="flex-1 py-3 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase hover:bg-gray-50">Previous</button>
-                            <!-- UPDATED NEXT BUTTON STYLE -->
-                            <button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-gray-100 border border-gray-200 text-gray-600 text-sm font-bold uppercase hover:bg-gray-200 shadow-sm flex items-center justify-center gap-2">
-                                NEXT CARD <i class="fa-solid fa-arrow-right"></i>
-                            </button>
+                            <button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-gray-100 border border-gray-200 text-gray-600 text-sm font-bold uppercase hover:bg-gray-200 shadow-sm flex items-center justify-center gap-2">NEXT CARD <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </div>
                 `;
@@ -411,156 +525,58 @@
             nextFlashcard() { if (flashcardState.index < DB.state.flashcards.length - 1) { flashcardState.index++; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
             prevFlashcard() { if (flashcardState.index > 0) { flashcardState.index--; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
 
-            // --- EXAM LOGIC (FIXED EXIT) ---
+            // --- EXAM LOGIC ---
             renderExam(container) {
-                if(!DB.state.questions || DB.state.questions.length === 0) {
-                    container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">Question Bank Empty</h3><button onclick="app.nav('admin')" class="mt-4 swiss-btn swiss-btn-outline px-4 py-2">Go to Settings</button></div>`;
-                    return;
-                }
-                if (!examState.active) {
-                    container.innerHTML = `<div class="max-w-xl mx-auto mt-8 text-center bg-white p-8 border border-gray-200 shadow-sm"><div class="w-16 h-16 bg-blue-50 text-navy rounded-full flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fa-solid fa-graduation-cap"></i></div><h2 class="text-2xl font-bold text-navy mb-2">Exam Simulator</h2><p class="text-gray-500 mb-8 text-sm">Total Questions: <strong>${DB.state.questions.length}</strong></p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3 w-full md:w-auto">Start Random Drill</button></div>`;
-                } else { this.renderActiveQuiz(container); }
+                if(!DB.state.questions || DB.state.questions.length === 0) { container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">Question Bank Empty</h3><button onclick="app.nav('admin')" class="mt-4 swiss-btn swiss-btn-outline px-4 py-2">Go to Settings</button></div>`; return; }
+                if (!examState.active) { container.innerHTML = `<div class="max-w-xl mx-auto mt-8 text-center bg-white p-8 border border-gray-200 shadow-sm"><div class="w-16 h-16 bg-blue-50 text-navy rounded-full flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fa-solid fa-graduation-cap"></i></div><h2 class="text-2xl font-bold text-navy mb-2">Exam Simulator</h2><p class="text-gray-500 mb-8 text-sm">Total Questions: <strong>${DB.state.questions.length}</strong></p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3 w-full md:w-auto">Start Random Drill</button></div>`; } 
+                else { this.renderActiveQuiz(container); }
             },
             startQuiz() { examState = { active: true, currentQ: 0, answers: {}, score: 0, finished: false }; this.renderActiveQuiz(document.getElementById('app-container')); },
-            quitExam() { 
-                if(confirm("Are you sure you want to exit the exam? Your progress will be lost.")) {
-                    examState.active = false;
-                    app.nav('exam');
-                }
-            },
+            quitExam() { if(confirm("Exit exam? Progress will be lost.")) { examState.active = false; app.nav('exam'); } },
             renderActiveQuiz(container) {
-                const qIndex = examState.currentQ;
-                const question = DB.state.questions[qIndex];
-                const total = DB.state.questions.length;
-                const isAnswered = examState.answers[question.id] !== undefined;
-                const userAns = examState.answers[question.id];
-                
-                let html = `
-                    <div class="max-w-3xl mx-auto relative">
-                        <!-- Top Bar with Exit -->
-                        <div class="flex justify-between items-center mb-6 bg-white p-2 border-b border-gray-100 sticky top-0 z-10">
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} of ${total}</span>
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs font-bold text-navy bg-blue-50 px-2 py-1 rounded">${question.ka || 'General'}</span>
-                                <button onclick="app.quitExam()" class="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50 transition" title="Exit Exam">
-                                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm mb-6"><h3 class="text-lg md:text-xl font-bold text-navy mb-6 leading-relaxed">${question.stem}</h3><div class="space-y-3">${question.options.map((opt, idx) => { let btnClass = "border-gray-200 hover:bg-gray-50"; let icon = ""; if (isAnswered) { if (idx === question.correct[0]) { btnClass = "border-green-500 bg-green-50 text-green-800"; icon = '<i class="fa-solid fa-check text-green-600 float-right mt-1"></i>'; } else if (idx === userAns) { btnClass = "border-red-500 bg-red-50 text-red-800"; icon = '<i class="fa-solid fa-xmark text-red-600 float-right mt-1"></i>'; } else { btnClass = "border-gray-100 opacity-50"; } } return `<div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" class="p-4 border ${btnClass} cursor-pointer transition text-sm md:text-base"><span class="font-bold mr-2">${String.fromCharCode(65 + idx)}.</span> ${opt} ${icon}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 border-l-4 border-navy text-sm text-navy"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-4 py-2">Previous</button>${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-6 py-2">Next Question</button>` : ''}${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-6 py-2">Finish Exam</button>` : ''}</div></div>`;
+                const qIndex = examState.currentQ; const question = DB.state.questions[qIndex]; const total = DB.state.questions.length;
+                const isAnswered = examState.answers[question.id] !== undefined; const userAns = examState.answers[question.id];
+                let html = `<div class="max-w-3xl mx-auto relative"><div class="flex justify-between items-center mb-6 bg-white p-2 border-b border-gray-100 sticky top-0 z-10"><span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} of ${total}</span><div class="flex items-center gap-3"><span class="text-xs font-bold text-navy bg-blue-50 px-2 py-1 rounded">${question.ka || 'General'}</span><button onclick="app.quitExam()" class="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50 transition" title="Exit Exam"><i class="fa-solid fa-right-from-bracket text-lg"></i></button></div></div><div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm mb-6"><h3 class="text-lg md:text-xl font-bold text-navy mb-6 leading-relaxed">${question.stem}</h3><div class="space-y-3">${question.options.map((opt, idx) => { let btnClass = "border-gray-200 hover:bg-gray-50"; let icon = ""; if (isAnswered) { if (idx === question.correct[0]) { btnClass = "border-green-500 bg-green-50 text-green-800"; icon = '<i class="fa-solid fa-check text-green-600 float-right mt-1"></i>'; } else if (idx === userAns) { btnClass = "border-red-500 bg-red-50 text-red-800"; icon = '<i class="fa-solid fa-xmark text-red-600 float-right mt-1"></i>'; } else { btnClass = "border-gray-100 opacity-50"; } } return `<div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" class="p-4 border ${btnClass} cursor-pointer transition text-sm md:text-base"><span class="font-bold mr-2">${String.fromCharCode(65 + idx)}.</span> ${opt} ${icon}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 border-l-4 border-navy text-sm text-navy"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-4 py-2">Previous</button>${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-6 py-2">Next Question</button>` : ''}${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-6 py-2">Finish Exam</button>` : ''}</div></div>`;
                 container.innerHTML = html;
             },
             submitAnswer(ansIdx) { const q = DB.state.questions[examState.currentQ]; examState.answers[q.id] = ansIdx; this.renderActiveQuiz(document.getElementById('app-container')); },
             nextQuestion() { if (examState.currentQ < DB.state.questions.length - 1) { examState.currentQ++; this.renderActiveQuiz(document.getElementById('app-container')); } },
             prevQuestion() { if (examState.currentQ > 0) { examState.currentQ--; this.renderActiveQuiz(document.getElementById('app-container')); } },
-            finishExam() { 
-                let correctCount = 0; DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; });
-                const container = document.getElementById('app-container');
-                container.innerHTML = `<div class="max-w-xl mx-auto text-center bg-white p-10 border border-gray-200 shadow-lg mt-10"><h2 class="text-3xl font-bold text-navy mb-4">Exam Completed</h2><div class="text-6xl font-bold text-orange mb-2">${Math.round(correctCount/DB.state.questions.length * 100)}%</div><p class="text-gray-500 mb-8">You answered ${correctCount} out of ${DB.state.questions.length} correctly.</p><button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-primary px-8 py-3">Return to Menu</button></div>`;
-            },
+            finishExam() { let correctCount = 0; DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; }); const container = document.getElementById('app-container'); container.innerHTML = `<div class="max-w-xl mx-auto text-center bg-white p-10 border border-gray-200 shadow-lg mt-10"><h2 class="text-3xl font-bold text-navy mb-4">Exam Completed</h2><div class="text-6xl font-bold text-orange mb-2">${Math.round(correctCount/DB.state.questions.length * 100)}%</div><p class="text-gray-500 mb-8">You answered ${correctCount} out of ${DB.state.questions.length} correctly.</p><button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-primary px-8 py-3">Return to Menu</button></div>`; },
 
+            // --- LIBRARY ---
             renderLibrary(container, params) {
                 const curriculum = DB.state.curriculum || [];
                 if(curriculum.length === 0) { app.nav('admin'); return; }
-
                 this.zoomLevel = 1;
                 const activeCode = params?.code || curriculum[0].code;
                 const type = params?.type || 'textbook'; 
                 const mediaPath = 'CbapMedia/';
-                
-                const files = {
-                    textbook: `${mediaPath}${activeCode}_Textbook.pdf`,
-                    slide: `${mediaPath}${activeCode}_Slide.pdf`,
-                    info: `${mediaPath}${activeCode}_Info.png`,
-                    mindmap: `${mediaPath}${activeCode}_Mindmap.png`,
-                    video: `${mediaPath}${activeCode}_Video.mp4`
-                };
-
-                let viewer = '';
-                let showZoomControls = false;
-
-                if(type === 'textbook' || type === 'slide') {
-                    const src = type === 'textbook' ? files.textbook : files.slide;
-                    viewer = `<iframe src="${src}" class="w-full h-full border-none bg-gray-100"></iframe>`;
-                } else if(type === 'info' || type === 'mindmap') {
-                    const src = type === 'info' ? files.info : files.mindmap;
-                    showZoomControls = true;
-                    viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${src}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`;
-                } else if(type === 'video') {
-                    viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
-                }
-
-                container.innerHTML = `
-                    <div class="flex flex-col lg:flex-row h-full gap-4">
-                        <div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all">
-                            <div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>
-                            ${curriculum.map(c => `
-                                <button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>
-                                        ${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}
-                                    </div>
-                                    <div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div>
-                                </button>
-                            `).join('')}
-                        </div>
-                        
-                        <div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer">
-                            <div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1">
-                                <button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
-                                <div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0">
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button>
-                                    <button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button>
-                                </div>
-                                <div class="flex items-center gap-2 px-2 flex-shrink-0">
-                                    ${showZoomControls ? `
-                                        <div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden">
-                                            <button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button>
-                                            <button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button>
-                                        </div>
-                                    ` : ''}
-                                    <button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button>
-                                </div>
-                            </div>
-                            <div class="flex-1 relative bg-white overflow-hidden">
-                                ${viewer}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
+                let viewer = ''; let showZoomControls = false;
+                if(type === 'textbook' || type === 'slide') { viewer = `<iframe src="${type==='textbook'?files.textbook:files.slide}" class="w-full h-full border-none bg-gray-100"></iframe>`; }
+                else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
+                else if(type === 'video') { viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`; }
+                container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
             },
 
-            // --- DASHBOARD (WITH RADAR CHART RESET) ---
+            // --- DASHBOARD ---
             renderDashboard(container) {
                 const curriculum = DB.state.curriculum || [];
                 const completedTasks = DB.state.completedTasks || [];
                 let totalTasks = 0;
-                
-                // Initialize Chart Data arrays
                 const kaCodes = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
-                // Default data to 0
                 let chartDataValues = [0, 0, 0, 0, 0, 0];
-
                 const progressData = curriculum.map(ka => {
                     const kaTasks = ka.tasks || [];
                     const kaTotal = kaTasks.length;
                     totalTasks += kaTotal;
                     const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length;
                     const percent = kaTotal > 0 ? Math.round((kaCompleted / kaTotal) * 100) : 0;
-                    
-                    // Map percent to correct chart index if applicable
                     const kaIndex = kaCodes.indexOf(ka.code);
-                    if(kaIndex !== -1) {
-                        chartDataValues[kaIndex] = percent;
-                    }
-                    
+                    if(kaIndex !== -1) { chartDataValues[kaIndex] = percent; }
                     return { ...ka, percent };
                 });
-                
                 const totalCompleted = completedTasks.length;
                 const totalPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
 
@@ -580,137 +596,36 @@
                     </div>
                 `;
                 
-                // Render Chart with Real or Zero Data
                 setTimeout(() => {
                     const ctx = document.getElementById('proficiencyChart');
                     if(ctx) {
                         new Chart(ctx, {
                             type: 'radar',
-                            data: {
-                                labels: kaCodes,
-                                datasets: [{ label: 'Completion %', data: chartDataValues, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#003366', pointBorderColor: '#fff', borderWidth: 2 }]
-                            },
+                            data: { labels: kaCodes, datasets: [{ label: 'Completion %', data: chartDataValues, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#003366', pointBorderColor: '#fff', borderWidth: 2 }] },
                             options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#f0f0f0' }, grid: { color: '#f0f0f0' }, pointLabels: { font: { size: 10, family: 'Helvetica Neue', weight: 'bold' }, color: '#003366' }, suggestedMin: 0, suggestedMax: 100, ticks: { backdropColor: 'transparent', stepSize: 20 } } }, plugins: { legend: { display: false } } }
                         });
                     }
                 }, 100);
             },
             
-            // --- USER GUIDE (EXPANDED) ---
+            // --- USER GUIDE & OTHERS ---
             renderHelp(container) {
                 container.innerHTML = `
                     <div class="max-w-4xl mx-auto space-y-8 pb-10">
-                        <div class="border-b border-gray-200 pb-6">
-                            <h2 class="text-3xl font-bold text-navy mb-2">User Guide & Documentation</h2>
-                            <p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng CBAP Master App.</p>
-                        </div>
-
-                        <!-- 1. Introduction -->
-                        <div class="swiss-card p-8 border-l-4 border-navy">
-                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
-                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 
-                                Giới thiệu chung
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-2 leading-relaxed">
-                                <strong>CBAP Master</strong> là ứng dụng hỗ trợ ôn thi chứng chỉ CBAP (Certified Business Analysis Professional) theo chuẩn BABOK® Guide v3. 
-                                Ứng dụng được thiết kế theo phong cách Swiss Design tối giản, tập trung vào trải nghiệm học tập không xao nhãng.
-                            </p>
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                Các tính năng chính bao gồm: Hệ thống kiến thức (Knowledge Hub), Thư viện tài liệu (Library), Thi thử (Exam Engine), và Ôn tập thẻ nhớ (Flashcards).
-                            </p>
-                        </div>
-
-                        <!-- 2. Setup Data -->
-                        <div class="swiss-card p-8 border-l-4 border-orange">
-                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
-                                <span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> 
-                                Cài đặt & Dữ liệu
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-4 leading-relaxed">
-                                Để ứng dụng hoạt động, bạn cần cấu trúc thư mục dữ liệu chính xác. Tạo thư mục <strong>CbapMedia</strong> nằm cùng cấp với file <code>index.html</code>.
-                            </p>
-                            <div class="bg-gray-50 p-5 border border-gray-200 text-sm rounded mb-4 font-mono text-xs">
-                                <div>📁 [Root Folder]</div>
-                                <div class="ml-4">📄 index.html</div>
-                                <div class="ml-4">📂 <strong>CbapMedia</strong></div>
-                                <div class="ml-8 text-gray-500">
-                                    <div class="text-navy font-bold">-- Cấu trúc (JSON) --</div>
-                                    <div>📄 curriculum.json <span class="text-gray-400">// Danh sách bài học</span></div>
-                                    <div>📄 questions.json <span class="text-gray-400">// Ngân hàng câu hỏi</span></div>
-                                    <div>📄 flashcards.json <span class="text-gray-400">// Thẻ nhớ</span></div>
-                                    <div class="mt-2 text-navy font-bold">-- Tài liệu Media (Đặt tên theo Mã) --</div>
-                                    <div>📄 [Code]_Textbook.pdf <span class="text-gray-400">// VD: BAPM_Textbook.pdf</span></div>
-                                    <div>📄 [Code]_Slide.pdf <span class="text-gray-400">// VD: BAPM_Slide.pdf</span></div>
-                                    <div>📄 [Code]_Info.png <span class="text-gray-400">// Ảnh Infographic</span></div>
-                                    <div>📄 [Code]_Mindmap.png <span class="text-gray-400">// Ảnh Mindmap</span></div>
-                                    <div>🎥 [Code]_Video.mp4 <span class="text-gray-400">// Video bài giảng</span></div>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-500 italic">
-                                <strong>Lưu ý:</strong> Nếu chạy trực tiếp file HTML (không qua server), trình duyệt có thể chặn tải file. Hãy vào mục <strong>Settings</strong> và sử dụng chức năng <strong>Manual Data Import</strong> để nạp 3 file JSON thủ công.
-                            </p>
-                        </div>
-
-                        <!-- 3. Features Detail -->
-                        <div class="swiss-card p-8 border-l-4 border-navy">
-                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
-                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
-                                Hướng dẫn chức năng
-                            </h3>
-                            
-                            <div class="space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Knowledge Hub (Học tập)</h4>
-                                    <p class="text-sm text-gray-600">
-                                        Nơi hiển thị lộ trình học. Bấm vào từng thẻ bài học để xem chi tiết các Task.
-                                        <br><strong>Progress Tracking:</strong> Trong mỗi bài học, bấm nút "MARK COMPLETE" để ghi nhận tiến độ. Biểu đồ Radar ngoài Dashboard sẽ tự động cập nhật theo % hoàn thành này.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Study Library (Thư viện)</h4>
-                                    <p class="text-sm text-gray-600">
-                                        Xem tài liệu đa phương tiện. Chọn Chương ở cột trái (có thể ẩn/hiện bằng nút Menu), sau đó chọn loại tài liệu ở thanh trên (Textbook, Slide, Mindmap...).
-                                        <br><strong>Công cụ:</strong> Hỗ trợ phóng to/thu nhỏ ảnh (Zoom) và chế độ toàn màn hình (Fullscreen) để dễ đọc.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Exam Engine (Thi thử)</h4>
-                                    <p class="text-sm text-gray-600">
-                                        Làm bài thi trắc nghiệm ngẫu nhiên từ ngân hàng câu hỏi.
-                                        <br><strong>Cách dùng:</strong> Chọn đáp án -> Hệ thống báo Đúng/Sai ngay lập tức kèm giải thích.
-                                        <br><strong>Thoát:</strong> Bấm nút Exit <i class="fa-solid fa-right-from-bracket text-red-500"></i> góc trên phải để dừng bài thi.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Flashcards (Ôn tập)</h4>
-                                    <p class="text-sm text-gray-600">
-                                        Ôn tập nhanh các khái niệm.
-                                        <br><strong>Cách dùng:</strong>
-                                        <br>1. Đọc câu hỏi/khái niệm ở mặt trước (Front).
-                                        <br>2. Bấm vào thẻ để lật xem đáp án (Back).
-                                        <br>3. Bấm nút <strong>NEXT CARD</strong> màu xám để chuyển sang thẻ tiếp theo.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="border-b border-gray-200 pb-6"><h2 class="text-3xl font-bold text-navy mb-2">User Guide & Documentation</h2><p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng CBAP Master App.</p></div>
+                        <div class="swiss-card p-8 border-l-4 border-navy"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Giới thiệu chung</h3><p class="text-sm text-gray-600 mb-2 leading-relaxed"><strong>CBAP Master</strong> là ứng dụng hỗ trợ ôn thi chứng chỉ CBAP (Certified Business Analysis Professional) theo chuẩn BABOK® Guide v3.</p></div>
+                        <div class="swiss-card p-8 border-l-4 border-orange"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Cài đặt & Dữ liệu</h3><p class="text-sm text-gray-600 mb-4 leading-relaxed">Tạo thư mục <strong>CbapMedia</strong> cùng cấp file index.html. Nếu lỗi tải file, dùng Settings để import manual.</p></div>
+                        <div class="swiss-card p-8 border-l-4 border-navy"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> Hướng dẫn chức năng</h3><div class="space-y-6"><div><h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Knowledge Hub</h4><p class="text-sm text-gray-600">Theo dõi lộ trình học. Bấm "MARK COMPLETE" để cập nhật tiến độ.</p></div><div><h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Auth & Sync</h4><p class="text-sm text-gray-600">Đăng nhập để đồng bộ dữ liệu lên đám mây (Custom Cloud).</p></div></div></div>
                     </div>
                 `;
             },
-
-            // --- Other Logic (Library, Exam, Admin...) Remains the same ---
             renderLearn(container) {
-                const curriculum = DB.state.curriculum || [];
-                const completedTasks = DB.state.completedTasks || [];
+                const curriculum = DB.state.curriculum || []; const completedTasks = DB.state.completedTasks || [];
                 if(curriculum.length === 0) { app.nav('admin'); return; }
                 container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">${curriculum.map((c, i) => { const kaTasks = c.tasks || []; const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length; const percent = kaTasks.length > 0 ? Math.round((kaCompleted / kaTasks.length) * 100) : 0; return `<div class="bg-white p-6 border border-gray-200 hover:border-orange transition cursor-pointer group flex flex-col h-full" onclick="app.nav('task_detail', {code:'${c.code}'})"><div class="flex justify-between items-start mb-4"><span class="text-3xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span><span class="bg-navy text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">${c.code}</span></div><h3 class="text-md font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3><div class="mt-auto pt-4"><div class="flex justify-between text-[10px] text-gray-400 mb-1 uppercase tracking-wider"><span>Progress</span><span>${percent}%</span></div><div class="w-full bg-gray-100 h-1 rounded-full"><div class="bg-orange h-full" style="width: ${percent}%"></div></div></div></div>`; }).join('')}</div>`;
             },
             renderTaskDetail(container, params) {
-                const item = DB.state.curriculum.find(c => c.code === params.code);
-                if(!item) return;
-                const isComplete = (tid) => (DB.state.completedTasks || []).includes(tid);
+                const item = DB.state.curriculum.find(c => c.code === params.code); if(!item) return; const isComplete = (tid) => (DB.state.completedTasks || []).includes(tid);
                 container.innerHTML = `<div class="max-w-4xl mx-auto"><button onclick="app.nav('learn')" class="mb-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Back to Hub</button><div class="bg-white p-8 border-t-4 border-navy shadow-sm"><h1 class="text-2xl md:text-3xl font-bold text-navy mb-2">${item.name}</h1><p class="text-gray-600 mb-8">${item.desc}</p><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Tasks / Topics</h3><div class="space-y-3">${(item.tasks || []).map(t => { const done = isComplete(t.id); return `<div class="p-4 border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition"><div><span class="text-sm font-bold ${done ? 'text-green-600 line-through' : 'text-navy'}">${t.name}</span><div class="text-xs text-gray-400 font-mono">${t.id}</div></div><button onclick="app.toggleTask('${t.id}', '${params.code}')" class="text-xs font-bold uppercase tracking-widest px-3 py-1 border ${done ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-400 border-gray-200 hover:border-orange hover:text-orange'}">${done ? '<i class="fa-solid fa-check mr-1"></i> Done' : 'Mark Complete'}</button></div>`; }).join('')}</div></div></div>`;
             },
             toggleTask(taskId, code) { if (!DB.state.completedTasks) DB.state.completedTasks = []; const idx = DB.state.completedTasks.indexOf(taskId); if (idx > -1) { DB.state.completedTasks.splice(idx, 1); } else { DB.state.completedTasks.push(taskId); } DB.save(); this.renderTaskDetail(document.getElementById('app-container'), { code: code }); Toast.show("Progress Updated", "success"); },
