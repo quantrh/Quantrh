@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBAP Master - GitHub Edition v4</title>
+    <title>CBAP Master - GitHub Edition v4.1</title>
     <!-- Tailwind Config -->
     <script>
         window.tailwind = {
@@ -58,6 +58,9 @@
         /* Loading Overlay */
         #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
         #error-log { display: none; margin-top: 20px; padding: 15px; background: #FFF0F0; border: 1px solid #FFCDCD; color: #D8000C; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-width: 90%; text-align: left; overflow-x: auto; max-height: 250px; overflow-y: auto; width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Success Message styling within log */
+        .log-success { color: #008000; font-weight: bold; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800 bg-white">
@@ -71,7 +74,7 @@
         
         <div id="loading-controls" class="hidden flex gap-4 mt-6">
             <button onclick="location.reload()" class="swiss-btn swiss-btn-primary px-6 py-2">Retry</button>
-            <button onclick="app.forceManualMode()" class="swiss-btn swiss-btn-accent px-6 py-2">Upload Manually</button>
+            <button onclick="app.closeLoading()" class="swiss-btn swiss-btn-accent px-6 py-2">Force Enter Dashboard</button>
         </div>
     </div>
 
@@ -107,7 +110,7 @@
         </nav>
         
         <div class="p-6 border-t border-grey-line hidden lg:block">
-            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v4.0</div>
+            <div class="text-[10px] uppercase tracking-widest text-gray-400">System v4.1</div>
             <div class="text-xs font-bold text-navy mt-1">BABOK® Aligned</div>
         </div>
     </aside>
@@ -152,17 +155,24 @@
         };
 
         const DB = {
-            key: 'CBAP_CANVAS_V4_FIXED',
+            key: 'CBAP_CANVAS_V4_1_FIXED',
             state: { user: { name: 'User', xp: 0 }, questions: [], flashcards: [], attempts: [], curriculum: [] },
             
             async init() {
                 const data = localStorage.getItem(this.key);
                 if (data) {
-                    this.state = JSON.parse(data);
+                    try {
+                        this.state = JSON.parse(data);
+                    } catch(e) {
+                        console.error("Local data corrupted, resetting.");
+                        localStorage.removeItem(this.key);
+                    }
+                    
                     if(!this.state.curriculum || this.state.curriculum.length === 0) {
                         await this.seedFromJSON();
                     } else {
                         document.getElementById('loading-overlay').classList.add('hidden');
+                        app.navigate('dashboard'); // Ensure navigation happens
                     }
                 } else {
                     await this.seedFromJSON();
@@ -176,14 +186,15 @@
                 const controls = document.getElementById('loading-controls');
                 
                 overlay.classList.remove('hidden');
-                errorLog.innerHTML = "";
+                // Don't clear error log if it has useful info from previous attempts
                 
+                // Show controls if it takes too long
                 setTimeout(() => {
                     if(!overlay.classList.contains('hidden')) {
                         controls.classList.remove('hidden');
-                        if(!errorLog.innerHTML) loadingText.innerText = "Loading slow? Try uploading manually.";
+                        loadingText.innerText = "Processing Complete. Click 'Force Enter' if stuck.";
                     }
-                }, 4000);
+                }, 2000);
 
                 // List of possible folder names to try (GitHub Case Sensitivity Fix)
                 const folders = ['CbapMedia', 'cbapmedia', 'CBAPMEDIA'];
@@ -206,10 +217,7 @@
                         } catch(e) { console.log(`Skipping ${folder}`); }
                     }
 
-                    if (!foundFolder) {
-                        // Fallback: try fetching assuming default even if HEAD failed
-                        foundFolder = 'CbapMedia';
-                    }
+                    if (!foundFolder) foundFolder = 'CbapMedia'; // Default
 
                     // Step 2: Fetch files
                     let successCount = 0;
@@ -224,7 +232,6 @@
                             let text = await response.text();
                             if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // Strip BOM
                             
-                            // Check if HTML (404)
                             if (text.trim().startsWith('<')) throw new Error("File content is HTML/404");
 
                             const json = JSON.parse(text);
@@ -232,13 +239,12 @@
                             this.state[key] = json;
                             successCount++;
                             errorLog.style.display = 'block';
-                            errorLog.innerHTML += `<div class="mb-1 text-green-600 text-xs">✅ Loaded ${name} from ${foundFolder}</div>`;
+                            errorLog.innerHTML += `<div class="mb-1 log-success">✅ Loaded ${name} from ${foundFolder}</div>`;
                         } catch (e) {
                             const msg = `Failed ${name}`;
                             console.warn(msg, e);
                             errorLog.style.display = 'block';
                             errorLog.innerHTML += `<div class="mb-1 text-red-600 text-xs">❌ ${msg}: ${e.message}</div>`;
-                            // Non-blocking error for individual files
                             this.state[name.replace('.json', '')] = []; 
                         }
                     }
@@ -246,11 +252,11 @@
                     this.save();
                     
                     if (this.state.curriculum.length > 0) {
-                        setTimeout(() => {
-                            overlay.classList.add('hidden');
-                            Toast.show(`Loaded ${successCount} files`, "success");
-                            app.navigate('dashboard');
-                        }, 800);
+                        loadingText.innerText = "Initialization Complete";
+                        // Force navigation without timeout to avoid getting stuck
+                        overlay.classList.add('hidden');
+                        Toast.show(`Loaded ${successCount} files`, "success");
+                        app.navigate('dashboard');
                     } else {
                         throw new Error("Curriculum failed to load. Manual upload required.");
                     }
@@ -273,6 +279,16 @@
             view: 'dashboard',
             start() { DB.init(); },
 
+            closeLoading() {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                if(DB.state.curriculum && DB.state.curriculum.length > 0) {
+                    this.navigate('dashboard');
+                } else {
+                    this.navigate('admin');
+                    Toast.show("Data missing. Please import manually.", "info");
+                }
+            },
+
             forceManualMode() {
                 document.getElementById('loading-overlay').classList.add('hidden');
                 this.navigate('admin');
@@ -287,15 +303,20 @@
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
                 
-                switch(target) {
-                    case 'dashboard': this.renderDashboard(container); break;
-                    case 'learn': this.renderLearn(container); break;
-                    case 'library': this.renderLibrary(container, param); break;
-                    case 'task_detail': this.renderTaskDetail(container, param); break;
-                    case 'exam': this.renderExam(container); break;
-                    case 'flashcards': this.renderFlashcards(container); break;
-                    case 'help': this.renderHelp(container); break;
-                    case 'admin': this.renderAdmin(container); break;
+                try {
+                    switch(target) {
+                        case 'dashboard': this.renderDashboard(container); break;
+                        case 'learn': this.renderLearn(container); break;
+                        case 'library': this.renderLibrary(container, param); break;
+                        case 'task_detail': this.renderTaskDetail(container, param); break;
+                        case 'exam': this.renderExam(container); break;
+                        case 'flashcards': this.renderFlashcards(container); break;
+                        case 'help': this.renderHelp(container); break;
+                        case 'admin': this.renderAdmin(container); break;
+                    }
+                } catch(e) {
+                    console.error("Render Error:", e);
+                    container.innerHTML = `<div class="p-8 text-red-600">Error rendering view: ${e.message}</div>`;
                 }
             },
 
