@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.5 (Video Fix)</title>
+    <title>CBAP Master - Cloud Sync v8.7 (OneDrive Updated)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.5...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.7...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.5</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Video Fix Applied</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.7</div>
+            <div class="text-[10px] font-bold text-navy mt-1">OneDrive Fix</div>
         </div>
     </aside>
 
@@ -221,7 +221,6 @@
                     } catch (e) { localStorage.removeItem(this.key); }
                 }
 
-                // If logged in, fetch fresh data from cloud
                 if (this.state.user.loggedIn) {
                     await this.pullFromCloud();
                 }
@@ -259,7 +258,6 @@
                 if (this.state.user.loggedIn) this.pushToCloud();
             },
 
-            // --- CLOUD SYNC LOGIC (CUSTOM TABLES) ---
             async pushToCloud() {
                 if (!this.state.user.id) return;
                 const payload = { completedTasks: this.state.completedTasks };
@@ -597,7 +595,7 @@
                 // USER CONFIGURATION: VIDEO LINKS
                 const videoMapping = {
                     'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1', 
-                    'BACCM': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQA1a9VaUUkIRazjdZLFgYDIAXkWQ2wyyHCjx0OgS5NofbY?e=nwj7fT',
+                    'BACCM': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc',
                     'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
                     'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
                     'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
@@ -653,9 +651,14 @@
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
                 else if(type === 'video') { 
                      if (externalVideoUrl) {
-                         viewer = `<div class="h-full flex flex-col bg-black">
+                         viewer = `<div class="h-full flex flex-col bg-black relative">
                                      <iframe src="${externalVideoUrl}" class="w-full h-full border-none" allowfullscreen></iframe>
-                                     <div class="p-2 text-center text-gray-500 text-xs bg-gray-900">Source: External Video</div>
+                                     <div class="absolute bottom-4 right-4 z-10">
+                                        <a href="${externalVideoUrl}" target="_blank" class="swiss-btn swiss-btn-accent px-4 py-2 text-xs shadow-lg opacity-90 hover:opacity-100 flex items-center gap-2">
+                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở trong Tab mới
+                                        </a>
+                                     </div>
+                                     <div class="p-2 text-center text-gray-500 text-xs bg-gray-900">Nếu video không chạy, hãy bấm nút ở góc phải.</div>
                                    </div>`;
                      } else {
                          viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
