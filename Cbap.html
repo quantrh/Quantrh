@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Swiss Design v7.8 (Edge Fix)</title>
+    <title>CBAP Master - Swiss Design v8.0</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -111,7 +111,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V7.8...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.0...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -166,7 +166,7 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 7.8</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.0</div>
             <div class="text-[10px] font-bold text-navy mt-1">Mobile Optimized</div>
         </div>
     </aside>
@@ -214,7 +214,7 @@
         };
 
         const DB = {
-            key: 'CBAP_V7_8_DATA',
+            key: 'CBAP_V8_0_DATA',
             state: { user: {}, curriculum: [], questions: [], flashcards: [], completedTasks: [] },
 
             async init() {
@@ -364,7 +364,7 @@
                 if(img) img.style.transform = `scale(1)`;
             },
 
-            // --- FLASHCARDS LOGIC (FIXED) ---
+            // --- FLASHCARDS LOGIC (UPDATED BUTTON STYLE) ---
             renderFlashcards(container) {
                 if(!DB.state.flashcards || DB.state.flashcards.length === 0) { 
                     container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">No Flashcards</h3></div>`; 
@@ -390,17 +390,18 @@
                                     <p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p>
                                 </div>
                                 <!-- Back -->
-                                <div class="flip-back p-8 text-center bg-navy">
+                                <div class="flip-back p-8 text-center bg-navy" style="color: #FFFFFF !important;">
                                     <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-4">Back</span>
-                                    <h3 class="text-xl font-medium leading-relaxed text-white">${backContent}</h3>
+                                    <h3 class="text-xl font-medium leading-relaxed text-white" style="color: #FFFFFF !important;">${backContent}</h3>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flex gap-4 mt-8 w-full">
                             <button onclick="app.prevFlashcard()" class="flex-1 py-3 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase hover:bg-gray-50">Previous</button>
-                            <button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-orange text-white text-sm font-bold uppercase hover:bg-orange/90 shadow-md flex items-center justify-center gap-2">
-                                <span>NEXT CARD</span> <i class="fa-solid fa-arrow-right"></i>
+                            <!-- UPDATED NEXT BUTTON STYLE -->
+                            <button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-gray-100 border border-gray-200 text-gray-600 text-sm font-bold uppercase hover:bg-gray-200 shadow-sm flex items-center justify-center gap-2">
+                                NEXT CARD <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
@@ -533,24 +534,35 @@
                 `;
             },
 
-            // --- DASHBOARD, LEARN, ADMIN (Unchanged Logic) ---
+            // --- DASHBOARD (WITH RADAR CHART RESET) ---
             renderDashboard(container) {
                 const curriculum = DB.state.curriculum || [];
                 const completedTasks = DB.state.completedTasks || [];
                 let totalTasks = 0;
+                
+                // Initialize Chart Data arrays
+                const kaCodes = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
+                // Default data to 0
+                let chartDataValues = [0, 0, 0, 0, 0, 0];
+
                 const progressData = curriculum.map(ka => {
                     const kaTasks = ka.tasks || [];
                     const kaTotal = kaTasks.length;
                     totalTasks += kaTotal;
                     const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length;
                     const percent = kaTotal > 0 ? Math.round((kaCompleted / kaTotal) * 100) : 0;
+                    
+                    // Map percent to correct chart index if applicable
+                    const kaIndex = kaCodes.indexOf(ka.code);
+                    if(kaIndex !== -1) {
+                        chartDataValues[kaIndex] = percent;
+                    }
+                    
                     return { ...ka, percent };
                 });
+                
                 const totalCompleted = completedTasks.length;
                 const totalPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                
-                const chartLabels = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
-                const chartData = [65, 59, 80, 81, 56, 55]; // Demo data
 
                 container.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
@@ -567,20 +579,128 @@
                         <div class="flex flex-col gap-6"><div class="bg-navy p-6 md:p-8 text-white flex flex-col justify-between h-full shadow-sm"><div><h3 class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-4">Quick Action</h3><p class="text-xs md:text-sm leading-relaxed text-blue-100">Resume your study session.</p></div><div class="space-y-3 mt-6"><button onclick="app.nav('library')" class="w-full bg-white text-navy py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white transition">Read Library</button><button onclick="app.nav('exam')" class="w-full border border-white text-white py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-navy transition">Start Exam</button></div></div></div>
                     </div>
                 `;
+                
+                // Render Chart with Real or Zero Data
                 setTimeout(() => {
                     const ctx = document.getElementById('proficiencyChart');
                     if(ctx) {
                         new Chart(ctx, {
                             type: 'radar',
                             data: {
-                                labels: chartLabels,
-                                datasets: [{ label: 'Completion %', data: chartData, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#003366', pointBorderColor: '#fff', borderWidth: 2 }]
+                                labels: kaCodes,
+                                datasets: [{ label: 'Completion %', data: chartDataValues, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#003366', pointBorderColor: '#fff', borderWidth: 2 }]
                             },
                             options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#f0f0f0' }, grid: { color: '#f0f0f0' }, pointLabels: { font: { size: 10, family: 'Helvetica Neue', weight: 'bold' }, color: '#003366' }, suggestedMin: 0, suggestedMax: 100, ticks: { backdropColor: 'transparent', stepSize: 20 } } }, plugins: { legend: { display: false } } }
                         });
                     }
                 }, 100);
             },
+            
+            // --- USER GUIDE (EXPANDED) ---
+            renderHelp(container) {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto space-y-8 pb-10">
+                        <div class="border-b border-gray-200 pb-6">
+                            <h2 class="text-3xl font-bold text-navy mb-2">User Guide & Documentation</h2>
+                            <p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng CBAP Master App.</p>
+                        </div>
+
+                        <!-- 1. Introduction -->
+                        <div class="swiss-card p-8 border-l-4 border-navy">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 
+                                Giới thiệu chung
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-2 leading-relaxed">
+                                <strong>CBAP Master</strong> là ứng dụng hỗ trợ ôn thi chứng chỉ CBAP (Certified Business Analysis Professional) theo chuẩn BABOK® Guide v3. 
+                                Ứng dụng được thiết kế theo phong cách Swiss Design tối giản, tập trung vào trải nghiệm học tập không xao nhãng.
+                            </p>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                Các tính năng chính bao gồm: Hệ thống kiến thức (Knowledge Hub), Thư viện tài liệu (Library), Thi thử (Exam Engine), và Ôn tập thẻ nhớ (Flashcards).
+                            </p>
+                        </div>
+
+                        <!-- 2. Setup Data -->
+                        <div class="swiss-card p-8 border-l-4 border-orange">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> 
+                                Cài đặt & Dữ liệu
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                                Để ứng dụng hoạt động, bạn cần cấu trúc thư mục dữ liệu chính xác. Tạo thư mục <strong>CbapMedia</strong> nằm cùng cấp với file <code>index.html</code>.
+                            </p>
+                            <div class="bg-gray-50 p-5 border border-gray-200 text-sm rounded mb-4 font-mono text-xs">
+                                <div>📁 [Root Folder]</div>
+                                <div class="ml-4">📄 index.html</div>
+                                <div class="ml-4">📂 <strong>CbapMedia</strong></div>
+                                <div class="ml-8 text-gray-500">
+                                    <div class="text-navy font-bold">-- Cấu trúc (JSON) --</div>
+                                    <div>📄 curriculum.json <span class="text-gray-400">// Danh sách bài học</span></div>
+                                    <div>📄 questions.json <span class="text-gray-400">// Ngân hàng câu hỏi</span></div>
+                                    <div>📄 flashcards.json <span class="text-gray-400">// Thẻ nhớ</span></div>
+                                    <div class="mt-2 text-navy font-bold">-- Tài liệu Media (Đặt tên theo Mã) --</div>
+                                    <div>📄 [Code]_Textbook.pdf <span class="text-gray-400">// VD: BAPM_Textbook.pdf</span></div>
+                                    <div>📄 [Code]_Slide.pdf <span class="text-gray-400">// VD: BAPM_Slide.pdf</span></div>
+                                    <div>📄 [Code]_Info.png <span class="text-gray-400">// Ảnh Infographic</span></div>
+                                    <div>📄 [Code]_Mindmap.png <span class="text-gray-400">// Ảnh Mindmap</span></div>
+                                    <div>🎥 [Code]_Video.mp4 <span class="text-gray-400">// Video bài giảng</span></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 italic">
+                                <strong>Lưu ý:</strong> Nếu chạy trực tiếp file HTML (không qua server), trình duyệt có thể chặn tải file. Hãy vào mục <strong>Settings</strong> và sử dụng chức năng <strong>Manual Data Import</strong> để nạp 3 file JSON thủ công.
+                            </p>
+                        </div>
+
+                        <!-- 3. Features Detail -->
+                        <div class="swiss-card p-8 border-l-4 border-navy">
+                            <h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3">
+                                <span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                                Hướng dẫn chức năng
+                            </h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Knowledge Hub (Học tập)</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Nơi hiển thị lộ trình học. Bấm vào từng thẻ bài học để xem chi tiết các Task.
+                                        <br><strong>Progress Tracking:</strong> Trong mỗi bài học, bấm nút "MARK COMPLETE" để ghi nhận tiến độ. Biểu đồ Radar ngoài Dashboard sẽ tự động cập nhật theo % hoàn thành này.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Study Library (Thư viện)</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Xem tài liệu đa phương tiện. Chọn Chương ở cột trái (có thể ẩn/hiện bằng nút Menu), sau đó chọn loại tài liệu ở thanh trên (Textbook, Slide, Mindmap...).
+                                        <br><strong>Công cụ:</strong> Hỗ trợ phóng to/thu nhỏ ảnh (Zoom) và chế độ toàn màn hình (Fullscreen) để dễ đọc.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Exam Engine (Thi thử)</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Làm bài thi trắc nghiệm ngẫu nhiên từ ngân hàng câu hỏi.
+                                        <br><strong>Cách dùng:</strong> Chọn đáp án -> Hệ thống báo Đúng/Sai ngay lập tức kèm giải thích.
+                                        <br><strong>Thoát:</strong> Bấm nút Exit <i class="fa-solid fa-right-from-bracket text-red-500"></i> góc trên phải để dừng bài thi.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Flashcards (Ôn tập)</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Ôn tập nhanh các khái niệm.
+                                        <br><strong>Cách dùng:</strong>
+                                        <br>1. Đọc câu hỏi/khái niệm ở mặt trước (Front).
+                                        <br>2. Bấm vào thẻ để lật xem đáp án (Back).
+                                        <br>3. Bấm nút <strong>NEXT CARD</strong> màu xám để chuyển sang thẻ tiếp theo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // --- Other Logic (Library, Exam, Admin...) Remains the same ---
             renderLearn(container) {
                 const curriculum = DB.state.curriculum || [];
                 const completedTasks = DB.state.completedTasks || [];
@@ -595,7 +715,6 @@
             },
             toggleTask(taskId, code) { if (!DB.state.completedTasks) DB.state.completedTasks = []; const idx = DB.state.completedTasks.indexOf(taskId); if (idx > -1) { DB.state.completedTasks.splice(idx, 1); } else { DB.state.completedTasks.push(taskId); } DB.save(); this.renderTaskDetail(document.getElementById('app-container'), { code: code }); Toast.show("Progress Updated", "success"); },
             renderAdmin(container) { container.innerHTML = `<div class="max-w-xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-8 border border-gray-200 shadow-sm"><h3 class="text-sm font-bold text-navy uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Manual Data Import</h3><div class="space-y-4"><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Curriculum.json</label><input type="file" onchange="app.importFile(this, 'curriculum')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Questions.json</label><input type="file" onchange="app.importFile(this, 'questions')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Flashcards.json</label><input type="file" onchange="app.importFile(this, 'flashcards')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div></div><div class="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center"><button onclick="location.reload()" class="text-navy text-xs font-bold uppercase tracking-widest hover:text-orange">Reload App</button></div></div></div>`; },
-            renderHelp(c) { c.innerHTML = `<div class="max-w-4xl mx-auto space-y-8 pb-10"><div class="border-b border-gray-200 pb-6"><h2 class="text-3xl font-bold text-navy mb-2">User Guide</h2><p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng.</p></div><div class="swiss-card p-8 border-l-4 border-orange"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Cài đặt & Dữ liệu</h3><p class="text-sm text-gray-600 mb-4">Để ứng dụng hoạt động, bạn cần thư mục <strong>CbapMedia</strong> chứa các file JSON và tài liệu. Nếu không tải được tự động, hãy vào Settings để import thủ công.</p></div><div class="swiss-card p-8 border-l-4 border-navy"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Chức năng chính</h3><ul class="list-disc ml-5 space-y-2 text-sm text-gray-600"><li><strong>Library:</strong> Xem tài liệu (PDF, Ảnh, Video). Có chế độ Zoom và Fullscreen.</li><li><strong>Exam:</strong> Làm bài thi trắc nghiệm. Bấm icon Exit để thoát.</li><li><strong>Flashcards:</strong> Ôn tập nhanh. Bấm thẻ để lật, bấm NEXT để chuyển.</li></ul></div></div>`; },
             importFile(input, key) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { try { DB.state[key] = JSON.parse(e.target.result); DB.save(); Toast.show(`Imported ${key}`); } catch(err) { alert("Invalid JSON"); } }; reader.readAsText(file); }
         };
 
