@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v8.4 (OneDrive Video)</title>
+    <title>CBAP Master - Cloud Sync v8.5 (Video Fix)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.4...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V8.5...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.4</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Cloud Sync Active</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 8.5</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Video Fix Applied</div>
         </div>
     </aside>
 
@@ -585,7 +585,7 @@
             prevQuestion() { if (examState.currentQ > 0) { examState.currentQ--; this.renderActiveQuiz(document.getElementById('app-container')); } },
             finishExam() { let correctCount = 0; DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; }); const container = document.getElementById('app-container'); container.innerHTML = `<div class="max-w-xl mx-auto text-center bg-white p-10 border border-gray-200 shadow-lg mt-10"><h2 class="text-3xl font-bold text-navy mb-4">Exam Completed</h2><div class="text-6xl font-bold text-orange mb-2">${Math.round(correctCount/DB.state.questions.length * 100)}%</div><p class="text-gray-500 mb-8">You answered ${correctCount} out of ${DB.state.questions.length} correctly.</p><button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-primary px-8 py-3">Return to Menu</button></div>`; },
 
-            // --- LIBRARY (Updated mapping) ---
+            // --- LIBRARY (Updated mapping with Transform) ---
             renderLibrary(container, params) {
                 const curriculum = DB.state.curriculum || [];
                 if(curriculum.length === 0) { app.nav('admin'); return; }
@@ -595,11 +595,9 @@
                 const mediaPath = 'CbapMedia/';
                 
                 // USER CONFIGURATION: VIDEO LINKS
-                // Add your OneDrive embed links here.
-                // Leave empty to fall back to local file path CbapMedia/[Code]_Video.mp4
                 const videoMapping = {
                     'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1', 
-                    'BACCM': 'https://www.youtube.com/watch?v=cVsGlP-DYPs&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
+                    'BACCM': 'https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQA1a9VaUUkIRazjdZLFgYDIAXkWQ2wyyHCjx0OgS5NofbY?e=nwj7fT',
                     'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
                     'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
                     'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
@@ -611,13 +609,24 @@
                     'PERSP': ''
                 };
                 
-                const externalVideoUrl = videoMapping[activeCode];
+                // Helper to convert watch links to embed links
+                const getEmbedLink = (url) => {
+                    if (!url) return '';
+                    // YouTube
+                    if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
+                        const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+                        return `https://www.youtube.com/embed/${videoId}`;
+                    }
+                    // Return other URLs (e.g. OneDrive Embed) as is
+                    return url;
+                };
+
+                const externalVideoUrl = getEmbedLink(videoMapping[activeCode]);
                 
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
                 
                 if(type === 'textbook' || type === 'slide') { 
-                    // PDF VIEW USING PDF.JS RENDERER
                     const src = type === 'textbook' ? files.textbook : files.slide;
                     viewer = `
                         <div class="flex flex-col h-full bg-gray-100" id="pdf-wrapper">
@@ -639,19 +648,16 @@
                             </div>
                         </div>
                     `;
-                    // Load PDF after render
                     setTimeout(() => app.loadPDF(src), 0);
                 }
                 else if(type === 'info' || type === 'mindmap') { showZoomControls = true; viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${type==='info'?files.info:files.mindmap}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`; }
                 else if(type === 'video') { 
                      if (externalVideoUrl) {
-                         // Use Iframe for OneDrive Embed or similar
                          viewer = `<div class="h-full flex flex-col bg-black">
                                      <iframe src="${externalVideoUrl}" class="w-full h-full border-none" allowfullscreen></iframe>
                                      <div class="p-2 text-center text-gray-500 text-xs bg-gray-900">Source: External Video</div>
                                    </div>`;
                      } else {
-                         // Fallback to local file
                          viewer = `<div class="h-full flex items-center justify-center bg-black"><video controls class="w-full max-h-full"><source src="${files.video}" type="video/mp4"></video></div>`;
                      }
                 }
@@ -664,18 +670,25 @@
                 const curriculum = DB.state.curriculum || [];
                 const completedTasks = DB.state.completedTasks || [];
                 let totalTasks = 0;
+                
                 const kaCodes = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
                 let chartDataValues = [0, 0, 0, 0, 0, 0];
+
                 const progressData = curriculum.map(ka => {
                     const kaTasks = ka.tasks || [];
                     const kaTotal = kaTasks.length;
                     totalTasks += kaTotal;
                     const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length;
                     const percent = kaTotal > 0 ? Math.round((kaCompleted / kaTotal) * 100) : 0;
+                    
                     const kaIndex = kaCodes.indexOf(ka.code);
-                    if(kaIndex !== -1) { chartDataValues[kaIndex] = percent; }
+                    if(kaIndex !== -1) {
+                        chartDataValues[kaIndex] = percent;
+                    }
+                    
                     return { ...ka, percent };
                 });
+                
                 const totalCompleted = completedTasks.length;
                 const totalPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
 
