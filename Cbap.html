@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v9.0 (Multi-Video Playlist)</title>
+    <title>CBAP Master - Cloud Sync v9.1 (Auth Fix)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.0...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.1...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.0</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Multi-Video Playlist</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.1</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Auth Fixed</div>
         </div>
     </aside>
 
@@ -384,7 +384,6 @@
             
             togglePDFMode(container) {
                 this.pdfMode = this.pdfMode === 'canvas' ? 'iframe' : 'canvas';
-                // Re-render library with new mode
                 this.renderLibrary(container, this.lastLibraryParams || {});
                 Toast.show(`Switched to ${this.pdfMode === 'canvas' ? 'Canvas' : 'Browser'} Viewer`, 'info');
             },
@@ -419,6 +418,31 @@
                     console.error(e);
                     container.innerHTML = `<div class="p-8 text-red-600">Error: ${e.message}</div>`;
                 }
+            },
+
+            // --- AUTH VIEW ---
+            renderAuth(container) {
+                if (DB.state.user.loggedIn) {
+                    container.innerHTML = `<div class="max-w-md mx-auto text-center mt-10"><div class="w-20 h-20 bg-navy text-white text-4xl font-bold rounded-full flex items-center justify-center mx-auto mb-6">${DB.state.user.username.charAt(0)}</div><h2 class="text-2xl font-bold text-navy mb-2">Welcome, ${DB.state.user.username}</h2><p class="text-gray-500 mb-8">Your progress is being synced.</p><button onclick="Auth.logout()" class="swiss-btn swiss-btn-outline px-8 py-3 hover:bg-red-50 hover:text-red-600 hover:border-red-600">Log Out</button></div>`;
+                    return;
+                }
+                container.innerHTML = `<div class="max-w-md mx-auto bg-white p-8 border border-gray-200 shadow-lg mt-8"><div class="flex border-b border-gray-200 mb-6"><button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.nextElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-navy border-b-2 border-orange">Login</button><button onclick="document.getElementById('form-register').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.previousElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-gray-400">Register</button></div><div id="form-login"><input type="text" id="login-user" placeholder="Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="login-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3">Sign In</button><p class="text-xs text-center text-gray-400 mt-4">Uses custom cloud database</p></div><div id="form-register" class="hidden"><input type="text" id="reg-user" placeholder="Choose Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="reg-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-accent py-3">Create Account</button><p class="text-xs text-center text-gray-400 mt-4">Passwords are hashed before sending</p></div></div>`;
+            },
+            async handleLogin() {
+                const user = document.getElementById('login-user').value;
+                const pass = document.getElementById('login-pass').value;
+                if(!user || !pass) return Toast.show("Please fill all fields", "error");
+                const btn = document.querySelector('#form-login button'); btn.innerText = "Verifying...";
+                const res = await Auth.login(user, pass);
+                if(res.success) { Toast.show("Welcome back!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Sign In"; }
+            },
+            async handleRegister() {
+                const user = document.getElementById('reg-user').value;
+                const pass = document.getElementById('reg-pass').value;
+                if(!user || !pass) return Toast.show("Please fill all fields", "error");
+                const btn = document.querySelector('#form-register button'); btn.innerText = "Creating...";
+                const res = await Auth.register(user, pass);
+                if(res.success) { Toast.show("Account created!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Create Account"; }
             },
 
             // --- PDF.js Logic ---
@@ -612,7 +636,7 @@
                     'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1',
                     'BACCM': [
                          { title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" },
-                         { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=2" }
+                         { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }
                     ],
                     'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
                     'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
