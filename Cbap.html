@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v9.1 (Auth Fix)</title>
+    <title>CBAP Master - Cloud Sync v9.2 (Secure Docs)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.1...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.2...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.1</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Auth Fixed</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.2</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Secured Docs</div>
         </div>
     </aside>
 
@@ -384,6 +384,7 @@
             
             togglePDFMode(container) {
                 this.pdfMode = this.pdfMode === 'canvas' ? 'iframe' : 'canvas';
+                // Re-render library with new mode
                 this.renderLibrary(container, this.lastLibraryParams || {});
                 Toast.show(`Switched to ${this.pdfMode === 'canvas' ? 'Canvas' : 'Browser'} Viewer`, 'info');
             },
@@ -418,31 +419,6 @@
                     console.error(e);
                     container.innerHTML = `<div class="p-8 text-red-600">Error: ${e.message}</div>`;
                 }
-            },
-
-            // --- AUTH VIEW ---
-            renderAuth(container) {
-                if (DB.state.user.loggedIn) {
-                    container.innerHTML = `<div class="max-w-md mx-auto text-center mt-10"><div class="w-20 h-20 bg-navy text-white text-4xl font-bold rounded-full flex items-center justify-center mx-auto mb-6">${DB.state.user.username.charAt(0)}</div><h2 class="text-2xl font-bold text-navy mb-2">Welcome, ${DB.state.user.username}</h2><p class="text-gray-500 mb-8">Your progress is being synced.</p><button onclick="Auth.logout()" class="swiss-btn swiss-btn-outline px-8 py-3 hover:bg-red-50 hover:text-red-600 hover:border-red-600">Log Out</button></div>`;
-                    return;
-                }
-                container.innerHTML = `<div class="max-w-md mx-auto bg-white p-8 border border-gray-200 shadow-lg mt-8"><div class="flex border-b border-gray-200 mb-6"><button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.nextElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-navy border-b-2 border-orange">Login</button><button onclick="document.getElementById('form-register').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.previousElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-gray-400">Register</button></div><div id="form-login"><input type="text" id="login-user" placeholder="Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="login-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3">Sign In</button><p class="text-xs text-center text-gray-400 mt-4">Uses custom cloud database</p></div><div id="form-register" class="hidden"><input type="text" id="reg-user" placeholder="Choose Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="reg-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-accent py-3">Create Account</button><p class="text-xs text-center text-gray-400 mt-4">Passwords are hashed before sending</p></div></div>`;
-            },
-            async handleLogin() {
-                const user = document.getElementById('login-user').value;
-                const pass = document.getElementById('login-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-login button'); btn.innerText = "Verifying...";
-                const res = await Auth.login(user, pass);
-                if(res.success) { Toast.show("Welcome back!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Sign In"; }
-            },
-            async handleRegister() {
-                const user = document.getElementById('reg-user').value;
-                const pass = document.getElementById('reg-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-register button'); btn.innerText = "Creating...";
-                const res = await Auth.register(user, pass);
-                if(res.success) { Toast.show("Account created!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Create Account"; }
             },
 
             // --- PDF.js Logic ---
@@ -649,6 +625,22 @@
                     'PERSP': ''
                 };
                 
+                // USER CONFIGURATION: TEXTBOOK EN LINKS (Password Protected Docx)
+                // Map KA codes to their respective shared links.
+                const textbookEnMapping = {
+                    'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQ9a9VaUUkIRazjdZLFgYDIAR0a9VaUUkIRazjdZLFgYDIA', // Example link
+                    'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQDnsQnfHHmZQaI324IdGNKYAT_Z4_kDY3K8Lsx2m0iSOz4?e=l5Kbc4',
+                    'BAPM': '',
+                    'ELIC': '',
+                    'RLCM': '',
+                    'SA': '',
+                    'RADD': '',
+                    'SE': '',
+                    'COMP': '',
+                    'TECH': '',
+                    'PERSP': ''
+                };
+
                 // Helper to convert watch links to embed links
                 const getEmbedLink = (url) => {
                     if (!url) return '';
@@ -674,7 +666,29 @@
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf`, slide: `${mediaPath}${activeCode}_Slide.pdf`, info: `${mediaPath}${activeCode}_Info.png`, mindmap: `${mediaPath}${activeCode}_Mindmap.png`, video: `${mediaPath}${activeCode}_Video.mp4` };
                 let viewer = ''; let showZoomControls = false;
                 
-                if(type === 'textbook' || type === 'slide') {
+                if (type === 'textbookEN') {
+                    // Password protected docx logic
+                    const docUrl = textbookEnMapping[activeCode];
+                    if (docUrl) {
+                        viewer = `
+                            <div class="flex flex-col h-full bg-gray-100 items-center justify-center p-8" id="password-gate">
+                                <div class="bg-white p-8 rounded shadow-md max-w-sm w-full text-center">
+                                    <i class="fa-solid fa-lock text-4xl text-navy mb-4"></i>
+                                    <h3 class="text-lg font-bold text-navy mb-2">Protected Content</h3>
+                                    <p class="text-sm text-gray-600 mb-6">This document is password protected. Please enter the password to view.</p>
+                                    <input type="password" id="doc-password" placeholder="Enter Password" class="w-full p-2 border border-gray-300 rounded mb-4 text-sm" onkeydown="if(event.key === 'Enter') document.getElementById('unlock-btn').click()">
+                                    <button id="unlock-btn" onclick="app.unlockDoc('${docUrl}')" class="w-full swiss-btn swiss-btn-primary py-2">Unlock Document</button>
+                                </div>
+                            </div>
+                            <div id="doc-viewer" class="h-full w-full hidden">
+                                <iframe id="doc-iframe" src="" class="w-full h-full border-none"></iframe>
+                            </div>
+                        `;
+                    } else {
+                        viewer = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-link-slash text-4xl text-gray-300 mb-4"></i><div class="text-gray-500 font-bold">No Link Configured</div><div class="text-xs text-gray-400 mt-2">No English Textbook link found for this chapter.</div></div>`;
+                    }
+                }
+                else if(type === 'textbook' || type === 'slide') {
                     const src = type === 'textbook' ? files.textbook : files.slide;
                     
                     if (this.pdfMode === 'iframe') {
@@ -745,7 +759,22 @@
                     }
                 }
                 
-                container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
+                container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbook'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbook'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook</button><button onclick="app.nav('library', {code:'${activeCode}', type:'textbookEN'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbookEN'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">TextbookEN</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div></div>`;
+            },
+            
+            unlockDoc(url) {
+                // Here we just reveal the iframe with the URL. 
+                // The actual password validation happens on the OneDrive page loaded in the iframe.
+                // This gate is purely UX as requested.
+                const gate = document.getElementById('password-gate');
+                const viewer = document.getElementById('doc-viewer');
+                const iframe = document.getElementById('doc-iframe');
+                
+                if(gate && viewer && iframe) {
+                    gate.classList.add('hidden');
+                    viewer.classList.remove('hidden');
+                    iframe.src = url;
+                }
             },
 
             // --- DASHBOARD ---
