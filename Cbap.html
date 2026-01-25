@@ -3,22 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Pro Study Companion</title>
+    <title>CBAP Master - Premium Dark</title>
     
-    <!-- Tailwind Config updated from Color reference.txt -->
+    <!-- Tailwind Config - Premium Dark Mode -->
     <script>
         window.tailwind = {
             config: {
+                darkMode: 'class',
                 theme: {
                     extend: {
                         colors: {
-                            navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
-                            orange: { DEFAULT: '#FF6600', light: '#FF8533' },
-                            light: { DEFAULT: '#F0F9FF', bg: '#F8FAFC' },
-                            grey: { line: '#E2E8F0', bg: '#F1F5F9', text: '#475569' }
+                            navy: { 
+                                dark: '#001a33',   // Nền chính (Body)
+                                DEFAULT: '#003366', // Nền thẻ (Cards)
+                                // ĐÃ GIẢM VIỀN: Chuyển từ #004080 sang màu trong suốt cực mờ
+                                light: 'rgba(255, 255, 255, 0.05)' 
+                            },
+                            orange: { 
+                                DEFAULT: '#FF6600', // Accent chính
+                                hover: '#FF8533' 
+                            },
+                            gray: {
+                                300: '#D1D5DB',
+                                400: '#9CA3AF',
+                                800: '#1F2937',
+                                900: '#111827'
+                            }
                         },
-                        fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
-                        borderRadius: { 'swiss': '2px' }
+                        fontFamily: { 
+                            sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                            display: ['Arial', 'sans-serif'] 
+                        },
+                        animation: {
+                            'view-fade': 'viewFade 0.4s ease-out forwards',
+                            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        },
+                        keyframes: {
+                            viewFade: {
+                                '0%': { opacity: '0', transform: 'translateY(15px)' },
+                                '100%': { opacity: '1', transform: 'translateY(0)' },
+                            }
+                        }
                     }
                 }
             }
@@ -30,148 +55,248 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
     
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #F8FAFC; color: #003366; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        /* Base Dark Styles */
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            background-color: #001a33; /* Navy Dark */
+            color: #D1D5DB; /* Gray 300 */
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale; 
+        }
         
-        /* Custom Scrollbar */
+        /* Typography Overrides */
+        h1, h2, h3, h4, h5, h6 {
+            color: white;
+            font-weight: 900 !important; /* font-black */
+            font-style: italic;
+        }
+
+        /* Custom Scrollbar - Dark Theme */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #001a33; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #003366; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #FF6600; }
         
-        /* Navigation Styles - High Contrast */
-        .nav-item { transition: all 0.2s ease-in-out; border-left: 4px solid transparent; }
-        .nav-item:hover { background-color: #F1F5F9; border-left-color: #FF6600; }
+        /* Navigation Styles */
+        .nav-item { transition: all 0.3s ease; border-left: 3px solid transparent; color: #9CA3AF; }
+        .nav-item:hover { background-color: rgba(255, 102, 0, 0.1); color: #FF6600; }
         .nav-item.active { background-color: #003366; border-left-color: #FF6600; }
-        .nav-item.active .nav-text { color: #FFFFFF; font-weight: 700; }
+        .nav-item.active .nav-text { color: #FF6600; font-weight: 800; font-style: italic; }
         .nav-item.active i { color: #FF6600; }
         
-        /* Swiss Buttons */
-        .swiss-btn { border-radius: 2px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; transition: all 0.2s ease; cursor: pointer; padding: 10px 20px; }
-        .swiss-btn-primary { background-color: #003366; color: white; border: 1px solid #003366; }
-        .swiss-btn-primary:hover { background-color: #002244; }
-        .swiss-btn-outline { background-color: white; color: #003366; border: 1px solid #003366; }
-        .swiss-btn-outline:hover { background-color: #F0F9FF; }
+        /* Swiss Buttons - Updated for Dark Mode */
+        .swiss-btn { 
+            border-radius: 4px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-size: 0.75rem; 
+            transition: all 0.3s ease; 
+            cursor: pointer; 
+            padding: 12px 24px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .swiss-btn-primary { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
+        .swiss-btn-primary:hover { background-color: #E65C00; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 102, 0, 0.2); }
+        .swiss-btn-outline { background-color: transparent; color: #D1D5DB; border: 1px solid rgba(255,255,255,0.1); }
+        .swiss-btn-outline:hover { border-color: #FF6600; color: #FF6600; background: rgba(0, 51, 102, 0.5); }
 
-        /* Flip Card Styles (Sharper) */
-        .flip-container { perspective: 1000px; }
-        .flip-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; border-radius: 8px; }
-        .flip-front { background-color: #ffffff; color: #003366; z-index: 2; border: 2px solid #E2E8F0; }
-        .flip-back { background-color: #003366; color: #ffffff; transform: rotateY(180deg); z-index: 1; border: 2px solid #003366; }
+        /* --- FLIP CARD STYLES (FIXED & ROBUST) --- */
+        .flip-container { 
+            perspective: 1000px; 
+            transform-style: preserve-3d;
+        }
+        .flip-inner { 
+            position: relative; 
+            width: 100%; 
+            height: 100%; 
+            text-align: center; 
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d; 
+        }
+        
+        /* Trạng thái lật */
+        .flip-container.flipped .flip-inner { 
+            transform: rotateY(180deg); 
+        }
+
+        .flip-front, .flip-back { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-direction: column; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            top: 0; 
+            left: 0;
+        }
+
+        /* Mặt trước (Front) */
+        .flip-front { 
+            background-color: #003366; 
+            color: white; 
+            z-index: 2; 
+            transform: rotateY(0deg); 
+            border: 1px solid rgba(255,255,255,0.05); 
+        }
+
+        /* Mặt sau (Back) */
+        .flip-back { 
+            background-color: #003366; 
+            color: white; 
+            transform: rotateY(180deg); 
+            z-index: 1; 
+            border: 2px solid #FF6600; 
+        }
 
         /* Spinner & Toast */
-        #loading-overlay { position: fixed; inset: 0; background: #003366; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #004080; border-top: 4px solid #FF6600; border-radius: 50%; animation: spin 1s linear infinite; }
+        #loading-overlay { position: fixed; inset: 0; background: #001a33; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #003366; border-top: 4px solid #FF6600; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(255,102,0,0.2); }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .toast { min-width: 250px; background: white; border-left: 6px solid #FF6600; padding: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; z-index: 6000; font-weight: bold; border: 1px solid #E2E8F0; }
+        
+        .toast { 
+            min-width: 280px; 
+            background: #003366; 
+            border-left: 4px solid #FF6600; 
+            padding: 16px; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+            animation: slideIn 0.3s ease-out forwards; 
+            display: flex; align-items: center; gap: 12px; 
+            z-index: 6000; 
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+        }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Helpers */
+        .glass-panel { background: rgba(0, 51, 102, 0.4); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .text-glow { text-shadow: 0 0 10px rgba(255, 102, 0, 0.3); }
+        
+        /* Inputs Override */
+        input {
+            background-color: #002244 !important;
+            border-color: rgba(255,255,255,0.1) !important;
+            color: white !important;
+        }
+        input:focus {
+            border-color: #FF6600 !important;
+            box-shadow: 0 0 0 1px #FF6600 !important;
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-900 bg-light-bg font-sans">
+<body class="h-screen flex flex-col md:flex-row overflow-hidden text-gray-300 bg-navy-dark font-sans selection:bg-orange selection:text-white">
 
     <!-- LOADING SCREEN -->
     <div id="loading-overlay">
-        <div class="spinner mb-4"></div>
-        <h2 class="text-2xl font-black text-white tracking-widest uppercase">CBAP<span class="text-orange">.PRO</span></h2>
-        <p id="loading-status" class="text-xs text-blue-200 mt-2 font-mono font-bold">SYSTEM INITIALIZING...</p>
-        <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-orange-light transition">Force Start</button>
+        <div class="spinner mb-6"></div>
+        <h2 class="text-3xl font-black text-white italic tracking-widest uppercase text-glow">CBAP<span class="text-orange">.PRO</span></h2>
+        <p id="loading-status" class="text-[10px] text-gray-500 mt-2 font-mono font-bold tracking-[0.2em] uppercase">System Initializing...</p>
+        <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-8 px-8 py-3 bg-orange text-white text-xs font-black italic uppercase tracking-widest hover:bg-orange-hover transition shadow-lg rounded">Force Start</button>
     </div>
 
     <!-- MOBILE HEADER -->
-    <header class="md:hidden h-16 bg-navy text-white flex items-center justify-between px-4 z-40 flex-shrink-0 shadow-md">
-        <div class="flex items-center gap-3">
-            <button onclick="app.toggleSidebar()" class="text-white text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
-            <div class="font-bold text-white tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
+    <header class="md:hidden h-16 bg-navy-dark border-b border-navy-light flex items-center justify-between px-4 z-40 flex-shrink-0 shadow-lg">
+        <div class="flex items-center gap-4">
+            <button onclick="app.toggleSidebar()" class="text-white text-xl focus:outline-none hover:text-orange transition"><i class="fa-solid fa-bars"></i></button>
+            <div class="font-black italic text-white text-lg tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
         </div>
-        <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-xs" id="mobile-user-avatar">U</div>
+        <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-xs shadow-md" id="mobile-user-avatar">U</div>
     </header>
 
     <!-- MOBILE SIDEBAR OVERLAY -->
-    <div id="mobile-overlay" onclick="app.toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden transition-opacity"></div>
+    <div id="mobile-overlay" onclick="app.toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-80 z-30 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform -translate-x-full md:relative md:translate-x-0 sidebar-transition flex flex-col shadow-xl md:shadow-none">
-        <div class="h-20 hidden md:flex items-center px-6 bg-navy shadow-sm">
-            <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-sm mr-3">C</div>
-            <div class="font-bold text-white text-lg tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-navy-dark border-r border-navy-light transform -translate-x-full md:relative md:translate-x-0 sidebar-transition flex flex-col shadow-2xl md:shadow-none">
+        <!-- Logo Area -->
+        <div class="h-20 hidden md:flex items-center px-6 bg-navy-dark border-b border-navy-light">
+            <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-sm mr-3 shadow-lg shadow-orange/20">C</div>
+            <div class="font-black italic text-white text-xl tracking-tighter">CBAP<span class="text-orange">.PRO</span></div>
         </div>
         
         <!-- User Info -->
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3 cursor-pointer hover:bg-gray-50 bg-white" onclick="app.nav('auth')">
-            <div class="w-9 h-9 rounded bg-navy-light text-white flex items-center justify-center font-bold text-sm" id="sidebar-avatar">G</div>
+        <div class="px-6 py-6 border-b border-navy-light flex items-center gap-3 cursor-pointer hover:bg-navy transition group" onclick="app.nav('auth')">
+            <div class="w-10 h-10 rounded bg-navy border border-navy-light group-hover:border-orange text-white flex items-center justify-center font-bold text-sm shadow-inner" id="sidebar-avatar">G</div>
             <div class="overflow-hidden">
-                <div class="text-sm font-bold text-navy truncate" id="sidebar-username">Guest User</div>
-                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" id="sidebar-status">Click to Login</div>
+                <div class="text-sm font-bold text-white truncate group-hover:text-orange transition" id="sidebar-username">Guest User</div>
+                <div class="text-[9px] text-gray-500 uppercase tracking-widest font-bold" id="sidebar-status">Click to Login</div>
             </div>
         </div>
         
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1 bg-white">
+        <!-- Nav Links -->
+        <nav class="flex-1 overflow-y-auto py-6 space-y-1 bg-navy-dark custom-scrollbar">
             <button onclick="app.nav('dashboard')" id="nav-dashboard" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-chart-pie w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i> 
-                <span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Dashboard</span>
+                <i class="fa-solid fa-chart-pie w-5 text-center transition-colors"></i> 
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Dashboard</span>
             </button>
             <button onclick="app.nav('learn')" id="nav-learn" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-graduation-cap w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Knowledge Hub</span>
+                <i class="fa-solid fa-graduation-cap w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Knowledge Hub</span>
             </button>
             <button onclick="app.nav('library')" id="nav-library" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-book-open w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Study Library</span>
+                <i class="fa-solid fa-book-open w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Library</span>
             </button>
             <button onclick="app.nav('exam')" id="nav-exam" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-pen-to-square w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Exam Engine</span>
+                <i class="fa-solid fa-microchip w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Exam Engine</span>
             </button>
             <button onclick="app.nav('flashcards')" id="nav-flashcards" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-layer-group w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Flashcards</span>
+                <i class="fa-solid fa-bolt w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Flashcards</span>
             </button>
             
-            <div class="px-6 mt-6 mb-2"><span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">System</span></div>
+            <div class="px-6 mt-8 mb-3"><span class="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">System</span></div>
             <button onclick="app.nav('admin')" id="nav-admin" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-sliders w-5 text-center text-gray-500 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-600 ml-3">Settings</span>
+                <i class="fa-solid fa-sliders w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Settings</span>
             </button>
         </nav>
         
-        <div class="p-4 bg-gray-50 border-t border-gray-100 hidden md:block">
-            <div class="flex items-center justify-between">
+        <!-- Footer -->
+        <div class="p-4 bg-navy-dark border-t border-navy-light hidden md:block">
+            <div class="flex items-center justify-between opacity-50 hover:opacity-100 transition">
                 <div>
-                    <div class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Version 9.9.9</div>
-                    <div class="text-[10px] font-black text-navy mt-0.5">Fixed Edition</div>
+                    <div class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Version 10.0</div>
+                    <div class="text-[9px] font-black text-orange mt-0.5 italic">Premium Dark</div>
                 </div>
-                <i class="fa-solid fa-cloud text-orange text-xs"></i>
+                <i class="fa-solid fa-wifi text-gray-600 text-xs"></i>
             </div>
         </div>
     </aside>
 
     <!-- CONTENT -->
-    <main class="flex-1 flex flex-col bg-slate-50 w-full overflow-hidden relative">
+    <main class="flex-1 flex flex-col bg-navy-dark w-full overflow-hidden relative">
         <!-- Desktop Header -->
-        <header class="h-16 bg-navy border-b border-navy-dark px-8 hidden md:flex items-center justify-between shadow-lg flex-shrink-0 z-10 text-white">
+        <header class="h-20 bg-navy-dark border-b border-navy-light px-8 hidden md:flex items-center justify-between flex-shrink-0 z-10">
             <div>
-                <h2 id="page-title" class="text-xl font-black uppercase tracking-tight text-white">Overview</h2>
-                <div class="h-1 w-8 bg-orange mt-1"></div>
+                <h2 id="page-title" class="text-2xl font-black italic uppercase tracking-tighter text-white">Overview</h2>
+                <div class="h-1 w-12 bg-orange mt-1 rounded-full shadow-[0_0_10px_#FF6600]"></div>
             </div>
             <div class="flex items-center gap-6">
                 <div class="text-right">
-                    <div class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">System Status</div>
-                    <div class="font-bold text-orange text-xs" id="header-status">Checking...</div>
+                    <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Connection</div>
+                    <div class="font-bold text-orange text-xs glow" id="header-status">Checking...</div>
                 </div>
-                <div class="w-10 h-10 bg-white text-navy rounded flex items-center justify-center font-black cursor-pointer hover:bg-orange hover:text-white transition shadow-sm" onclick="app.nav('auth')" id="header-avatar">G</div>
+                <div class="w-10 h-10 bg-navy border border-navy-light text-white rounded flex items-center justify-center font-black cursor-pointer hover:bg-orange hover:border-orange hover:text-white transition shadow-lg" onclick="app.nav('auth')" id="header-avatar">G</div>
             </div>
         </header>
         
         <!-- Mobile Page Title -->
-        <div class="md:hidden bg-navy border-b border-navy-light px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0 z-10">
-            <h2 id="mobile-page-title" class="text-sm font-bold text-white uppercase">Dashboard</h2>
+        <div class="md:hidden bg-navy-dark border-b border-navy-light px-4 py-3 flex items-center justify-between flex-shrink-0 z-10">
+            <h2 id="mobile-page-title" class="text-sm font-black italic text-white uppercase tracking-wider">Dashboard</h2>
         </div>
 
         <!-- Scrollable Content -->
-        <div id="app-container" class="flex-1 overflow-hidden relative"></div>
-        <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col gap-2 z-[6000]"></div>
+        <div id="app-container" class="flex-1 overflow-hidden relative bg-navy-dark"></div>
+        <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3 z-[6000]"></div>
     </main>
 
     <!-- APP LOGIC -->
@@ -189,8 +314,8 @@
                 const div = document.createElement('div');
                 div.className = 'toast';
                 div.style.borderLeftColor = type === 'success' ? '#10B981' : (type === 'error' ? '#EF4444' : '#FF6600');
-                const icon = type === 'success' ? '<i class="fa-solid fa-check-circle text-green-600"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-600"></i>' : '<i class="fa-solid fa-info-circle text-navy"></i>');
-                div.innerHTML = `${icon} <span class="text-xs font-bold text-navy uppercase tracking-wide">${msg}</span>`;
+                const icon = type === 'success' ? '<i class="fa-solid fa-check-circle text-green-500"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500"></i>' : '<i class="fa-solid fa-info-circle text-orange"></i>');
+                div.innerHTML = `${icon} <span class="text-xs font-bold text-white uppercase tracking-widest">${msg}</span>`;
                 container.appendChild(div);
                 setTimeout(() => { div.style.opacity = '0'; div.style.transform = 'translateX(100%)'; setTimeout(() => div.remove(), 300); }, 3000);
             }
@@ -214,23 +339,16 @@
             return url;
         };
 
-        // --- GLOBAL DATA MAPPING ---
+        // --- DATA ---
         const mediaPath = 'CbapMedia/';
-        
-        // Video Links
         const videoMapping = {
             'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1',
-            'BACCM': [
-                 { title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" },
-                 { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }
-            ],
+            'BACCM': [{ title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" }, { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }],
             'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
             'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
             'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
             'SA': 'https://www.youtube.com/watch?v=0I10KLv79iY&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=19'
         };
-        
-        // Textbook VN
         const textbookVnMapping = {
             'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTQDwN3GdgHQqDhojduHJRsATyqTG9UOzZYZkyDBtlxso4?action=embedview',
             'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
@@ -244,60 +362,35 @@
             'TECH': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSrHgODW-PMTJ9QodzBaE8IAb7ufvTHLv-ab3TnbsES8fg?action=embedview',
             'PERSP': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSpCGYUGP2XRan5GbFjulXBAQZQ9a132pm2Z3cb8zKIgRc?action=embedview'
         };
-
-        // Textbook EN
-        const textbookEnMapping = {
-            'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTQDwN3GdgHQqDhojduHJRsATyqTG9UOzZYZkyDBtlxso4?action=embedview',
-            'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview'
-        };
-
-        // Other Resources (Slides, Mindmaps, Info)
-        const resourceMapping = {
-            'BACCM': {
-                slides: [
-                    { title: "Part 1: Overview", url: `${mediaPath}BACCM_Slide_1.pdf` },
-                    { title: "Part 2: Details", url: `${mediaPath}BACCM_Slide_2.pdf` }
-                ],
-                mindmaps: [
-                    { title: "Core Concepts", url: `${mediaPath}BACCM_Mindmap_1.png` },
-                    { title: "Relationships", url: `${mediaPath}BACCM_Mindmap_2.png` }
-                ],
-                info: [
-                     { title: "Infographic 1", url: `${mediaPath}BACCM_Info_1.png` },
-                     { title: "Infographic 2", url: `${mediaPath}BACCM_Info_2.png` }
-                ]
-            }
-        };
+        const textbookEnMapping = { 'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTQDwN3GdgHQqDhojduHJRsATyqTG9UOzZYZkyDBtlxso4?action=embedview' };
+        const resourceMapping = { 'BACCM': { slides: [{ title: "Part 1", url: `${mediaPath}BACCM_Slide_1.pdf` }, { title: "Part 2", url: `${mediaPath}BACCM_Slide_2.pdf` }], mindmaps: [{ title: "Concept Map", url: `${mediaPath}BACCM_Mindmap_1.png` }], info: [{ title: "Info 1", url: `${mediaPath}BACCM_Info_1.png` }] } };
 
         // --- DATABASE ---
         const DB = {
-            key: 'CBAP_V9_PRO_DATA',
+            key: 'CBAP_V10_DARK_DATA',
             state: { 
                 user: { id: null, username: 'Guest', loggedIn: false }, 
                 lastView: { code: 'INTRO', type: 'slide' },
                 curriculum: [
-                    { code: 'INTRO', name: '01. Introduction & Key Concepts', desc: 'Structure of the BABOK Guide and Key Concepts.' },
-                    { code: 'BACCM', name: '02. BA Core Concept Model', desc: 'The conceptual framework for Business Analysis.' },
-                    { code: 'BAPM', name: '03. Planning & Monitoring', desc: 'Organizing and coordinating the efforts of BAs.' },
-                    { code: 'ELIC', name: '04. Elicitation & Collaboration', desc: 'Drawing forth information and working with stakeholders.' },
-                    { code: 'RLCM', name: '05. Req. Life Cycle Mgmt', desc: 'Managing and maintaining requirements.' },
-                    { code: 'SA', name: '06. Strategy Analysis', desc: 'Identifying business need and aligning strategy.' },
-                    { code: 'RADD', name: '07. RADD (Design Definition)', desc: 'Specifying and modelling requirements.' },
-                    { code: 'SE', name: '08. Solution Evaluation', desc: 'Assessing value and solution performance.' },
-                    { code: 'COMP', name: '09. Underlying Competencies', desc: 'Behaviors and knowledge supporting BA work.' },
-                    { code: 'TECH', name: '10. Techniques', desc: 'The 50 standard techniques in BABOK.' },
-                    { code: 'PERSP', name: '11. Perspectives', desc: 'Agile, BI, IT, Architecture, BPM.' }
+                    { code: 'INTRO', name: '01. Introduction & Key Concepts', desc: 'Structure of the BABOK Guide.' },
+                    { code: 'BACCM', name: '02. BA Core Concept Model', desc: 'Conceptual framework for BA.' },
+                    { code: 'BAPM', name: '03. Planning & Monitoring', desc: 'Organizing BA efforts.' },
+                    { code: 'ELIC', name: '04. Elicitation & Collaboration', desc: 'Working with stakeholders.' },
+                    { code: 'RLCM', name: '05. Req. Life Cycle Mgmt', desc: 'Managing requirements.' },
+                    { code: 'SA', name: '06. Strategy Analysis', desc: 'Identifying business need.' },
+                    { code: 'RADD', name: '07. RADD (Design Definition)', desc: 'Specifying requirements.' },
+                    { code: 'SE', name: '08. Solution Evaluation', desc: 'Assessing value.' },
+                    { code: 'COMP', name: '09. Underlying Competencies', desc: 'Behaviors and knowledge.' },
+                    { code: 'TECH', name: '10. Techniques', desc: 'Standard techniques.' },
+                    { code: 'PERSP', name: '11. Perspectives', desc: 'Agile, BI, IT, Architecture.' }
                 ],
-                questions: [], 
-                flashcards: [], 
-                completedTasks: []
+                questions: [], flashcards: [], completedTasks: []
             },
             
             async init() {
                 if (typeof supabase !== 'undefined') {
                     try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.warn("Supabase init failed", e); }
                 }
-
                 const stored = localStorage.getItem(this.key);
                 if (stored) {
                     try {
@@ -307,12 +400,9 @@
                         this.state.user = parsed.user || { id: null, username: 'Guest', loggedIn: false };
                     } catch(e) { console.error("Load error", e); }
                 }
-
                 await this.fetchLocalData();
                 this.ensureDataIntegrity();
-
                 if (this.state.user.loggedIn && sb) await this.pullFromCloud();
-
                 this.save();
                 return true;
             },
@@ -324,9 +414,7 @@
                         const res = await fetch(`${file}?t=${Date.now()}`);
                         if (res.ok) {
                             const data = await res.json();
-                            if(Array.isArray(data) && data.length > 0) {
-                                this.state[file.replace('.json', '')] = data;
-                            }
+                            if(Array.isArray(data) && data.length > 0) this.state[file.replace('.json', '')] = data;
                         }
                     } catch (e) { }
                 }
@@ -335,67 +423,50 @@
             ensureDataIntegrity() {
                 this.state.curriculum.forEach((c) => {
                     if(!c.tasks || c.tasks.length === 0) {
-                        const count = 5; 
-                        c.tasks = Array(count).fill(0).map((_, i) => ({ id: `${c.code}_T${i+1}`, name: `${c.name} - Topic ${i+1}` }));
+                        c.tasks = Array(5).fill(0).map((_, i) => ({ id: `${c.code}_T${i+1}`, name: `${c.name} - Topic ${i+1}` }));
                     }
                 });
-                
                 if(!this.state.questions || this.state.questions.length === 0) {
                      this.state.questions = Array(20).fill(0).map((_, i) => ({
                         id: `Q${i+1}`, ka: 'BAPM', 
                         stem: `Sample Question ${i+1}: What is the primary output of Plan Business Analysis Information Management?`, 
                         options: ["Information Management Approach", "BA Performance Assessment", "Governance Approach", "Stakeholder Engagement Plan"], 
-                        correct: [0], 
-                        explanation: "The Information Management Approach defines how BA information will be stored and accessed."
+                        correct: [0], explanation: "The Information Management Approach defines how BA information will be stored and accessed."
                     }));
                 }
-
                 if(!this.state.flashcards || this.state.flashcards.length === 0) {
                     this.state.flashcards = Array(10).fill(0).map((_, i) => ({
-                        front: `Flashcard Term ${i+1}`, back: `Definition for term ${i+1}. A key concept in BABOK guide.`
+                        front: `Term ${i+1}`, back: `Definition for term ${i+1}. A key concept in BABOK guide.`
                     }));
                 }
             },
 
             save() {
                 localStorage.setItem(this.key, JSON.stringify({
-                    completedTasks: this.state.completedTasks,
-                    lastView: this.state.lastView,
-                    user: this.state.user
+                    completedTasks: this.state.completedTasks, lastView: this.state.lastView, user: this.state.user
                 }));
             },
 
             async pushToCloud() {
                 if (!this.state.user.id || !sb) return;
-                const payload = { completedTasks: this.state.completedTasks };
-                await sb.from('user_progress').upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
+                await sb.from('user_progress').upsert({ user_id: this.state.user.id, data: { completedTasks: this.state.completedTasks }, updated_at: new Date() });
             },
 
             async pullFromCloud() {
                 if (!this.state.user.id || !sb) return;
-                const { data, error } = await sb.from('user_progress').select('data').eq('user_id', this.state.user.id).single();
-                if (data && data.data) {
-                    this.state.completedTasks = data.data.completedTasks || [];
-                    this.save();
-                }
+                const { data } = await sb.from('user_progress').select('data').eq('user_id', this.state.user.id).single();
+                if (data && data.data) { this.state.completedTasks = data.data.completedTasks || []; this.save(); }
             },
 
             toggleTask(taskId) {
                 const idx = this.state.completedTasks.indexOf(taskId);
-                if (idx > -1) {
-                    this.state.completedTasks.splice(idx, 1);
-                } else {
-                    this.state.completedTasks.push(taskId);
-                }
+                if (idx > -1) this.state.completedTasks.splice(idx, 1);
+                else this.state.completedTasks.push(taskId);
                 this.save();
                 if(this.state.user.loggedIn) this.pushToCloud();
                 return this.state.completedTasks.includes(taskId); 
             },
-            
-            setLastView(code, type) {
-                this.state.lastView = { code, type };
-                this.save();
-            }
+            setLastView(code, type) { this.state.lastView = { code, type }; this.save(); }
         };
 
         const Auth = {
@@ -405,12 +476,9 @@
                 const { data, error } = await sb.from('custom_users').select('*').eq('username', username).eq('password', hashed).single();
                 if (error || !data) return { error: "Invalid username or password" };
                 DB.state.user = { id: data.id, username: data.username, loggedIn: true };
-                await DB.pullFromCloud(); 
-                DB.save();
-                app.updateUserUI();
+                await DB.pullFromCloud(); DB.save(); app.updateUserUI();
                 return { success: true };
             },
-
             async register(username, password) {
                 if(!sb) return { error: "Cloud service unavailable" };
                 const hashed = await Crypto.hash(password);
@@ -420,27 +488,21 @@
                 if (error) return { error: error.message };
                 DB.state.user = { id: data.id, username: data.username, loggedIn: true };
                 await sb.from('user_progress').insert({ user_id: data.id, data: { completedTasks: [] } });
-                DB.save();
-                app.updateUserUI();
+                DB.save(); app.updateUserUI();
                 return { success: true };
             },
-
             logout() {
                 DB.state.user = { id: null, username: 'Guest', loggedIn: false };
-                DB.state.completedTasks = []; 
-                DB.save();
-                app.updateUserUI();
-                app.nav('auth');
+                DB.state.completedTasks = []; DB.save(); app.updateUserUI(); app.nav('auth');
             }
         };
 
         // --- APP CONTROLLER ---
         const app = {
-            isSidebarOpen: false,
-            zoomLevel: 1,
-            selectedSubResource: null,
-            flashcardIndex: 0,
-            flashcardFlipped: false,
+            isSidebarOpen: false, zoomLevel: 1, selectedSubResource: null,
+            flashcardIndex: 0, flashcardFlipped: false,
+            // Thêm trạng thái cho Sidebar của Library
+            librarySidebarOpen: true,
             examState: { active: false, current: 0, answers: {} },
 
             async start() {
@@ -449,21 +511,14 @@
                 this.updateUserUI();
                 this.nav('dashboard');
             },
-
-            emergencyEnter() { 
-                document.getElementById('loading-overlay').style.display = 'none'; 
-                this.nav('dashboard');
-            },
+            emergencyEnter() { document.getElementById('loading-overlay').style.display = 'none'; this.nav('dashboard'); },
 
             updateUserUI() {
                 const user = DB.state.user;
                 const status = user.loggedIn ? (sb ? 'Online • Synced' : 'Local (No Cloud)') : 'Local Mode';
                 document.getElementById('header-status').innerText = status;
-                
-                // Safe access to username
                 const username = user && user.username ? user.username : 'Guest';
                 document.getElementById('sidebar-username').innerText = username;
-                
                 const initial = username.charAt(0).toUpperCase();
                 document.getElementById('sidebar-avatar').innerText = initial;
                 document.getElementById('header-avatar').innerText = initial;
@@ -474,18 +529,11 @@
                 const sb = document.getElementById('sidebar');
                 const overlay = document.getElementById('mobile-overlay');
                 this.isSidebarOpen = !this.isSidebarOpen;
-                if (this.isSidebarOpen) {
-                    sb.classList.remove('-translate-x-full');
-                    overlay.classList.remove('hidden');
-                } else {
-                    sb.classList.add('-translate-x-full');
-                    overlay.classList.add('hidden');
-                }
+                if (this.isSidebarOpen) { sb.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); }
+                else { sb.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
             },
 
-            viewModule(code) {
-                this.nav('task_detail', { code: code });
-            },
+            viewModule(code) { this.nav('task_detail', { code: code }); },
 
             nav(view, params) {
                 if(window.innerWidth < 768 && this.isSidebarOpen) this.toggleSidebar();
@@ -493,22 +541,15 @@
                 const btn = document.getElementById(`nav-${view}`);
                 if(btn) btn.classList.add('active');
 
-                if (view === 'library' && params) {
-                    DB.setLastView(params.code, params.type);
-                }
+                if (view === 'library' && params) DB.setLastView(params.code, params.type);
 
-                const titles = {
-                    dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library',
-                    exam: 'Exam Engine', flashcards: 'Flashcards', admin: 'Settings', auth: 'Login',
-                    task_detail: 'Topic Details'
-                };
+                const titles = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', admin: 'Settings', auth: 'Login', task_detail: 'Topic Details' };
                 document.getElementById('page-title').innerText = titles[view] || 'CBAP Pro';
-                const mobileTitle = document.getElementById('mobile-page-title');
-                if(mobileTitle) mobileTitle.innerText = titles[view] || 'CBAP Pro';
+                const mt = document.getElementById('mobile-page-title');
+                if(mt) mt.innerText = titles[view] || 'CBAP Pro';
                 
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
-
                 try {
                     switch(view) {
                         case 'dashboard': this.renderDashboard(container); break;
@@ -520,389 +561,380 @@
                         case 'admin': this.renderAdmin(container); break;
                         case 'auth': this.renderAuth(container); break;
                     }
-                } catch(e) {
-                    console.error(e);
-                    container.innerHTML = `<div class="p-10 text-center text-red-500">Error: ${e.message}</div>`;
-                }
+                } catch(e) { console.error(e); container.innerHTML = `<div class="p-10 text-center text-red-500">Error: ${e.message}</div>`; }
             },
 
-            // --- DASHBOARD ---
+            // --- DASHBOARD (DARK) ---
             renderDashboard(container) {
                 const curriculum = DB.state.curriculum || [];
                 const kaCodes = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
-                
-                let totalTasks = 0;
-                let totalCompleted = 0;
+                let totalTasks = 0, totalCompleted = 0;
                 
                 const progressData = curriculum.map(c => {
-                    const tasks = c.tasks || [];
-                    const tCount = tasks.length;
-                    const cCount = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
-                    totalTasks += tCount;
-                    totalCompleted += cCount;
-                    const percent = tCount > 0 ? Math.round((cCount / tCount) * 100) : 0;
-                    return { ...c, percent };
+                    const tCount = (c.tasks||[]).length;
+                    const cCount = (c.tasks||[]).filter(t => DB.state.completedTasks.includes(t.id)).length;
+                    totalTasks += tCount; totalCompleted += cCount;
+                    return { ...c, percent: tCount > 0 ? Math.round((cCount / tCount) * 100) : 0 };
                 });
 
                 const overallPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-                const chartValues = kaCodes.map(code => {
-                    const item = progressData.find(p => p.code === code);
-                    return item ? item.percent : 0;
-                });
-                
+                const chartValues = kaCodes.map(code => (progressData.find(p => p.code === code) || {percent:0}).percent);
                 const lastView = DB.state.lastView || { code: 'INTRO', type: 'slide' };
-                const resumeTitle = curriculum.find(c => c.code === lastView.code)?.name || lastView.code;
-                const resumeType = (lastView.type || 'slide').toUpperCase();
 
                 container.innerHTML = `
-                    <div class="p-6 md:p-8 space-y-6 overflow-y-auto h-full custom-scrollbar">
-                        <!-- Welcome -->
-                        <div class="bg-navy rounded-lg shadow-lg p-6 text-white relative overflow-hidden border border-gray-700">
+                    <div class="p-6 md:p-8 space-y-6 overflow-y-auto h-full custom-scrollbar view-fade">
+                        <!-- Welcome Card (Navy) -->
+                        <div class="bg-navy rounded-lg shadow-lg p-6 border border-navy-light relative overflow-hidden group">
                              <div class="relative z-10">
-                                <h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-2">Study Dashboard</h3>
-                                <h1 class="text-2xl font-bold mb-2">Welcome Back, ${DB.state.user.username || 'Student'}</h1>
-                                <p class="text-blue-100 text-sm mb-6 max-w-lg">
-                                    Last viewed: <strong>${resumeTitle}</strong> (${resumeType}).
+                                <h3 class="text-[10px] font-bold text-orange uppercase tracking-widest mb-2">My Dashboard</h3>
+                                <h1 class="text-3xl font-black italic text-white mb-2">Hello, <span class="text-gray-300">${DB.state.user.username || 'Student'}</span></h1>
+                                <p class="text-gray-400 text-sm mb-6 max-w-lg">
+                                    Last viewed: <strong class="text-white">${lastView.code}</strong> (${lastView.type}).
                                 </p>
-                                <button onclick="app.nav('library', {code: '${lastView.code}', type: '${lastView.type}'})" class="bg-orange text-white px-6 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-orange transition shadow-md">
+                                <button onclick="app.nav('library', {code: '${lastView.code}', type: '${lastView.type}'})" class="bg-orange text-white px-6 py-3 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-orange transition shadow-lg">
                                     Resume Session <i class="fa-solid fa-arrow-right ml-1"></i>
                                 </button>
                             </div>
-                            <div class="absolute right-0 bottom-0 opacity-10 text-9xl text-white transform translate-x-10 translate-y-10 pointer-events-none">
+                            <div class="absolute right-0 bottom-0 opacity-5 group-hover:opacity-10 transition-opacity text-9xl text-white transform translate-x-10 translate-y-10">
                                 <i class="fa-solid fa-chart-line"></i>
                             </div>
                         </div>
 
-                        <!-- Shortcuts -->
+                        <!-- Shortcuts (Dark Cards) -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button onclick="app.nav('learn')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-graduation-cap"></i></div>
-                                <div><div class="font-bold text-navy text-sm">Knowledge Hub</div><div class="text-[10px] text-gray-400">Track Tasks</div></div>
+                            <button onclick="app.nav('learn')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-graduation-cap"></i></div>
+                                <div><div class="font-bold text-white text-xs uppercase tracking-wider">Knowledge</div><div class="text-[9px] text-gray-500 font-bold">Track Tasks</div></div>
                             </button>
-                            <button onclick="app.nav('library')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-book-open"></i></div>
-                                <div><div class="font-bold text-navy text-sm">Study Library</div><div class="text-[10px] text-gray-400">Books & Slides</div></div>
+                            <button onclick="app.nav('library')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-book-open"></i></div>
+                                <div><div class="font-bold text-white text-xs uppercase tracking-wider">Library</div><div class="text-[9px] text-gray-500 font-bold">Books & Slides</div></div>
                             </button>
-                            <button onclick="app.nav('exam')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-pen-to-square"></i></div>
-                                <div><div class="font-bold text-navy text-sm">Exam Engine</div><div class="text-[10px] text-gray-400">Practice Quiz</div></div>
+                            <button onclick="app.nav('exam')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen-to-square"></i></div>
+                                <div><div class="font-bold text-white text-xs uppercase tracking-wider">Exam Sim</div><div class="text-[9px] text-gray-500 font-bold">Practice Quiz</div></div>
                             </button>
-                            <button onclick="app.nav('flashcards')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-layer-group"></i></div>
-                                <div><div class="font-bold text-navy text-sm">Flashcards</div><div class="text-[10px] text-gray-400">Memory Aid</div></div>
+                            <button onclick="app.nav('flashcards')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-bolt"></i></div>
+                                <div><div class="font-bold text-white text-xs uppercase tracking-wider">Flashcards</div><div class="text-[9px] text-gray-500 font-bold">Memory Aid</div></div>
                             </button>
                         </div>
 
-                        <!-- Stats -->
+                        <!-- Stats (Dark) -->
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
-                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Proficiency (Real-time)</h3>
+                            <div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light lg:col-span-2">
+                                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Skill Radar</h3>
                                 <div class="h-64 relative flex items-center justify-center" id="chart-container">
                                     <canvas id="proficiencyChart"></canvas>
                                 </div>
                             </div>
-                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col">
-                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Course Progress</h3>
+                            <div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light flex flex-col">
+                                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Total Progress</h3>
                                 <div class="flex items-center gap-3 mb-6">
-                                    <div class="text-4xl font-bold text-navy">${overallPercent}%</div>
+                                    <div class="text-4xl font-black italic text-white">${overallPercent}%</div>
                                     <div class="flex-1">
-                                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-orange transition-all duration-1000" style="width: ${overallPercent}%"></div>
+                                        <div class="h-2 bg-navy-dark border border-navy-light rounded-full overflow-hidden">
+                                            <div class="h-full bg-orange shadow-[0_0_10px_#FF6600]" style="width: ${overallPercent}%"></div>
                                         </div>
-                                        <div class="text-[10px] text-gray-400 mt-1 uppercase">${totalCompleted} / ${totalTasks} Tasks Completed</div>
+                                        <div class="text-[9px] text-gray-500 mt-2 uppercase font-bold tracking-wider">${totalCompleted} / ${totalTasks} Tasks Done</div>
                                     </div>
                                 </div>
                                 <div class="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar max-h-60">
                                     ${progressData.map(p => `
                                         <div>
-                                            <div class="flex justify-between text-[10px] font-bold text-navy mb-1"><span>${p.code}</span><span class="${p.percent === 100 ? 'text-green-500' : 'text-orange'}">${p.percent}%</span></div>
-                                            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div class="bg-navy h-full transition-all duration-1000" style="width: ${p.percent}%"></div></div>
+                                            <div class="flex justify-between text-[10px] font-bold text-gray-300 mb-1"><span>${p.code}</span><span class="${p.percent === 100 ? 'text-green-400' : 'text-orange'}">${p.percent}%</span></div>
+                                            <div class="w-full bg-navy-dark border border-navy-light h-1.5 rounded-full overflow-hidden"><div class="bg-gray-500 h-full transition-all duration-1000" style="width: ${p.percent}%"></div></div>
                                         </div>`).join('')}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
                 setTimeout(() => {
                     const ctx = document.getElementById('proficiencyChart');
                     if(ctx && typeof Chart !== 'undefined') {
                         new Chart(ctx, {
                             type: 'radar',
-                            data: { labels: kaCodes, datasets: [{ label: 'Completed %', data: chartValues, backgroundColor: 'rgba(255, 107, 0, 0.2)', borderColor: '#ff6b00', pointBackgroundColor: '#0a192f', pointBorderColor: '#fff', borderWidth: 2 }] },
-                            options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#f1f5f9' }, grid: { color: '#e2e8f0' }, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#0a192f' }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } }, plugins: { legend: { display: false } } } 
+                            data: { labels: kaCodes, datasets: [{ label: 'Score', data: chartValues, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#001a33', pointBorderColor: '#fff', borderWidth: 2 }] },
+                            options: { 
+                                responsive: true, maintainAspectRatio: false, 
+                                scales: { r: { angleLines: { color: '#004080' }, grid: { color: '#004080' }, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#9CA3AF' }, ticks: { display: false, backdropColor: 'transparent' } } }, 
+                                plugins: { legend: { display: false } } 
+                            } 
                         });
                     }
                 }, 500);
             },
 
-            // --- KNOWLEDGE HUB ---
+            // --- LEARN (Dark) ---
             renderLearn(container) {
                 const curriculum = DB.state.curriculum || [];
                 container.innerHTML = `
-                    <div class="p-6 md:p-8 overflow-y-auto h-full">
-                        <h2 class="text-2xl font-bold text-navy mb-6">Knowledge Hub</h2>
+                    <div class="p-6 md:p-8 overflow-y-auto h-full view-fade">
+                        <h2 class="text-3xl font-black italic text-white mb-8">Knowledge Hub</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             ${curriculum.map((c, i) => {
                                 const tasks = c.tasks || [];
                                 const done = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
-                                const total = tasks.length;
-                                const percent = total > 0 ? Math.round((done/total)*100) : 0;
-                                
+                                const percent = tasks.length > 0 ? Math.round((done/tasks.length)*100) : 0;
                                 return `
-                                <div class="bg-white p-6 rounded shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition group flex flex-col h-full cursor-pointer" onclick="app.viewModule('${c.code}')">
+                                <div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light hover:border-orange hover:shadow-[0_0_15px_rgba(255,102,0,0.1)] transition group flex flex-col h-full cursor-pointer" onclick="app.viewModule('${c.code}')">
                                     <div class="flex justify-between items-start mb-4">
-                                        <span class="text-4xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span>
-                                        <span class="bg-navy-light text-blue-200 text-[9px] font-bold px-2 py-1 uppercase tracking-widest rounded">${c.code}</span>
+                                        <span class="text-4xl font-black text-navy-dark text-outline group-hover:text-orange/20 transition">${(i+1).toString().padStart(2,'0')}</span>
+                                        <span class="bg-navy-dark border border-navy-light text-orange text-[9px] font-bold px-2 py-1 uppercase tracking-widest rounded">${c.code}</span>
                                     </div>
-                                    <h3 class="text-lg font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3>
-                                    <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-2">
-                                        <div class="bg-orange h-full" style="width: ${percent}%"></div>
+                                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-orange transition tracking-tight">${c.name}</h3>
+                                    <div class="w-full bg-navy-dark border border-navy-light h-1.5 rounded-full overflow-hidden mb-3">
+                                        <div class="bg-orange h-full shadow-[0_0_5px_#FF6600]" style="width: ${percent}%"></div>
                                     </div>
-                                    <div class="text-[10px] text-gray-400 mb-4">${done}/${total} Completed</div>
-                                    <div class="mt-auto flex gap-2">
-                                        <button class="flex-1 bg-navy text-white py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-orange transition">View Details</button>
+                                    <div class="text-[10px] text-gray-400 mb-6 uppercase tracking-wider font-bold">${done}/${tasks.length} Completed</div>
+                                    <div class="mt-auto">
+                                        <button class="w-full bg-navy-dark border border-navy-light text-gray-300 py-3 rounded text-[10px] font-bold uppercase tracking-widest group-hover:bg-orange group-hover:text-white group-hover:border-orange transition">View Details</button>
                                     </div>
                                 </div>`;
                             }).join('')}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             },
 
             renderTaskDetail(container, params) {
                 const item = DB.state.curriculum.find(c => c.code === params.code);
-                if(!item) { container.innerHTML = '<div class="p-8">Module not found</div>'; return; }
+                if(!item) { container.innerHTML = '<div class="p-8 text-white">Module not found</div>'; return; }
                 const tasks = item.tasks || [];
                 const doneCount = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
                 const percent = tasks.length > 0 ? Math.round((doneCount/tasks.length)*100) : 0;
 
                 container.innerHTML = `
-                    <div class="p-6 md:p-8 max-w-4xl mx-auto h-full overflow-y-auto custom-scrollbar">
+                    <div class="p-6 md:p-8 max-w-4xl mx-auto h-full overflow-y-auto custom-scrollbar view-fade">
                         <div class="flex justify-between items-center mb-6">
-                            <button onclick="app.nav('learn')" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2">
-                                <i class="fa-solid fa-arrow-left"></i> Back to Hub
+                            <button onclick="app.nav('learn')" class="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-orange flex items-center gap-2 transition">
+                                <i class="fa-solid fa-arrow-left"></i> Back
                             </button>
-                            <button onclick="app.nav('library', {code:'${params.code}', type:'textbookvn'})" class="bg-white border border-gray-300 text-navy px-4 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white hover:border-orange transition flex items-center gap-2">
+                            <button onclick="app.nav('library', {code:'${params.code}', type:'textbookvn'})" class="bg-navy-dark border border-navy-light text-gray-300 px-5 py-2 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-orange hover:text-white hover:border-orange transition flex items-center gap-2 shadow-md">
                                 <i class="fa-solid fa-book-open"></i> Read Textbook
                             </button>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
-                            <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div><div class="text-xs font-bold text-orange uppercase tracking-widest mb-1">Module Detail</div><h1 class="text-2xl font-bold text-navy">${item.name}</h1></div>
-                                <div class="text-right"><div class="text-3xl font-bold text-navy">${percent}%</div><div class="text-[10px] text-gray-400 uppercase">Module Progress</div></div>
+                        <div class="bg-navy rounded-lg shadow-lg border border-navy-light overflow-hidden mb-6">
+                            <div class="p-8 border-b border-navy-light bg-navy-dark/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div><div class="text-[10px] font-bold text-orange uppercase tracking-[0.2em] mb-1">Module Detail</div><h1 class="text-2xl font-black italic text-white">${item.name}</h1></div>
+                                <div class="text-right"><div class="text-4xl font-black italic text-white">${percent}%</div><div class="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Completed</div></div>
                             </div>
                             <div class="p-0">
                                 ${tasks.map((t, idx) => {
                                     const isDone = DB.state.completedTasks.includes(t.id);
                                     return `
-                                        <div class="flex items-center justify-between p-4 border-b border-gray-50 hover:bg-blue-50 transition group">
-                                            <div class="flex items-center gap-4">
-                                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isDone ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${idx + 1}</div>
-                                                <div><div class="text-sm font-bold ${isDone ? 'text-gray-400 line-through' : 'text-navy'}">${t.name}</div><div class="text-[10px] text-gray-400 font-mono">${t.id}</div></div>
+                                        <div class="flex items-center justify-between p-5 border-b border-navy-light hover:bg-navy-dark transition group">
+                                            <div class="flex items-center gap-5">
+                                                <div class="w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${isDone ? 'bg-green-900/30 text-green-500 border border-green-800' : 'bg-navy-dark text-gray-500 border border-navy-light'}">${idx + 1}</div>
+                                                <div><div class="text-sm font-bold ${isDone ? 'text-gray-500 line-through' : 'text-white'}">${t.name}</div><div class="text-[9px] text-gray-600 font-mono mt-1">${t.id}</div></div>
                                             </div>
-                                            <button onclick="app.toggleTaskState('${t.id}', '${params.code}')" class="px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest border transition flex items-center gap-2 ${isDone ? 'bg-green-50 text-green-600 border-green-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200' : 'bg-white text-gray-400 border-gray-200 hover:border-orange hover:text-orange'}">
-                                                ${isDone ? '<span>Completed</span> <i class="fa-solid fa-check"></i>' : '<span>Mark Complete</span>'}
+                                            <button onclick="app.toggleTaskState('${t.id}', '${params.code}')" class="px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest border transition flex items-center gap-2 ${isDone ? 'bg-green-900/20 text-green-500 border-green-800 hover:bg-red-900/20 hover:text-red-500 hover:border-red-800' : 'bg-navy-dark text-gray-400 border-navy-light hover:border-orange hover:text-orange'}">
+                                                ${isDone ? '<span>Done</span> <i class="fa-solid fa-check"></i>' : '<span>Mark</span>'}
                                             </button>
-                                        </div>
-                                    `;
+                                        </div>`;
                                 }).join('')}
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             },
+            toggleTaskState(taskId, code) { const newState = DB.toggleTask(taskId); this.renderTaskDetail(document.getElementById('app-container'), { code: code }); Toast.show(newState ? "Task Completed" : "Task Unmarked", newState ? 'success' : 'info'); },
 
-            toggleTaskState(taskId, code) {
-                const newState = DB.toggleTask(taskId);
-                this.renderTaskDetail(document.getElementById('app-container'), { code: code });
-                Toast.show(newState ? "Task Completed" : "Task Unmarked", newState ? 'success' : 'info');
-            },
-
-            // --- LIBRARY (Corrected Logic) ---
+            // --- LIBRARY (Dark) ---
             renderLibrary(container, params) {
                 const code = params?.code || DB.state.lastView.code || 'INTRO';
                 const type = params?.type || 'textbookvn';
+                const vMap = videoMapping||{}, vnMap = textbookVnMapping||{}, enMap = textbookEnMapping||{}, resMap = resourceMapping||{};
+                let list = [], currentItem = this.selectedSubResource;
                 
-                // Mappings (OneD Embeds) DIRECTLY
-                const vMap = videoMapping || {}; 
-                const vnMap = textbookVnMapping || {};
-                const enMap = textbookEnMapping || {};
-                const resMap = resourceMapping || {}; 
+                if (type === 'slide') list = (resMap[code]?.slides) || [];
+                else if (type === 'mindmap') list = (resMap[code]?.mindmaps) || [];
+                else if (type === 'info') list = (resMap[code]?.info) || [];
+                if (list.length > 0 && (!currentItem || !list.find(i => i.url === currentItem.url))) currentItem = list[0];
 
-                // Resolve Data based on Type
-                let list = [];
-                let currentItem = this.selectedSubResource;
-                
-                if (type === 'slide') {
-                    list = (resMap[code]?.slides) || [];
-                } else if (type === 'mindmap') {
-                    list = (resMap[code]?.mindmaps) || [];
-                } else if (type === 'info') {
-                    list = (resMap[code]?.info) || [];
-                }
-
-                // If list has items but no current item selected (or selected is not in list), pick first
-                if (list.length > 0 && (!currentItem || !list.find(i => i.url === currentItem.url))) {
-                    currentItem = list[0];
-                }
-
-                const loader = `<div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-0"><div class="spinner mb-2"></div><span class="text-xs text-gray-500 font-bold">LOADING...</span></div>`;
-                let viewerHtml = `<div class="flex items-center justify-center h-full text-gray-400">Content not available</div>`;
+                const loader = `<div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-navy-dark z-0"><div class="spinner mb-2"></div><span class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Loading Content...</span></div>`;
+                let viewerHtml = `<div class="flex items-center justify-center h-full text-gray-500 font-bold uppercase tracking-widest text-xs">Content not available</div>`;
 
                 if (type === 'textbookvn' || type === 'textbookEN') {
-                    // Logic: Use VN map for VN, EN map for EN. Fallback to INTRO if specific code missing
                     let rawUrl = (type === 'textbookvn') ? (vnMap[code] || vnMap['INTRO']) : (enMap[code] || enMap['INTRO']);
-                    
-                    if (rawUrl) {
-                        let url = toOneD(rawUrl);
-                        viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${url}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
-                    }
-                } 
-                else if (type === 'video') {
+                    if (rawUrl) viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(rawUrl)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
+                } else if (type === 'video') {
                     let vidData = vMap[code];
                     let vidUrl = Array.isArray(vidData) ? vidData[0].url : vidData;
-                    
-                    if (vidUrl) {
-                         if(vidUrl.includes('watch?v=')) vidUrl = vidUrl.replace('watch?v=', 'embed/');
-                         viewerHtml = `<div class="h-full w-full bg-black flex items-center justify-center"><iframe class="w-full max-w-4xl aspect-video shadow-2xl" src="${vidUrl}" frameborder="0" allowfullscreen></iframe></div>`;
-                    }
-                }
-                else if (currentItem) {
-                    if (type === 'slide') {
-                        viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(currentItem.url)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
-                    } else if (['mindmap', 'info'].includes(type)) {
-                        viewerHtml = `<div class="relative w-full h-full bg-slate-200 overflow-hidden flex items-center justify-center">${loader}<img id="zoom-img" src="${currentItem.url}" class="max-w-full max-h-full shadow-lg transition-transform duration-200 z-10" style="transform: scale(${this.zoomLevel})" onload="this.parentElement.querySelector('#content-loader')?.remove()"></div>`;
-                    }
+                    if (vidUrl) { if(vidUrl.includes('watch?v=')) vidUrl = vidUrl.replace('watch?v=', 'embed/'); viewerHtml = `<div class="h-full w-full bg-black flex items-center justify-center border border-navy-light"><iframe class="w-full max-w-4xl aspect-video shadow-2xl" src="${vidUrl}" frameborder="0" allowfullscreen></iframe></div>`; }
+                } else if (currentItem) {
+                    if (type === 'slide') viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(currentItem.url)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
+                    else viewerHtml = `<div class="relative w-full h-full bg-navy-dark overflow-hidden flex items-center justify-center">${loader}<img id="zoom-img" src="${currentItem.url}" class="max-w-full max-h-full shadow-lg transition-transform duration-200 z-10" style="transform: scale(${this.zoomLevel})" onload="this.parentElement.querySelector('#content-loader')?.remove()"></div>`;
                 }
 
-                // Render HTML
+                // Xử lý ẩn/hiện sidebar
+                const sidebarClass = this.librarySidebarOpen ? 'block' : 'hidden';
+
                 container.innerHTML = `
-                    <div class="flex h-full flex-col lg:flex-row border-t border-gray-200">
-                        <div class="w-full lg:w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-48 lg:h-full lg:order-1 order-3">
-                            <div class="p-3 bg-gray-50 border-b border-gray-100 font-bold text-[10px] text-gray-500 uppercase tracking-widest sticky top-0">Modules</div>
+                    <div class="flex h-full flex-col lg:flex-row border-t border-navy-light view-fade">
+                        <!-- Module List (Sidebar) -->
+                        <div id="lib-sidebar" class="${sidebarClass} w-full lg:w-64 bg-navy-dark border-r border-navy-light flex-shrink-0 flex flex-col h-48 lg:h-full lg:order-1 order-3 transition-all duration-300">
+                            <div class="p-3 bg-navy border-b border-navy-light font-bold text-[9px] text-gray-500 uppercase tracking-[0.2em] sticky top-0">Modules</div>
                             <div class="flex-1 overflow-y-auto custom-scrollbar">
-                                ${DB.state.curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}'})" class="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition group ${c.code === code ? 'bg-navy border-l-4 border-l-orange' : ''}"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold uppercase tracking-wide ${c.code === code ? 'text-white' : 'text-navy'}">${c.code}</span></div><div class="text-[10px] truncate ${c.code === code ? 'text-blue-200' : 'text-gray-600'}">${c.name}</div></button>`).join('')}
+                                ${DB.state.curriculum.map(c => `
+                                    <button onclick="app.nav('library', {code:'${c.code}'})" class="w-full text-left px-4 py-3 hover:bg-navy transition group ${c.code === code ? 'bg-navy border-l-4 border-l-orange' : ''}">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-xs font-bold uppercase tracking-wide ${c.code === code ? 'text-white' : 'text-gray-400'}">${c.code}</span>
+                                        </div>
+                                        <!-- MÀU CAM KHÓA CỨNG: Luôn hiển thị text-orange -->
+                                        <div class="text-[10px] truncate font-bold text-orange transition">${c.name}</div>
+                                    </button>`).join('')}
                             </div>
                         </div>
-                        <div class="flex-1 flex flex-col h-full bg-gray-100 relative lg:order-2 order-2 min-h-[400px]">
-                            <div class="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-2 overflow-x-auto no-scrollbar">
-                                ${['textbookvn', 'textbookEN', 'slide', 'mindmap', 'info', 'video'].map(t => `<button onclick="app.nav('library', {code:'${code}', type:'${t}'})" class="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition ${type === t ? 'bg-orange text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-navy'}">${t==='textbookvn'?'Book VN':(t==='textbookEN'?'Book EN':t)}</button>`).join('')}
+
+                        <!-- Main Viewer -->
+                        <div class="flex-1 flex flex-col h-full bg-navy relative lg:order-2 order-2 min-h-[400px]">
+                            <!-- Toolbar -->
+                            <div class="h-12 bg-navy-dark border-b border-navy-light flex items-center px-4 gap-2 overflow-x-auto custom-scrollbar">
+                                <!-- Nút Toggle Sidebar Mới -->
+                                <button onclick="app.toggleLibrarySidebar()" class="w-8 h-8 flex items-center justify-center text-orange border border-navy-light rounded hover:bg-navy hover:text-white transition mr-2" title="Toggle Modules">
+                                    <i class="fa-solid fa-list text-xs"></i>
+                                </button>
+
+                                ${['textbookvn', 'textbookEN', 'slide', 'mindmap', 'info', 'video'].map(t => `<button onclick="app.nav('library', {code:'${code}', type:'${t}'})" class="px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest whitespace-nowrap transition border border-navy-light ${type === t ? 'bg-orange text-white border-orange' : 'text-gray-400 hover:bg-navy hover:text-white'}">${t==='textbookvn'?'Book VN':(t==='textbookEN'?'Book EN':t)}</button>`).join('')}
                                 <div class="flex-1"></div>
-                                ${['mindmap','info'].includes(type) ? `<button onclick="app.adjustZoom(-0.2)" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-plus text-xs"></i></button>` : ''}
-                                <button onclick="app.toggleFullscreen('app-container')" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-expand text-xs"></i></button>
+                                ${['mindmap','info'].includes(type) ? `<button onclick="app.adjustZoom(-0.2)" class="w-7 h-7 flex items-center justify-center text-gray-400 border border-navy-light rounded hover:text-white"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="w-7 h-7 flex items-center justify-center text-gray-400 border border-navy-light rounded hover:text-white"><i class="fa-solid fa-plus text-xs"></i></button>` : ''}
+                                <button onclick="app.toggleFullscreen('app-container')" class="w-7 h-7 flex items-center justify-center text-gray-400 border border-navy-light rounded hover:text-white"><i class="fa-solid fa-expand text-xs"></i></button>
                             </div>
-                            <div class="flex-1 relative overflow-hidden">${viewerHtml}</div>
+                            <div class="flex-1 relative overflow-hidden bg-black/20">${viewerHtml}</div>
                         </div>
-                        <!-- Right Sidebar for Sub-files -->
-                        <div class="${list.length > 1 ? 'block' : 'hidden'} lg:block lg:order-3 h-full w-56 bg-white border-l border-gray-200 flex-shrink-0 flex flex-col">
-                             <div class="p-3 bg-gray-50 border-b border-gray-100 font-bold text-[10px] text-gray-500 uppercase tracking-widest">Files</div>
-                             <div class="flex-1 overflow-y-auto">${list.map(item => `<button onclick="app.selectSubResource('${item.url}', '${item.title}')" class="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-blue-50 transition ${currentItem && currentItem.url === item.url ? 'bg-blue-50 border-l-4 border-l-orange' : 'text-gray-600'}"><div class="text-xs font-bold ${currentItem && currentItem.url === item.url ? 'text-navy' : ''}">${item.title}</div></button>`).join('')}</div>
+
+                        <!-- File List (Sub-resource) -->
+                        <div class="${list.length > 1 ? 'block' : 'hidden'} lg:block lg:order-3 h-full w-56 bg-navy-dark border-l border-navy-light flex-shrink-0 flex flex-col">
+                             <div class="p-3 bg-navy border-b border-navy-light font-bold text-[9px] text-gray-500 uppercase tracking-[0.2em]">Files</div>
+                             <div class="flex-1 overflow-y-auto custom-scrollbar">${list.map(item => `<button onclick="app.selectSubResource('${item.url}', '${item.title}')" class="w-full text-left px-4 py-3 border-b border-navy-light hover:bg-navy transition ${currentItem && currentItem.url === item.url ? 'bg-navy border-l-4 border-l-orange' : 'text-gray-500'}"><div class="text-[10px] font-bold ${currentItem && currentItem.url === item.url ? 'text-white' : ''}">${item.title}</div></button>`).join('')}</div>
                         </div>
                     </div>`;
+            },
+            
+            // Hàm xử lý Toggle Sidebar
+            toggleLibrarySidebar() {
+                this.librarySidebarOpen = !this.librarySidebarOpen;
+                const sidebar = document.getElementById('lib-sidebar');
+                if (sidebar) {
+                    if (this.librarySidebarOpen) {
+                        sidebar.classList.remove('hidden');
+                        sidebar.classList.add('block');
+                    } else {
+                        sidebar.classList.add('hidden');
+                        sidebar.classList.remove('block');
+                    }
+                }
             },
             
             selectSubResource(url, title) { this.selectedSubResource = { url, title }; this.nav('library'); },
             adjustZoom(delta) { this.zoomLevel = Math.max(0.5, Math.min(3, this.zoomLevel + delta)); const img = document.getElementById('zoom-img'); if(img) img.style.transform = `scale(${this.zoomLevel})`; },
             toggleFullscreen(id) { const el = document.getElementById(id); if (!document.fullscreenElement) { el.requestFullscreen().catch(err => {}); } else { document.exitFullscreen(); } },
 
-            // --- EXAM ENGINE (High Contrast) ---
+            // --- EXAM (Dark) ---
             renderExam(container) {
                 if(!this.examState.active) {
                     const count = DB.state.questions.length;
-                    container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-8 text-center bg-white"><div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-3xl text-navy mb-6 shadow-sm"><i class="fa-solid fa-pen-to-square"></i></div><h2 class="text-2xl font-bold text-navy mb-2">Exam Simulator</h2><p class="text-gray-600 mb-8 max-w-md font-medium">Ready with ${count} questions.</p><button class="swiss-btn swiss-btn-primary px-8 py-3 shadow-lg" onclick="app.startExam()">Start Random Drill</button></div>`;
+                    container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-8 text-center bg-navy-dark view-fade"><div class="w-24 h-24 bg-navy border border-navy-light rounded-full flex items-center justify-center text-4xl text-orange mb-6 shadow-[0_0_20px_rgba(255,102,0,0.2)]"><i class="fa-solid fa-pen-to-square"></i></div><h2 class="text-3xl font-black italic text-white mb-2">Exam Simulator</h2><p class="text-gray-400 mb-8 max-w-md font-medium text-sm">Test your knowledge with ${count} practice questions.</p><button class="swiss-btn swiss-btn-primary px-10 py-4 shadow-lg text-sm" onclick="app.startExam()">Start Practice</button></div>`;
                 } else {
                     const q = DB.state.questions[this.examState.current];
                     const userAns = this.examState.answers[q.id];
                     const isAnswered = userAns !== undefined;
                     container.innerHTML = `
-                    <div class="max-w-3xl mx-auto p-4 md:p-8">
+                    <div class="max-w-3xl mx-auto p-4 md:p-8 view-fade">
                         <div class="flex justify-between items-center mb-6">
-                            <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">Question ${this.examState.current + 1}/${DB.state.questions.length}</div>
-                            <button onclick="app.quitExam()" class="text-red-600 hover:text-red-800 font-bold text-xs uppercase border border-red-200 px-3 py-1 rounded bg-white hover:bg-red-50">Exit</button>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Question ${this.examState.current + 1}/${DB.state.questions.length}</div>
+                            <button onclick="app.quitExam()" class="text-red-500 hover:text-red-400 font-bold text-[10px] uppercase border border-red-900/50 px-3 py-1 rounded bg-red-900/20 hover:bg-red-900/40">Exit Exam</button>
                         </div>
-                        <div class="bg-white p-6 md:p-8 rounded shadow-lg border border-gray-300 mb-6">
-                            <h3 class="text-lg font-bold text-navy mb-6 leading-relaxed">${q.stem}</h3>
-                            <div class="space-y-3">
+                        <div class="bg-navy p-6 md:p-10 rounded-lg shadow-lg border border-navy-light mb-8">
+                            <h3 class="text-lg font-bold text-white mb-8 leading-relaxed">${q.stem}</h3>
+                            <div class="space-y-4">
                                 ${q.options.map((opt, i) => { 
-                                    let cls = "border-gray-300 hover:bg-blue-50 bg-white text-navy"; 
+                                    let cls = "border-navy-light hover:bg-navy-dark bg-navy-dark/30 text-gray-300"; 
                                     if(isAnswered) { 
-                                        if(i === q.correct[0]) cls = "bg-green-100 border-green-600 text-green-900 font-bold"; 
-                                        else if(i === userAns) cls = "bg-red-100 border-red-600 text-red-900 font-bold"; 
-                                        else cls = "opacity-50 border-gray-200";
+                                        if(i === q.correct[0]) cls = "bg-green-900/40 border-green-600 text-green-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]"; 
+                                        else if(i === userAns) cls = "bg-red-900/40 border-red-600 text-red-400 font-bold"; 
+                                        else cls = "opacity-40 border-navy-light";
                                     } 
-                                    return `<div onclick="${!isAnswered ? `app.answerExam(${i})` : ''}" class="p-4 border-2 rounded cursor-pointer transition flex items-center gap-3 ${cls}"><span class="font-bold border border-gray-400 w-6 h-6 flex items-center justify-center rounded text-xs bg-white text-navy">${String.fromCharCode(65+i)}</span> ${opt}</div>`; 
+                                    return `<div onclick="${!isAnswered ? `app.answerExam(${i})` : ''}" class="p-4 border rounded cursor-pointer transition flex items-center gap-4 ${cls}"><span class="font-bold border border-navy-light w-8 h-8 flex items-center justify-center rounded text-xs bg-navy text-white">${String.fromCharCode(65+i)}</span> ${opt}</div>`; 
                                 }).join('')}
                             </div>
-                            ${isAnswered ? `<div class="mt-6 p-4 bg-navy text-white text-sm rounded shadow-inner border-l-4 border-orange"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
+                            ${isAnswered ? `<div class="mt-8 p-5 bg-navy-dark text-gray-300 text-sm rounded border-l-4 border-orange"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
                         </div>
                         <div class="flex justify-between">
-                            <button onclick="app.prevExam()" class="swiss-btn swiss-btn-outline px-6 py-2 bg-white" ${this.examState.current===0 ? 'disabled':''}>Previous</button>
-                            <button onclick="app.nextExam()" class="swiss-btn swiss-btn-primary px-6 py-2 shadow-lg" ${!isAnswered ? 'disabled opacity-50':''}>Next</button>
+                            <button onclick="app.prevExam()" class="swiss-btn swiss-btn-outline px-6 py-3" ${this.examState.current===0 ? 'disabled':''}>Previous</button>
+                            <button onclick="app.nextExam()" class="swiss-btn swiss-btn-primary px-6 py-3 shadow-lg" ${!isAnswered ? 'disabled opacity-50':''}>Next Question</button>
                         </div>
                     </div>`;
                 }
             },
-            startExam() { this.examState = { active: true, current: 0, answers: {}, score: 0, finished: false }; this.nav('exam'); },
+            startExam() { this.examState = { active: true, current: 0, answers: {}, score: 0 }; this.nav('exam'); },
             answerExam(idx) { const q = DB.state.questions[this.examState.current]; this.examState.answers[q.id] = idx; this.nav('exam'); },
             nextExam() { if(this.examState.current < DB.state.questions.length-1) { this.examState.current++; this.nav('exam'); } else { this.quitExam(); } },
             prevExam() { if(this.examState.current > 0) { this.examState.current--; this.nav('exam'); } },
             quitExam() { this.examState.active = false; this.nav('exam'); },
 
-            // --- FLASHCARDS (Fixed: Crisp Colors & Contrast) ---
+            // --- FLASHCARDS (Dark) ---
             renderFlashcards(container) {
                 const total = DB.state.flashcards.length;
                 const card = DB.state.flashcards[this.flashcardIndex];
                 container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full p-4 md:p-8 bg-slate-100">
+                    <div class="flex flex-col items-center justify-center h-full p-4 md:p-8 bg-navy-dark view-fade">
                         <div class="w-full max-w-xl mb-4 flex justify-between">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Card ${this.flashcardIndex + 1}/${total}</span>
-                            <span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Card ${this.flashcardIndex + 1}/${total}</span>
+                            <span class="text-[10px] font-bold text-orange uppercase tracking-widest">Active Recall</span>
                         </div>
-                        <div class="flip-container w-full max-w-xl aspect-[3/2] cursor-pointer group" onclick="app.flipCard()">
-                            <div id="card-inner" class="flip-inner shadow-xl rounded border border-gray-300 ${this.flashcardFlipped ? 'flipped' : ''} transition-transform duration-500">
+                        
+                        <!-- Flip Container with ID -->
+                        <div id="flashcard-container" class="flip-container w-full max-w-xl aspect-[3/2] cursor-pointer group ${this.flashcardFlipped ? 'flipped' : ''}" onclick="app.flipCard()">
+                            <div class="flip-inner shadow-2xl rounded-lg">
                                 <!-- FRONT -->
-                                <div class="flip-front absolute inset-0 bg-white p-8 flex flex-col items-center justify-center text-center backface-hidden z-10 rounded border-2 border-gray-200">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Front</span>
-                                    <h3 class="text-3xl font-black text-navy leading-relaxed">${card.front}</h3>
-                                    <div class="mt-8 text-xs text-orange font-bold uppercase animate-pulse tracking-widest">Tap to Flip</div>
+                                <div class="flip-front p-8 text-center rounded-lg">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase mb-6 tracking-[0.3em]">Concept</span>
+                                    <h3 class="text-3xl font-black italic text-white leading-relaxed tracking-tight select-none">${card.front}</h3>
+                                    <div class="mt-8 text-[10px] text-orange font-bold uppercase animate-pulse tracking-widest">Tap to Reveal</div>
                                 </div>
-                                <!-- BACK (High Contrast: Navy Background, White Text) -->
-                                <div class="flip-back absolute inset-0 bg-navy p-8 flex flex-col items-center justify-center text-center backface-hidden transform rotate-y-180 z-0 rounded border-2 border-navy">
-                                    <span class="text-[10px] font-bold text-blue-200 uppercase mb-4 tracking-widest">Back</span>
-                                    <h3 class="text-2xl font-bold text-white leading-relaxed">${card.back}</h3>
+                                <!-- BACK -->
+                                <div class="flip-back p-8 text-center rounded-lg">
+                                    <span class="text-[9px] font-bold text-gray-300 uppercase mb-6 tracking-[0.3em]">Definition</span>
+                                    <!-- Ép màu trắng tuyệt đối cho text -->
+                                    <h3 class="text-2xl font-bold text-white leading-relaxed select-none" style="color: #ffffff !important;">${card.back}</h3>
                                 </div>
                             </div>
                         </div>
+
                         <div class="w-full max-w-xl flex gap-4 mt-8">
-                            <button onclick="app.prevCard()" class="flex-1 py-4 border-2 border-navy bg-white text-navy text-xs font-bold uppercase rounded hover:bg-blue-50 transition">Previous</button>
-                            <button onclick="app.nextCard()" class="flex-1 py-4 bg-navy text-white text-xs font-bold uppercase rounded shadow-lg hover:bg-orange transition border-2 border-navy">Next Card</button>
+                            <button onclick="app.prevCard()" class="flex-1 py-3 border border-navy-light bg-navy text-gray-300 text-xs font-bold uppercase rounded hover:border-orange hover:text-orange transition tracking-widest">Prev</button>
+                            <button onclick="app.nextCard()" class="flex-1 py-3 bg-orange text-white text-xs font-bold uppercase rounded shadow-lg hover:bg-orange-hover transition tracking-widest border border-orange">Next</button>
                         </div>
                     </div>`;
-                
-                setTimeout(() => {
-                    const inner = document.getElementById('card-inner');
-                    if(inner && this.flashcardFlipped) inner.style.transform = "rotateY(180deg)";
-                }, 0);
             },
+            
             flipCard() { 
+                // Chỉ toggle class CSS, không render lại HTML
                 this.flashcardFlipped = !this.flashcardFlipped; 
-                const inner = document.getElementById('card-inner');
-                if(inner) inner.style.transform = this.flashcardFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
+                const container = document.getElementById('flashcard-container');
+                if(container) {
+                    if (this.flashcardFlipped) container.classList.add('flipped');
+                    else container.classList.remove('flipped');
+                }
             },
+            
             nextCard() { if(this.flashcardIndex < DB.state.flashcards.length-1) { this.flashcardIndex++; this.flashcardFlipped = false; this.nav('flashcards'); } },
             prevCard() { if(this.flashcardIndex > 0) { this.flashcardIndex--; this.flashcardFlipped = false; this.nav('flashcards'); } },
 
-            renderAuth(container) { container.innerHTML = `<div class="flex items-center justify-center h-full bg-light-bg p-4"><div class="w-full max-w-md bg-white p-8 rounded shadow-lg border-t-4 border-orange"><h2 class="text-2xl font-bold text-navy mb-6 text-center">Cloud Login</h2><div class="space-y-4"><div><label class="block text-xs font-bold text-gray-600 uppercase mb-1">Username</label><input type="text" id="login-user" class="w-full p-3 border border-gray-300 rounded text-sm bg-white focus:border-navy focus:outline-none"></div><div><label class="block text-xs font-bold text-gray-600 uppercase mb-1">Password</label><input type="password" id="login-pass" class="w-full p-3 border border-gray-300 rounded text-sm bg-white focus:border-navy focus:outline-none"></div><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3 mt-4">Sign In</button><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-outline py-3 mt-2">Register</button></div></div></div>`; },
-            async handleLogin() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.login(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Welcome','success'); this.nav('dashboard'); } } },
-            async handleRegister() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.register(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Account created','success'); this.nav('dashboard'); } } },
-            renderAdmin(container) { container.innerHTML = `<div class="p-8 max-w-2xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-6 rounded shadow border border-gray-200"><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Data Management</h3><div class="p-4 border-2 border-dashed border-gray-300 rounded bg-gray-50 text-center cursor-pointer hover:bg-blue-50 transition"><i class="fa-solid fa-upload text-gray-400 mb-2"></i><div class="text-xs font-bold text-navy">Import Curriculum.json</div></div></div></div>`; }
+            // --- AUTH & ADMIN (Dark) ---
+            renderAuth(container) { container.innerHTML = `<div class="flex items-center justify-center h-full bg-navy-dark p-4 view-fade"><div class="w-full max-w-md bg-navy p-8 rounded-lg shadow-2xl border-t-4 border-orange relative"><div class="absolute top-0 right-0 p-4 opacity-10 text-white text-6xl"><i class="fa-solid fa-user-shield"></i></div><h2 class="text-2xl font-black italic text-white mb-8 text-center uppercase tracking-tight">System Access</h2><div class="space-y-5"><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Username</label><input type="text" id="login-user" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Password</label><input type="password" id="login-pass" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3 mt-4">Initialize Session</button><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-outline py-3 mt-2">Create New ID</button></div></div></div>`; },
+            async handleLogin() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.login(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Authenticated','success'); this.nav('dashboard'); } } },
+            async handleRegister() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.register(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('ID Created','success'); this.nav('dashboard'); } } },
+            renderAdmin(container) { container.innerHTML = `<div class="p-8 max-w-2xl mx-auto view-fade"><h2 class="text-2xl font-black italic text-white mb-6 uppercase">System Settings</h2><div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light"><h3 class="text-[10px] font-bold text-orange uppercase tracking-widest mb-6">Data Management</h3><div class="p-8 border-2 border-dashed border-navy-light rounded bg-navy-dark/50 text-center cursor-pointer hover:border-orange hover:bg-navy-dark transition group"><i class="fa-solid fa-cloud-arrow-up text-gray-500 mb-3 text-2xl group-hover:text-white transition"></i><div class="text-xs font-bold text-gray-300 group-hover:text-white uppercase tracking-wider">Import Curriculum.json</div></div></div></div>`; }
         };
 
         document.addEventListener('DOMContentLoaded', () => app.start());
     </script>
     <style>
         .backface-hidden { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .text-outline { -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1); color: transparent; }
+        .glow { text-shadow: 0 0 5px currentColor; }
     </style>
 </body>
 </html>
