@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v9.6 (No Auth Docs)</title>
+    <title>CBAP Master - Cloud Sync v9.7 (Smart Loader)</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,7 +76,7 @@
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
         <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.6...</p>
+        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.7...</p>
         <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
     </div>
 
@@ -141,8 +141,8 @@
         </nav>
         
         <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.6</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Multi-Docs Support</div>
+            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.7</div>
+            <div class="text-[10px] font-bold text-navy mt-1">Smart Loader</div>
         </div>
     </aside>
 
@@ -321,7 +321,7 @@
             zoomLevel: 1,
             pdfMode: 'canvas', // 'canvas' or 'iframe'
             pdfState: { pdfDoc: null, pageNum: 1, pageRendering: false, pageNumPending: null, scale: 1.0, canvas: null, ctx: null },
-            selectedSubResource: null, // Track selected file for multi-file views
+            selectedSubResource: null, 
 
             async start() {
                 setTimeout(() => {
@@ -385,7 +385,6 @@
             
             togglePDFMode(container) {
                 this.pdfMode = this.pdfMode === 'canvas' ? 'iframe' : 'canvas';
-                // Re-render library with new mode
                 this.renderLibrary(container, this.lastLibraryParams || {});
                 Toast.show(`Switched to ${this.pdfMode === 'canvas' ? 'Canvas' : 'Browser'} Viewer`, 'info');
             },
@@ -404,7 +403,6 @@
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
                 
-                // Reset sub-resource on new navigation unless same context
                 if (view !== 'library') this.selectedSubResource = null;
 
                 try {
@@ -454,13 +452,23 @@
             async loadPDF(url) {
                 this.pdfState.canvas = document.getElementById('the-canvas');
                 if(!this.pdfState.canvas) return;
+                
+                // Show loader
+                const wrapper = document.getElementById('pdf-wrapper');
+                if(wrapper) {
+                     const existingLoader = wrapper.querySelector('#content-loader');
+                     if(!existingLoader) {
+                         const loader = document.createElement('div');
+                         loader.id = 'content-loader';
+                         loader.className = 'absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-20';
+                         loader.innerHTML = '<div class="spinner w-8 h-8 border-4 border-gray-200 border-t-orange rounded-full animate-spin mb-2"></div><span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Loading PDF...</span>';
+                         wrapper.querySelector('.relative').appendChild(loader);
+                     }
+                }
+
                 this.pdfState.ctx = this.pdfState.canvas.getContext('2d');
                 this.pdfState.pageNum = 1;
                 this.pdfState.scale = 1.0;
-                
-                this.pdfState.ctx.clearRect(0, 0, this.pdfState.canvas.width, this.pdfState.canvas.height);
-                this.pdfState.ctx.font = "14px Helvetica";
-                this.pdfState.ctx.fillText("Loading PDF...", 20, 50);
 
                 try {
                     const loadingTask = pdfjsLib.getDocument(url);
@@ -470,7 +478,7 @@
                 } catch (error) {
                     console.error('Error loading PDF: ' + error);
                     const container = document.getElementById('pdf-wrapper');
-                    if(container) container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl text-gray-300 mb-4"></i><div class="text-red-500 font-bold">PDF Load Error</div><div class="text-xs text-gray-500 mt-2">${url}<br>Check file existence and format.</div></div>`;
+                    if(container) container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl text-gray-300 mb-4"></i><div class="text-red-500 font-bold">PDF Load Error</div><div class="text-xs text-gray-500 mt-2">${url}<br>Check file existence.</div></div>`;
                 }
             },
 
@@ -499,6 +507,9 @@
                             this.renderPDFPage(this.pdfState.pageNumPending);
                             this.pdfState.pageNumPending = null;
                         }
+                        // Remove loader
+                        const loader = document.getElementById('content-loader');
+                        if(loader) loader.remove();
                     });
                 });
 
@@ -632,7 +643,7 @@
                 if(curriculum.length === 0) { app.nav('admin'); return; }
                 this.zoomLevel = 1;
                 const activeCode = params?.code || curriculum[0].code;
-                const type = params?.type || 'textbookvn'; // Default updated to textbookvn
+                const type = params?.type || 'textbookvn'; 
                 const mediaPath = 'CbapMedia/';
                 
                 // USER CONFIGURATION: VIDEO LINKS
@@ -656,13 +667,11 @@
                 // USER CONFIGURATION: TEXTBOOK VN LINKS (OneDrive Embed)
                 const textbookVnMapping = {
                     'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
-                    // Defaulting all to same link for demo purposes as requested, or customize per chapter
                     'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
                     'BAPM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
-                    // ... add others
-                    'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
-                    'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
-                    'SA': 'https://www.youtube.com/watch?v=0I10KLv79iY&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=19',
+                    'ELIC': '',
+                    'RLCM': '',
+                    'SA': '',
                     'RADD': '',
                     'SE': '',
                     'COMP': '',
@@ -671,9 +680,8 @@
                 };
 
                  // USER CONFIGURATION: TEXTBOOK EN LINKS (Password Protected Docx)
-                 // Map KA codes to their respective shared links.
                  const textbookEnMapping = {
-                    'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQ9a9VaUUkIRazjdZLFgYDIAR0a9VaUUkIRazjdZLFgYDIA?action=embedview', // Example link
+                    'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQ9a9VaUUkIRazjdZLFgYDIAR0a9VaUUkIRazjdZLFgYDIA?action=embedview',
                     'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
                     'BAPM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
                     'ELIC': '',
@@ -687,8 +695,6 @@
                 };
 
                 // MULTI-RESOURCE CONFIGURATION
-                // To support multiple slides, mindmaps, etc., define them here.
-                // If not defined, falls back to default single file assumption.
                 const resourceMapping = {
                     'BACCM': {
                         slides: [
@@ -704,7 +710,6 @@
                              { title: "Infographic 2", url: `${mediaPath}BACCM_Info_2.png` }
                         ]
                     }
-                    // Add other chapters here...
                 };
 
                 // Helper to convert watch links to embed links
@@ -750,47 +755,56 @@
 
                 const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf` }; // Legacy fallback
                 
+                // Common Loading HTML helper
+                const getLoadingHTML = () => `
+                    <div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-0">
+                        <div class="spinner w-8 h-8 border-4 border-gray-200 border-t-orange rounded-full animate-spin mb-2"></div>
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Loading Content...</span>
+                    </div>`;
+
                 let viewer = ''; 
                 let showZoomControls = false;
                 let subListHTML = '';
 
                 // --- VIEWER LOGIC ---
 
-                if (type === 'textbookvn') {
-                    const docUrl = textbookVnMapping[activeCode] || textbookVnMapping['INTRO']; // Fallback to intro link if specific not found for demo
-                    viewer = `
-                        <div class="h-full w-full bg-gray-100 flex flex-col">
-                            <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
-                                 <span class="text-xs font-bold text-gray-500">Embedded Document (OneDrive)</span>
-                                 <a href="${docUrl}" target="_blank" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Open in New Tab</a>
-                            </div>
-                            <iframe src="${docUrl}" class="w-full h-full border-none"></iframe>
-                        </div>
-                    `;
-                }
-                else if (type === 'textbookEN') {
-                    const docUrl = textbookEnMapping[activeCode];
+                if (type === 'textbookvn' || type === 'textbookEN') {
+                    const docUrl = type === 'textbookvn' ? (textbookVnMapping[activeCode] || textbookVnMapping['INTRO']) : (textbookEnMapping[activeCode]); 
+                    
                     if (docUrl) {
-                         viewer = `
-                            <div class="h-full w-full bg-gray-100 flex flex-col">
-                                <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0">
+                        viewer = `
+                            <div class="h-full w-full bg-gray-100 flex flex-col relative">
+                                <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0 z-20 relative">
                                      <span class="text-xs font-bold text-gray-500">Embedded Document (OneDrive)</span>
                                      <a href="${docUrl}" target="_blank" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Open in New Tab</a>
                                 </div>
-                                <iframe src="${docUrl}" class="w-full h-full border-none"></iframe>
+                                <div class="flex-1 relative w-full h-full">
+                                    ${getLoadingHTML()}
+                                    <iframe src="${docUrl}" class="absolute inset-0 w-full h-full border-none opacity-0 transition-opacity duration-500 z-10" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()"></iframe>
+                                </div>
                             </div>
                         `;
                     } else {
-                        viewer = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-link-slash text-4xl text-gray-300 mb-4"></i><div class="text-gray-500 font-bold">No Link Configured</div><div class="text-xs text-gray-400 mt-2">No English Textbook link found for this chapter.</div></div>`;
+                        viewer = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-link-slash text-4xl text-gray-300 mb-4"></i><div class="text-gray-500 font-bold">No Link Configured</div><div class="text-xs text-gray-400 mt-2">No Document link found for this chapter.</div></div>`;
                     }
                 }
                 else if (type === 'slide') {
-                    // Check for multiple files
                     subListHTML = renderFileList(slideList, 'slide');
                     const currentSlide = (this.selectedSubResource && slideList.find(s => s.url === this.selectedSubResource.url)) ? this.selectedSubResource : slideList[0];
                     
                     if (this.pdfMode === 'iframe') {
-                         viewer = `<div class="flex flex-col h-full bg-gray-100 w-full"><div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0"><span class="text-xs font-bold text-gray-500">${currentSlide.title}</span><button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Switch Viewer</button></div><iframe src="${currentSlide.url}" class="w-full h-full border-none"></iframe></div>`;
+                         viewer = `
+                             <div class="flex flex-col h-full bg-gray-100 w-full relative">
+                                 <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0 z-20 relative">
+                                     <span class="text-xs font-bold text-gray-500">${currentSlide.title}</span>
+                                     <button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Switch Viewer</button>
+                                 </div>
+                                 <div class="flex-1 relative w-full h-full">
+                                    ${getLoadingHTML()}
+                                    <iframe src="${currentSlide.url}" class="absolute inset-0 w-full h-full border-none opacity-0 transition-opacity duration-500 z-10" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()"></iframe>
+                                 </div>
+                             </div>
+                         `;
                     } else {
                         viewer = `<div class="flex flex-col h-full bg-gray-100 w-full" id="pdf-wrapper"><div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0"><div class="flex items-center gap-2"><button id="prev-pdf" onclick="app.prevPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30"><i class="fa-solid fa-chevron-left"></i></button><span class="text-xs font-bold text-gray-500">Page <span id="page-num">0</span> / <span id="page-count">0</span></span><button id="next-pdf" onclick="app.nextPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30"><i class="fa-solid fa-chevron-right"></i></button></div><div class="flex items-center gap-2"><button onclick="app.zoomPDFOut()" class="p-2 text-navy hover:bg-gray-100 rounded"><i class="fa-solid fa-magnifying-glass-minus"></i></button><button onclick="app.zoomPDFIn()" class="p-2 text-navy hover:bg-gray-100 rounded"><i class="fa-solid fa-magnifying-glass-plus"></i></button><div class="h-4 w-px bg-gray-300 mx-2"></div><button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="text-[10px] font-bold text-orange hover:underline uppercase">Switch Viewer</button></div></div><div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-200 relative"><canvas id="the-canvas" class="shadow-lg bg-white"></canvas></div></div>`;
                         setTimeout(() => app.loadPDF(currentSlide.url), 0);
@@ -802,16 +816,34 @@
                     subListHTML = renderFileList(list, type);
                     const currentImg = (this.selectedSubResource && list.find(s => s.url === this.selectedSubResource.url)) ? this.selectedSubResource : list[0];
 
-                    viewer = `<div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper"><img id="zoomable-image" src="${currentImg.url}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center" style="transform: scale(1)" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'"></div>`;
+                    viewer = `
+                        <div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper">
+                            ${getLoadingHTML()}
+                            <img id="zoomable-image" src="${currentImg.url}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center relative z-10 opacity-0 transition-opacity duration-500" style="transform: scale(1)" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'; this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()">
+                        </div>`;
                 }
                 else if(type === 'video') {
-                     // Video already supports list internally in previous code, reusing that logic but simplified
                      viewer = `<div class="h-full w-full overflow-y-auto bg-gray-900 p-4 md:p-8 space-y-8">`;
                      if(videoList.length > 0) {
                         videoList.forEach((v, index) => {
                              const embedUrl = getEmbedLink(v.url);
                              if(embedUrl) {
-                                viewer += `<div class="max-w-4xl mx-auto bg-black border border-gray-800 rounded-lg overflow-hidden shadow-lg"><div class="p-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center"><h4 class="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-play-circle text-orange"></i> ${v.title || `Video ${index + 1}`}</h4><a href="${embedUrl}" target="_blank" class="text-[10px] text-gray-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open External</a></div><div class="relative w-full" style="padding-bottom: 56.25%;"><iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none" allowfullscreen></iframe></div></div>`;
+                                viewer += `
+                                   <div class="max-w-4xl mx-auto bg-black border border-gray-800 rounded-lg overflow-hidden shadow-lg relative">
+                                        <div class="p-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center z-20 relative">
+                                            <h4 class="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                                <i class="fa-solid fa-play-circle text-orange"></i> ${v.title || `Video ${index + 1}`}
+                                            </h4>
+                                            <a href="${embedUrl}" target="_blank" class="text-[10px] text-gray-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open External</a>
+                                        </div>
+                                        <div class="relative w-full" style="padding-bottom: 56.25%;">
+                                            <div class="absolute inset-0 flex items-center justify-center z-0">
+                                                <div class="spinner w-8 h-8 border-4 border-gray-600 border-t-orange rounded-full animate-spin"></div>
+                                            </div>
+                                            <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-black" allowfullscreen></iframe>
+                                        </div>
+                                   </div>
+                                `;
                              }
                         });
                      } else {
