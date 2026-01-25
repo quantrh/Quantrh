@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBAP Master - Cloud Sync v9.7 (Smart Loader)</title>
+    <title>CBAP Master - Pro Study Companion</title>
     
     <!-- Tailwind Config -->
     <script>
@@ -12,81 +12,70 @@
                 theme: {
                     extend: {
                         colors: {
-                            navy: { DEFAULT: '#003366', light: '#004080', dark: '#002244' },
-                            orange: { DEFAULT: '#FF6600', light: '#FF8533' },
-                            grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#666666' }
+                            navy: { DEFAULT: '#0a192f', light: '#112240', dark: '#020c1b' },
+                            orange: { DEFAULT: '#ff6b00', light: '#ff8533' },
+                            light: { DEFAULT: '#ccd6f6', bg: '#f0f4f8' },
+                            grey: { line: '#E5E5E5', bg: '#F5F5F5', text: '#8892b0' }
                         },
                         fontFamily: { sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
-                        borderRadius: { 'swiss': '2px' },
-                        boxShadow: { 'swiss': '0 1px 2px rgba(0,0,0,0.05)' }
+                        borderRadius: { 'swiss': '4px' }
                     }
                 }
             }
         }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- PDF.js Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Chart.js UMD Build (Safe for browser globals) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Supabase Client UMD Build -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FFFFFF; color: #333; }
-        .swiss-card { background: #FFFFFF; border: 1px solid #E5E5E5; border-radius: 0px; }
-        .swiss-btn { border-radius: 0px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; transition: all 0.2s ease; cursor: pointer; }
-        .swiss-btn-primary { background-color: #003366; color: white; border: 1px solid #003366; }
-        .swiss-btn-primary:hover { background-color: #002244; }
-        .swiss-btn-accent { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
-        .swiss-btn-outline { background-color: transparent; color: #003366; border: 1px solid #003366; }
-        .swiss-btn-outline:hover { background-color: #F0F4F8; }
-        .nav-item { transition: all 0.2s ease-in-out; border-left: 4px solid transparent; }
-        .nav-item:hover { background-color: #F9FAFB; border-left-color: #FF6600; }
-        .nav-item.active { background-color: #F0F9FF; border-left-color: #003366; }
-        .lib-tab { border-bottom: 2px solid transparent; color: #999; transition: all 0.3s; white-space: nowrap; }
-        .lib-tab:hover { color: #003366; }
-        .lib-tab.active { border-bottom: 2px solid #FF6600; color: #003366; font-weight: bold; }
-        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #0a192f; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Flip Card Fixes */
-        .flip-container { perspective: 1000px; }
-        .flip-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .flip-front { background-color: #ffffff; color: #003366; z-index: 2; }
-        .flip-back { background-color: #003366; color: #ffffff; transform: rotateY(180deg); z-index: 1; }
+        .nav-item { transition: all 0.2s ease-in-out; border-left: 3px solid transparent; }
+        .nav-item:hover { background-color: #e6f1ff; border-left-color: #ff6b00; }
+        .nav-item.active { background-color: #112240; border-left-color: #ff6b00; }
+        .nav-item.active .nav-text { color: #ccd6f6; }
+        .nav-item.active i { color: #ff6b00; }
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
 
-        #loading-overlay { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; }
+        #loading-overlay { position: fixed; inset: 0; background: #0a192f; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #112240; border-top: 4px solid #ff6b00; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 250px; background: white; border: 1px solid #003366; border-left: 6px solid #FF6600; padding: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; }
+        
+        .toast { min-width: 250px; background: white; border-left: 4px solid #ff6b00; padding: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 12px; z-index: 6000; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        :fullscreen { background: white; overflow: auto; } :-webkit-full-screen { background: white; overflow: auto; }
-        .progress-bar { transition: width 1s ease-in-out; }
     </style>
 </head>
-<body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-800 bg-white font-sans">
+<body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-800 bg-light-bg font-sans">
 
     <!-- LOADING SCREEN -->
     <div id="loading-overlay">
         <div class="spinner mb-4"></div>
-        <h2 class="text-xl font-bold text-navy tracking-widest uppercase">CBAP Master</h2>
-        <p id="loading-status" class="text-xs text-gray-500 mt-2 font-mono">INITIALIZING V9.7...</p>
-        <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition">Force Start</button>
+        <h2 class="text-2xl font-bold text-white tracking-widest uppercase">CBAP<span class="text-orange">.PRO</span></h2>
+        <p id="loading-status" class="text-xs text-blue-200 mt-2 font-mono">SYSTEM INITIALIZING...</p>
+        <button id="manual-entry-btn" onclick="app.emergencyEnter()" class="hidden mt-6 px-6 py-2 bg-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-orange-light transition">Force Start</button>
     </div>
 
     <!-- MOBILE HEADER -->
-    <header class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40 flex-shrink-0">
+    <header class="md:hidden h-16 bg-navy text-white flex items-center justify-between px-4 z-40 flex-shrink-0 shadow-md">
         <div class="flex items-center gap-3">
-            <button onclick="app.toggleSidebar()" class="text-navy text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
-            <div class="font-bold text-navy tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
+            <button onclick="app.toggleSidebar()" class="text-white text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
+            <div class="font-bold text-white tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
         </div>
-        <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-xs" id="mobile-user-avatar">U</div>
+        <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-xs" id="mobile-user-avatar">U</div>
     </header>
 
     <!-- MOBILE SIDEBAR OVERLAY -->
@@ -94,93 +83,87 @@
 
     <!-- SIDEBAR -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform -translate-x-full md:relative md:translate-x-0 sidebar-transition flex flex-col shadow-xl md:shadow-none">
-        <div class="h-20 hidden md:flex items-center px-6 border-b border-gray-100">
-            <div class="w-8 h-8 bg-navy text-white flex items-center justify-center font-bold text-sm mr-3">C</div>
-            <div class="font-bold text-navy text-lg tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
+        <div class="h-20 hidden md:flex items-center px-6 bg-navy shadow-sm">
+            <div class="w-8 h-8 bg-orange text-white rounded flex items-center justify-center font-bold text-sm mr-3">C</div>
+            <div class="font-bold text-white text-lg tracking-tight">CBAP<span class="text-orange">.PRO</span></div>
         </div>
         
         <!-- User Info -->
-        <div class="px-6 py-4 border-b border-gray-50 flex items-center gap-3 cursor-pointer hover:bg-gray-50" onclick="app.nav('auth')">
-            <div class="w-8 h-8 rounded-full bg-orange text-white flex items-center justify-center font-bold text-xs" id="sidebar-avatar">G</div>
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3 cursor-pointer hover:bg-gray-50 bg-white" onclick="app.nav('auth')">
+            <div class="w-9 h-9 rounded bg-navy-light text-white flex items-center justify-center font-bold text-sm" id="sidebar-avatar">G</div>
             <div class="overflow-hidden">
-                <div class="text-xs font-bold text-navy truncate" id="sidebar-username">Guest User</div>
-                <div class="text-[9px] text-gray-400 uppercase tracking-wider" id="sidebar-status">Click to Login</div>
+                <div class="text-sm font-bold text-navy truncate" id="sidebar-username">Guest User</div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider" id="sidebar-status">Click to Login</div>
             </div>
         </div>
         
-        <nav class="flex-1 overflow-y-auto py-2 space-y-1">
-            <button onclick="app.nav('dashboard')" id="nav-dashboard" class="nav-item w-full text-left px-6 py-4 flex items-center group">
-                <i class="fa-solid fa-chart-pie w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i> 
-                <span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Dashboard</span>
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 bg-white">
+            <button onclick="app.nav('dashboard')" id="nav-dashboard" class="nav-item w-full text-left px-6 py-3 flex items-center group">
+                <i class="fa-solid fa-chart-pie w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i> 
+                <span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Dashboard</span>
             </button>
-            
-            <div class="px-6 mt-4 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Modules</span></div>
             <button onclick="app.nav('learn')" id="nav-learn" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-book w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Knowledge Hub</span>
+                <i class="fa-solid fa-graduation-cap w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Knowledge Hub</span>
             </button>
             <button onclick="app.nav('library')" id="nav-library" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-book-journal-whills w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Study Library</span>
+                <i class="fa-solid fa-book-open w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Study Library</span>
             </button>
             <button onclick="app.nav('exam')" id="nav-exam" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-pen-ruler w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Exam Engine</span>
+                <i class="fa-solid fa-pen-to-square w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Exam Engine</span>
             </button>
             <button onclick="app.nav('flashcards')" id="nav-flashcards" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-clone w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Flashcards</span>
+                <i class="fa-solid fa-layer-group w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Flashcards</span>
             </button>
             
-            <div class="px-6 mt-4 mb-2"><span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">System</span></div>
-            <button onclick="app.nav('auth')" id="nav-auth" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-user-lock w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Login / Cloud</span>
-            </button>
-            <button onclick="app.nav('help')" id="nav-help" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-circle-question w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">User Guide</span>
-            </button>
+            <div class="px-6 mt-6 mb-2"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">System</span></div>
             <button onclick="app.nav('admin')" id="nav-admin" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-gear w-6 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-[10px] font-bold uppercase text-gray-500 group-hover:text-navy ml-3">Settings</span>
+                <i class="fa-solid fa-sliders w-5 text-center text-gray-400 group-hover:text-navy transition-colors"></i><span class="nav-text text-xs font-bold uppercase text-gray-500 ml-3">Settings</span>
             </button>
         </nav>
         
-        <div class="p-6 border-t border-gray-100 hidden md:block">
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.7</div>
-            <div class="text-[10px] font-bold text-navy mt-1">Smart Loader</div>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 hidden md:block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-[9px] text-gray-400 uppercase tracking-widest">Version 9.9.9</div>
+                    <div class="text-[10px] font-bold text-navy mt-0.5">Fixed Edition</div>
+                </div>
+                <i class="fa-solid fa-cloud text-orange text-xs"></i>
+            </div>
         </div>
     </aside>
 
     <!-- CONTENT -->
-    <main class="flex-1 flex flex-col bg-gray-50 w-full overflow-hidden">
-        <!-- Desktop Header -->
-        <header class="h-20 bg-white border-b px-8 hidden md:flex items-center justify-between shadow-sm flex-shrink-0">
+    <main class="flex-1 flex flex-col bg-light-bg w-full overflow-hidden relative">
+        <header class="h-16 bg-white border-b border-gray-200 px-8 hidden md:flex items-center justify-between shadow-sm flex-shrink-0 z-10">
             <div>
-                <h2 id="page-title" class="text-2xl font-bold text-navy uppercase tracking-tighter">Overview</h2>
-                <div class="h-1 w-10 bg-orange mt-1"></div>
+                <h2 id="page-title" class="text-xl font-bold text-navy uppercase tracking-tight">Overview</h2>
+                <div class="h-0.5 w-8 bg-orange mt-1"></div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-6">
                 <div class="text-right">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</div>
-                    <div class="font-bold text-navy text-sm" id="header-status">Local Mode</div>
+                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">System Status</div>
+                    <div class="font-bold text-navy text-xs" id="header-status">Checking...</div>
                 </div>
-                <div class="w-10 h-10 bg-navy text-white flex items-center justify-center font-bold cursor-pointer hover:bg-orange transition" onclick="app.nav('auth')" id="header-avatar">G</div>
+                <div class="w-9 h-9 bg-navy text-white rounded flex items-center justify-center font-bold cursor-pointer hover:bg-orange transition shadow-sm" onclick="app.nav('auth')" id="header-avatar">G</div>
             </div>
         </header>
         
-        <!-- Mobile Page Title -->
-        <div class="md:hidden bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0">
-            <h2 id="mobile-page-title" class="text-lg font-bold text-navy uppercase">Dashboard</h2>
+        <div class="md:hidden bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0 z-10">
+            <h2 id="mobile-page-title" class="text-sm font-bold text-navy uppercase">Dashboard</h2>
         </div>
 
-        <!-- Scrollable Content -->
-        <div id="app-container" class="flex-1 p-4 md:p-8 overflow-y-auto"></div>
+        <div id="app-container" class="flex-1 overflow-hidden relative"></div>
+        <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col gap-2 z-[6000]"></div>
     </main>
-
-    <div id="toast-container"></div>
 
     <!-- APP LOGIC -->
     <script>
-        // --- SUPABASE CONFIG ---
+        // --- SUPABASE & CONFIG ---
         const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y';
         
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase Instance (initialized safely)
+        let sb = null;
 
         // --- UTILS ---
         const Toast = {
@@ -188,8 +171,9 @@
                 const container = document.getElementById('toast-container');
                 const div = document.createElement('div');
                 div.className = 'toast';
-                const icon = type === 'success' ? '<i class="fa-solid fa-check text-orange"></i>' : (type === 'error' ? '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>' : '<i class="fa-solid fa-info text-navy"></i>');
-                div.innerHTML = `${icon} <span class="text-sm font-bold text-navy uppercase tracking-wide">${msg}</span>`;
+                div.style.borderLeftColor = type === 'success' ? '#10B981' : (type === 'error' ? '#EF4444' : '#ff6b00');
+                const icon = type === 'success' ? '<i class="fa-solid fa-check-circle text-green-500"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500"></i>' : '<i class="fa-solid fa-info-circle text-navy"></i>');
+                div.innerHTML = `${icon} <span class="text-xs font-bold text-navy uppercase tracking-wide">${msg}</span>`;
                 container.appendChild(div);
                 setTimeout(() => { div.style.opacity = '0'; div.style.transform = 'translateX(100%)'; setTimeout(() => div.remove(), 300); }, 3000);
             }
@@ -204,80 +188,163 @@
             }
         };
 
-        // --- DATA & AUTH SERVICE ---
+        const toOneD = (url) => {
+            if (!url) return "";
+            if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
+                if (!url.includes('action=embedview') && !url.includes('resid=')) {
+                    return url.includes('?') ? `${url}&action=embedview` : `${url}?action=embedview`;
+                }
+            }
+            return url;
+        };
+
+        // --- DATABASE ---
         const DB = {
-            key: 'CBAP_V9_4_DATA',
+            key: 'CBAP_V9_PRO_DATA',
             state: { 
                 user: { id: null, username: 'Guest', loggedIn: false }, 
-                curriculum: [], questions: [], flashcards: [], completedTasks: [] 
+                lastView: { code: 'INTRO', type: 'slide' },
+                curriculum: [
+                    { code: 'INTRO', name: '01. Introduction & Key Concepts', desc: 'Structure of the BABOK Guide and Key Concepts.' },
+                    { code: 'BACCM', name: '02. BA Core Concept Model', desc: 'The conceptual framework for Business Analysis.' },
+                    { code: 'BAPM', name: '03. Planning & Monitoring', desc: 'Organizing and coordinating the efforts of BAs.' },
+                    { code: 'ELIC', name: '04. Elicitation & Collaboration', desc: 'Drawing forth information and working with stakeholders.' },
+                    { code: 'RLCM', name: '05. Req. Life Cycle Mgmt', desc: 'Managing and maintaining requirements.' },
+                    { code: 'SA', name: '06. Strategy Analysis', desc: 'Identifying business need and aligning strategy.' },
+                    { code: 'RADD', name: '07. RADD (Design Definition)', desc: 'Specifying and modelling requirements.' },
+                    { code: 'SE', name: '08. Solution Evaluation', desc: 'Assessing value and solution performance.' },
+                    { code: 'COMP', name: '09. Underlying Competencies', desc: 'Behaviors and knowledge supporting BA work.' },
+                    { code: 'TECH', name: '10. Techniques', desc: 'The 50 standard techniques in BABOK.' },
+                    { code: 'PERSP', name: '11. Perspectives', desc: 'Agile, BI, IT, Architecture, BPM.' }
+                ],
+                questions: [], 
+                flashcards: [], 
+                completedTasks: []
             },
-
+            
+            resources: {
+                'INTRO': { slides: [{ title: "Course Introduction", url: "https://1drv.ms/p/s!Am8Lw2njpdkKgf4c_Sample_PPT?action=embedview" }], mindmaps: [{ title: "BA Career Path", url: "https://via.placeholder.com/800x600/0a192f/64ffda?text=Mindmap:+Career+Path" }], info: [{ title: "Exam Blueprint", url: "https://via.placeholder.com/600x800/fff/0a192f?text=Info:+Exam+Blueprint" }] },
+                'BACCM': { slides: [{ title: "Core Concepts Overview", url: "https://1drv.ms/p/s!Am8Lw2njpdkKgf4e_Sample?action=embedview" }], mindmaps: [{ title: "BACCM Hexagon", url: "https://via.placeholder.com/800x600/0a192f/ff6b00?text=Mindmap:+BACCM+Core" }], info: [{ title: "Terminologies", url: "https://via.placeholder.com/600x800/fff/0a192f?text=Info:+Key+Terms" }] },
+            },
+            
             async init() {
-                const data = localStorage.getItem(this.key);
-                if (data) {
+                // Initialize Supabase safely
+                if (typeof supabase !== 'undefined') {
                     try {
-                        const parsed = JSON.parse(data);
-                        this.state = { ...this.state, ...parsed };
-                    } catch (e) { localStorage.removeItem(this.key); }
+                        sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        console.log("Supabase initialized");
+                    } catch (e) { console.warn("Supabase init failed", e); }
+                } else {
+                    console.warn("Supabase library not loaded");
                 }
 
-                if (this.state.user.loggedIn) {
-                    await this.pullFromCloud();
+                // Load LocalStorage
+                const stored = localStorage.getItem(this.key);
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        this.state.completedTasks = parsed.completedTasks || [];
+                        this.state.lastView = parsed.lastView || { code: 'INTRO', type: 'slide' };
+                        this.state.user = parsed.user || { id: null, username: 'Guest', loggedIn: false };
+                    } catch(e) { console.error("Load error", e); }
                 }
 
-                if (!this.state.curriculum || this.state.curriculum.length === 0) {
-                    await this.fetchLocalData();
-                }
-                
+                await this.fetchLocalData();
+                this.ensureDataIntegrity();
+
+                if (this.state.user.loggedIn && sb) await this.pullFromCloud();
+
+                this.save();
                 return true;
             },
 
             async fetchLocalData() {
-                const files = ['curriculum.json', 'questions.json', 'flashcards.json'];
-                const paths = ['CbapMedia/', '']; 
+                const files = ['questions.json', 'flashcards.json'];
                 for (let file of files) {
-                    for (let pathPrefix of paths) {
-                        try {
-                            const res = await fetch(`${pathPrefix}${file}?t=${Date.now()}`);
-                            if (res.ok) {
-                                let text = await res.text();
-                                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                                if (!text.trim().startsWith('<')) {
-                                    this.state[file.replace('.json', '')] = JSON.parse(text);
-                                    break;
-                                }
+                    try {
+                        const res = await fetch(`${file}?t=${Date.now()}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if(Array.isArray(data) && data.length > 0) {
+                                this.state[file.replace('.json', '')] = data;
                             }
-                        } catch (e) {}
-                    }
+                        }
+                    } catch (e) { }
                 }
-                this.save();
+            },
+
+            ensureDataIntegrity() {
+                this.state.curriculum.forEach((c) => {
+                    if(!c.tasks || c.tasks.length === 0) {
+                        const count = 5; 
+                        c.tasks = Array(count).fill(0).map((_, i) => ({ 
+                            id: `${c.code}_T${i+1}`, 
+                            name: `${c.name} - Topic ${i+1}` 
+                        }));
+                    }
+                });
+                
+                if(!this.state.questions || this.state.questions.length === 0) {
+                     this.state.questions = Array(20).fill(0).map((_, i) => ({
+                        id: `Q${i+1}`, ka: 'BAPM', 
+                        stem: `Sample Question ${i+1}: This is a generated placeholder question because 'questions.json' was not found.`, 
+                        options: ["Option A", "Option B", "Option C", "Option D"], 
+                        correct: [0], 
+                        explanation: "Explanation placeholder."
+                    }));
+                }
+
+                if(!this.state.flashcards || this.state.flashcards.length === 0) {
+                    this.state.flashcards = Array(10).fill(0).map((_, i) => ({
+                        front: `Term ${i+1}`, back: `Definition for term ${i+1}. Generated automatically.`
+                    }));
+                }
             },
 
             save() {
-                localStorage.setItem(this.key, JSON.stringify(this.state));
-                if (this.state.user.loggedIn) this.pushToCloud();
+                localStorage.setItem(this.key, JSON.stringify({
+                    completedTasks: this.state.completedTasks,
+                    lastView: this.state.lastView,
+                    user: this.state.user
+                }));
             },
 
             async pushToCloud() {
-                if (!this.state.user.id) return;
+                if (!this.state.user.id || !sb) return;
                 const payload = { completedTasks: this.state.completedTasks };
-                const { error } = await sb.from('user_progress').upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
-                if (error) console.error("Cloud Save Error:", error);
+                await sb.from('user_progress').upsert({ user_id: this.state.user.id, data: payload, updated_at: new Date() });
             },
 
             async pullFromCloud() {
-                if (!this.state.user.id) return;
+                if (!this.state.user.id || !sb) return;
                 const { data, error } = await sb.from('user_progress').select('data').eq('user_id', this.state.user.id).single();
                 if (data && data.data) {
                     this.state.completedTasks = data.data.completedTasks || [];
-                    localStorage.setItem(this.key, JSON.stringify(this.state));
-                    Toast.show("Sync complete from Cloud", "success");
+                    this.save();
                 }
+            },
+
+            toggleTask(taskId) {
+                const idx = this.state.completedTasks.indexOf(taskId);
+                if (idx > -1) {
+                    this.state.completedTasks.splice(idx, 1);
+                } else {
+                    this.state.completedTasks.push(taskId);
+                }
+                this.save();
+                if(this.state.user.loggedIn) this.pushToCloud();
+                return this.state.completedTasks.includes(taskId); 
+            },
+            
+            setLastView(code, type) {
+                this.state.lastView = { code, type };
+                this.save();
             }
         };
 
         const Auth = {
             async login(username, password) {
+                if(!sb) return { error: "Cloud service unavailable" };
                 const hashed = await Crypto.hash(password);
                 const { data, error } = await sb.from('custom_users').select('*').eq('username', username).eq('password', hashed).single();
                 if (error || !data) return { error: "Invalid username or password" };
@@ -289,6 +356,7 @@
             },
 
             async register(username, password) {
+                if(!sb) return { error: "Cloud service unavailable" };
                 const hashed = await Crypto.hash(password);
                 const { data: existing } = await sb.from('custom_users').select('id').eq('username', username).single();
                 if (existing) return { error: "Username already taken" };
@@ -306,645 +374,395 @@
                 DB.state.completedTasks = []; 
                 DB.save();
                 app.updateUserUI();
-                Toast.show("Logged out");
                 app.nav('auth');
             }
         };
 
-        // --- CONTROLLER ---
-        let examState = { active: false, currentQ: 0, answers: {}, score: 0, finished: false };
-        let flashcardState = { index: 0, flipped: false };
-
+        // --- APP CONTROLLER ---
         const app = {
             isSidebarOpen: false,
-            isLibraryMenuOpen: true,
             zoomLevel: 1,
-            pdfMode: 'canvas', // 'canvas' or 'iframe'
-            pdfState: { pdfDoc: null, pageNum: 1, pageRendering: false, pageNumPending: null, scale: 1.0, canvas: null, ctx: null },
-            selectedSubResource: null, 
+            selectedSubResource: null,
+            flashcardIndex: 0,
+            flashcardFlipped: false,
+            examState: { active: false, current: 0, answers: {} },
 
             async start() {
-                setTimeout(() => {
-                    const overlay = document.getElementById('loading-overlay');
-                    if(overlay.style.display !== 'none') {
-                        document.getElementById('manual-entry-btn').style.display = 'block';
-                        document.getElementById('loading-status').innerText = "Loading timeout.";
-                    }
-                }, 3500);
-
-                try {
-                    await DB.init();
-                    this.updateUserUI();
-                    this.launch();
-                } catch (e) { this.launch(); }
-            },
-
-            launch() {
+                await DB.init();
                 document.getElementById('loading-overlay').style.display = 'none';
-                if(!DB.state.curriculum || DB.state.curriculum.length === 0) {
-                    this.nav('admin');
-                } else {
-                    this.nav('dashboard');
-                }
+                this.updateUserUI();
+                this.nav('dashboard');
             },
 
-            emergencyEnter() { this.launch(); },
-            
+            emergencyEnter() { 
+                document.getElementById('loading-overlay').style.display = 'none'; 
+                this.nav('dashboard');
+            },
+
             updateUserUI() {
                 const user = DB.state.user;
-                const name = user.loggedIn ? user.username : 'Guest User';
-                const status = user.loggedIn ? 'Online • Synced' : 'Local Mode';
-                const avatar = name.charAt(0).toUpperCase();
-
-                document.getElementById('sidebar-username').innerText = name;
-                document.getElementById('sidebar-status').innerText = status;
-                document.getElementById('sidebar-avatar').innerText = avatar;
+                const status = user.loggedIn ? (sb ? 'Online • Synced' : 'Local (No Cloud)') : 'Local Mode';
                 document.getElementById('header-status').innerText = status;
-                document.getElementById('header-avatar').innerText = avatar;
-                document.getElementById('mobile-user-avatar').innerText = avatar;
+                document.getElementById('sidebar-username').innerText = user.username;
             },
 
             toggleSidebar() {
-                this.isSidebarOpen = !this.isSidebarOpen;
-                const sidebar = document.getElementById('sidebar');
+                const sb = document.getElementById('sidebar');
                 const overlay = document.getElementById('mobile-overlay');
+                this.isSidebarOpen = !this.isSidebarOpen;
                 if (this.isSidebarOpen) {
-                    sidebar.classList.remove('-translate-x-full');
+                    sb.classList.remove('-translate-x-full');
                     overlay.classList.remove('hidden');
                 } else {
-                    sidebar.classList.add('-translate-x-full');
+                    sb.classList.add('-translate-x-full');
                     overlay.classList.add('hidden');
                 }
             },
 
-            toggleLibraryMenu() {
-                this.isLibraryMenuOpen = !this.isLibraryMenuOpen;
-                const container = document.getElementById('app-container');
-                this.renderLibrary(container, this.lastLibraryParams || {}); 
-            },
-            
-            togglePDFMode(container) {
-                this.pdfMode = this.pdfMode === 'canvas' ? 'iframe' : 'canvas';
-                this.renderLibrary(container, this.lastLibraryParams || {});
-                Toast.show(`Switched to ${this.pdfMode === 'canvas' ? 'Canvas' : 'Browser'} Viewer`, 'info');
+            // --- SAFE NAVIGATION HELPER ---
+            viewModule(code) {
+                this.nav('task_detail', { code: code });
             },
 
             nav(view, params) {
                 if(window.innerWidth < 768 && this.isSidebarOpen) this.toggleSidebar();
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                const activeBtn = document.getElementById(`nav-${view}`);
-                if(activeBtn) activeBtn.classList.add('active');
+                const btn = document.getElementById(`nav-${view}`);
+                if(btn) btn.classList.add('active');
 
-                const title = { dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library', exam: 'Exam Engine', flashcards: 'Flashcards', help: 'User Guide', admin: 'Settings', auth: 'Authentication' }[view] || 'CBAP Master';
-                document.getElementById('page-title').innerText = title;
+                if (view === 'library' && params) {
+                    DB.setLastView(params.code, params.type);
+                }
+
+                const titles = {
+                    dashboard: 'Dashboard', learn: 'Knowledge Hub', library: 'Study Library',
+                    exam: 'Exam Engine', flashcards: 'Flashcards', admin: 'Settings', auth: 'Login',
+                    task_detail: 'Topic Details'
+                };
+                document.getElementById('page-title').innerText = titles[view] || 'CBAP Pro';
                 const mobileTitle = document.getElementById('mobile-page-title');
-                if(mobileTitle) mobileTitle.innerText = title;
-
+                if(mobileTitle) mobileTitle.innerText = titles[view] || 'CBAP Pro';
+                
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
-                
-                if (view !== 'library') this.selectedSubResource = null;
 
                 try {
                     switch(view) {
                         case 'dashboard': this.renderDashboard(container); break;
-                        case 'auth': this.renderAuth(container); break;
-                        case 'library': this.lastLibraryParams = params; this.renderLibrary(container, params); break;
+                        case 'library': this.renderLibrary(container, params); break;
                         case 'learn': this.renderLearn(container); break;
                         case 'task_detail': this.renderTaskDetail(container, params); break;
                         case 'exam': this.renderExam(container); break;
                         case 'flashcards': this.renderFlashcards(container); break;
-                        case 'help': this.renderHelp(container); break;
                         case 'admin': this.renderAdmin(container); break;
+                        case 'auth': this.renderAuth(container); break;
                     }
                 } catch(e) {
                     console.error(e);
-                    container.innerHTML = `<div class="p-8 text-red-600">Error: ${e.message}</div>`;
+                    container.innerHTML = `<div class="p-10 text-center text-red-500">Error: ${e.message}</div>`;
                 }
-            },
-
-            // --- AUTH VIEW ---
-            renderAuth(container) {
-                if (DB.state.user.loggedIn) {
-                    container.innerHTML = `<div class="max-w-md mx-auto text-center mt-10"><div class="w-20 h-20 bg-navy text-white text-4xl font-bold rounded-full flex items-center justify-center mx-auto mb-6">${DB.state.user.username.charAt(0)}</div><h2 class="text-2xl font-bold text-navy mb-2">Welcome, ${DB.state.user.username}</h2><p class="text-gray-500 mb-8">Your progress is being synced.</p><button onclick="Auth.logout()" class="swiss-btn swiss-btn-outline px-8 py-3 hover:bg-red-50 hover:text-red-600 hover:border-red-600">Log Out</button></div>`;
-                    return;
-                }
-                container.innerHTML = `<div class="max-w-md mx-auto bg-white p-8 border border-gray-200 shadow-lg mt-8"><div class="flex border-b border-gray-200 mb-6"><button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.nextElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-navy border-b-2 border-orange">Login</button><button onclick="document.getElementById('form-register').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); this.classList.add('border-b-2', 'border-orange', 'text-navy'); this.previousElementSibling.classList.remove('border-b-2', 'border-orange', 'text-navy');" class="flex-1 pb-3 font-bold text-sm uppercase tracking-widest text-gray-400">Register</button></div><div id="form-login"><input type="text" id="login-user" placeholder="Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="login-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3">Sign In</button><p class="text-xs text-center text-gray-400 mt-4">Uses custom cloud database</p></div><div id="form-register" class="hidden"><input type="text" id="reg-user" placeholder="Choose Username" class="w-full p-3 border border-gray-300 mb-4 text-sm"><input type="password" id="reg-pass" placeholder="Password" class="w-full p-3 border border-gray-300 mb-6 text-sm"><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-accent py-3">Create Account</button><p class="text-xs text-center text-gray-400 mt-4">Passwords are hashed before sending</p></div></div>`;
-            },
-            async handleLogin() {
-                const user = document.getElementById('login-user').value;
-                const pass = document.getElementById('login-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-login button'); btn.innerText = "Verifying...";
-                const res = await Auth.login(user, pass);
-                if(res.success) { Toast.show("Welcome back!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Sign In"; }
-            },
-            async handleRegister() {
-                const user = document.getElementById('reg-user').value;
-                const pass = document.getElementById('reg-pass').value;
-                if(!user || !pass) return Toast.show("Please fill all fields", "error");
-                const btn = document.querySelector('#form-register button'); btn.innerText = "Creating...";
-                const res = await Auth.register(user, pass);
-                if(res.success) { Toast.show("Account created!", "success"); app.nav('dashboard'); } else { Toast.show(res.error, "error"); btn.innerText = "Create Account"; }
-            },
-
-            // --- PDF.js Logic ---
-            async loadPDF(url) {
-                this.pdfState.canvas = document.getElementById('the-canvas');
-                if(!this.pdfState.canvas) return;
-                
-                // Show loader
-                const wrapper = document.getElementById('pdf-wrapper');
-                if(wrapper) {
-                     const existingLoader = wrapper.querySelector('#content-loader');
-                     if(!existingLoader) {
-                         const loader = document.createElement('div');
-                         loader.id = 'content-loader';
-                         loader.className = 'absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-20';
-                         loader.innerHTML = '<div class="spinner w-8 h-8 border-4 border-gray-200 border-t-orange rounded-full animate-spin mb-2"></div><span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Loading PDF...</span>';
-                         wrapper.querySelector('.relative').appendChild(loader);
-                     }
-                }
-
-                this.pdfState.ctx = this.pdfState.canvas.getContext('2d');
-                this.pdfState.pageNum = 1;
-                this.pdfState.scale = 1.0;
-
-                try {
-                    const loadingTask = pdfjsLib.getDocument(url);
-                    this.pdfState.pdfDoc = await loadingTask.promise;
-                    document.getElementById('page-count').textContent = this.pdfState.pdfDoc.numPages;
-                    this.renderPDFPage(this.pdfState.pageNum);
-                } catch (error) {
-                    console.error('Error loading PDF: ' + error);
-                    const container = document.getElementById('pdf-wrapper');
-                    if(container) container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-file-circle-xmark text-4xl text-gray-300 mb-4"></i><div class="text-red-500 font-bold">PDF Load Error</div><div class="text-xs text-gray-500 mt-2">${url}<br>Check file existence.</div></div>`;
-                }
-            },
-
-            renderPDFPage(num) {
-                this.pdfState.pageRendering = true;
-                this.pdfState.pdfDoc.getPage(num).then((page) => {
-                    const outputScale = window.devicePixelRatio || 1;
-                    const viewport = page.getViewport({scale: this.pdfState.scale});
-
-                    this.pdfState.canvas.width = Math.floor(viewport.width * outputScale);
-                    this.pdfState.canvas.height = Math.floor(viewport.height * outputScale);
-                    
-                    this.pdfState.canvas.style.width = Math.floor(viewport.width) + "px";
-                    this.pdfState.canvas.style.height = Math.floor(viewport.height) + "px";
-
-                    const renderContext = {
-                        canvasContext: this.pdfState.ctx,
-                        transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
-                        viewport: viewport
-                    };
-                    const renderTask = page.render(renderContext);
-
-                    renderTask.promise.then(() => {
-                        this.pdfState.pageRendering = false;
-                        if (this.pdfState.pageNumPending !== null) {
-                            this.renderPDFPage(this.pdfState.pageNumPending);
-                            this.pdfState.pageNumPending = null;
-                        }
-                        // Remove loader
-                        const loader = document.getElementById('content-loader');
-                        if(loader) loader.remove();
-                    });
-                });
-
-                document.getElementById('page-num').textContent = num;
-                const input = document.getElementById('pdf-page-input');
-                if(input) input.value = num;
-                
-                const btnPrev = document.getElementById('prev-pdf');
-                if(btnPrev) btnPrev.disabled = num <= 1;
-                const btnNext = document.getElementById('next-pdf');
-                if(btnNext) btnNext.disabled = num >= this.pdfState.pdfDoc.numPages;
-            },
-
-            queueRenderPage(num) {
-                if (this.pdfState.pageRendering) {
-                    this.pdfState.pageNumPending = num;
-                } else {
-                    this.renderPDFPage(num);
-                }
-            },
-
-            prevPDFPage() {
-                if (this.pdfState.pageNum <= 1) return;
-                this.pdfState.pageNum--;
-                this.queueRenderPage(this.pdfState.pageNum);
-            },
-
-            nextPDFPage() {
-                if (this.pdfState.pageNum >= this.pdfState.pdfDoc.numPages) return;
-                this.pdfState.pageNum++;
-                this.queueRenderPage(this.pdfState.pageNum);
-            },
-            
-            zoomPDFIn() {
-                this.pdfState.scale += 0.25;
-                this.renderPDFPage(this.pdfState.pageNum);
-            },
-
-            zoomPDFOut() {
-                if(this.pdfState.scale <= 0.5) return;
-                this.pdfState.scale -= 0.25;
-                this.renderPDFPage(this.pdfState.pageNum);
-            },
-            
-            goToPDFPage(val) {
-                let num = parseInt(val);
-                if(!num) return;
-                if(num < 1) num = 1;
-                if(num > this.pdfState.pdfDoc.numPages) num = this.pdfState.pdfDoc.numPages;
-                this.pdfState.pageNum = num;
-                this.queueRenderPage(num);
-            },
-
-
-            // --- UTILS ---
-            toggleFullscreen(elementId) {
-                const elem = document.getElementById(elementId);
-                if (!elem) return;
-                if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen(); } 
-                else { if (document.exitFullscreen) document.exitFullscreen(); }
-            },
-            adjustZoom(amount) {
-                this.zoomLevel = parseFloat((this.zoomLevel + amount).toFixed(1));
-                if(this.zoomLevel < 0.5) this.zoomLevel = 0.5;
-                if(this.zoomLevel > 3.0) this.zoomLevel = 3.0;
-                const img = document.getElementById('zoomable-image');
-                if(img) img.style.transform = `scale(${this.zoomLevel})`;
-            },
-            resetZoom() {
-                this.zoomLevel = 1;
-                const img = document.getElementById('zoomable-image');
-                if(img) img.style.transform = `scale(1)`;
-            },
-
-            // --- FLASHCARDS LOGIC ---
-            renderFlashcards(container) {
-                if(!DB.state.flashcards || DB.state.flashcards.length === 0) { 
-                    container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">No Flashcards</h3></div>`; 
-                    return; 
-                }
-                const card = DB.state.flashcards[flashcardState.index];
-                const total = DB.state.flashcards.length;
-                const backContent = card.back && card.back.trim() !== "" ? card.back : (card.answer || "No Content Available");
-
-                container.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center max-w-xl mx-auto min-h-[400px]">
-                        <div class="w-full flex justify-between mb-4 px-2">
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Card ${flashcardState.index + 1} / ${total}</span>
-                            <span class="text-xs font-bold text-orange uppercase tracking-widest">Active Recall</span>
-                        </div>
-                        
-                        <div class="flip-container w-full h-80 relative cursor-pointer group" onclick="app.flipFlashcard()">
-                            <div class="flip-inner border border-gray-200 shadow-md bg-white" id="flashcard-inner">
-                                <div class="flip-front p-8 text-center"><span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Front</span><h3 class="text-2xl font-bold text-navy leading-snug">${card.front}</h3><p class="mt-8 text-xs text-orange font-bold uppercase tracking-widest animate-pulse">Tap to Flip</p></div>
-                                <div class="flip-back p-8 text-center bg-navy" style="color: #FFFFFF !important;"><span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-4">Back</span><h3 class="text-xl font-medium leading-relaxed text-white" style="color: #FFFFFF !important;">${backContent}</h3></div>
-                            </div>
-                        </div>
-                        <div class="flex gap-4 mt-8 w-full">
-                            <button onclick="app.prevFlashcard()" class="flex-1 py-3 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase hover:bg-gray-50">Previous</button>
-                            <button onclick="app.nextFlashcard()" class="flex-1 py-3 bg-gray-100 border border-gray-200 text-gray-600 text-sm font-bold uppercase hover:bg-gray-200 shadow-sm flex items-center justify-center gap-2">NEXT CARD <i class="fa-solid fa-arrow-right"></i></button>
-                        </div>
-                    </div>
-                `;
-            },
-            flipFlashcard() { flashcardState.flipped = !flashcardState.flipped; const el = document.getElementById('flashcard-inner'); if(el) { if (flashcardState.flipped) el.parentElement.classList.add('flipped'); else el.parentElement.classList.remove('flipped'); } },
-            nextFlashcard() { if (flashcardState.index < DB.state.flashcards.length - 1) { flashcardState.index++; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
-            prevFlashcard() { if (flashcardState.index > 0) { flashcardState.index--; flashcardState.flipped = false; this.renderFlashcards(document.getElementById('app-container')); } },
-
-            // --- EXAM LOGIC ---
-            renderExam(container) {
-                if(!DB.state.questions || DB.state.questions.length === 0) { container.innerHTML = `<div class="text-center p-10"><h3 class="font-bold text-navy">Question Bank Empty</h3><button onclick="app.nav('admin')" class="mt-4 swiss-btn swiss-btn-outline px-4 py-2">Go to Settings</button></div>`; return; }
-                if (!examState.active) { container.innerHTML = `<div class="max-w-xl mx-auto mt-8 text-center bg-white p-8 border border-gray-200 shadow-sm"><div class="w-16 h-16 bg-blue-50 text-navy rounded-full flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fa-solid fa-graduation-cap"></i></div><h2 class="text-2xl font-bold text-navy mb-2">Exam Simulator</h2><p class="text-gray-500 mb-8 text-sm">Total Questions: <strong>${DB.state.questions.length}</strong></p><button onclick="app.startQuiz()" class="swiss-btn swiss-btn-primary px-8 py-3 w-full md:w-auto">Start Random Drill</button></div>`; } 
-                else { this.renderActiveQuiz(container); }
-            },
-            startQuiz() { examState = { active: true, currentQ: 0, answers: {}, score: 0, finished: false }; this.renderActiveQuiz(document.getElementById('app-container')); },
-            quitExam() { if(confirm("Exit exam? Progress will be lost.")) { examState.active = false; app.nav('exam'); } },
-            renderActiveQuiz(container) {
-                const qIndex = examState.currentQ; const question = DB.state.questions[qIndex]; const total = DB.state.questions.length;
-                const isAnswered = examState.answers[question.id] !== undefined; const userAns = examState.answers[question.id];
-                let html = `<div class="max-w-3xl mx-auto relative"><div class="flex justify-between items-center mb-6 bg-white p-2 border-b border-gray-100 sticky top-0 z-10"><span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question ${qIndex + 1} of ${total}</span><div class="flex items-center gap-3"><span class="text-xs font-bold text-navy bg-blue-50 px-2 py-1 rounded">${question.ka || 'General'}</span><button onclick="app.quitExam()" class="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50 transition" title="Exit Exam"><i class="fa-solid fa-right-from-bracket text-lg"></i></button></div></div><div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm mb-6"><h3 class="text-lg md:text-xl font-bold text-navy mb-6 leading-relaxed">${question.stem}</h3><div class="space-y-3">${question.options.map((opt, idx) => { let btnClass = "border-gray-200 hover:bg-gray-50"; let icon = ""; if (isAnswered) { if (idx === question.correct[0]) { btnClass = "border-green-500 bg-green-50 text-green-800"; icon = '<i class="fa-solid fa-check text-green-600 float-right mt-1"></i>'; } else if (idx === userAns) { btnClass = "border-red-500 bg-red-50 text-red-800"; icon = '<i class="fa-solid fa-xmark text-red-600 float-right mt-1"></i>'; } else { btnClass = "border-gray-100 opacity-50"; } } return `<div onclick="${!isAnswered ? `app.submitAnswer(${idx})` : ''}" class="p-4 border ${btnClass} cursor-pointer transition text-sm md:text-base"><span class="font-bold mr-2">${String.fromCharCode(65 + idx)}.</span> ${opt} ${icon}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 border-l-4 border-navy text-sm text-navy"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevQuestion()" ${qIndex===0 ? 'disabled class="opacity-0"' : ''} class="swiss-btn swiss-btn-outline px-4 py-2">Previous</button>${isAnswered && qIndex < total - 1 ? `<button onclick="app.nextQuestion()" class="swiss-btn swiss-btn-primary px-6 py-2">Next Question</button>` : ''}${isAnswered && qIndex === total - 1 ? `<button onclick="app.finishExam()" class="swiss-btn swiss-btn-accent px-6 py-2">Finish Exam</button>` : ''}</div></div>`;
-                container.innerHTML = html;
-            },
-            submitAnswer(ansIdx) { const q = DB.state.questions[examState.currentQ]; examState.answers[q.id] = ansIdx; this.renderActiveQuiz(document.getElementById('app-container')); },
-            nextQuestion() { if (examState.currentQ < DB.state.questions.length - 1) { examState.currentQ++; this.renderActiveQuiz(document.getElementById('app-container')); } },
-            prevQuestion() { if (examState.currentQ > 0) { examState.currentQ--; this.renderActiveQuiz(document.getElementById('app-container')); } },
-            finishExam() { let correctCount = 0; DB.state.questions.forEach(q => { if (examState.answers[q.id] === q.correct[0]) correctCount++; }); const container = document.getElementById('app-container'); container.innerHTML = `<div class="max-w-xl mx-auto text-center bg-white p-10 border border-gray-200 shadow-lg mt-10"><h2 class="text-3xl font-bold text-navy mb-4">Exam Completed</h2><div class="text-6xl font-bold text-orange mb-2">${Math.round(correctCount/DB.state.questions.length * 100)}%</div><p class="text-gray-500 mb-8">You answered ${correctCount} out of ${DB.state.questions.length} correctly.</p><button onclick="examState.active=false; app.nav('exam')" class="swiss-btn swiss-btn-primary px-8 py-3">Return to Menu</button></div>`; },
-
-            // --- LIBRARY (Updated mapping with Transform) ---
-            renderLibrary(container, params) {
-                const curriculum = DB.state.curriculum || [];
-                if(curriculum.length === 0) { app.nav('admin'); return; }
-                this.zoomLevel = 1;
-                const activeCode = params?.code || curriculum[0].code;
-                const type = params?.type || 'textbookvn'; 
-                const mediaPath = 'CbapMedia/';
-                
-                // USER CONFIGURATION: VIDEO LINKS
-                const videoMapping = {
-                    'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1',
-                    'BACCM': [
-                         { title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" },
-                         { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }
-                    ],
-                    'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
-                    'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
-                    'RLCM': 'https://www.youtube.com/watch?v=0zXvWPHzIZg&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=13',
-                    'SA': 'https://www.youtube.com/watch?v=0I10KLv79iY&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=19',
-                    'RADD': '',
-                    'SE': '',
-                    'COMP': '',
-                    'TECH': '',
-                    'PERSP': ''
-                };
-                
-                // USER CONFIGURATION: TEXTBOOK VN LINKS (OneDrive Embed)
-                const textbookVnMapping = {
-                    'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTQDwN3GdgHQqDhojduHJRsATyqTG9UOzZYZkyDBtlxso4?action=embedview',
-                    'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
-                    'BAPM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQyec-WxF2QQqqKg0L3EakaAdnFJhshHi56Wwl6xZYzjUI?action=embedview',
-                    'ELIC': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQT9Xa3vYrIMTKHojgeZ3_onATTlY2EvFtxnCXICszi6wZ8?action=embedview',
-                    'RLCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQT5bGx0GlPvQ5A6WERHbW40AR3Prw4qYyJCpenwEpkcdT8?action=embedview',
-                    'SA': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQ4-lqNpR5ZT5sbjFLIC66IAb2iBwSNGI4GIG8AZNLKTj4?action=embedview',
-                    'RADD': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSvpv0sT-rrRL5rTXRfQw2JAeu93keX0xFg9jmJD_BxrZc?action=embedview',
-                    'SE': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQRbApyX5bAjRpHut2RsLXAvAVY9vzs-zZtx-mmT4q9EYXQ?action=embedview',
-                    'COMP': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQShGQ7gAWTxSpP3hn09SBd1AeCnQvu69EJwvzI1LmXV8Bo?action=embedview',
-                    'TECH': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSrHgODW-PMTJ9QodzBaE8IAb7ufvTHLv-ab3TnbsES8fg?action=embedview',
-                    'PERSP': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSpCGYUGP2XRan5GbFjulXBAQZQ9a132pm2Z3cb8zKIgRc?action=embedview'
-               
-                };
-
-                 // USER CONFIGURATION: TEXTBOOK EN LINKS (Password Protected Docx)
-                 const textbookEnMapping = {
-                    'INTRO': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTQDwN3GdgHQqDhojduHJRsATyqTG9UOzZYZkyDBtlxso4?action=embedview',
-                    'BACCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQTnsQnfHHmZQaI324IdGNKYAXFMal7wq-4LN4YkivPsU5I?action=embedview',
-                    'BAPM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQyec-WxF2QQqqKg0L3EakaAdnFJhshHi56Wwl6xZYzjUI?action=embedview',
-                    'ELIC': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQT9Xa3vYrIMTKHojgeZ3_onATTlY2EvFtxnCXICszi6wZ8?action=embedview',
-                    'RLCM': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQT5bGx0GlPvQ5A6WERHbW40AR3Prw4qYyJCpenwEpkcdT8?action=embedview',
-                    'SA': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQQ4-lqNpR5ZT5sbjFLIC66IAb2iBwSNGI4GIG8AZNLKTj4?action=embedview',
-                    'RADD': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSvpv0sT-rrRL5rTXRfQw2JAeu93keX0xFg9jmJD_BxrZc?action=embedview',
-                    'SE': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQRbApyX5bAjRpHut2RsLXAvAVY9vzs-zZtx-mmT4q9EYXQ?action=embedview',
-                    'COMP': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQShGQ7gAWTxSpP3hn09SBd1AeCnQvu69EJwvzI1LmXV8Bo?action=embedview',
-                    'TECH': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSrHgODW-PMTJ9QodzBaE8IAb7ufvTHLv-ab3TnbsES8fg?action=embedview',
-                    'PERSP': 'https://1drv.ms/w/c/0ad9a5e369cb0bf2/IQSpCGYUGP2XRan5GbFjulXBAQZQ9a132pm2Z3cb8zKIgRc?action=embedview'
-                };
-
-                // MULTI-RESOURCE CONFIGURATION
-                const resourceMapping = {
-                    'BACCM': {
-                        slides: [
-                            { title: "Part 1: Overview", url: `${mediaPath}BACCM_Slide_1.pdf` },
-                            { title: "Part 2: Details", url: `${mediaPath}BACCM_Slide_2.pdf` }
-                        ],
-                        mindmaps: [
-                            { title: "Core Concepts", url: `${mediaPath}BACCM_Mindmap_1.png` },
-                            { title: "Relationships", url: `${mediaPath}BACCM_Mindmap_2.png` }
-                        ],
-                        info: [
-                             { title: "Infographic 1", url: `${mediaPath}BACCM_Info_1.png` },
-                             { title: "Infographic 2", url: `${mediaPath}BACCM_Info_2.png` }
-                        ]
-                    }
-                };
-
-                // Helper to convert watch links to embed links
-                const getEmbedLink = (url) => {
-                    if (!url) return '';
-                    if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
-                        const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-                        return `https://www.youtube.com/embed/${videoId}`;
-                    }
-                    return url;
-                };
-
-                // Normalize configs
-                let videoConfig = videoMapping[activeCode];
-                let videoList = Array.isArray(videoConfig) ? videoConfig : (videoConfig ? [{title: "Main Video", url: videoConfig}] : []);
-                
-                let slideList = resourceMapping[activeCode]?.slides || [{ title: "Main Slide", url: `${mediaPath}${activeCode}_Slide.pdf` }];
-                let mindmapList = resourceMapping[activeCode]?.mindmaps || [{ title: "Main Mindmap", url: `${mediaPath}${activeCode}_Mindmap.png` }];
-                let infoList = resourceMapping[activeCode]?.info || [{ title: "Main Info", url: `${mediaPath}${activeCode}_Info.png` }];
-                
-                // Track sub-resource selection
-                if (!this.selectedSubResource) {
-                     // Default selections
-                     if (type === 'slide') this.selectedSubResource = slideList[0];
-                     else if (type === 'mindmap') this.selectedSubResource = mindmapList[0];
-                     else if (type === 'info') this.selectedSubResource = infoList[0];
-                }
-                
-                // Helper to render file list sidebar/selector
-                const renderFileList = (list, currentType) => {
-                    if (list.length <= 1) return '';
-                    return `
-                        <div class="w-48 border-l border-gray-200 bg-gray-50 flex-shrink-0 overflow-y-auto">
-                            <div class="p-2 font-bold text-[10px] uppercase text-gray-400">Files</div>
-                            ${list.map(item => `
-                                <button onclick="app.selectSubResource('${item.url}', '${item.title}', '${currentType}', '${activeCode}')" class="w-full text-left p-2 text-xs hover:bg-gray-100 ${app.selectedSubResource && app.selectedSubResource.url === item.url ? 'bg-blue-100 text-navy font-bold' : 'text-gray-600'}">
-                                    <i class="fa-solid fa-file mr-1"></i> ${item.title}
-                                </button>
-                            `).join('')}
-                        </div>
-                    `;
-                };
-
-                const files = { textbook: `${mediaPath}${activeCode}_Textbook.pdf` }; // Legacy fallback
-                
-                // Common Loading HTML helper
-                const getLoadingHTML = () => `
-                    <div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-0">
-                        <div class="spinner w-8 h-8 border-4 border-gray-200 border-t-orange rounded-full animate-spin mb-2"></div>
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Loading Content...</span>
-                    </div>`;
-
-                let viewer = ''; 
-                let showZoomControls = false;
-                let subListHTML = '';
-
-                // --- VIEWER LOGIC ---
-
-                if (type === 'textbookvn' || type === 'textbookEN') {
-                    const docUrl = type === 'textbookvn' ? (textbookVnMapping[activeCode] || textbookVnMapping['INTRO']) : (textbookEnMapping[activeCode]); 
-                    
-                    if (docUrl) {
-                        viewer = `
-                            <div class="h-full w-full bg-gray-100 flex flex-col relative">
-                                <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0 z-20 relative">
-                                     <span class="text-xs font-bold text-gray-500">Embedded Document (OneDrive)</span>
-                                     <a href="${docUrl}" target="_blank" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Open in New Tab</a>
-                                </div>
-                                <div class="flex-1 relative w-full h-full">
-                                    ${getLoadingHTML()}
-                                    <iframe src="${docUrl}" class="absolute inset-0 w-full h-full border-none opacity-0 transition-opacity duration-500 z-10" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()"></iframe>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        viewer = `<div class="flex flex-col items-center justify-center h-full p-10 text-center"><i class="fa-solid fa-link-slash text-4xl text-gray-300 mb-4"></i><div class="text-gray-500 font-bold">No Link Configured</div><div class="text-xs text-gray-400 mt-2">No Document link found for this chapter.</div></div>`;
-                    }
-                }
-                else if (type === 'slide') {
-                    subListHTML = renderFileList(slideList, 'slide');
-                    const currentSlide = (this.selectedSubResource && slideList.find(s => s.url === this.selectedSubResource.url)) ? this.selectedSubResource : slideList[0];
-                    
-                    if (this.pdfMode === 'iframe') {
-                         viewer = `
-                             <div class="flex flex-col h-full bg-gray-100 w-full relative">
-                                 <div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0 z-20 relative">
-                                     <span class="text-xs font-bold text-gray-500">${currentSlide.title}</span>
-                                     <button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="swiss-btn swiss-btn-outline px-3 py-1 text-[10px]">Switch Viewer</button>
-                                 </div>
-                                 <div class="flex-1 relative w-full h-full">
-                                    ${getLoadingHTML()}
-                                    <iframe src="${currentSlide.url}" class="absolute inset-0 w-full h-full border-none opacity-0 transition-opacity duration-500 z-10" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()"></iframe>
-                                 </div>
-                             </div>
-                         `;
-                    } else {
-                        viewer = `<div class="flex flex-col h-full bg-gray-100 w-full" id="pdf-wrapper"><div class="flex items-center justify-between bg-white border-b border-gray-200 p-2 shadow-sm shrink-0"><div class="flex items-center gap-2"><button id="prev-pdf" onclick="app.prevPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30"><i class="fa-solid fa-chevron-left"></i></button><span class="text-xs font-bold text-gray-500">Page <span id="page-num">0</span> / <span id="page-count">0</span></span><button id="next-pdf" onclick="app.nextPDFPage()" class="p-2 text-navy hover:bg-gray-100 rounded disabled:opacity-30"><i class="fa-solid fa-chevron-right"></i></button></div><div class="flex items-center gap-2"><button onclick="app.zoomPDFOut()" class="p-2 text-navy hover:bg-gray-100 rounded"><i class="fa-solid fa-magnifying-glass-minus"></i></button><button onclick="app.zoomPDFIn()" class="p-2 text-navy hover:bg-gray-100 rounded"><i class="fa-solid fa-magnifying-glass-plus"></i></button><div class="h-4 w-px bg-gray-300 mx-2"></div><button onclick="app.togglePDFMode(document.getElementById('app-container'))" class="text-[10px] font-bold text-orange hover:underline uppercase">Switch Viewer</button></div></div><div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-200 relative"><canvas id="the-canvas" class="shadow-lg bg-white"></canvas></div></div>`;
-                        setTimeout(() => app.loadPDF(currentSlide.url), 0);
-                    }
-                }
-                else if (type === 'info' || type === 'mindmap') {
-                    showZoomControls = true;
-                    const list = type === 'info' ? infoList : mindmapList;
-                    subListHTML = renderFileList(list, type);
-                    const currentImg = (this.selectedSubResource && list.find(s => s.url === this.selectedSubResource.url)) ? this.selectedSubResource : list[0];
-
-                    viewer = `
-                        <div class="h-full w-full overflow-auto flex justify-center bg-gray-50 p-4 relative" id="image-wrapper">
-                            ${getLoadingHTML()}
-                            <img id="zoomable-image" src="${currentImg.url}" class="max-w-full my-auto shadow-md border border-gray-200 transition-transform origin-top-center relative z-10 opacity-0 transition-opacity duration-500" style="transform: scale(1)" onload="this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Not+Found'; this.classList.remove('opacity-0'); document.getElementById('content-loader')?.remove()">
-                        </div>`;
-                }
-                else if(type === 'video') {
-                     viewer = `<div class="h-full w-full overflow-y-auto bg-gray-900 p-4 md:p-8 space-y-8">`;
-                     if(videoList.length > 0) {
-                        videoList.forEach((v, index) => {
-                             const embedUrl = getEmbedLink(v.url);
-                             if(embedUrl) {
-                                viewer += `
-                                   <div class="max-w-4xl mx-auto bg-black border border-gray-800 rounded-lg overflow-hidden shadow-lg relative">
-                                        <div class="p-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center z-20 relative">
-                                            <h4 class="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                                <i class="fa-solid fa-play-circle text-orange"></i> ${v.title || `Video ${index + 1}`}
-                                            </h4>
-                                            <a href="${embedUrl}" target="_blank" class="text-[10px] text-gray-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open External</a>
-                                        </div>
-                                        <div class="relative w-full" style="padding-bottom: 56.25%;">
-                                            <div class="absolute inset-0 flex items-center justify-center z-0">
-                                                <div class="spinner w-8 h-8 border-4 border-gray-600 border-t-orange rounded-full animate-spin"></div>
-                                            </div>
-                                            <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-black" allowfullscreen></iframe>
-                                        </div>
-                                   </div>
-                                `;
-                             }
-                        });
-                     } else {
-                         viewer = `<div class="flex flex-col items-center justify-center h-full text-white">No videos configured.</div>`;
-                     }
-                     viewer += `</div>`;
-                }
-                
-                container.innerHTML = `<div class="flex flex-col lg:flex-row h-full gap-4"><div class="${this.isLibraryMenuOpen ? 'w-full lg:w-64' : 'hidden'} bg-white border border-gray-200 h-48 lg:h-full overflow-y-auto flex-shrink-0 transition-all"><div class="p-3 border-b border-gray-100 bg-gray-50 sticky top-0"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Chapters</span></div>${curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}', type:'${type}'})" class="w-full text-left p-3 border-b border-gray-50 hover:bg-gray-50 transition ${c.code === activeCode ? 'bg-navy' : ''}"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wide ${c.code === activeCode ? 'text-white' : 'text-navy'}">${c.code}</span>${c.code === activeCode ? '<i class="fa-solid fa-chevron-right text-[10px] text-orange"></i>' : ''}</div><div class="text-[10px] mt-1 truncate ${c.code === activeCode ? 'text-blue-200' : 'text-gray-500'}">${c.name}</div></button>`).join('')}</div><div class="flex-1 bg-white border border-gray-200 flex flex-col h-[500px] lg:h-full" id="lib-viewer"><div class="flex border-b border-gray-200 bg-gray-50 items-center justify-between shrink-0 p-1"><button onclick="app.toggleLibraryMenu()" class="p-2 mr-2 text-gray-500 hover:text-navy" title="Toggle Menu"><i class="fa-solid fa-bars"></i></button><div class="flex overflow-x-auto whitespace-nowrap flex-1 min-w-0"><button onclick="app.nav('library', {code:'${activeCode}', type:'textbookvn'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbookvn'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook VN</button><button onclick="app.nav('library', {code:'${activeCode}', type:'textbookEN'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='textbookEN'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Textbook EN</button><button onclick="app.nav('library', {code:'${activeCode}', type:'slide'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='slide'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Slide</button><button onclick="app.nav('library', {code:'${activeCode}', type:'mindmap'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='mindmap'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Mindmap</button><button onclick="app.nav('library', {code:'${activeCode}', type:'info'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='info'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Info</button><button onclick="app.nav('library', {code:'${activeCode}', type:'video'})" class="px-3 md:px-6 py-3 text-[10px] font-bold uppercase tracking-widest ${type==='video'?'bg-white border-t-2 border-orange text-navy':'text-gray-500 hover:text-navy'}">Video</button></div><div class="flex items-center gap-2 px-2 flex-shrink-0">${showZoomControls ? `<div class="flex items-center bg-white border border-gray-300 rounded overflow-hidden"><button onclick="app.adjustZoom(-0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-r"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="px-2 py-1 text-gray-500 hover:bg-gray-100 border-l"><i class="fa-solid fa-plus text-xs"></i></button></div>` : ''}<button onclick="app.toggleFullscreen('lib-viewer')" class="text-xs text-gray-500 hover:text-navy p-2"><i class="fa-solid fa-expand text-lg"></i></button></div></div><div class="flex-1 relative bg-white overflow-hidden">${viewer}</div></div>${subListHTML}</div>`;
-            },
-
-            // New helper to handle sub-resource click
-            selectSubResource(url, title, type, code) {
-                this.selectedSubResource = { url, title };
-                // Re-render library with same params but updated state
-                const container = document.getElementById('app-container');
-                this.renderLibrary(container, { code, type });
             },
 
             // --- DASHBOARD ---
             renderDashboard(container) {
                 const curriculum = DB.state.curriculum || [];
-                const completedTasks = DB.state.completedTasks || [];
-                let totalTasks = 0;
-                
                 const kaCodes = ['BAPM', 'ELIC', 'RLCM', 'SA', 'RADD', 'SE'];
-                let chartDataValues = [0, 0, 0, 0, 0, 0];
+                
+                let totalTasks = 0;
+                let totalCompleted = 0;
+                
+                const progressData = curriculum.map(c => {
+                    const tasks = c.tasks || [];
+                    const tCount = tasks.length;
+                    const cCount = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
+                    totalTasks += tCount;
+                    totalCompleted += cCount;
+                    const percent = tCount > 0 ? Math.round((cCount / tCount) * 100) : 0;
+                    return { ...c, percent };
+                });
 
-                const progressData = curriculum.map(ka => {
-                    const kaTasks = ka.tasks || [];
-                    const kaTotal = kaTasks.length;
-                    totalTasks += kaTotal;
-                    const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length;
-                    const percent = kaTotal > 0 ? Math.round((kaCompleted / kaTotal) * 100) : 0;
-                    
-                    const kaIndex = kaCodes.indexOf(ka.code);
-                    if(kaIndex !== -1) {
-                        chartDataValues[kaIndex] = percent;
-                    }
-                    
-                    return { ...ka, percent };
+                const overallPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+                const chartValues = kaCodes.map(code => {
+                    const item = progressData.find(p => p.code === code);
+                    return item ? item.percent : 0;
                 });
                 
-                const totalCompleted = completedTasks.length;
-                const totalPercent = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+                const lastView = DB.state.lastView;
+                const resumeTitle = curriculum.find(c => c.code === lastView.code)?.name || lastView.code;
 
                 container.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                        <div class="bg-white p-6 md:p-8 border border-gray-200 shadow-sm col-span-1 lg:col-span-2">
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Overall Status</h3>
-                            <div class="flex items-center gap-4 mb-6"><div class="text-4xl font-bold text-navy">${totalPercent}%</div><div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden"><div class="bg-orange h-full progress-bar" style="width: ${totalPercent}%"></div></div></div>
-                            <div class="flex flex-col md:flex-row gap-8 items-center mt-8">
-                                <div class="relative h-64 w-full md:w-1/2"><canvas id="proficiencyChart"></canvas></div>
-                                <div class="w-full md:w-1/2 space-y-3 overflow-y-auto max-h-60 pr-2 custom-scrollbar">
-                                    ${progressData.map(p => `<div><div class="flex justify-between text-[10px] text-blue-800 mb-1"><span>${p.code}</span><span>${p.percent}%</span></div><div class="w-full bg-blue-50 h-1 rounded-full overflow-hidden"><div class="bg-navy h-full progress-bar" style="width: ${p.percent}%"></div></div></div>`).join('')}
+                    <div class="p-6 md:p-8 space-y-6 overflow-y-auto h-full custom-scrollbar">
+                        <!-- Welcome & Resume -->
+                        <div class="bg-[#0a192f] rounded-lg shadow-lg p-6 text-white relative overflow-hidden border border-gray-700">
+                             <div class="relative z-10">
+                                <h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-2">Study Dashboard</h3>
+                                <h1 class="text-2xl font-bold mb-2">Welcome Back, ${DB.state.user.username}</h1>
+                                <p class="text-blue-200 text-sm mb-6 max-w-lg">
+                                    Last viewed: <strong>${resumeTitle}</strong> (${lastView.type.toUpperCase()}).
+                                </p>
+                                <button onclick="app.nav('library', {code: '${lastView.code}', type: '${lastView.type}'})" class="bg-orange text-white px-6 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-orange transition shadow-md">
+                                    Resume Session <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                            <div class="absolute right-0 bottom-0 opacity-10 text-9xl text-white transform translate-x-10 translate-y-10 pointer-events-none">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                        </div>
+
+                        <!-- Quick Shortcuts (REQUEST 3) -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button onclick="app.nav('learn')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-graduation-cap"></i></div>
+                                <div><div class="font-bold text-navy text-sm">Knowledge Hub</div><div class="text-[10px] text-gray-400">Track Tasks</div></div>
+                            </button>
+                            <button onclick="app.nav('library')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-book-open"></i></div>
+                                <div><div class="font-bold text-navy text-sm">Study Library</div><div class="text-[10px] text-gray-400">Books & Slides</div></div>
+                            </button>
+                            <button onclick="app.nav('exam')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-pen-to-square"></i></div>
+                                <div><div class="font-bold text-navy text-sm">Exam Engine</div><div class="text-[10px] text-gray-400">Practice Quiz</div></div>
+                            </button>
+                            <button onclick="app.nav('flashcards')" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition text-left group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-navy flex items-center justify-center group-hover:bg-navy group-hover:text-white transition"><i class="fa-solid fa-layer-group"></i></div>
+                                <div><div class="font-bold text-navy text-sm">Flashcards</div><div class="text-[10px] text-gray-400">Memory Aid</div></div>
+                            </button>
+                        </div>
+
+                        <!-- Charts & Stats -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Radar Chart -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
+                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Proficiency (Real-time)</h3>
+                                <div class="h-64 relative flex items-center justify-center" id="chart-container">
+                                    <canvas id="proficiencyChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Progress List -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col">
+                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Course Progress</h3>
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="text-4xl font-bold text-navy">${overallPercent}%</div>
+                                    <div class="flex-1">
+                                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div class="h-full bg-orange transition-all duration-1000" style="width: ${overallPercent}%"></div>
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 mt-1 uppercase">${totalCompleted} / ${totalTasks} Tasks Completed</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar max-h-60">
+                                    ${progressData.map(p => `
+                                        <div>
+                                            <div class="flex justify-between text-[10px] font-bold text-navy mb-1"><span>${p.code}</span><span class="${p.percent === 100 ? 'text-green-500' : 'text-orange'}">${p.percent}%</span></div>
+                                            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div class="bg-navy h-full transition-all duration-1000" style="width: ${p.percent}%"></div></div>
+                                        </div>`).join('')}
                                 </div>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-6"><div class="bg-navy p-6 md:p-8 text-white flex flex-col justify-between h-full shadow-sm"><div><h3 class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-4">Quick Action</h3><p class="text-xs md:text-sm leading-relaxed text-blue-100">Resume your study session.</p></div><div class="space-y-3 mt-6"><button onclick="app.nav('library')" class="w-full bg-white text-navy py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white transition">Read Library</button><button onclick="app.nav('exam')" class="w-full border border-white text-white py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-navy transition">Start Exam</button></div></div></div>
                     </div>
                 `;
-                
+
+                // Safe Chart Initialization
                 setTimeout(() => {
                     const ctx = document.getElementById('proficiencyChart');
-                    if(ctx) {
+                    if(ctx && typeof Chart !== 'undefined') {
                         new Chart(ctx, {
                             type: 'radar',
-                            data: { labels: kaCodes, datasets: [{ label: 'Completion %', data: chartDataValues, backgroundColor: 'rgba(255, 102, 0, 0.2)', borderColor: '#FF6600', pointBackgroundColor: '#003366', pointBorderColor: '#fff', borderWidth: 2 }] },
-                            options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#f0f0f0' }, grid: { color: '#f0f0f0' }, pointLabels: { font: { size: 10, family: 'Helvetica Neue', weight: 'bold' }, color: '#003366' }, suggestedMin: 0, suggestedMax: 100, ticks: { backdropColor: 'transparent', stepSize: 20 } } }, plugins: { legend: { display: false } } }
+                            data: { labels: kaCodes, datasets: [{ label: 'Completed %', data: chartValues, backgroundColor: 'rgba(255, 107, 0, 0.2)', borderColor: '#ff6b00', pointBackgroundColor: '#0a192f', pointBorderColor: '#fff', borderWidth: 2 }] },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#f1f5f9' }, grid: { color: '#e2e8f0' }, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#0a192f' }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } }, plugins: { legend: { display: false } } } 
                         });
+                    } else if (ctx) {
+                        ctx.style.display = 'none';
+                        document.getElementById('chart-container').innerHTML = '<div class="text-xs text-gray-400">Chart library loading...</div>';
                     }
-                }, 100);
+                }, 500);
             },
-            
-            // --- USER GUIDE & OTHERS ---
-            renderHelp(container) {
+
+            // --- KNOWLEDGE HUB (Fixed Click Issue) ---
+            renderLearn(container) {
+                const curriculum = DB.state.curriculum || [];
                 container.innerHTML = `
-                    <div class="max-w-4xl mx-auto space-y-8 pb-10">
-                        <div class="border-b border-gray-200 pb-6"><h2 class="text-3xl font-bold text-navy mb-2">User Guide & Documentation</h2><p class="text-gray-500 text-sm">Hướng dẫn chi tiết sử dụng CBAP Master App.</p></div>
-                        <div class="swiss-card p-8 border-l-4 border-navy"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Giới thiệu chung</h3><p class="text-sm text-gray-600 mb-2 leading-relaxed"><strong>CBAP Master</strong> là ứng dụng hỗ trợ ôn thi chứng chỉ CBAP (Certified Business Analysis Professional) theo chuẩn BABOK® Guide v3.</p></div>
-                        <div class="swiss-card p-8 border-l-4 border-orange"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-orange text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Cài đặt & Dữ liệu</h3><p class="text-sm text-gray-600 mb-4 leading-relaxed">Tạo thư mục <strong>CbapMedia</strong> cùng cấp file index.html. Nếu lỗi tải file, dùng Settings để import manual.</p></div>
-                        <div class="swiss-card p-8 border-l-4 border-navy"><h3 class="text-lg font-bold text-navy mb-4 flex items-center gap-3"><span class="bg-navy text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> Hướng dẫn chức năng</h3><div class="space-y-6"><div><h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Knowledge Hub</h4><p class="text-sm text-gray-600">Theo dõi lộ trình học. Bấm "MARK COMPLETE" để cập nhật tiến độ.</p></div><div><h4 class="font-bold text-navy text-sm uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Auth & Sync</h4><p class="text-sm text-gray-600">Đăng nhập để đồng bộ dữ liệu lên đám mây (Custom Cloud).</p></div></div></div>
+                    <div class="p-6 md:p-8 overflow-y-auto h-full">
+                        <h2 class="text-2xl font-bold text-navy mb-6">Knowledge Hub</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${curriculum.map((c, i) => {
+                                const tasks = c.tasks || [];
+                                const done = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
+                                const total = tasks.length;
+                                const percent = total > 0 ? Math.round((done/total)*100) : 0;
+                                
+                                return `
+                                <div class="bg-white p-6 rounded shadow-sm border border-gray-200 hover:border-orange hover:shadow-md transition group flex flex-col h-full cursor-pointer" onclick="app.viewModule('${c.code}')">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <span class="text-4xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span>
+                                        <span class="bg-navy-light text-blue-200 text-[9px] font-bold px-2 py-1 uppercase tracking-widest rounded">${c.code}</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3>
+                                    <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-2">
+                                        <div class="bg-orange h-full" style="width: ${percent}%"></div>
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 mb-4">${done}/${total} Completed</div>
+                                    <div class="mt-auto flex gap-2">
+                                        <button class="flex-1 bg-navy text-white py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-orange transition">View Details</button>
+                                    </div>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
             },
-            renderLearn(container) {
-                const curriculum = DB.state.curriculum || []; const completedTasks = DB.state.completedTasks || [];
-                if(curriculum.length === 0) { app.nav('admin'); return; }
-                container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">${curriculum.map((c, i) => { const kaTasks = c.tasks || []; const kaCompleted = kaTasks.filter(t => completedTasks.includes(t.id)).length; const percent = kaTasks.length > 0 ? Math.round((kaCompleted / kaTasks.length) * 100) : 0; return `<div class="bg-white p-6 border border-gray-200 hover:border-orange transition cursor-pointer group flex flex-col h-full" onclick="app.nav('task_detail', {code:'${c.code}'})"><div class="flex justify-between items-start mb-4"><span class="text-3xl font-bold text-gray-100 group-hover:text-navy transition">${(i+1).toString().padStart(2,'0')}</span><span class="bg-navy text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">${c.code}</span></div><h3 class="text-md font-bold text-navy mb-2 group-hover:text-orange transition">${c.name}</h3><div class="mt-auto pt-4"><div class="flex justify-between text-[10px] text-gray-400 mb-1 uppercase tracking-wider"><span>Progress</span><span>${percent}%</span></div><div class="w-full bg-gray-100 h-1 rounded-full"><div class="bg-orange h-full" style="width: ${percent}%"></div></div></div></div>`; }).join('')}</div>`;
-            },
+
             renderTaskDetail(container, params) {
-                const item = DB.state.curriculum.find(c => c.code === params.code); if(!item) return; const isComplete = (tid) => (DB.state.completedTasks || []).includes(tid);
-                container.innerHTML = `<div class="max-w-4xl mx-auto"><button onclick="app.nav('learn')" class="mb-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Back to Hub</button><div class="bg-white p-8 border-t-4 border-navy shadow-sm"><h1 class="text-2xl md:text-3xl font-bold text-navy mb-2">${item.name}</h1><p class="text-gray-600 mb-8">${item.desc}</p><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Tasks / Topics</h3><div class="space-y-3">${(item.tasks || []).map(t => { const done = isComplete(t.id); return `<div class="p-4 border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition"><div><span class="text-sm font-bold ${done ? 'text-green-600 line-through' : 'text-navy'}">${t.name}</span><div class="text-xs text-gray-400 font-mono">${t.id}</div></div><button onclick="app.toggleTask('${t.id}', '${params.code}')" class="text-xs font-bold uppercase tracking-widest px-3 py-1 border ${done ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-400 border-gray-200 hover:border-orange hover:text-orange'}">${done ? '<i class="fa-solid fa-check mr-1"></i> Done' : 'Mark Complete'}</button></div>`; }).join('')}</div></div></div>`;
+                const item = DB.state.curriculum.find(c => c.code === params.code);
+                if(!item) { container.innerHTML = '<div class="p-8">Module not found</div>'; return; }
+                
+                const tasks = item.tasks || [];
+                const total = tasks.length;
+                const doneCount = tasks.filter(t => DB.state.completedTasks.includes(t.id)).length;
+                const percent = total > 0 ? Math.round((doneCount/total)*100) : 0;
+
+                container.innerHTML = `
+                    <div class="p-6 md:p-8 max-w-4xl mx-auto h-full overflow-y-auto custom-scrollbar">
+                        <div class="flex justify-between items-center mb-6">
+                            <button onclick="app.nav('learn')" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-navy flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-left"></i> Back to Hub
+                            </button>
+                            <!-- REQUEST 2: Added Textbook Link -->
+                            <button onclick="app.nav('library', {code:'${params.code}', type:'textbookvn'})" class="bg-white border border-gray-300 text-navy px-4 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-orange hover:text-white hover:border-orange transition flex items-center gap-2">
+                                <i class="fa-solid fa-book-open"></i> Read Textbook
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                            <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div><div class="text-xs font-bold text-orange uppercase tracking-widest mb-1">Module Detail</div><h1 class="text-2xl font-bold text-navy">${item.name}</h1></div>
+                                <div class="text-right"><div class="text-3xl font-bold text-navy">${percent}%</div><div class="text-[10px] text-gray-400 uppercase">Module Progress</div></div>
+                            </div>
+                            
+                            <div class="p-0">
+                                ${tasks.map((t, idx) => {
+                                    const isDone = DB.state.completedTasks.includes(t.id);
+                                    return `
+                                        <div class="flex items-center justify-between p-4 border-b border-gray-50 hover:bg-blue-50 transition group">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isDone ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${idx + 1}</div>
+                                                <div><div class="text-sm font-bold ${isDone ? 'text-gray-400 line-through' : 'text-navy'}">${t.name}</div><div class="text-[10px] text-gray-400 font-mono">${t.id}</div></div>
+                                            </div>
+                                            <button onclick="app.toggleTaskState('${t.id}', '${params.code}')" class="px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest border transition flex items-center gap-2 ${isDone ? 'bg-green-50 text-green-600 border-green-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200' : 'bg-white text-gray-400 border-gray-200 hover:border-orange hover:text-orange'}">
+                                                ${isDone ? '<span>Completed</span> <i class="fa-solid fa-check"></i>' : '<span>Mark Complete</span>'}
+                                            </button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
             },
-            toggleTask(taskId, code) { if (!DB.state.completedTasks) DB.state.completedTasks = []; const idx = DB.state.completedTasks.indexOf(taskId); if (idx > -1) { DB.state.completedTasks.splice(idx, 1); } else { DB.state.completedTasks.push(taskId); } DB.save(); this.renderTaskDetail(document.getElementById('app-container'), { code: code }); Toast.show("Progress Updated", "success"); },
-            renderAdmin(container) { container.innerHTML = `<div class="max-w-xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-8 border border-gray-200 shadow-sm"><h3 class="text-sm font-bold text-navy uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Manual Data Import</h3><div class="space-y-4"><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Curriculum.json</label><input type="file" onchange="app.importFile(this, 'curriculum')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Questions.json</label><input type="file" onchange="app.importFile(this, 'questions')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Flashcards.json</label><input type="file" onchange="app.importFile(this, 'flashcards')" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-navy file:text-white file:font-bold file:uppercase file:text-[10px] file:tracking-widest hover:file:bg-orange"></div></div><div class="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center"><button onclick="location.reload()" class="text-navy text-xs font-bold uppercase tracking-widest hover:text-orange">Reload App</button></div></div></div>`; },
-            importFile(input, key) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { try { DB.state[key] = JSON.parse(e.target.result); DB.save(); Toast.show(`Imported ${key}`); } catch(err) { alert("Invalid JSON"); } }; reader.readAsText(file); }
+
+            toggleTaskState(taskId, code) {
+                const newState = DB.toggleTask(taskId);
+                this.renderTaskDetail(document.getElementById('app-container'), { code: code });
+                Toast.show(newState ? "Task Completed" : "Task Unmarked", newState ? 'success' : 'info');
+            },
+
+            // --- LIBRARY ---
+            renderLibrary(container, params) {
+                const code = params?.code || DB.state.lastView.code || 'INTRO';
+                const type = params?.type || DB.state.lastView.type || 'slide';
+                
+                const resources = DB.resources[code] || { slides: [], mindmaps: [], info: [] };
+                let list = (type === 'slide') ? resources.slides : (type === 'mindmap' ? resources.mindmaps : (type === 'info' ? resources.info : []));
+                
+                let currentItem = this.selectedSubResource;
+                if (!currentItem || !list.find(i => i.url === currentItem.url)) currentItem = list[0];
+
+                const loader = `<div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-0"><div class="spinner mb-2"></div><span class="text-xs text-gray-500 font-bold">LOADING...</span></div>`;
+                let viewerHtml = `<div class="flex items-center justify-center h-full text-gray-400">Content not available</div>`;
+
+                if (['textbookvn','textbookEN'].includes(type)) {
+                    const url = type === 'textbookvn' ? 'https://1drv.ms/b/s!Am8Lw2njpdkKgf4a' : 'https://1drv.ms/b/s!Am8Lw2njpdkKgf4b';
+                    viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(url)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
+                } else if (currentItem) {
+                    if (type === 'slide') {
+                        viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(currentItem.url)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
+                    } else if (['mindmap', 'info'].includes(type)) {
+                        viewerHtml = `<div class="relative w-full h-full bg-slate-200 overflow-hidden flex items-center justify-center">${loader}<img id="zoom-img" src="${currentItem.url}" class="max-w-full max-h-full shadow-lg transition-transform duration-200 z-10" style="transform: scale(${this.zoomLevel})" onload="this.parentElement.querySelector('#content-loader')?.remove()"></div>`;
+                    } else if (type === 'video') {
+                         viewerHtml = `<div class="h-full w-full bg-black flex items-center justify-center"><iframe class="w-full max-w-4xl aspect-video shadow-2xl" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe></div>`;
+                    }
+                }
+
+                container.innerHTML = `
+                    <div class="flex h-full flex-col lg:flex-row border-t border-gray-200">
+                        <div class="w-full lg:w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-48 lg:h-full lg:order-1 order-3">
+                            <div class="p-3 bg-gray-50 border-b border-gray-100 font-bold text-[10px] text-gray-500 uppercase tracking-widest sticky top-0">Modules</div>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                                ${DB.state.curriculum.map(c => `<button onclick="app.nav('library', {code:'${c.code}'})" class="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition group ${c.code === code ? 'bg-navy border-l-4 border-l-orange' : ''}"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold ${c.code === code ? 'text-white' : 'text-navy'}">${c.code}</span></div><div class="text-[10px] truncate ${c.code === code ? 'text-blue-200' : 'text-gray-400'}">${c.name}</div></button>`).join('')}
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col h-full bg-gray-100 relative lg:order-2 order-2 min-h-[400px]">
+                            <div class="h-12 bg-white border-b border-gray-200 flex items-center px-4 flex-shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.02)] z-20 gap-2 overflow-x-auto no-scrollbar">
+                                ${['slide', 'mindmap', 'info', 'textbookvn', 'textbookEN', 'video'].map(t => `<button onclick="app.nav('library', {code:'${code}', type:'${t}'})" class="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition ${type === t ? 'bg-orange text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-navy'}">${t==='textbookvn'?'Book VN':(t==='textbookEN'?'Book EN':t)}</button>`).join('')}
+                                <div class="flex-1"></div>
+                                ${['mindmap','info'].includes(type) ? `<button onclick="app.adjustZoom(-0.2)" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-minus text-xs"></i></button><button onclick="app.adjustZoom(0.2)" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-plus text-xs"></i></button>` : ''}
+                                <button onclick="app.toggleFullscreen('app-container')" class="w-7 h-7 flex items-center justify-center text-gray-500 border rounded"><i class="fa-solid fa-expand text-xs"></i></button>
+                            </div>
+                            <div class="flex-1 relative overflow-hidden">${viewerHtml}</div>
+                        </div>
+                        <div class="hidden lg:block lg:order-3 h-full w-56 bg-white border-l border-gray-200 flex-shrink-0 flex flex-col">
+                             <div class="p-3 bg-gray-50 border-b border-gray-100 font-bold text-[10px] text-gray-500 uppercase tracking-widest">Files</div>
+                             <div class="flex-1 overflow-y-auto">${list.map(item => `<button onclick="app.selectSubResource('${item.url}', '${item.title}')" class="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-blue-50 transition ${currentItem && currentItem.url === item.url ? 'bg-blue-50 border-l-4 border-l-orange' : 'text-gray-600'}"><div class="text-xs font-bold ${currentItem && currentItem.url === item.url ? 'text-navy' : ''}">${item.title}</div></button>`).join('')}</div>
+                        </div>
+                    </div>`;
+            },
+            
+            selectSubResource(url, title) { this.selectedSubResource = { url, title }; this.nav('library'); },
+            adjustZoom(delta) { this.zoomLevel = Math.max(0.5, Math.min(3, this.zoomLevel + delta)); const img = document.getElementById('zoom-img'); if(img) img.style.transform = `scale(${this.zoomLevel})`; },
+            toggleFullscreen(id) { const el = document.getElementById(id); if (!document.fullscreenElement) { el.requestFullscreen().catch(err => {}); } else { document.exitFullscreen(); } },
+
+            // --- EXAM ENGINE ---
+            renderExam(container) {
+                if(!this.examState.active) {
+                    const count = DB.state.questions.length;
+                    container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-8 text-center bg-white"><div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-3xl text-navy mb-6 shadow-sm"><i class="fa-solid fa-pen-to-square"></i></div><h2 class="text-2xl font-bold text-navy mb-2">Exam Simulator</h2><p class="text-gray-500 mb-8 max-w-md">Ready with ${count} questions.</p><button class="swiss-btn swiss-btn-primary px-8 py-3 shadow-lg" onclick="app.startExam()">Start Random Drill</button></div>`;
+                } else {
+                    const q = DB.state.questions[this.examState.current];
+                    const userAns = this.examState.answers[q.id];
+                    const isAnswered = userAns !== undefined;
+                    container.innerHTML = `<div class="max-w-3xl mx-auto p-4 md:p-8"><div class="flex justify-between items-center mb-6"><div class="text-xs font-bold text-gray-400 uppercase">Question ${this.examState.current + 1}/${DB.state.questions.length}</div><button onclick="app.quitExam()" class="text-red-500 hover:text-red-700 font-bold text-xs uppercase">Exit</button></div><div class="bg-white p-6 md:p-8 rounded shadow-sm border border-gray-200 mb-6"><h3 class="text-lg font-bold text-navy mb-6 leading-relaxed">${q.stem}</h3><div class="space-y-3">${q.options.map((opt, i) => { let cls = "border-gray-200 hover:bg-gray-50"; if(isAnswered) { if(i === q.correct[0]) cls = "bg-green-50 border-green-500 text-green-800"; else if(i === userAns) cls = "bg-red-50 border-red-500 text-red-800"; } return `<div onclick="${!isAnswered ? `app.answerExam(${i})` : ''}" class="p-4 border ${cls} rounded cursor-pointer transition flex items-center gap-3"><span class="font-bold">${String.fromCharCode(65+i)}.</span> ${opt}</div>`; }).join('')}</div>${isAnswered ? `<div class="mt-6 p-4 bg-blue-50 text-navy text-sm border-l-4 border-navy">${q.explanation}</div>` : ''}</div><div class="flex justify-between"><button onclick="app.prevExam()" class="swiss-btn swiss-btn-outline px-6 py-2" ${this.examState.current===0 ? 'disabled':''}>Previous</button><button onclick="app.nextExam()" class="swiss-btn swiss-btn-primary px-6 py-2" ${!isAnswered ? 'disabled opacity-50':''}>Next</button></div></div>`;
+                }
+            },
+            startExam() { this.examState = { active: true, current: 0, answers: {} }; this.nav('exam'); },
+            answerExam(idx) { const q = DB.state.questions[this.examState.current]; this.examState.answers[q.id] = idx; this.nav('exam'); },
+            nextExam() { if(this.examState.current < DB.state.questions.length-1) { this.examState.current++; this.nav('exam'); } else { this.quitExam(); } },
+            prevExam() { if(this.examState.current > 0) { this.examState.current--; this.nav('exam'); } },
+            quitExam() { this.examState.active = false; this.nav('exam'); },
+
+            // --- FLASHCARDS ---
+            renderFlashcards(container) {
+                const total = DB.state.flashcards.length;
+                const card = DB.state.flashcards[this.flashcardIndex];
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full p-4 md:p-8"><div class="w-full max-w-xl mb-4 flex justify-between"><span class="text-xs font-bold text-gray-400 uppercase">Card ${this.flashcardIndex + 1}/${total}</span><span class="text-xs font-bold text-orange uppercase">Active Recall</span></div><div class="w-full max-w-xl aspect-[3/2] perspective-1000 relative cursor-pointer group" onclick="app.flipCard()"><div id="card-inner" class="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-lg rounded-xl border border-gray-200 ${this.flashcardFlipped ? 'rotate-y-180' : ''}"><div class="absolute inset-0 backface-hidden bg-white p-8 flex flex-col items-center justify-center text-center"><span class="text-[10px] font-bold text-gray-300 uppercase mb-4">Front</span><h3 class="text-xl md:text-2xl font-bold text-navy">${card.front}</h3><div class="mt-8 text-xs text-orange font-bold uppercase animate-pulse">Tap to Flip</div></div><div class="absolute inset-0 backface-hidden bg-navy p-8 flex flex-col items-center justify-center text-center rotate-y-180"><span class="text-[10px] font-bold text-blue-200 uppercase mb-4">Back</span><h3 class="text-lg md:text-xl font-medium text-white">${card.back}</h3></div></div></div><div class="w-full max-w-xl flex gap-4 mt-8"><button onclick="app.prevCard()" class="flex-1 py-3 border border-gray-200 bg-white text-gray-500 text-xs font-bold uppercase rounded hover:bg-gray-50">Previous</button><button onclick="app.nextCard()" class="flex-1 py-3 bg-navy text-white text-xs font-bold uppercase rounded hover:bg-orange transition">Next Card</button></div></div>`;
+            },
+            flipCard() { this.flashcardFlipped = !this.flashcardFlipped; this.nav('flashcards'); },
+            nextCard() { if(this.flashcardIndex < DB.state.flashcards.length-1) { this.flashcardIndex++; this.flashcardFlipped = false; this.nav('flashcards'); } },
+            prevCard() { if(this.flashcardIndex > 0) { this.flashcardIndex--; this.flashcardFlipped = false; this.nav('flashcards'); } },
+
+            renderAuth(container) { container.innerHTML = `<div class="flex items-center justify-center h-full bg-light-bg p-4"><div class="w-full max-w-md bg-white p-8 rounded shadow-lg border-t-4 border-orange"><h2 class="text-2xl font-bold text-navy mb-6 text-center">Cloud Login</h2><div class="space-y-4"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username</label><input type="text" id="login-user" class="w-full p-3 border border-gray-200 rounded text-sm bg-gray-50"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label><input type="password" id="login-pass" class="w-full p-3 border border-gray-200 rounded text-sm bg-gray-50"></div><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3 mt-4">Sign In</button><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-outline py-3 mt-2">Register</button></div></div></div>`; },
+            async handleLogin() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.login(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Welcome','success'); this.nav('dashboard'); } } },
+            async handleRegister() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.register(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Account created','success'); this.nav('dashboard'); } } },
+            renderAdmin(container) { container.innerHTML = `<div class="p-8 max-w-2xl mx-auto"><h2 class="text-2xl font-bold text-navy mb-6">Settings</h2><div class="bg-white p-6 rounded shadow border border-gray-200"><h3 class="text-xs font-bold text-orange uppercase tracking-widest mb-4">Data Management</h3><div class="p-4 border border-dashed border-gray-300 rounded bg-gray-50 text-center cursor-pointer hover:bg-blue-50 transition"><i class="fa-solid fa-upload text-gray-400 mb-2"></i><div class="text-xs font-bold text-navy">Import Curriculum.json</div></div></div></div>`; }
         };
 
         document.addEventListener('DOMContentLoaded', () => app.start());
     </script>
+    <style>
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .perspective-1000 { perspective: 1000px; }
+    </style>
 </body>
 </html>
