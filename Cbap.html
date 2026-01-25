@@ -16,8 +16,8 @@
                             navy: { 
                                 dark: '#001a33',   // Nền chính (Body)
                                 DEFAULT: '#003366', // Nền thẻ (Cards)
-                                // ĐÃ GIẢM VIỀN: Chuyển từ #004080 sang màu trong suốt cực mờ
-                                light: 'rgba(255, 255, 255, 0.05)' 
+                                // ĐÃ GIẢM VIỀN TỐI ĐA: Chỉ còn 2% độ sáng (Rất mờ)
+                                light: 'rgba(255, 255, 255, 0.02)' 
                             },
                             orange: { 
                                 DEFAULT: '#FF6600', // Accent chính
@@ -100,7 +100,7 @@
         }
         .swiss-btn-primary { background-color: #FF6600; color: white; border: 1px solid #FF6600; }
         .swiss-btn-primary:hover { background-color: #E65C00; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 102, 0, 0.2); }
-        .swiss-btn-outline { background-color: transparent; color: #D1D5DB; border: 1px solid rgba(255,255,255,0.1); }
+        .swiss-btn-outline { background-color: transparent; color: #D1D5DB; border: 1px solid rgba(255,255,255,0.05); }
         .swiss-btn-outline:hover { border-color: #FF6600; color: #FF6600; background: rgba(0, 51, 102, 0.5); }
 
         /* --- FLIP CARD STYLES (FIXED & ROBUST) --- */
@@ -144,7 +144,7 @@
             color: white; 
             z-index: 2; 
             transform: rotateY(0deg); 
-            border: 1px solid rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.02); 
         }
 
         /* Mặt sau (Back) */
@@ -170,19 +170,19 @@
             animation: slideIn 0.3s ease-out forwards; 
             display: flex; align-items: center; gap: 12px; 
             z-index: 6000; 
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
             color: white;
         }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* Helpers */
-        .glass-panel { background: rgba(0, 51, 102, 0.4); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-panel { background: rgba(0, 51, 102, 0.4); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.02); }
         .text-glow { text-shadow: 0 0 10px rgba(255, 102, 0, 0.3); }
         
         /* Inputs Override */
         input {
             background-color: #002244 !important;
-            border-color: rgba(255,255,255,0.1) !important;
+            border-color: rgba(255,255,255,0.05) !important;
             color: white !important;
         }
         input:focus {
@@ -603,19 +603,20 @@
                         <!-- Shortcuts (Dark Cards) -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <button onclick="app.nav('learn')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-graduation-cap"></i></div>
+                                <!-- Đã bỏ border cho Icon -->
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-graduation-cap"></i></div>
                                 <div><div class="font-bold text-white text-xs uppercase tracking-wider">Knowledge</div><div class="text-[9px] text-gray-500 font-bold">Track Tasks</div></div>
                             </button>
                             <button onclick="app.nav('library')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-book-open"></i></div>
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-book-open"></i></div>
                                 <div><div class="font-bold text-white text-xs uppercase tracking-wider">Library</div><div class="text-[9px] text-gray-500 font-bold">Books & Slides</div></div>
                             </button>
                             <button onclick="app.nav('exam')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen-to-square"></i></div>
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen-to-square"></i></div>
                                 <div><div class="font-bold text-white text-xs uppercase tracking-wider">Exam Sim</div><div class="text-[9px] text-gray-500 font-bold">Practice Quiz</div></div>
                             </button>
                             <button onclick="app.nav('flashcards')" class="bg-navy p-4 rounded-lg shadow-md border border-navy-light hover:border-orange transition text-left group flex items-center gap-3">
-                                <div class="w-10 h-10 rounded bg-navy-dark text-orange border border-navy-light group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-bolt"></i></div>
+                                <div class="w-10 h-10 rounded bg-navy-dark text-orange group-hover:bg-orange group-hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-bolt"></i></div>
                                 <div><div class="font-bold text-white text-xs uppercase tracking-wider">Flashcards</div><div class="text-[9px] text-gray-500 font-bold">Memory Aid</div></div>
                             </button>
                         </div>
@@ -681,7 +682,8 @@
                                 <div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light hover:border-orange hover:shadow-[0_0_15px_rgba(255,102,0,0.1)] transition group flex flex-col h-full cursor-pointer" onclick="app.viewModule('${c.code}')">
                                     <div class="flex justify-between items-start mb-4">
                                         <span class="text-4xl font-black text-navy-dark text-outline group-hover:text-orange/20 transition">${(i+1).toString().padStart(2,'0')}</span>
-                                        <span class="bg-navy-dark border border-navy-light text-orange text-[9px] font-bold px-2 py-1 uppercase tracking-widest rounded">${c.code}</span>
+                                        <!-- Đã bỏ border quanh Code (INTRO, BACCM...) -->
+                                        <span class="bg-navy-dark text-orange text-[9px] font-bold px-2 py-1 uppercase tracking-widest rounded">${c.code}</span>
                                     </div>
                                     <h3 class="text-lg font-bold text-white mb-2 group-hover:text-orange transition tracking-tight">${c.name}</h3>
                                     <div class="w-full bg-navy-dark border border-navy-light h-1.5 rounded-full overflow-hidden mb-3">
@@ -689,7 +691,8 @@
                                     </div>
                                     <div class="text-[10px] text-gray-400 mb-6 uppercase tracking-wider font-bold">${done}/${tasks.length} Completed</div>
                                     <div class="mt-auto">
-                                        <button class="w-full bg-navy-dark border border-navy-light text-gray-300 py-3 rounded text-[10px] font-bold uppercase tracking-widest group-hover:bg-orange group-hover:text-white group-hover:border-orange transition">View Details</button>
+                                        <!-- Đã bỏ border quanh nút View Details -->
+                                        <button class="w-full bg-navy-dark text-gray-300 py-3 rounded text-[10px] font-bold uppercase tracking-widest group-hover:bg-orange group-hover:text-white transition">View Details</button>
                                     </div>
                                 </div>`;
                             }).join('')}
@@ -849,13 +852,15 @@
                             <h3 class="text-lg font-bold text-white mb-8 leading-relaxed">${q.stem}</h3>
                             <div class="space-y-4">
                                 ${q.options.map((opt, i) => { 
-                                    let cls = "border-navy-light hover:bg-navy-dark bg-navy-dark/30 text-gray-300"; 
+                                    // Loại bỏ hoàn toàn các class liên quan đến border ở đây
+                                    let cls = "hover:bg-navy-dark bg-navy-dark/30 text-gray-300"; 
                                     if(isAnswered) { 
-                                        if(i === q.correct[0]) cls = "bg-green-900/40 border-green-600 text-green-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]"; 
-                                        else if(i === userAns) cls = "bg-red-900/40 border-red-600 text-red-400 font-bold"; 
-                                        else cls = "opacity-40 border-navy-light";
+                                        if(i === q.correct[0]) cls = "bg-green-900/40 text-green-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]"; 
+                                        else if(i === userAns) cls = "bg-red-900/40 text-red-400 font-bold"; 
+                                        else cls = "opacity-40";
                                     } 
-                                    return `<div onclick="${!isAnswered ? `app.answerExam(${i})` : ''}" class="p-4 border rounded cursor-pointer transition flex items-center gap-4 ${cls}"><span class="font-bold border border-navy-light w-8 h-8 flex items-center justify-center rounded text-xs bg-navy text-white">${String.fromCharCode(65+i)}</span> ${opt}</div>`; 
+                                    // Bỏ class "border" ở div container
+                                    return `<div onclick="${!isAnswered ? `app.answerExam(${i})` : ''}" class="p-4 rounded cursor-pointer transition flex items-center gap-4 ${cls}"><span class="font-bold border border-navy-light w-8 h-8 flex items-center justify-center rounded text-xs bg-navy text-white">${String.fromCharCode(65+i)}</span> ${opt}</div>`; 
                                 }).join('')}
                             </div>
                             ${isAnswered ? `<div class="mt-8 p-5 bg-navy-dark text-gray-300 text-sm rounded border-l-4 border-orange"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
