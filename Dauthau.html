@@ -1478,7 +1478,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.showScreen('result');
         },
         
-        // ... (Các hàm logQuizResult, saveResult, displayResult, showHistory, showExplanationModal giữ nguyên) ...
         async logQuizResult(res, cfg) {
             if(!supabaseClient) return;
             try { await supabaseClient.from('quiz_results').insert({student_name: res.name, score: res.score, total_questions: res.totalQuestions, time_taken_seconds: res.timeTaken}); } catch(e){}
@@ -1488,6 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
             h.unshift(res); if(h.length>20) h=h.slice(0,20);
             localStorage.setItem('quizHistory', JSON.stringify(h));
         },
+        // --- DISPLAY RESULT (UPDATED) ---
         displayResult(res) {
             const pct = (res.score/res.totalQuestions*100).toFixed(1);
             this.displays.resultSummary.innerHTML = `<p class="text-xl">Điểm: <b class="${pct>=50?'text-green-700':'text-red-600'}">${res.score}/${res.totalQuestions}</b> (${pct}%)</p><p class="text-sm">Thời gian: ${this.formatTime(res.timeTaken)}</p>`;
@@ -1502,8 +1502,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.className = `p-4 border rounded ${right?'bg-green-50 border-green-300':'bg-red-50 border-red-300'}`;
                 
                 let expl = '';
-                if(q.explanation_right) expl += `<div class="mt-2 text-sm text-green-800 bg-green-100 p-2 rounded">✅ ${q.explanation_right}</div>`;
-                if(q.explanation_wrong) expl += `<div class="mt-2 text-sm text-red-800 bg-red-100 p-2 rounded">❌ ${q.explanation_wrong}</div>`;
+                // THÊM: Hiển thị đầy đủ cả 3 loại giải thích nếu có
+                if(q.explanation_right) expl += `<div class="mt-2 text-sm text-green-800 bg-green-100 p-2 rounded">✅ <b>Giải thích đúng:</b> ${q.explanation_right}</div>`;
+                if(q.explanation_wrong) expl += `<div class="mt-2 text-sm text-red-800 bg-red-100 p-2 rounded">❌ <b>Giải thích sai:</b> ${q.explanation_wrong}</div>`;
+                if(q.explanation_question) expl += `<div class="mt-2 text-sm text-blue-800 bg-blue-100 p-2 rounded">🕵️ <b>Bóc phốt đề:</b> ${q.explanation_question}</div>`;
 
                 card.innerHTML = `<p class="font-bold">Câu ${i+1}: ${q.question}</p>
                     <p class="text-sm mt-1">Bạn chọn: <b>${u||'--'}</b> | Đáp án: <b class="text-green-700">${q.answer}</b></p>
@@ -1536,16 +1538,38 @@ document.addEventListener('DOMContentLoaded', () => {
         clearHistory() {
             if(confirm('Xóa hết lịch sử?')) { localStorage.removeItem('quizHistory'); this.showHistory(); }
         },
+        
+        // --- SHOW CURRENT ANSWER POPUP (UPDATED) ---
         showCurrentAnswer() {
              const q = this.quizQuestions[this.currentQuestionIndex];
              const u = this.userAnswers[this.currentQuestionIndex];
              const modal = document.getElementById('review-modal');
              const ph = document.getElementById('modal-content-placeholder');
+             
+             let expl = '';
+             // THÊM: Hiển thị đầy đủ cả 3 loại giải thích trong popup
+             if(q.explanation_right) expl += `<div class="mt-2 text-sm text-green-800 bg-green-100 p-2 rounded">✅ <b>Giải thích đúng:</b> ${q.explanation_right}</div>`;
+             if(q.explanation_wrong) expl += `<div class="mt-2 text-sm text-red-800 bg-red-100 p-2 rounded">❌ <b>Giải thích sai:</b> ${q.explanation_wrong}</div>`;
+             if(q.explanation_question) expl += `<div class="mt-2 text-sm text-blue-800 bg-blue-100 p-2 rounded">🕵️ <b>Bóc phốt đề:</b> ${q.explanation_question}</div>`;
+
              ph.innerHTML = `<h3 class="font-bold text-lg mb-2">Đáp án Câu ${this.currentQuestionIndex+1}</h3>
-                <p>${q.question}</p>
-                <div class="my-2 p-2 bg-gray-100 rounded">Bạn chọn: <b>${u||'--'}</b> | Đáp án: <b class="text-green-700">${q.answer}</b></div>
-                <div class="text-sm">${q.explanation_right ? `<p class="text-green-800 mt-2"><b>Giải thích:</b> ${q.explanation_right}</p>` : ''}</div>
-                <div class="text-right mt-4"><button onclick="document.getElementById('review-modal-backdrop').classList.remove('active')" class="px-4 py-2 bg-gray-500 text-white rounded">Đóng</button></div>`;
+                <p class="mb-4 text-justify">${q.question}</p>
+                
+                <div class="mb-4 space-y-2">
+                    <div class="p-2 border rounded ${q.answer==='A'?'bg-green-100 border-green-500 font-bold text-green-800':''}">A. ${q.options.A}</div>
+                    <div class="p-2 border rounded ${q.answer==='B'?'bg-green-100 border-green-500 font-bold text-green-800':''}">B. ${q.options.B}</div>
+                    <div class="p-2 border rounded ${q.answer==='C'?'bg-green-100 border-green-500 font-bold text-green-800':''}">C. ${q.options.C}</div>
+                    <div class="p-2 border rounded ${q.answer==='D'?'bg-green-100 border-green-500 font-bold text-green-800':''}">D. ${q.options.D}</div>
+                </div>
+
+                <div class="my-2 p-2 bg-gray-100 rounded">Bạn chọn: <b>${u||'--'}</b> | Đáp án đúng: <b class="text-green-700">${q.answer}</b></div>
+                
+                <div class="space-y-2 border-t pt-2 mt-2">
+                    <h4 class="font-bold text-sm text-gray-700">Chi tiết giải thích:</h4>
+                    ${expl || '<i class="text-gray-500 text-sm">Chưa có lời giải thích chi tiết.</i>'}
+                </div>
+                
+                <div class="text-right mt-4"><button onclick="document.getElementById('review-modal-backdrop').classList.remove('active')" class="px-4 py-2 bg-gray-500 text-white rounded font-bold hover:bg-gray-600">Đóng</button></div>`;
              document.getElementById('review-modal-backdrop').classList.add('active');
         },
 
