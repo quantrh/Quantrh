@@ -16,8 +16,7 @@
                             navy: { 
                                 dark: '#001a33',   // Nền chính (Body)
                                 DEFAULT: '#003366', // Nền thẻ (Cards)
-                                // ĐÃ GIẢM VIỀN TỐI ĐA: Chỉ còn 2% độ sáng (Rất mờ)
-                                light: 'rgba(255, 255, 255, 0.02)' 
+                                light: 'rgba(255, 255, 255, 0.05)' 
                             },
                             orange: { 
                                 DEFAULT: '#FF6600', // Accent chính
@@ -253,10 +252,10 @@
                 <span class="nav-text text-xs ml-3 uppercase tracking-widest">Flashcards</span>
             </button>
             
-            <div class="px-6 mt-8 mb-3"><span class="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">System</span></div>
-            <button onclick="app.nav('admin')" id="nav-admin" class="nav-item w-full text-left px-6 py-3 flex items-center group">
-                <i class="fa-solid fa-sliders w-5 text-center transition-colors"></i>
-                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Settings</span>
+            <!-- Removed System/Settings and added Logout Button (Hidden by default) -->
+            <button onclick="Auth.logout()" id="nav-logout" class="hidden nav-item w-full text-left px-6 py-3 flex items-center group text-red-400 hover:text-red-500 mt-auto">
+                <i class="fa-solid fa-right-from-bracket w-5 text-center transition-colors"></i>
+                <span class="nav-text text-xs ml-3 uppercase tracking-widest">Log Out</span>
             </button>
         </nav>
         
@@ -342,7 +341,8 @@
         // --- DATA ---
         const mediaPath = 'CbapMedia/';
         const videoMapping = {
-            'INTRO': 'https://www.youtube.com/watch?v=-T7mQzxs4TM&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=1',
+            // Updated video link to use basic 'watch' format to ensure getEmbedLink parses correctly and strips parameters
+            'INTRO': [{ title: "INTRODUCTION", url: "https://www.youtube.com/watch?v=-T7mQzxs4TM" }, { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }],
             'BACCM': [{ title: "BACCM Overview", url: "https://1drv.ms/v/c/0ad9a5e369cb0bf2/IQQ1a9VaUUkIRazjdZLFgYDIAVP2QdsYXuehLzmyx9_igWc" }, { title: "Key Concepts", url: "https://www.youtube.com/watch?v=cVsGlP-DYPs" }],
             'BAPM': 'https://www.youtube.com/watch?v=ddo6gKe7Jhw&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=3',
             'ELIC': 'https://www.youtube.com/watch?v=nZB3e-yGSxk&list=PLcsVLaGLO5v_5efVhsT7GmT-Ms3whvA5x&index=8',
@@ -523,6 +523,18 @@
                 document.getElementById('sidebar-avatar').innerText = initial;
                 document.getElementById('header-avatar').innerText = initial;
                 document.getElementById('mobile-user-avatar').innerText = initial;
+
+                // Toggle visibility of Log Out button
+                const logoutBtn = document.getElementById('nav-logout');
+                if (logoutBtn) {
+                    if (user.loggedIn) {
+                        logoutBtn.classList.remove('hidden');
+                        logoutBtn.classList.add('flex');
+                    } else {
+                        logoutBtn.classList.add('hidden');
+                        logoutBtn.classList.remove('flex');
+                    }
+                }
             },
 
             toggleSidebar() {
@@ -732,7 +744,7 @@
                                                 <div><div class="text-sm font-bold ${isDone ? 'text-gray-500 line-through' : 'text-white'}">${t.name}</div><div class="text-[9px] text-gray-600 font-mono mt-1">${t.id}</div></div>
                                             </div>
                                             <button onclick="app.toggleTaskState('${t.id}', '${params.code}')" class="px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest border transition flex items-center gap-2 ${isDone ? 'bg-green-900/20 text-green-500 border-green-800 hover:bg-red-900/20 hover:text-red-500 hover:border-red-800' : 'bg-navy-dark text-gray-400 border-navy-light hover:border-orange hover:text-orange'}">
-                                                ${isDone ? '<span>Done</span> <i class="fa-solid fa-check"></i>' : '<span>Mark</span>'}
+                                                ${isDone ? '<span>Done</span> <i class="fa-solid fa-check"></i>' : '<span>Mark as Done</span>'}
                                             </button>
                                         </div>`;
                                 }).join('')}
@@ -749,9 +761,42 @@
                 const vMap = videoMapping||{}, vnMap = textbookVnMapping||{}, enMap = textbookEnMapping||{}, resMap = resourceMapping||{};
                 let list = [], currentItem = this.selectedSubResource;
                 
+                // --- UPDATE: Helper xử lý link Youtube (Logic trích xuất ID chuẩn) ---
+                const getEmbedLink = (url) => {
+                    if (!url) return '';
+                    let videoId = null;
+                    
+                    // Regex tìm ID từ mọi định dạng (watch?v=, embed/, youtu.be/)
+                    // Quan trọng: Nó sẽ bỏ qua phần tham số sau dấu ? (như ?si=...)
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = url.match(regExp);
+
+                    if (match && match[2].length === 11) {
+                        videoId = match[2];
+                        return `https://www.youtube.com/embed/${videoId}`;
+                    }
+                    
+                    // Nếu không phải link Youtube chuẩn, trả về nguyên gốc (ví dụ link OneDrive)
+                    return url;
+                };
+
+                // Xử lý danh sách cho cả Video để hiển thị Sidebar chọn bài
                 if (type === 'slide') list = (resMap[code]?.slides) || [];
                 else if (type === 'mindmap') list = (resMap[code]?.mindmaps) || [];
                 else if (type === 'info') list = (resMap[code]?.info) || [];
+                
+                // Chuẩn bị danh sách Video từ cấu hình
+                let videoList = [];
+                if (type === 'video') {
+                    const raw = vMap[code];
+                    if (Array.isArray(raw)) {
+                        videoList = raw;
+                    } else if (typeof raw === 'string' && raw.trim() !== '') {
+                        videoList = [{ title: 'Main Video', url: raw }];
+                    }
+                }
+
+                // Chọn item mặc định
                 if (list.length > 0 && (!currentItem || !list.find(i => i.url === currentItem.url))) currentItem = list[0];
 
                 const loader = `<div id="content-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-navy-dark z-0"><div class="spinner mb-2"></div><span class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Loading Content...</span></div>`;
@@ -760,17 +805,54 @@
                 if (type === 'textbookvn' || type === 'textbookEN') {
                     let rawUrl = (type === 'textbookvn') ? (vnMap[code] || vnMap['INTRO']) : (enMap[code] || enMap['INTRO']);
                     if (rawUrl) viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(rawUrl)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
-                } else if (type === 'video') {
-                    let vidData = vMap[code];
-                    let vidUrl = Array.isArray(vidData) ? vidData[0].url : vidData;
-                    if (vidUrl) { if(vidUrl.includes('watch?v=')) vidUrl = vidUrl.replace('watch?v=', 'embed/'); viewerHtml = `<div class="h-full w-full bg-black flex items-center justify-center border border-navy-light"><iframe class="w-full max-w-4xl aspect-video shadow-2xl" src="${vidUrl}" frameborder="0" allowfullscreen></iframe></div>`; }
-                } else if (currentItem) {
+                } 
+                // --- CẬP NHẬT GIAO DIỆN VIDEO (GIỐNG FILE MẪU KA.TXT) ---
+                else if (type === 'video') {
+                    if (videoList.length > 0) {
+                        viewerHtml = `<div class="h-full w-full overflow-y-auto bg-navy-dark p-4 md:p-8 space-y-8 custom-scrollbar">`;
+                        
+                        videoList.forEach((v, index) => {
+                            // Bước 1: Lấy link sạch (không còn ?si=...)
+                            const embedUrl = getEmbedLink(v.url);
+                            
+                            if(embedUrl) {
+                                viewerHtml += `
+                                   <div class="max-w-4xl mx-auto bg-black border border-navy-light rounded-lg overflow-hidden shadow-2xl relative group">
+                                        <div class="p-3 bg-navy border-b border-navy-light flex justify-between items-center z-20 relative">
+                                            <h4 class="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                                <i class="fa-solid fa-play-circle text-orange"></i> ${v.title || `Video ${index + 1}`}
+                                            </h4>
+                                            <a href="${embedUrl}" target="_blank" class="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 transition">
+                                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open External
+                                            </a>
+                                        </div>
+                                        <div class="relative w-full" style="padding-bottom: 56.25%;"> <!-- Tỉ lệ 16:9 -->
+                                            <!-- FIX: Iframe tối giản, loại bỏ allow="accelerometer..." gây lỗi cấu hình -->
+                                            <iframe src="${embedUrl}" 
+                                                class="absolute top-0 left-0 w-full h-full border-none z-10 bg-black" 
+                                                allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                   </div>
+                                `;
+                            }
+                        });
+                        viewerHtml += `</div>`;
+                    } else {
+                        viewerHtml = `<div class="flex flex-col items-center justify-center h-full text-gray-500 font-bold uppercase tracking-widest text-xs">No videos available for this module.</div>`;
+                    }
+                } 
+                // --- END CẬP NHẬT VIDEO ---
+                else if (currentItem) {
                     if (type === 'slide') viewerHtml = `<div class="relative w-full h-full bg-gray-200">${loader}<iframe src="${toOneD(currentItem.url)}" class="absolute inset-0 w-full h-full border-none z-10" onload="this.parentElement.querySelector('#content-loader')?.remove()"></iframe></div>`;
                     else viewerHtml = `<div class="relative w-full h-full bg-navy-dark overflow-hidden flex items-center justify-center">${loader}<img id="zoom-img" src="${currentItem.url}" class="max-w-full max-h-full shadow-lg transition-transform duration-200 z-10" style="transform: scale(${this.zoomLevel})" onload="this.parentElement.querySelector('#content-loader')?.remove()"></div>`;
                 }
 
                 // Xử lý ẩn/hiện sidebar
                 const sidebarClass = this.librarySidebarOpen ? 'block' : 'hidden';
+
+                // Nếu là Video thì không cần Sidebar file list (vì đã hiển thị list bên trong viewer)
+                const showSubResourceSidebar = (type !== 'video' && list.length > 1) ? 'block' : 'hidden';
 
                 container.innerHTML = `
                     <div class="flex h-full flex-col lg:flex-row border-t border-navy-light view-fade">
@@ -783,7 +865,6 @@
                                         <div class="flex justify-between items-center mb-1">
                                             <span class="text-xs font-bold uppercase tracking-wide ${c.code === code ? 'text-white' : 'text-gray-400'}">${c.code}</span>
                                         </div>
-                                        <!-- MÀU CAM KHÓA CỨNG: Luôn hiển thị text-orange -->
                                         <div class="text-[10px] truncate font-bold text-orange transition">${c.name}</div>
                                     </button>`).join('')}
                             </div>
@@ -793,7 +874,6 @@
                         <div class="flex-1 flex flex-col h-full bg-navy relative lg:order-2 order-2 min-h-[400px]">
                             <!-- Toolbar -->
                             <div class="h-12 bg-navy-dark border-b border-navy-light flex items-center px-4 gap-2 overflow-x-auto custom-scrollbar">
-                                <!-- Nút Toggle Sidebar Mới -->
                                 <button onclick="app.toggleLibrarySidebar()" class="w-8 h-8 flex items-center justify-center text-orange border border-navy-light rounded hover:bg-navy hover:text-white transition mr-2" title="Toggle Modules">
                                     <i class="fa-solid fa-list text-xs"></i>
                                 </button>
@@ -807,7 +887,7 @@
                         </div>
 
                         <!-- File List (Sub-resource) -->
-                        <div class="${list.length > 1 ? 'block' : 'hidden'} lg:block lg:order-3 h-full w-56 bg-navy-dark border-l border-navy-light flex-shrink-0 flex flex-col">
+                        <div class="${showSubResourceSidebar} lg:block lg:order-3 h-full w-56 bg-navy-dark border-l border-navy-light flex-shrink-0 flex flex-col">
                              <div class="p-3 bg-navy border-b border-navy-light font-bold text-[9px] text-gray-500 uppercase tracking-[0.2em]">Files</div>
                              <div class="flex-1 overflow-y-auto custom-scrollbar">${list.map(item => `<button onclick="app.selectSubResource('${item.url}', '${item.title}')" class="w-full text-left px-4 py-3 border-b border-navy-light hover:bg-navy transition ${currentItem && currentItem.url === item.url ? 'bg-navy border-l-4 border-l-orange' : 'text-gray-500'}"><div class="text-[10px] font-bold ${currentItem && currentItem.url === item.url ? 'text-white' : ''}">${item.title}</div></button>`).join('')}</div>
                         </div>
@@ -928,7 +1008,7 @@
             prevCard() { if(this.flashcardIndex > 0) { this.flashcardIndex--; this.flashcardFlipped = false; this.nav('flashcards'); } },
 
             // --- AUTH & ADMIN (Dark) ---
-            renderAuth(container) { container.innerHTML = `<div class="flex items-center justify-center h-full bg-navy-dark p-4 view-fade"><div class="w-full max-w-md bg-navy p-8 rounded-lg shadow-2xl border-t-4 border-orange relative"><div class="absolute top-0 right-0 p-4 opacity-10 text-white text-6xl"><i class="fa-solid fa-user-shield"></i></div><h2 class="text-2xl font-black italic text-white mb-8 text-center uppercase tracking-tight">System Access</h2><div class="space-y-5"><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Username</label><input type="text" id="login-user" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Password</label><input type="password" id="login-pass" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3 mt-4">Initialize Session</button><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-outline py-3 mt-2">Create New ID</button></div></div></div>`; },
+            renderAuth(container) { container.innerHTML = `<div class="flex items-center justify-center h-full bg-navy-dark p-4 view-fade"><div class="w-full max-w-md bg-navy p-8 rounded-lg shadow-2xl border-t-4 border-orange relative"><div class="absolute top-0 right-0 p-4 opacity-10 text-white text-6xl"><i class="fa-solid fa-user-shield"></i></div><h2 class="text-2xl font-black italic text-white mb-8 text-center uppercase tracking-tight">System Access</h2><div class="space-y-5"><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Username</label><input type="text" id="login-user" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Password</label><input type="password" id="login-pass" class="w-full p-3 border border-navy-light rounded text-sm bg-navy-dark text-white focus:border-orange focus:outline-none placeholder-gray-600"></div><button onclick="app.handleLogin()" class="w-full swiss-btn swiss-btn-primary py-3 mt-4">Log in</button><button onclick="app.handleRegister()" class="w-full swiss-btn swiss-btn-outline py-3 mt-2">Create New ID</button></div></div></div>`; },
             async handleLogin() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.login(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('Authenticated','success'); this.nav('dashboard'); } } },
             async handleRegister() { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; if(u&&p) { const res = await Auth.register(u,p); if(res.error) Toast.show(res.error,'error'); else { Toast.show('ID Created','success'); this.nav('dashboard'); } } },
             renderAdmin(container) { container.innerHTML = `<div class="p-8 max-w-2xl mx-auto view-fade"><h2 class="text-2xl font-black italic text-white mb-6 uppercase">System Settings</h2><div class="bg-navy p-6 rounded-lg shadow-md border border-navy-light"><h3 class="text-[10px] font-bold text-orange uppercase tracking-widest mb-6">Data Management</h3><div class="p-8 border-2 border-dashed border-navy-light rounded bg-navy-dark/50 text-center cursor-pointer hover:border-orange hover:bg-navy-dark transition group"><i class="fa-solid fa-cloud-arrow-up text-gray-500 mb-3 text-2xl group-hover:text-white transition"></i><div class="text-xs font-bold text-gray-300 group-hover:text-white uppercase tracking-wider">Import Curriculum.json</div></div></div></div>`; }
