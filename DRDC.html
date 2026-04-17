@@ -25,6 +25,8 @@
     </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* Hide scrollbar for mobile horizontal menu */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -57,6 +59,13 @@
                 btn_running: "Đang chạy",
                 btn_completed: "Hoàn thành",
                 btn_issue: "Sự cố",
+                btn_pending: "Chờ xử lý",
+                modal_title: "Xác thực thao tác",
+                modal_desc: "Vui lòng nhập mã xác nhận (passcode) để thay đổi trạng thái:",
+                modal_placeholder: "Nhập mã xác nhận...",
+                modal_error: "Mã xác nhận không chính xác!",
+                btn_cancel: "Hủy",
+                btn_confirm: "Xác nhận"
             },
             en: {
                 header_subtitle: "BIDV IT Center",
@@ -77,6 +86,13 @@
                 btn_running: "Run",
                 btn_completed: "Complete",
                 btn_issue: "Issue",
+                btn_pending: "Pending",
+                modal_title: "Authentication Required",
+                modal_desc: "Please enter the passcode to change status:",
+                modal_placeholder: "Enter passcode...",
+                modal_error: "Incorrect passcode!",
+                btn_cancel: "Cancel",
+                btn_confirm: "Confirm"
             }
         };
 
@@ -123,16 +139,43 @@
 
         // --- GLOBAL STATE ---
         let state = {
-            tasks: JSON.parse(localStorage.getItem('bidv_dr_tasks_2026')) || initialTasks,
+            tasks: initialTasks,
             activePhaseId: 'dcdr',
-            lang: 'vi'
+            lang: 'vi',
+            modalOpen: false,
+            pendingAction: null,
+            passcodeError: false
         };
 
-        // --- CORE FUNCTIONS ---
-        function saveState() {
-            localStorage.setItem('bidv_dr_tasks_2026', JSON.stringify(state.tasks));
-        }
+        // --- SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
+        
+        // Tắt Realtime websocket mặc định để tránh lỗi trên iFrame, dùng REST API thuần
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            realtime: { params: { eventsPerSecond: 0 } }
+        });
 
+        async function initializeBackend() {
+            try {
+                // Tải dữ liệu từ bảng bidv_dr_tasks_tong_the
+                const { data, error } = await supabaseClient.from('bidv_dr_tasks_tong_the').select('tasks_data').eq('id', 1).single();
+                
+                if (data && data.tasks_data) {
+                    state.tasks = data.tasks_data;
+                    render();
+                } else {
+                    // Tạo bản ghi khởi tạo nếu chưa có
+                    await supabaseClient.from('bidv_dr_tasks_tong_the').upsert({ id: 1, tasks_data: initialTasks });
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu từ Supabase:", error);
+            }
+        }
+        
+        initializeBackend();
+
+        // --- CORE FUNCTIONS ---
         function setLang(newLang) {
             state.lang = newLang;
             render();
@@ -143,10 +186,64 @@
             render();
         }
 
+        // Mở cửa sổ Modal yêu cầu nhập Passcode
         function updateTaskStatus(taskId, newStatus) {
-            state.tasks = state.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
-            saveState();
+            state.modalOpen = true;
+            state.pendingAction = { taskId, newStatus };
+            state.passcodeError = false;
             render();
+            
+            setTimeout(() => {
+                const input = document.getElementById('passcode-input');
+                if (input) input.focus();
+            }, 50);
+        }
+
+        function closeModal() {
+            state.modalOpen = false;
+            state.pendingAction = null;
+            state.passcodeError = false;
+            render();
+        }
+
+        function submitPasscode() {
+            const input = document.getElementById('passcode-input');
+            if (input && input.value === 'bidvdr') {
+                executeTaskUpdate();
+            } else {
+                state.passcodeError = true;
+                render();
+                
+                setTimeout(() => {
+                    const inputRef = document.getElementById('passcode-input');
+                    if (inputRef) {
+                        inputRef.focus();
+                        inputRef.value = '';
+                    }
+                }, 10);
+            }
+        }
+
+        // Thực thi cập nhật trạng thái và đồng bộ Supabase
+        async function executeTaskUpdate() {
+            if (!state.pendingAction) return;
+            const { taskId, newStatus } = state.pendingAction;
+
+            // Cập nhật state nội bộ
+            state.tasks = state.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
+            
+            // Đóng Modal
+            state.modalOpen = false;
+            state.pendingAction = null;
+            state.passcodeError = false;
+            render();
+            
+            // Lưu lên Supabase
+            try {
+                await supabaseClient.from('bidv_dr_tasks_tong_the').upsert({ id: 1, tasks_data: state.tasks });
+            } catch (error) {
+                console.error("Lỗi khi lưu trữ lên Supabase:", error);
+            }
         }
 
         function getStats() {
@@ -264,9 +361,10 @@
                                 <span class="leading-tight">${task.unit[state.lang]}</span>
                             </div>
                             <div class="flex items-center gap-1 bg-white border border-slate-100 rounded-lg p-1 shadow-sm">
-                                <button onclick="updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded"><i data-lucide="play-circle" class="w-4 h-4"></i></button>
-                                <button onclick="updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
-                                <button onclick="updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i data-lucide="alert-triangle" class="w-4 h-4"></i></button>
+                                <button onclick="updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                                <button onclick="updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-4 h-4"></i></button>
+                                <button onclick="updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
+                                <button onclick="updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     </div>`;
@@ -282,8 +380,8 @@
                             <th class="px-6 py-4 w-[15%]">${t.col_time}</th>
                             <th class="px-6 py-4 w-[40%]">${t.col_desc}</th>
                             <th class="px-6 py-4 w-[20%]">${t.col_unit}</th>
-                            <th class="px-6 py-4 w-[15%]">${t.col_status}</th>
-                            <th class="px-6 py-4 w-[10%] text-center">${t.col_action}</th>
+                            <th class="px-6 py-4 w-[12%]">${t.col_status}</th>
+                            <th class="px-6 py-4 w-[13%] text-center">${t.col_action}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -310,6 +408,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
                                         <button onclick="updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-5 h-5"></i></button>
                                         <button onclick="updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
                                         <button onclick="updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-5 h-5"></i></button>
@@ -322,6 +421,33 @@
             </div>`;
 
             return mobileView + desktopView;
+        }
+
+        function renderModal(t) {
+            return `
+            <div id="passcode-modal" class="${state.modalOpen ? 'flex' : 'hidden'} fixed inset-0 z-50 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="lock" class="w-5 h-5 text-bidv-primary"></i>
+                            ${t.modal_title}
+                        </h3>
+                        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 outline-none"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-slate-600 mb-3">${t.modal_desc}</p>
+                        <input type="password" id="passcode-input" 
+                            class="w-full border ${state.passcodeError ? 'border-red-500 ring-red-100' : 'border-slate-300'} rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary/50" 
+                            placeholder="${t.modal_placeholder}" 
+                            onkeydown="if(event.key === 'Enter') submitPasscode()">
+                        ${state.passcodeError ? `<p class="text-xs text-red-500 mt-2 font-medium"><i data-lucide="alert-circle" class="w-3 h-3 inline"></i> ${t.modal_error}</p>` : ''}
+                    </div>
+                    <div class="p-4 bg-slate-50 flex justify-end gap-2">
+                        <button onclick="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors outline-none">${t.btn_cancel}</button>
+                        <button onclick="submitPasscode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-bidv-primary text-white hover:bg-[#005553] transition-colors outline-none">${t.btn_confirm}</button>
+                    </div>
+                </div>
+            </div>`;
         }
 
         function render() {
@@ -342,6 +468,7 @@
                         ${renderTasks(t, filteredTasks)}
                     </div>
                 </div>
+                ${renderModal(t)}
             `;
 
             document.getElementById('app-root').innerHTML = html;
