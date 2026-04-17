@@ -63,7 +63,13 @@
                 btn_running: "Đang chạy",
                 btn_completed: "Hoàn thành",
                 btn_issue: "Sự cố",
-                btn_pending: "Chờ xử lý"
+                btn_pending: "Chờ xử lý",
+                modal_title: "Xác thực thao tác",
+                modal_desc: "Vui lòng nhập mã xác nhận (passcode) để thay đổi trạng thái:",
+                modal_placeholder: "Nhập mã xác nhận...",
+                modal_error: "Mã xác nhận không chính xác!",
+                btn_cancel: "Hủy",
+                btn_confirm: "Xác nhận"
             },
             en: {
                 header_subtitle: "Core Banking Management & Dev Dept",
@@ -84,7 +90,13 @@
                 btn_running: "Run",
                 btn_completed: "Complete",
                 btn_issue: "Issue",
-                btn_pending: "Pending"
+                btn_pending: "Pending",
+                modal_title: "Authentication Required",
+                modal_desc: "Please enter the passcode to change status:",
+                modal_placeholder: "Enter passcode...",
+                modal_error: "Incorrect passcode!",
+                btn_cancel: "Cancel",
+                btn_confirm: "Confirm"
             }
         };
 
@@ -127,7 +139,10 @@
             tasks: initialTasks, 
             activePhaseId: 'dcdr',
             lang: 'vi',
-            user: null
+            user: null,
+            modalOpen: false,
+            pendingAction: null,
+            passcodeError: false
         };
 
         // ==========================================
@@ -233,9 +248,60 @@
             window.render();
         };
 
-        window.updateTaskStatus = async function(taskId, newStatus) {
-            // Cập nhật giao diện lập tức (Optimistic Update)
+        // Hàm mở cửa sổ Modal yêu cầu nhập Passcode
+        window.updateTaskStatus = function(taskId, newStatus) {
+            window.state.modalOpen = true;
+            window.state.pendingAction = { taskId, newStatus };
+            window.state.passcodeError = false;
+            window.render();
+            
+            // Tự động focus vào ô nhập liệu
+            setTimeout(() => {
+                const input = document.getElementById('passcode-input');
+                if (input) input.focus();
+            }, 50);
+        };
+
+        window.closeModal = function() {
+            window.state.modalOpen = false;
+            window.state.pendingAction = null;
+            window.state.passcodeError = false;
+            window.render();
+        };
+
+        window.submitPasscode = function() {
+            const input = document.getElementById('passcode-input');
+            if (input && input.value === 'bidvdr') {
+                window.executeTaskUpdate();
+            } else {
+                window.state.passcodeError = true;
+                window.render();
+                
+                // Đặt lại focus vào ô nhập và xóa giá trị sai
+                setTimeout(() => {
+                    const inputRef = document.getElementById('passcode-input');
+                    if (inputRef) {
+                        inputRef.focus();
+                        inputRef.value = '';
+                    }
+                }, 10);
+            }
+        };
+
+        // Hàm thực thi cập nhật trạng thái sau khi đã nhập đúng Passcode
+        window.executeTaskUpdate = async function() {
+            if (!window.state.pendingAction) return;
+            const { taskId, newStatus } = window.state.pendingAction;
+
+            // Cập nhật state
             window.state.tasks = window.state.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
+            
+            // Đóng Modal
+            window.state.modalOpen = false;
+            window.state.pendingAction = null;
+            window.state.passcodeError = false;
+            
+            // Render lại giao diện (Optimistic Update)
             window.render();
             
             // Đồng bộ lên Cloud Storage
@@ -433,6 +499,33 @@
             return mobileView + desktopView;
         }
 
+        window.renderModal = function(t) {
+            return `
+            <div id="passcode-modal" class="${state.modalOpen ? 'flex' : 'hidden'} fixed inset-0 z-50 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="lock" class="w-5 h-5 text-bidv-primary"></i>
+                            ${t.modal_title}
+                        </h3>
+                        <button onclick="window.closeModal()" class="text-slate-400 hover:text-slate-600 outline-none"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-slate-600 mb-3">${t.modal_desc}</p>
+                        <input type="password" id="passcode-input" 
+                            class="w-full border ${state.passcodeError ? 'border-red-500 ring-red-100' : 'border-slate-300'} rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary/50" 
+                            placeholder="${t.modal_placeholder}" 
+                            onkeydown="if(event.key === 'Enter') window.submitPasscode()">
+                        ${state.passcodeError ? `<p class="text-xs text-red-500 mt-2 font-medium"><i data-lucide="alert-circle" class="w-3 h-3 inline"></i> ${t.modal_error}</p>` : ''}
+                    </div>
+                    <div class="p-4 bg-slate-50 flex justify-end gap-2">
+                        <button onclick="window.closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors outline-none">${t.btn_cancel}</button>
+                        <button onclick="window.submitPasscode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-bidv-primary text-white hover:bg-[#005553] transition-colors outline-none">${t.btn_confirm}</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
         window.render = function() {
             const t = DICT[state.lang];
             const stats = window.getStats();
@@ -451,6 +544,7 @@
                         ${window.renderTasks(t, filteredTasks)}
                     </div>
                 </div>
+                ${window.renderModal(t)}
             `;
 
             document.getElementById('app-root').innerHTML = html;
