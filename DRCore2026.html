@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Diễn tập DR Core Banking 2026 - BIDV</title>
+    <title>Hệ thống Quản lý Diễn tập DR 2026 - BIDV</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tailwind Config for BIDV Colors -->
@@ -37,16 +37,12 @@
 
     <div id="app-root"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         // --- DATA & CONFIGURATION ---
         const DICT = {
             vi: {
-                header_subtitle: "Ban Quản lý & Phát triển Core Banking",
-                header_title: "Quản lý Diễn tập DR Core Banking 2026",
+                header_subtitle: "Trung Tâm CNTT BIDV",
+                header_title: "Hệ thống Quản lý Diễn tập DR 2026",
                 progress: "Tiến độ tổng thể",
                 stats_completed: "Hoàn thành",
                 stats_running: "Đang chạy",
@@ -58,6 +54,7 @@
                 col_desc: "Nội dung thực hiện",
                 col_unit: "Đơn vị đầu mối",
                 col_status: "Trạng thái",
+                col_note: "Ghi chú",
                 col_action: "Cập nhật",
                 empty_data: "Không có dữ liệu cho giai đoạn này.",
                 btn_running: "Đang chạy",
@@ -67,13 +64,14 @@
                 modal_title: "Xác thực thao tác",
                 modal_desc: "Vui lòng nhập mã xác nhận (passcode) để thay đổi trạng thái:",
                 modal_placeholder: "Nhập mã xác nhận...",
+                placeholder_note: "Nhập ghi chú...",
                 modal_error: "Mã xác nhận không chính xác!",
                 btn_cancel: "Hủy",
                 btn_confirm: "Xác nhận"
             },
             en: {
-                header_subtitle: "Core Banking Management & Dev Dept",
-                header_title: "2026 Core Banking DR Drill Management",
+                header_subtitle: "BIDV IT Center",
+                header_title: "2026 Comprehensive DR Drill Management",
                 progress: "Overall Progress",
                 stats_completed: "Completed",
                 stats_running: "In Progress",
@@ -85,6 +83,7 @@
                 col_desc: "Task Description",
                 col_unit: "Lead Unit",
                 col_status: "Status",
+                col_note: "Note",
                 col_action: "Action",
                 empty_data: "No data available for this phase.",
                 btn_running: "Run",
@@ -94,6 +93,7 @@
                 modal_title: "Authentication Required",
                 modal_desc: "Please enter the passcode to change status:",
                 modal_placeholder: "Enter passcode...",
+                placeholder_note: "Enter note...",
                 modal_error: "Incorrect passcode!",
                 btn_cancel: "Cancel",
                 btn_confirm: "Confirm"
@@ -102,9 +102,10 @@
 
         const PHASES = [
             { id: 'overview', vi: 'Tổng quan', en: 'Overview', icon: 'clipboard-list' },
-            { id: 'prep', vi: 'Công tác chuẩn bị', en: 'Preparation Phase', icon: 'settings' },
-            { id: 'dcdr', vi: 'Phase I: Chuyển DC sang DR', en: 'Phase I: DC to DR', icon: 'server-crash' },
-            { id: 'drdc', vi: 'Phase II: Chuyển DR về DC', en: 'Phase II: DR to DC', icon: 'server' }
+            { id: 'prep', vi: 'Giai đoạn chuẩn bị', en: 'Preparation Phase', icon: 'settings' },
+            { id: 'ready', vi: 'Giai đoạn sẵn sàng', en: 'Readiness Phase', icon: 'zap' },
+            { id: 'dcdr', vi: 'Quá trình chuyển DC-DR', en: 'DC-DR Transition', icon: 'server-crash' },
+            { id: 'drdc', vi: 'Quá trình chuyển DR-DC', en: 'DR-DC Transition', icon: 'server' }
         ];
 
         const STATUS_CONFIG = {
@@ -115,169 +116,140 @@
         };
 
         const initialTasks = [
-            // CÔNG TÁC CHUẨN BỊ
-            { id: 't1', phaseId: 'prep', time: 'Chậm nhất 16/04/2026', title: { vi: 'Thông báo KH/đối tác về việc ngừng dịch vụ (3:00 - 4:10 ngày 18 & 19/4)', en: 'Notify customers/partners about service downtime' }, unit: { vi: 'Ban KHBL, TTCSKH, Ban SPBL...', en: 'Retail Banking, CS Center...' }, status: 'pending' },
-            // PHASE I: DC SANG DR (18/04)
-            { id: 't2', phaseId: 'dcdr', time: '03:00 - 03:25 (18/04)', title: { vi: 'Dừng Service hạch toán kênh ngoài Core. Ngừng SOA. Ngừng ứng dụng thành phần Core tại DC.', en: 'Stop external Core services, SOA, and Core components at DC' }, unit: { vi: 'TTCNTT & Ban QLPTCB', en: 'IT Center & Core Banking Dept' }, status: 'pending' },
-            { id: 't3', phaseId: 'dcdr', time: '03:25 - 03:30 (18/04)', title: { vi: 'Kiểm tra lưu lượng, đảm bảo không còn backlog LMS từ DC (91.7) sang DR (171.5).', en: 'Check traffic, ensure no LMS backlog from DC to DR' }, unit: { vi: 'TTCNTT & Ban QLPTCB', en: 'IT Center & Core Banking Dept' }, status: 'pending' },
-            { id: 't4', phaseId: 'dcdr', time: '03:30 - 03:45 (18/04)', title: { vi: 'Hoán đổi Primary Profile từ DC (91.7) sang DR (171.5). Hoán đổi CSDL Oracle.', en: 'Switch Primary Profile & Oracle DB from DC to DR' }, unit: { vi: 'Trung tâm CNTT', en: 'IT Center' }, status: 'pending' },
-            { id: 't5', phaseId: 'dcdr', time: '03:45 - 04:00 (18/04)', title: { vi: 'Bật lại ứng dụng Core tại DR. Smoke test/Health check Xpress. Bật lại SOA kết nối DR.', en: 'Start Core at DR, Smoke test Xpress, reconnect SOA to DR' }, unit: { vi: 'Trung tâm CNTT', en: 'IT Center' }, status: 'pending' },
-            { id: 't6', phaseId: 'dcdr', time: '04:00 (18/04)', title: { vi: '[CHECKPOINT] Xác nhận hệ thống Core Banking chuyển DR thành công', en: '[CHECKPOINT] Core Banking successful DR transition' }, unit: { vi: 'Ban QLPTCB', en: 'Core Banking Dept' }, status: 'pending' },
-            { id: 't7', phaseId: 'dcdr', time: '04:00 - 04:10 (18/04)', title: { vi: 'Mở lại kênh giao dịch ngoài Core. Nghiệp vụ kiểm tra chức năng vấn tin, hạch toán.', en: 'Reopen external channels. Business units verify transactions.' }, unit: { vi: 'Các Ban nghiệp vụ TSC', en: 'Head Office Business Units' }, status: 'pending' },
-            { id: 't8', phaseId: 'dcdr', time: '04:10 (18/04) - 03:00 (19/04)', title: { vi: 'Theo dõi, vận hành hệ thống tại DR (Bao gồm chạy DayEnd ngày 18/04)', en: 'Monitor & operate at DR (Including DayEnd process)' }, unit: { vi: 'TTCNTT & Ban QLPTCB', en: 'IT Center & Core Banking Dept' }, status: 'pending' },
-            // PHASE II: DR TRỞ LẠI DC (19/04)
-            { id: 't9', phaseId: 'drdc', time: '03:00 - 03:25 (19/04)', title: { vi: 'Dừng Service hạch toán kênh ngoài Core. Ngừng SOA. Ngừng ứng dụng thành phần Core tại DR.', en: 'Stop external Core services, SOA, and Core components at DR' }, unit: { vi: 'TTCNTT & Ban QLPTCB', en: 'IT Center & Core Banking Dept' }, status: 'pending' },
-            { id: 't10', phaseId: 'drdc', time: '03:25 - 03:30 (19/04)', title: { vi: 'Kiểm tra lưu lượng, đảm bảo không còn backlog LMS từ DR (171.5) về DC (91.5, 91.7).', en: 'Check traffic, ensure no LMS backlog from DR to DC' }, unit: { vi: 'TTCNTT & Ban QLPTCB', en: 'IT Center & Core Banking Dept' }, status: 'pending' },
-            { id: 't11', phaseId: 'drdc', time: '03:30 - 03:45 (19/04)', title: { vi: 'Hoán đổi Primary Profile từ DR (171.5) về lại DC (91.5). Hoán đổi CSDL Oracle.', en: 'Switch Primary Profile & Oracle DB from DR back to DC' }, unit: { vi: 'Trung tâm CNTT', en: 'IT Center' }, status: 'pending' },
-            { id: 't12', phaseId: 'drdc', time: '03:45 - 04:00 (19/04)', title: { vi: 'Bật lại ứng dụng Core tại DC. Smoke test/Health check Xpress. Bật lại SOA kết nối DC.', en: 'Start Core at DC, Smoke test Xpress, reconnect SOA to DC' }, unit: { vi: 'Trung tâm CNTT', en: 'IT Center' }, status: 'pending' },
-            { id: 't13', phaseId: 'drdc', time: '04:00 - 04:10 (19/04)', title: { vi: 'Mở lại kênh giao dịch ngoài Core. Nghiệp vụ kiểm tra chức năng vấn tin, hạch toán.', en: 'Reopen external channels. Business units verify transactions at DC.' }, unit: { vi: 'Các Ban nghiệp vụ TSC', en: 'Head Office Business Units' }, status: 'pending' },
-            { id: 't14', phaseId: 'drdc', time: 'Từ 04:10 (19/04)', title: { vi: 'Theo dõi, vận hành hệ thống Core Profile tại site DC như bình thường.', en: 'Monitor and operate Core Profile system at DC normally.' }, unit: { vi: 'Ban QLPTCB', en: 'Core Banking Dept' }, status: 'pending' }
+            { id: 't1', phaseId: 'prep', time: '07/04/2026', title: { vi: 'Họp Ban chỉ đạo diễn tập DR tổng thể', en: 'Overall DR Drill Steering Committee Meeting' }, unit: { vi: 'P.TGĐ Phan Thanh Hải chủ trì', en: 'Chaired by DGD Phan Thanh Hai' }, status: 'completed', note: '' },
+            { id: 't2', phaseId: 'prep', time: 'Trước 17/4/2026', title: { vi: 'Sẵn sàng môi trường phục vụ thử nghiệm & điều kiện hạ tầng, cơ sở vật chất tại iDC Viettel', en: 'Prepare testing environment & infrastructure at iDC Viettel' }, unit: { vi: 'Các nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'completed', note: '' },
+            { id: 't3', phaseId: 'prep', time: 'Trước 17/4/2026', title: { vi: 'Khởi tạo Group Zalo UCSC&PHTH, add các thành viên liên quan', en: 'Create Zalo Group, add relevant members' }, unit: { vi: 'Nhóm DR đầu mối', en: 'Core DR Team' }, status: 'completed', note: '' },
+            { id: 't4', phaseId: 'ready', time: '17h00-20h00 (17/4/2026)', title: { vi: 'Di chuyển nhân sự chỉ đạo/điều phối đến vị trí diễn tập (DC2 - iDC Viettel)', en: 'Relocate steering personnel to DC2 (iDC Viettel)' }, unit: { vi: 'Nhóm quản trị hậu cần (VP TSC)', en: 'Logistics Admin Team' }, status: 'pending', note: '' },
+            { id: 't5', phaseId: 'ready', time: '20h00-21h00 (17/4/2026)', title: { vi: 'Bố trí chỗ nghỉ, ăn tối. Kiểm tra lại lần cuối môi trường làm việc đảm bảo sẵn sàng', en: 'Arrange accommodation/dinner. Final environment check.' }, unit: { vi: 'Nhóm hậu cần & Tất cả các nhóm', en: 'Logistics & All Teams' }, status: 'pending', note: '' },
+            { id: 't6', phaseId: 'dcdr', time: '21h00-22h00 (17/4)', title: { vi: '[ĐỢT 1] Chuyển DR 08 HTTT cấp độ 3 (8/5) & Chuyển hướng kết nối mạng WAN', en: '[PHASE 1] Transition 8 Level-3 Systems & WAN' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't7', phaseId: 'dcdr', time: '22h30 (17/4)', title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Đợt 1', en: 'CHECK POINT: Confirm Phase 1 transition' }, unit: { vi: 'Nhóm điều phối (TTCNTT & Ban CN)', en: 'Coordination Team' }, status: 'pending', note: '' },
+            { id: 't8', phaseId: 'dcdr', time: '23h00-24h00 (17/4)', title: { vi: '[ĐỢT 2] Chuyển DR 08 HTTT cấp độ 2 liên quan (AD, Log, DataHub, IDM...)', en: '[PHASE 2] Transition 8 Level-2 Systems (AD, Log, DataHub...)' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't9', phaseId: 'dcdr', time: '00h30 (18/4)', title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Đợt 2', en: 'CHECK POINT: Confirm Phase 2 transition' }, unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' }, status: 'pending', note: '' },
+            { id: 't10', phaseId: 'dcdr', time: '01h00-02h00 (18/4)', title: { vi: 'Thiết lập hoạt động song song DC1 và DC2 (10 hệ thống nền tảng dùng chung)', en: 'Setup parallel operations DC1 & DC2 (10 common platforms)' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't11', phaseId: 'dcdr', time: '03h00-04h00 (18/4)', title: { vi: '[CORE] Chuyển DR 10 HTTT cấp độ 3 (Corebanking, Way4, SOA, ESB...)', en: '[CORE] Transition 10 Level-3 Systems (Corebanking, Way4...)' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't12', phaseId: 'dcdr', time: '04h00-04h30 (18/4)', title: { vi: 'Kiểm tra nghiệp vụ trên môi trường DR, đối chiếu, xử lý sai lệch (nếu có)', en: 'Business validation on DR environment, resolve discrepancies' }, unit: { vi: 'Nhóm ND nghiệp vụ, Ban nghiệp vụ TSC', en: 'Business Users' }, status: 'pending', note: '' },
+            { id: 't13', phaseId: 'dcdr', time: '04h30 (18/4)', title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Corebanking', en: 'CHECK POINT: Confirm Corebanking transition' }, unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' }, status: 'pending', note: '' },
+            { id: 't14', phaseId: 'dcdr', time: '04h00-05h30 (18/4)', title: { vi: '[ONLINE 24/7] Chuyển DR 8 HTTT (Smart Banking, iBank 1.5, TTHĐ, ePIN, NAPAS...)', en: '[ONLINE 24/7] Transition 8 Systems (Smart Banking, iBank...)' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't15', phaseId: 'dcdr', time: '06h00 (18/4)', title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Online 24/7', en: 'CHECK POINT: Confirm Online 24/7 transition' }, unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' }, status: 'pending', note: '' },
+            { id: 't16', phaseId: 'dcdr', time: '09h00-10h00 (18/4)', title: { vi: '[ĐỢT 3] Chuyển DR 14 HTTT cấp độ 3 còn lại (BOne, SWIFT, Citad...)', en: '[PHASE 3] Transition 14 remaining Level-3 Systems' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't17', phaseId: 'dcdr', time: '11h30-12h30 (18/4)', title: { vi: 'SƠ KẾT: Họp tổng hợp kết quả chuyển DC-DR', en: 'PRELIMINARY REVIEW: DC-DR Transition' }, unit: { vi: 'Ban công nghệ, TTCNTT', en: 'Technology Dept, IT Center' }, status: 'pending', note: '' },
+            { id: 't18', phaseId: 'drdc', time: '21h00-22h00 (18/4)', title: { vi: 'Chuyển về DC1 đối với 08 HTTT cấp độ 3 (Đợt 1) & WAN', en: 'Return 8 Level-3 Systems (Phase 1) & WAN to DC1' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't19', phaseId: 'drdc', time: '23h00-24h00 (18/4)', title: { vi: 'Chuyển về DC1 đối với 08 HTTT cấp độ 2', en: 'Return 8 Level-2 Systems to DC1' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't20', phaseId: 'drdc', time: '03h00-04h00 (19/4)', title: { vi: 'Chuyển về DC1 đối với hệ thống Corebanking, Way4, SOA...', en: 'Return Corebanking, Way4, SOA to DC1' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't21', phaseId: 'drdc', time: '04h00-05h30 (19/4)', title: { vi: 'Chuyển về DC1 đối với HTTT Online 24/7 (SmartBanking, iBank...)', en: 'Return Online 24/7 Systems to DC1' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't22', phaseId: 'drdc', time: '08h00-09h00 (19/4)', title: { vi: 'Chuyển về DC1 đối với 14 HTTT cấp độ 3 còn lại', en: 'Return 14 remaining Level-3 Systems to DC1' }, unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' }, status: 'pending', note: '' },
+            { id: 't23', phaseId: 'drdc', time: '10h30-12h00 (19/4)', title: { vi: 'TỔNG KẾT: Họp tổng kết toàn bộ diễn tập DR tổng thể', en: 'FINAL REVIEW: Overall DR Drill' }, unit: { vi: 'Ban công nghệ, TTCNTT', en: 'Technology Dept, IT Center' }, status: 'pending', note: '' }
         ];
 
         // --- GLOBAL STATE ---
-        window.state = {
-            tasks: initialTasks, 
+        let state = {
+            tasks: initialTasks,
             activePhaseId: 'dcdr',
             lang: 'vi',
-            user: null,
             modalOpen: false,
-            pendingAction: null,
-            passcodeError: false
+            pendingAction: null, // Sẽ có định dạng { type: 'status', taskId, newValue } hoặc { type: 'note', taskId, newValue }
+            passcodeError: false,
+            // Cờ xác thực ghi nhớ đăng nhập (nếu đã nhập đúng pass trong phiên này)
+            isPasscodeVerified: localStorage.getItem('bidv_passcode_verified') === 'true'
         };
 
-        // ==========================================
-        //         1. CẤU HÌNH SUPABASE 
-        // ==========================================
-        // THÔNG TIN SUPABASE ĐƯỢC NGƯỜI DÙNG CUNG CẤP:
+        // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
         
-        const useSupabase = SUPABASE_URL !== '' && SUPABASE_ANON_KEY !== '';
-        let supabaseClient = null;
+        // Tắt Realtime websocket mặc định để tránh lỗi trên iFrame, dùng REST API thuần
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            realtime: { params: { eventsPerSecond: 0 } }
+        });
 
-        if (useSupabase) {
-            // Tắt hoàn toàn thiết lập Realtime mặc định để tránh lỗi WebSocket trong môi trường Canvas
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                realtime: {
-                    params: {
-                        eventsPerSecond: 0
-                    }
-                }
-            });
-        }
-
-        // ==========================================
-        //         2. CẤU HÌNH FALLBACK (NỘI BỘ)
-        // ==========================================
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        let app, auth, db;
-        
-        if (!useSupabase) {
-            try {
-                if (Object.keys(firebaseConfig).length > 0) {
-                    app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                }
-            } catch (e) { console.warn("Fallback Storage missing config", e); }
-        }
-
-        // --- KHỞI TẠO BACKEND (SUPABASE HOẶC FALLBACK) ---
         async function initializeBackend() {
-            if (useSupabase) {
-                console.log("🚀 Đang sử dụng Supabase làm cơ sở dữ liệu chính (Chế độ HTTPS).");
-                try {
-                    // 1. Lấy dữ liệu khởi tạo từ Supabase bằng HTTPS/REST
-                    const { data, error } = await supabaseClient.from('bidv_dr_tasks').select('tasks_data').eq('id', 1).single();
-                    
-                    if (data && data.tasks_data) {
-                        window.state.tasks = data.tasks_data;
-                        window.render();
-                    } else {
-                        // Khởi tạo dữ liệu mẫu nếu bảng đang trống
-                        await supabaseClient.from('bidv_dr_tasks').upsert({ id: 1, tasks_data: initialTasks });
-                    }
-                    
-                    // Đã tắt phần Realtime (.channel().subscribe()) vì Canvas chặn WebSocket. 
-                    // Mọi thao tác lưu/tải sẽ dựa trên REST API HTTPS bình thường.
-
-                } catch (error) {
-                    console.error("Lỗi kết nối Supabase:", error);
+            try {
+                // Tải dữ liệu từ bảng bidv_dr_tasks_tong_the
+                const { data, error } = await supabaseClient.from('bidv_dr_tasks_tong_the').select('tasks_data').eq('id', 1).single();
+                
+                if (data && data.tasks_data) {
+                    state.tasks = data.tasks_data;
+                    render();
+                } else {
+                    // Tạo bản ghi khởi tạo nếu chưa có
+                    await supabaseClient.from('bidv_dr_tasks_tong_the').upsert({ id: 1, tasks_data: initialTasks });
                 }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu từ Supabase:", error);
+            }
+        }
+        
+        initializeBackend();
+
+        // --- CORE FUNCTIONS ---
+        function setLang(newLang) {
+            state.lang = newLang;
+            render();
+        }
+
+        function setActivePhase(phaseId) {
+            state.activePhaseId = phaseId;
+            render();
+        }
+
+        // --- HÀM XỬ LÝ GHI CHÚ ---
+        async function updateTaskNote(taskId, newNote) {
+            if (state.isPasscodeVerified) {
+                // Đã xác thực -> Lưu luôn
+                await executeTaskUpdate({ type: 'note', taskId, newValue: newNote });
             } else {
-                console.log("⚡ Đang sử dụng Fallback Storage nội bộ (vì chưa cấu hình Supabase URL/Key).");
-                if (!auth) return;
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    
-                    onAuthStateChanged(auth, (user) => {
-                        window.state.user = user;
-                        if (!user) return;
-                        
-                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', 'core_banking');
-                        onSnapshot(docRef, (docSnap) => {
-                            if (docSnap.exists()) {
-                                window.state.tasks = docSnap.data().tasks || [];
-                            } else {
-                                setDoc(docRef, { tasks: initialTasks }).catch(console.error);
-                            }
-                            window.render();
-                        });
-                    });
-                } catch (error) { console.error("Lỗi xác thực Fallback:", error); }
+                // Chưa xác thực -> Bật modal yêu cầu nhập passcode
+                state.modalOpen = true;
+                state.pendingAction = { type: 'note', taskId, newValue: newNote };
+                state.passcodeError = false;
+                render();
+                
+                setTimeout(() => {
+                    const input = document.getElementById('passcode-input');
+                    if (input) input.focus();
+                }, 50);
             }
         }
 
-        // Gọi khởi tạo Backend
-        initializeBackend();
+        // --- HÀM XỬ LÝ TRẠNG THÁI ---
+        function updateTaskStatus(taskId, newStatus) {
+            if (state.isPasscodeVerified) {
+                // Đã xác thực -> Lưu luôn
+                executeTaskUpdate({ type: 'status', taskId, newValue: newStatus });
+            } else {
+                // Chưa xác thực -> Bật modal yêu cầu nhập passcode
+                state.modalOpen = true;
+                state.pendingAction = { type: 'status', taskId, newValue: newStatus };
+                state.passcodeError = false;
+                render();
+                
+                setTimeout(() => {
+                    const input = document.getElementById('passcode-input');
+                    if (input) input.focus();
+                }, 50);
+            }
+        }
 
+        function closeModal() {
+            state.modalOpen = false;
+            state.pendingAction = null;
+            state.passcodeError = false;
+            // Render lại sẽ tự động reset các ô input note vừa gõ chưa lưu về dữ liệu cũ
+            render();
+        }
 
-        // --- CORE FUNCTIONS (GLOBAL TO WORK WITH MODULE SCRIPT) ---
-        window.setLang = function(newLang) {
-            window.state.lang = newLang;
-            window.render();
-        };
-
-        window.setActivePhase = function(phaseId) {
-            window.state.activePhaseId = phaseId;
-            window.render();
-        };
-
-        // Hàm mở cửa sổ Modal yêu cầu nhập Passcode
-        window.updateTaskStatus = function(taskId, newStatus) {
-            window.state.modalOpen = true;
-            window.state.pendingAction = { taskId, newStatus };
-            window.state.passcodeError = false;
-            window.render();
-            
-            // Tự động focus vào ô nhập liệu
-            setTimeout(() => {
-                const input = document.getElementById('passcode-input');
-                if (input) input.focus();
-            }, 50);
-        };
-
-        window.closeModal = function() {
-            window.state.modalOpen = false;
-            window.state.pendingAction = null;
-            window.state.passcodeError = false;
-            window.render();
-        };
-
-        window.submitPasscode = function() {
+        function submitPasscode() {
             const input = document.getElementById('passcode-input');
             if (input && input.value === 'bidvdr') {
-                window.executeTaskUpdate();
-            } else {
-                window.state.passcodeError = true;
-                window.render();
+                // Lưu trạng thái đã xác thực vào Local Storage
+                localStorage.setItem('bidv_passcode_verified', 'true');
+                state.isPasscodeVerified = true;
                 
-                // Đặt lại focus vào ô nhập và xóa giá trị sai
+                executeTaskUpdate();
+            } else {
+                state.passcodeError = true;
+                render();
+                
                 setTimeout(() => {
                     const inputRef = document.getElementById('passcode-input');
                     if (inputRef) {
@@ -286,59 +258,53 @@
                     }
                 }, 10);
             }
-        };
+        }
 
-        // Hàm thực thi cập nhật trạng thái sau khi đã nhập đúng Passcode
-        window.executeTaskUpdate = async function() {
-            if (!window.state.pendingAction) return;
-            const { taskId, newStatus } = window.state.pendingAction;
+        // Thực thi cập nhật dữ liệu (Nhận directAction cho trường hợp đã xác thực)
+        async function executeTaskUpdate(directAction = null) {
+            const action = directAction || state.pendingAction;
+            if (!action) return;
 
-            // Cập nhật state
-            window.state.tasks = window.state.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
+            const { type, taskId, newValue } = action;
+
+            // Cập nhật state nội bộ tương ứng với hành động
+            if (type === 'status') {
+                state.tasks = state.tasks.map(t => t.id === taskId ? { ...t, status: newValue } : t);
+            } else if (type === 'note') {
+                state.tasks = state.tasks.map(t => t.id === taskId ? { ...t, note: newValue } : t);
+            }
             
             // Đóng Modal
-            window.state.modalOpen = false;
-            window.state.pendingAction = null;
-            window.state.passcodeError = false;
+            state.modalOpen = false;
+            state.pendingAction = null;
+            state.passcodeError = false;
+            render();
             
-            // Render lại giao diện (Optimistic Update)
-            window.render();
-            
-            // Đồng bộ lên Cloud Storage
-            if (useSupabase) {
-                try {
-                    // Dùng HTTPS (REST) để cập nhật dữ liệu, hoạt động tốt trong Canvas
-                    await supabaseClient.from('bidv_dr_tasks').upsert({ id: 1, tasks_data: window.state.tasks });
-                } catch (error) {
-                    console.error("Lỗi khi lưu trữ trạng thái lên Supabase:", error);
-                }
-            } else if (window.state.user && db) {
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', 'core_banking');
-                    await setDoc(docRef, { tasks: window.state.tasks });
-                } catch (error) {
-                    console.error("Lỗi khi lưu trữ trạng thái lên Fallback:", error);
-                }
+            // Lưu lên Supabase
+            try {
+                await supabaseClient.from('bidv_dr_tasks_tong_the').upsert({ id: 1, tasks_data: state.tasks });
+            } catch (error) {
+                console.error("Lỗi khi lưu trữ lên Supabase:", error);
             }
-        };
+        }
 
-        window.getStats = function() {
-            const total = window.state.tasks.length;
-            const completed = window.state.tasks.filter(t => t.status === 'completed').length;
-            const in_progress = window.state.tasks.filter(t => t.status === 'in_progress').length;
-            const pending = window.state.tasks.filter(t => t.status === 'pending').length;
-            const issue = window.state.tasks.filter(t => t.status === 'issue').length;
+        function getStats() {
+            const total = state.tasks.length;
+            const completed = state.tasks.filter(t => t.status === 'completed').length;
+            const in_progress = state.tasks.filter(t => t.status === 'in_progress').length;
+            const pending = state.tasks.filter(t => t.status === 'pending').length;
+            const issue = state.tasks.filter(t => t.status === 'issue').length;
             const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
             return { total, completed, in_progress, pending, issue, progress };
         }
 
-        window.getPhaseName = function(id) {
+        function getPhaseName(id) {
             const phase = PHASES.find(p => p.id === id);
-            return phase ? phase[window.state.lang] : '';
+            return phase ? phase[state.lang] : '';
         }
 
         // --- RENDER FUNCTIONS ---
-        window.renderHeader = function(t, stats) {
+        function renderHeader(t, stats) {
             return `
             <header class="mb-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div class="flex-grow w-full">
@@ -349,13 +315,13 @@
                         </div>
                         <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
                             <i data-lucide="globe" class="w-4 h-4 text-slate-400 ml-1 hidden sm:block"></i>
-                            <button onclick="window.setLang('vi')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all ${state.lang === 'vi' ? 'bg-white shadow text-bidv-primary' : 'text-slate-500 hover:text-slate-700'}">VI</button>
-                            <button onclick="window.setLang('en')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all ${state.lang === 'en' ? 'bg-white shadow text-bidv-primary' : 'text-slate-500 hover:text-slate-700'}">EN</button>
+                            <button onclick="setLang('vi')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all ${state.lang === 'vi' ? 'bg-white shadow text-bidv-primary' : 'text-slate-500 hover:text-slate-700'}">VI</button>
+                            <button onclick="setLang('en')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all ${state.lang === 'en' ? 'bg-white shadow text-bidv-primary' : 'text-slate-500 hover:text-slate-700'}">EN</button>
                         </div>
                     </div>
                     <h1 class="text-xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 mt-2">${t.header_title}</h1>
                     <p class="text-slate-500 mt-2 flex items-center gap-2 text-xs md:text-sm">
-                        <i data-lucide="calendar" class="w-4 h-4 flex-shrink-0"></i> 18/04 - 19/04/2026 | Gián đoạn: 03:00 - 04:10
+                        <i data-lucide="calendar" class="w-4 h-4 flex-shrink-0"></i> 17/04 - 19/04/2026 | DC2: iDC Viettel
                     </p>
                 </div>
                 <div class="w-full lg:w-72 bg-slate-50 rounded-lg p-4 border border-slate-100 flex-shrink-0">
@@ -370,7 +336,7 @@
             </header>`;
         }
 
-        window.renderStatsGrid = function(t, stats) {
+        function renderStatsGrid(t, stats) {
             const statItems = [
                 { label: t.stats_completed, value: stats.completed, color: 'text-green-600', bg: 'bg-green-50' },
                 { label: t.stats_running, value: stats.in_progress, color: 'text-[#D49A00]', bg: 'bg-bidv-accentLight' },
@@ -389,7 +355,7 @@
             </div>`;
         }
 
-        window.renderSidebar = function(t) {
+        function renderSidebar(t) {
             return `
             <div class="lg:w-64 flex-shrink-0">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-4">
@@ -399,7 +365,7 @@
                     <ul class="flex flex-row lg:flex-col p-2 gap-1.5 overflow-x-auto hide-scrollbar">
                         ${PHASES.map(phase => `
                             <li class="flex-shrink-0 lg:flex-shrink">
-                                <button onclick="window.setActivePhase('${phase.id}')" class="w-full text-left px-3 py-2.5 lg:px-4 lg:py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${state.activePhaseId === phase.id ? 'bg-bidv-primaryLight text-[#004A48]' : 'text-slate-600 hover:bg-slate-50'}">
+                                <button onclick="setActivePhase('${phase.id}')" class="w-full text-left px-3 py-2.5 lg:px-4 lg:py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${state.activePhaseId === phase.id ? 'bg-bidv-primaryLight text-[#004A48]' : 'text-slate-600 hover:bg-slate-50'}">
                                     <i data-lucide="${phase.icon}" class="w-4 h-4 flex-shrink-0"></i>
                                     <span class="whitespace-nowrap lg:whitespace-normal">${phase[state.lang]}</span>
                                 </button>
@@ -410,7 +376,7 @@
             </div>`;
         }
 
-        window.renderTasks = function(t, filteredTasks) {
+        function renderTasks(t, filteredTasks) {
             if (filteredTasks.length === 0) {
                 return `<div class="p-8 text-center text-slate-500">${t.empty_data}</div>`;
             }
@@ -430,17 +396,30 @@
                             </span>
                         </div>
                         <h4 class="font-semibold text-slate-800 text-sm leading-snug">${task.title[state.lang]}</h4>
-                        ${state.activePhaseId === 'overview' ? `<span class="text-xs text-slate-500 flex items-center gap-1"><i data-lucide="chevron-right" class="w-3 h-3"></i> ${window.getPhaseName(task.phaseId)}</span>` : ''}
-                        <div class="flex justify-between items-end mt-1">
-                            <div class="flex items-start gap-1.5 text-xs text-slate-600 max-w-[50%]">
-                                <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0"></i>
-                                <span class="leading-tight">${task.unit[state.lang]}</span>
+                        ${state.activePhaseId === 'overview' ? `<span class="text-xs text-slate-500 flex items-center gap-1"><i data-lucide="chevron-right" class="w-3 h-3"></i> ${getPhaseName(task.phaseId)}</span>` : ''}
+                        
+                        <div class="flex flex-col gap-2 mt-1">
+                            <div class="flex justify-between items-end">
+                                <div class="flex items-start gap-1.5 text-xs text-slate-600 max-w-[60%]">
+                                    <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                                    <span class="leading-tight">${task.unit[state.lang]}</span>
+                                </div>
+                                <div class="flex items-center gap-1 bg-white border border-slate-100 rounded-lg p-1 shadow-sm">
+                                    <button onclick="updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                                    <button onclick="updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-4 h-4"></i></button>
+                                    <button onclick="updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
+                                    <button onclick="updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-4 h-4"></i></button>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1 bg-white border border-slate-100 rounded-lg p-1 shadow-sm">
-                                <button onclick="window.updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
-                                <button onclick="window.updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-4 h-4"></i></button>
-                                <button onclick="window.updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
-                                <button onclick="window.updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-4 h-4"></i></button>
+                            
+                            <!-- Thêm trường ghi chú cho Mobile -->
+                            <div class="w-full mt-1">
+                                <textarea
+                                    class="w-full text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded p-2 focus:ring-1 focus:ring-bidv-primary/50 focus:border-bidv-primary resize-none placeholder-slate-400"
+                                    rows="1"
+                                    placeholder="${t.placeholder_note}"
+                                    onchange="updateTaskNote('${task.id}', this.value)"
+                                >${task.note || ''}</textarea>
                             </div>
                         </div>
                     </div>`;
@@ -453,11 +432,12 @@
                 <table class="w-full text-left text-sm text-slate-600">
                     <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 w-[15%]">${t.col_time}</th>
-                            <th class="px-6 py-4 w-[40%]">${t.col_desc}</th>
-                            <th class="px-6 py-4 w-[20%]">${t.col_unit}</th>
-                            <th class="px-6 py-4 w-[12%]">${t.col_status}</th>
-                            <th class="px-6 py-4 w-[13%] text-center">${t.col_action}</th>
+                            <th class="px-6 py-4 w-[12%]">${t.col_time}</th>
+                            <th class="px-6 py-4 w-[28%]">${t.col_desc}</th>
+                            <th class="px-6 py-4 w-[15%]">${t.col_unit}</th>
+                            <th class="px-6 py-4 w-[13%]">${t.col_status}</th>
+                            <th class="px-6 py-4 w-[20%]">${t.col_note}</th>
+                            <th class="px-6 py-4 w-[12%] text-center">${t.col_action}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -468,7 +448,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${task.time}</td>
                                 <td class="px-6 py-4">
                                     <span class="block font-medium text-slate-800 mb-1">${task.title[state.lang]}</span>
-                                    ${state.activePhaseId === 'overview' ? `<span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">${window.getPhaseName(task.phaseId)}</span>` : ''}
+                                    ${state.activePhaseId === 'overview' ? `<span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">${getPhaseName(task.phaseId)}</span>` : ''}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-start gap-2">
@@ -482,12 +462,23 @@
                                         ${statusConfig[state.lang]}
                                     </span>
                                 </td>
+                                
+                                <!-- Thêm trường ghi chú cho Desktop -->
+                                <td class="px-6 py-4">
+                                    <textarea
+                                        class="w-full text-sm text-slate-700 bg-transparent border border-slate-200 rounded p-1.5 focus:bg-white focus:ring-1 focus:ring-bidv-primary/50 focus:border-bidv-primary resize-none hide-scrollbar placeholder-slate-400 transition-colors"
+                                        rows="2"
+                                        placeholder="${t.placeholder_note}"
+                                        onchange="updateTaskNote('${task.id}', this.value)"
+                                    >${task.note || ''}</textarea>
+                                </td>
+                                
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="window.updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
-                                        <button onclick="window.updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-5 h-5"></i></button>
-                                        <button onclick="window.updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
-                                        <button onclick="window.updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-5 h-5"></i></button>
+                                        <button onclick="updateTaskStatus('${task.id}', 'pending')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded" title="${t.btn_pending}"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                                        <button onclick="updateTaskStatus('${task.id}', 'in_progress')" class="p-1.5 text-[#D49A00] hover:bg-bidv-accentLight rounded" title="${t.btn_running}"><i data-lucide="play-circle" class="w-5 h-5"></i></button>
+                                        <button onclick="updateTaskStatus('${task.id}', 'completed')" class="p-1.5 text-green-600 hover:bg-green-50 rounded" title="${t.btn_completed}"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
+                                        <button onclick="updateTaskStatus('${task.id}', 'issue')" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="${t.btn_issue}"><i data-lucide="alert-triangle" class="w-5 h-5"></i></button>
                                     </div>
                                 </td>
                             </tr>`;
@@ -499,7 +490,7 @@
             return mobileView + desktopView;
         }
 
-        window.renderModal = function(t) {
+        function renderModal(t) {
             return `
             <div id="passcode-modal" class="${state.modalOpen ? 'flex' : 'hidden'} fixed inset-0 z-50 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
                 <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all">
@@ -508,43 +499,43 @@
                             <i data-lucide="lock" class="w-5 h-5 text-bidv-primary"></i>
                             ${t.modal_title}
                         </h3>
-                        <button onclick="window.closeModal()" class="text-slate-400 hover:text-slate-600 outline-none"><i data-lucide="x" class="w-5 h-5"></i></button>
+                        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 outline-none"><i data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
                     <div class="p-5">
                         <p class="text-sm text-slate-600 mb-3">${t.modal_desc}</p>
                         <input type="password" id="passcode-input" 
                             class="w-full border ${state.passcodeError ? 'border-red-500 ring-red-100' : 'border-slate-300'} rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary/50" 
                             placeholder="${t.modal_placeholder}" 
-                            onkeydown="if(event.key === 'Enter') window.submitPasscode()">
+                            onkeydown="if(event.key === 'Enter') submitPasscode()">
                         ${state.passcodeError ? `<p class="text-xs text-red-500 mt-2 font-medium"><i data-lucide="alert-circle" class="w-3 h-3 inline"></i> ${t.modal_error}</p>` : ''}
                     </div>
                     <div class="p-4 bg-slate-50 flex justify-end gap-2">
-                        <button onclick="window.closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors outline-none">${t.btn_cancel}</button>
-                        <button onclick="window.submitPasscode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-bidv-primary text-white hover:bg-[#005553] transition-colors outline-none">${t.btn_confirm}</button>
+                        <button onclick="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors outline-none">${t.btn_cancel}</button>
+                        <button onclick="submitPasscode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-bidv-primary text-white hover:bg-[#005553] transition-colors outline-none">${t.btn_confirm}</button>
                     </div>
                 </div>
             </div>`;
         }
 
-        window.render = function() {
+        function render() {
             const t = DICT[state.lang];
-            const stats = window.getStats();
+            const stats = getStats();
             const filteredTasks = state.activePhaseId === 'overview' ? state.tasks : state.tasks.filter(task => task.phaseId === state.activePhaseId);
 
             const html = `
-                ${window.renderHeader(t, stats)}
-                ${window.renderStatsGrid(t, stats)}
+                ${renderHeader(t, stats)}
+                ${renderStatsGrid(t, stats)}
                 <div class="flex flex-col lg:flex-row gap-6">
-                    ${window.renderSidebar(t)}
+                    ${renderSidebar(t)}
                     <div class="flex-grow bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                            <h3 class="font-semibold text-slate-800 text-base md:text-lg">${window.getPhaseName(state.activePhaseId)}</h3>
+                            <h3 class="font-semibold text-slate-800 text-base md:text-lg">${getPhaseName(state.activePhaseId)}</h3>
                             <span class="text-xs md:text-sm text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">${filteredTasks.length} ${t.tasks_count}</span>
                         </div>
-                        ${window.renderTasks(t, filteredTasks)}
+                        ${renderTasks(t, filteredTasks)}
                     </div>
                 </div>
-                ${window.renderModal(t)}
+                ${renderModal(t)}
             `;
 
             document.getElementById('app-root').innerHTML = html;
@@ -554,7 +545,7 @@
         }
 
         // --- INITIALIZE ---
-        window.render();
+        render();
 
     </script>
 </body>
