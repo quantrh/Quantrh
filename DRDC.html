@@ -1,0 +1,553 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  CheckCircle2, 
+  Clock, 
+  PlayCircle, 
+  AlertTriangle, 
+  Activity,
+  Calendar,
+  Users,
+  ClipboardList,
+  Settings,
+  Zap,
+  ServerCrash,
+  Server,
+  ChevronRight,
+  Globe
+} from 'lucide-react';
+
+const DICT = {
+  vi: {
+    header_subtitle: "Trung Tâm CNTT BIDV",
+    header_title: "Hệ thống Quản lý Diễn tập DR 2026",
+    progress: "Tiến độ tổng thể",
+    stats_completed: "Hoàn thành",
+    stats_running: "Đang chạy",
+    stats_pending: "Chờ xử lý",
+    stats_issue: "Sự cố / Rollback",
+    phases_title: "Các Giai Đoạn",
+    tasks_count: "tác vụ",
+    col_time: "Thời gian",
+    col_desc: "Nội dung thực hiện",
+    col_unit: "Đơn vị đầu mối",
+    col_status: "Trạng thái",
+    col_action: "Cập nhật",
+    empty_data: "Không có dữ liệu cho giai đoạn này.",
+    btn_running: "Đang chạy",
+    btn_completed: "Hoàn thành",
+    btn_issue: "Sự cố",
+  },
+  en: {
+    header_subtitle: "BIDV IT Center",
+    header_title: "2026 Comprehensive DR Drill Management",
+    progress: "Overall Progress",
+    stats_completed: "Completed",
+    stats_running: "In Progress",
+    stats_pending: "Pending",
+    stats_issue: "Issue / Rollback",
+    phases_title: "Drill Phases",
+    tasks_count: "tasks",
+    col_time: "Time",
+    col_desc: "Task Description",
+    col_unit: "Lead Unit",
+    col_status: "Status",
+    col_action: "Action",
+    empty_data: "No data available for this phase.",
+    btn_running: "Run",
+    btn_completed: "Complete",
+    btn_issue: "Issue",
+  }
+};
+
+const PHASES = [
+  { id: 'overview', vi: 'Tổng quan', en: 'Overview', icon: ClipboardList },
+  { id: 'prep', vi: 'Giai đoạn chuẩn bị', en: 'Preparation Phase', icon: Settings },
+  { id: 'ready', vi: 'Giai đoạn sẵn sàng', en: 'Readiness Phase', icon: Zap },
+  { id: 'dcdr', vi: 'Quá trình chuyển DC-DR', en: 'DC-DR Transition', icon: ServerCrash },
+  { id: 'drdc', vi: 'Quá trình chuyển DR-DC', en: 'DR-DC Transition', icon: Server }
+];
+
+const STATUS_CONFIG = {
+  pending: { vi: 'Chờ xử lý', en: 'Pending', color: 'bg-gray-100 text-gray-600 border-gray-200', icon: Clock },
+  in_progress: { vi: 'Đang chạy', en: 'Running', color: 'bg-[#FFC62F]/20 text-[#A67E00] border-[#FFC62F]/40', icon: PlayCircle },
+  completed: { vi: 'Hoàn thành', en: 'Completed', color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle2 },
+  issue: { vi: 'Gặp sự cố', en: 'Issue', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertTriangle }
+};
+
+const initialTasks = [
+  {
+    id: 't1',
+    phaseId: 'prep',
+    time: '07/04/2026',
+    title: { vi: 'Họp Ban chỉ đạo diễn tập DR tổng thể', en: 'Overall DR Drill Steering Committee Meeting' },
+    unit: { vi: 'P.TGĐ Phan Thanh Hải chủ trì', en: 'Chaired by DGD Phan Thanh Hai' },
+    status: 'completed'
+  },
+  {
+    id: 't2',
+    phaseId: 'prep',
+    time: 'Trước 17/4/2026',
+    title: { vi: 'Sẵn sàng môi trường phục vụ thử nghiệm & điều kiện hạ tầng, cơ sở vật chất tại iDC Viettel', en: 'Prepare testing environment & infrastructure at iDC Viettel' },
+    unit: { vi: 'Các nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'completed'
+  },
+  {
+    id: 't3',
+    phaseId: 'prep',
+    time: 'Trước 17/4/2026',
+    title: { vi: 'Khởi tạo Group Zalo UCSC&PHTH, add các thành viên liên quan', en: 'Create Zalo Group, add relevant members' },
+    unit: { vi: 'Nhóm DR đầu mối', en: 'Core DR Team' },
+    status: 'completed'
+  },
+  {
+    id: 't4',
+    phaseId: 'ready',
+    time: '17h00-20h00 (17/4/2026)',
+    title: { vi: 'Di chuyển nhân sự chỉ đạo/điều phối đến vị trí diễn tập (DC2 - iDC Viettel)', en: 'Relocate steering personnel to DC2 (iDC Viettel)' },
+    unit: { vi: 'Nhóm quản trị hậu cần (VP TSC)', en: 'Logistics Admin Team' },
+    status: 'pending'
+  },
+  {
+    id: 't5',
+    phaseId: 'ready',
+    time: '20h00-21h00 (17/4/2026)',
+    title: { vi: 'Bố trí chỗ nghỉ, ăn tối. Kiểm tra lại lần cuối môi trường làm việc đảm bảo sẵn sàng', en: 'Arrange accommodation/dinner. Final environment check.' },
+    unit: { vi: 'Nhóm hậu cần & Tất cả các nhóm', en: 'Logistics & All Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't6',
+    phaseId: 'dcdr',
+    time: '21h00-22h00 (17/4)',
+    title: { vi: '[ĐỢT 1] Chuyển DR 08 HTTT cấp độ 3 (8/5) & Chuyển hướng kết nối mạng WAN', en: '[PHASE 1] Transition 8 Level-3 Systems & WAN' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't7',
+    phaseId: 'dcdr',
+    time: '22h30 (17/4)',
+    title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Đợt 1', en: 'CHECK POINT: Confirm Phase 1 transition' },
+    unit: { vi: 'Nhóm điều phối (TTCNTT & Ban CN)', en: 'Coordination Team' },
+    status: 'pending'
+  },
+  {
+    id: 't8',
+    phaseId: 'dcdr',
+    time: '23h00-24h00 (17/4)',
+    title: { vi: '[ĐỢT 2] Chuyển DR 08 HTTT cấp độ 2 liên quan (AD, Log, DataHub, IDM...)', en: '[PHASE 2] Transition 8 Level-2 Systems (AD, Log, DataHub...)' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't9',
+    phaseId: 'dcdr',
+    time: '00h30 (18/4)',
+    title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Đợt 2', en: 'CHECK POINT: Confirm Phase 2 transition' },
+    unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' },
+    status: 'pending'
+  },
+  {
+    id: 't10',
+    phaseId: 'dcdr',
+    time: '01h00-02h00 (18/4)',
+    title: { vi: 'Thiết lập hoạt động song song DC1 và DC2 (10 hệ thống nền tảng dùng chung)', en: 'Setup parallel operations DC1 & DC2 (10 common platforms)' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't11',
+    phaseId: 'dcdr',
+    time: '03h00-04h00 (18/4)',
+    title: { vi: '[CORE] Chuyển DR 10 HTTT cấp độ 3 (Corebanking, Way4, SOA, ESB...)', en: '[CORE] Transition 10 Level-3 Systems (Corebanking, Way4...)' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't12',
+    phaseId: 'dcdr',
+    time: '04h00-04h30 (18/4)',
+    title: { vi: 'Kiểm tra nghiệp vụ trên môi trường DR, đối chiếu, xử lý sai lệch (nếu có)', en: 'Business validation on DR environment, resolve discrepancies' },
+    unit: { vi: 'Nhóm ND nghiệp vụ, Ban nghiệp vụ TSC', en: 'Business Users' },
+    status: 'pending'
+  },
+  {
+    id: 't13',
+    phaseId: 'dcdr',
+    time: '04h30 (18/4)',
+    title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Corebanking', en: 'CHECK POINT: Confirm Corebanking transition' },
+    unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' },
+    status: 'pending'
+  },
+  {
+    id: 't14',
+    phaseId: 'dcdr',
+    time: '04h00-05h30 (18/4)',
+    title: { vi: '[ONLINE 24/7] Chuyển DR 8 HTTT (Smart Banking, iBank 1.5, TTHĐ, ePIN, NAPAS...)', en: '[ONLINE 24/7] Transition 8 Systems (Smart Banking, iBank...)' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't15',
+    phaseId: 'dcdr',
+    time: '06h00 (18/4)',
+    title: { vi: 'CHECK POINT: Xác nhận kết quả chuyển DR Online 24/7', en: 'CHECK POINT: Confirm Online 24/7 transition' },
+    unit: { vi: 'Nhóm điều phối', en: 'Coordination Team' },
+    status: 'pending'
+  },
+  {
+    id: 't16',
+    phaseId: 'dcdr',
+    time: '09h00-10h00 (18/4)',
+    title: { vi: '[ĐỢT 3] Chuyển DR 14 HTTT cấp độ 3 còn lại (BOne, SWIFT, Citad...)', en: '[PHASE 3] Transition 14 remaining Level-3 Systems' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't17',
+    phaseId: 'dcdr',
+    time: '11h30-12h30 (18/4)',
+    title: { vi: 'SƠ KẾT: Họp tổng hợp kết quả chuyển DC-DR', en: 'PRELIMINARY REVIEW: DC-DR Transition' },
+    unit: { vi: 'Ban công nghệ, TTCNTT', en: 'Technology Dept, IT Center' },
+    status: 'pending'
+  },
+  {
+    id: 't18',
+    phaseId: 'drdc',
+    time: '21h00-22h00 (18/4)',
+    title: { vi: 'Chuyển về DC1 đối với 08 HTTT cấp độ 3 (Đợt 1) & WAN', en: 'Return 8 Level-3 Systems (Phase 1) & WAN to DC1' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't19',
+    phaseId: 'drdc',
+    time: '23h00-24h00 (18/4)',
+    title: { vi: 'Chuyển về DC1 đối với 08 HTTT cấp độ 2', en: 'Return 8 Level-2 Systems to DC1' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't20',
+    phaseId: 'drdc',
+    time: '03h00-04h00 (19/4)',
+    title: { vi: 'Chuyển về DC1 đối với hệ thống Corebanking, Way4, SOA...', en: 'Return Corebanking, Way4, SOA to DC1' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't21',
+    phaseId: 'drdc',
+    time: '04h00-05h30 (19/4)',
+    title: { vi: 'Chuyển về DC1 đối với HTTT Online 24/7 (SmartBanking, iBank...)', en: 'Return Online 24/7 Systems to DC1' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't22',
+    phaseId: 'drdc',
+    time: '08h00-09h00 (19/4)',
+    title: { vi: 'Chuyển về DC1 đối với 14 HTTT cấp độ 3 còn lại', en: 'Return 14 remaining Level-3 Systems to DC1' },
+    unit: { vi: 'Nhóm kỹ thuật (TTCNTT)', en: 'IT Technical Teams' },
+    status: 'pending'
+  },
+  {
+    id: 't23',
+    phaseId: 'drdc',
+    time: '10h30-12h00 (19/4)',
+    title: { vi: 'TỔNG KẾT: Họp tổng kết toàn bộ diễn tập DR tổng thể', en: 'FINAL REVIEW: Overall DR Drill' },
+    unit: { vi: 'Ban công nghệ, TTCNTT', en: 'Technology Dept, IT Center' },
+    status: 'pending'
+  }
+];
+
+export default function App() {
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('bidv_dr_tasks_2026');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return initialTasks;
+  });
+  const [activePhaseId, setActivePhaseId] = useState('overview');
+  const [lang, setLang] = useState('vi');
+
+  useEffect(() => {
+    localStorage.setItem('bidv_dr_tasks_2026', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const t = DICT[lang];
+
+  // Logic cập nhật trạng thái
+  const updateTaskStatus = (taskId, newStatus) => {
+    setTasks(prev => 
+      prev.map(task => task.id === taskId ? { ...task, status: newStatus } : task)
+    );
+  };
+
+  // Tính toán thống kê
+  const stats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(task => task.status === 'completed').length;
+    const in_progress = tasks.filter(task => task.status === 'in_progress').length;
+    const pending = tasks.filter(task => task.status === 'pending').length;
+    const issue = tasks.filter(task => task.status === 'issue').length;
+    const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { total, completed, in_progress, pending, issue, progress };
+  }, [tasks]);
+
+  // Lọc task theo Tab
+  const filteredTasks = activePhaseId === 'overview' 
+    ? tasks 
+    : tasks.filter(task => task.phaseId === activePhaseId);
+
+  // Helper để lấy tên tab theo ngôn ngữ hiện tại
+  const getPhaseName = (id) => {
+    const phase = PHASES.find(p => p.id === id);
+    return phase ? phase[lang] : '';
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-3 md:p-6 pb-20">
+      
+      {/* Header */}
+      <header className="mb-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="flex-grow w-full">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2 text-[#006B68] mb-1">
+              <Activity className="w-5 h-5 md:w-6 md:h-6" />
+              <h2 className="font-bold tracking-wide uppercase text-xs md:text-sm">{t.header_subtitle}</h2>
+            </div>
+            
+            {/* Language Toggle Button */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <Globe className="w-4 h-4 text-slate-400 ml-1 hidden sm:block" />
+              <button 
+                onClick={() => setLang('vi')} 
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${lang === 'vi' ? 'bg-white shadow text-[#006B68]' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                VI
+              </button>
+              <button 
+                onClick={() => setLang('en')} 
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${lang === 'en' ? 'bg-white shadow text-[#006B68]' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                EN
+              </button>
+            </div>
+          </div>
+          
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 mt-2">
+            {t.header_title}
+          </h1>
+          <p className="text-slate-500 mt-2 flex items-center gap-2 text-xs md:text-sm">
+            <Calendar className="w-4 h-4 flex-shrink-0" /> 17/04 - 19/04/2026 | DC2: iDC Viettel
+          </p>
+        </div>
+
+        {/* Tổng quan tiến độ trên Header */}
+        <div className="w-full lg:w-72 bg-slate-50 rounded-lg p-4 border border-slate-100 flex-shrink-0">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-sm font-semibold text-slate-600">{t.progress}</span>
+            <span className="text-xl font-bold text-[#006B68]">{stats.progress}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-2.5">
+            <div 
+              className="bg-[#006B68] h-2.5 rounded-full transition-all duration-500" 
+              style={{ width: `${stats.progress}%` }}
+            ></div>
+          </div>
+        </div>
+      </header>
+
+      {/* Thống kê nhanh */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+        {[
+          { label: t.stats_completed, value: stats.completed, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: t.stats_running, value: stats.in_progress, color: 'text-[#D49A00]', bg: 'bg-[#FFC62F]/10' },
+          { label: t.stats_pending, value: stats.pending, color: 'text-slate-600', bg: 'bg-slate-100' },
+          { label: t.stats_issue, value: stats.issue, color: 'text-red-600', bg: 'bg-red-50' }
+        ].map((stat, idx) => (
+          <div key={idx} className={`p-4 rounded-xl border border-slate-200 bg-white flex flex-col items-center justify-center shadow-sm`}>
+            <span className={`text-2xl md:text-3xl font-bold mb-1 ${stat.color}`}>{stat.value}</span>
+            <span className="text-xs md:text-sm font-medium text-slate-500 text-center">{stat.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar / Tabs */}
+        <div className="lg:w-64 flex-shrink-0">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-4">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 hidden lg:block">
+              <h3 className="font-semibold text-slate-700">{t.phases_title}</h3>
+            </div>
+            
+            {/* Thanh cuộn ngang trên Mobile, Dọc trên PC */}
+            <ul className="flex flex-row lg:flex-col p-2 gap-1.5 overflow-x-auto hide-scrollbar">
+              {PHASES.map((phase) => {
+                const PhaseIcon = phase.icon;
+                return (
+                <li key={phase.id} className="flex-shrink-0 lg:flex-shrink">
+                  <button
+                    onClick={() => setActivePhaseId(phase.id)}
+                    className={`w-full text-left px-3 py-2.5 lg:px-4 lg:py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                      activePhaseId === phase.id 
+                        ? 'bg-[#006B68]/10 text-[#004A48]' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <PhaseIcon className="w-4 h-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap lg:whitespace-normal">{phase[lang]}</span>
+                  </button>
+                </li>
+              )})}
+            </ul>
+          </div>
+        </div>
+
+        {/* Danh sách Công việc */}
+        <div className="flex-grow bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <h3 className="font-semibold text-slate-800 text-base md:text-lg">{getPhaseName(activePhaseId)}</h3>
+            <span className="text-xs md:text-sm text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">
+              {filteredTasks.length} {t.tasks_count}
+            </span>
+          </div>
+          
+          {/* GIAO DIỆN MOBILE: Dạng Card */}
+          <div className="block lg:hidden divide-y divide-slate-100">
+            {filteredTasks.map((task) => {
+              const StatusIcon = STATUS_CONFIG[task.status].icon;
+              return (
+                <div key={task.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="text-xs font-semibold text-[#006B68] bg-[#006B68]/10 px-2 py-1 rounded">
+                      {task.time}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border ${STATUS_CONFIG[task.status].color}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {STATUS_CONFIG[task.status][lang]}
+                    </span>
+                  </div>
+                  
+                  <h4 className="font-semibold text-slate-800 text-sm leading-snug">
+                    {task.title[lang]}
+                  </h4>
+                  
+                  {activePhaseId === 'overview' && (
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> {getPhaseName(task.phaseId)}
+                    </span>
+                  )}
+                  
+                  <div className="flex justify-between items-end mt-1">
+                    <div className="flex items-start gap-1.5 text-xs text-slate-600 max-w-[60%]">
+                      <Users className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <span className="leading-tight">{task.unit[lang]}</span>
+                    </div>
+                    
+                    {/* Nút hành động */}
+                    <div className="flex items-center gap-1 bg-white border border-slate-100 rounded-lg p-1 shadow-sm">
+                      <button 
+                        onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                        className="p-1.5 text-[#D49A00] hover:bg-[#FFC62F]/20 rounded"
+                      ><PlayCircle className="w-4 h-4"/></button>
+                      <button 
+                        onClick={() => updateTaskStatus(task.id, 'completed')}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                      ><CheckCircle2 className="w-4 h-4"/></button>
+                      <button 
+                        onClick={() => updateTaskStatus(task.id, 'issue')}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                      ><AlertTriangle className="w-4 h-4"/></button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* GIAO DIỆN PC: Dạng Bảng */}
+          <div className="hidden lg:block overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 w-[15%]">{t.col_time}</th>
+                  <th className="px-6 py-4 w-[40%]">{t.col_desc}</th>
+                  <th className="px-6 py-4 w-[20%]">{t.col_unit}</th>
+                  <th className="px-6 py-4 w-[15%]">{t.col_status}</th>
+                  <th className="px-6 py-4 w-[10%] text-center">{t.col_action}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTasks.map((task) => {
+                  const StatusIcon = STATUS_CONFIG[task.status].icon;
+                  return (
+                    <tr key={task.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-800">
+                        {task.time}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="block font-medium text-slate-800 mb-1">{task.title[lang]}</span>
+                        {activePhaseId === 'overview' && (
+                          <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
+                            {getPhaseName(task.phaseId)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-start gap-2">
+                          <Users className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700">{task.unit[lang]}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${STATUS_CONFIG[task.status].color}`}>
+                          <StatusIcon className="w-3.5 h-3.5" />
+                          {STATUS_CONFIG[task.status][lang]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                            className="p-1.5 text-[#D49A00] hover:bg-[#FFC62F]/20 rounded"
+                            title={t.btn_running}
+                          ><PlayCircle className="w-5 h-5"/></button>
+                          <button 
+                            onClick={() => updateTaskStatus(task.id, 'completed')}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                            title={t.btn_completed}
+                          ><CheckCircle2 className="w-5 h-5"/></button>
+                          <button 
+                            onClick={() => updateTaskStatus(task.id, 'issue')}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            title={t.btn_issue}
+                          ><AlertTriangle className="w-5 h-5"/></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Empty State */}
+          {filteredTasks.length === 0 && (
+            <div className="p-8 text-center text-slate-500">
+              {t.empty_data}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Thêm CSS ẩn scrollbar cho menu ngang trên mobile */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+    </div>
+  );
+}
