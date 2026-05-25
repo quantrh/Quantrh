@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - BankB Virtual Account</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f2937; }
+        
+        /* Custom Header Styles */
+        .main-header { 
+            color: #006B68; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 1.25rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem; 
+            margin-top: 2.5rem; 
+            margin-bottom: 1.25rem; 
+            border-bottom: 2px solid #e5e7eb; 
+            padding-bottom: 0.75rem;
+        }
+        
+        .sub-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #374151;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .note-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 1rem; font-style: italic; color: #374151; margin-bottom: 2rem; border-radius: 0.25rem; }
+        
+        .step-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 2rem; 
+            height: 2rem; 
+            background-color: #e0f2f1; 
+            color: #00695c; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            border-radius: 50%; 
+            flex-shrink: 0;
+        }
+
+        .highlight-card {
+            background-color: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="p-6 md:p-10 max-w-6xl mx-auto">
+
+    <!-- PHẦN NỘI DUNG TIẾNG VIỆT -->
+    <div id="content-vi">
+        <h1 class="text-4xl font-extrabold text-[#006B68] mb-6 border-b-2 border-[#006B68] pb-4">HƯỚNG DẪN & QUY TRÌNH VIRTUAL ACCOUNT</h1>
+        
+        <div class="note-box text-sm">
+            Virtual account là giải pháp được xây dựng trên lớp Deposit Business Logic do BIDV viết thêm phủ ra ngoài phân hệ deposit cốt lõi trong core để xử lý các yêu cầu nghiệp vụ mới của tiền gửi, tránh ảnh hưởng đến hiệu năng và logic xử lý của core banking.
+        </div>
+
+        <!-- 1. GIẢI THÍCH THUẬT NGỮ -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            1. GIẢI THÍCH THUẬT NGỮ
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">RealBalance</span>
+                <p class="text-sm text-gray-600"><strong>Số dư thực (Own Balance).</strong> Số tiền thực tế nằm tại chính tài khoản VA đó, không bao gồm tiền của các tài khoản con.</p>
+            </div>
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">RollupBalance</span>
+                <p class="text-sm text-gray-600"><strong>Số dư cộng dồn (Roll-up Balance).</strong> Tổng tiền của chính VA đó + Tổng số dư Roll-up của tất cả các VA con trực thuộc. Dùng để quản lý hạn mức tổng.</p>
+            </div>
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">VA (Virtual Account)</span>
+                <p class="text-sm text-gray-600">Tài khoản ảo/định danh gắn với tài khoản thanh toán chính (DDA). Có hai loại: <strong>Light VA</strong> (chỉ nhận diện) và <strong>Full VA</strong> (có số dư nội bộ, hạn mức). Giúp tự động hóa đối soát.</p>
+            </div>
+             <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">DDA</span>
+                <p class="text-sm text-gray-600"><strong>Demand Deposit Account.</strong> Tài khoản thanh toán thực của doanh nghiệp tại ngân hàng.</p>
+            </div>
+            <div class="highlight-card md:col-span-2">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">Giao dịch gốc và giao dịch shadow</span>
+                <p class="text-sm text-gray-600">
+                    <span class="font-semibold">Giao dịch gốc:</span> Giao dịch nợ, có ghi nhận vào tài khoản DDA.<br>
+                    <span class="font-semibold">Giao dịch Shadow:</span> Giao dịch phụ được ghi nhận thêm vào các tài khoản VA chi tiết phục vụ định tuyến và báo cáo.
+                </p>
+            </div>
+        </div>
+
+        <!-- 2. QUY TRÌNH XỬ LÝ -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            2. QUY TRÌNH XỬ LÝ HIỆN TẠI
+        </h2>
+        
+        <!-- MỚI: Định nghĩa & Phạm vi (Di chuyển từ mục 3 cũ) -->
+        <div class="mb-8">
+            <h3 class="sub-header text-teal-700 mt-0">1. ĐỊNH NGHĨA VÀ PHẠM VI</h3>
+            <p class="text-sm mb-3">Trước khi đi vào quy trình, cần phân biệt rõ hai đối tượng tài khoản được xử lý:</p>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-orange-50 p-4 rounded border border-orange-200">
+                    <div class="font-bold text-orange-800 mb-2">Alias (Bí danh)</div>
+                    <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
+                        <li>Là dãy số/chữ được chủ tài khoản dùng thay thế cho số tài khoản thực.</li>
+                        <li><strong>Đặc điểm:</strong> Chỉ đóng vai trò 'mặt nạ' định danh.</li>
+                        <li>Giao dịch chuyển đến Alias là giao dịch chuyển tiền thông thường, không có xử lý gạch nợ sau.</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                    <div class="font-bold text-blue-800 mb-2">Virtual Account (VA - Tài khoản ảo)</div>
+                    <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
+                        <li>Là tài khoản quản trị logic (không tồn tại vật lý trong Core) được tạo bởi hệ thống VA Engine.</li>
+                        <li><strong>Mục đích:</strong> Phân loại dòng tiền chi tiết (dự án, hợp đồng...).</li>
+                        <li><strong>Cơ chế:</strong> Shadow posting, sử dụng định danh ảo để tự động định tuyến.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="sub-header text-teal-700">2. CÁC GIAI ĐOẠN XỬ LÝ (HIGH-LEVEL)</h3>
+        
+        <!-- GIAI ĐOẠN 1 -->
+        <div class="mb-6 border rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-blue-100 px-4 py-3 font-bold text-blue-900 border-b border-blue-200">GIAI ĐOẠN 1: VẤN TIN (Kiểm tra thông tin người thụ hưởng)</div>
+            <div class="p-5 space-y-4 bg-white">
+                <p class="text-sm italic text-gray-500 bg-gray-50 p-2 rounded">Mục đích: Xác thực thông tin tài khoản đích và số tiền trước khi chuyển.</p>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">B1</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Khởi tạo:</span> Khách hàng tại Ngân hàng ngoài (NH chuyển) bắt đầu thực hiện giao dịch chuyển tiền 247. Họ nhập thông tin tài khoản thụ hưởng và yêu cầu vấn tin.</div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">B2</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Kiểm tra định dạng (Tại Chương trình 247):</span> Hệ thống tiếp nhận yêu cầu và kiểm tra định dạng tài khoản hưởng.
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Nếu là tài khoản thường -> Chuyển luồng Core Banking.</li>
+                            <li>Nếu là VA/Alias -> Chuyển sang hệ thống Paygate.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B3</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Xử lý tại Paygate:</span> Paygate kiểm tra loại tài khoản và bóc tách thông tin.
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Nếu là VA: Gửi yêu cầu sang NCCDV/Kho dữ liệu lấy thông tin cước.</li>
+                            <li>Nếu là Alias: Phản hồi tên và số DDA liên kết.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B4</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Tổng hợp thông tin (Tại Chương trình 247):</span>
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Gọi Core Banking truy vấn trạng thái DDA liên kết.</li>
+                            <li>Lưu thông tin tạm thời (Cache): Tên người hưởng, số tiền, Billid (với VA)...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B5</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Phản hồi khách hàng:</span> Kết quả được gửi trả về Ngân hàng ngoài để khách hàng kiểm tra.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GIAI ĐOẠN 2 -->
+        <div class="mb-6 border rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-green-100 px-4 py-3 font-bold text-green-900 border-b border-green-200">GIAI ĐOẠN 2: HẠCH TOÁN (Thực hiện chuyển tiền)</div>
+            <div class="p-5 space-y-4 bg-white">
+                <p class="text-sm italic text-gray-500 bg-gray-50 p-2 rounded">Mục đích: Ghi nhận dòng tiền và gạch nợ.</p>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">B1</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Xác nhận giao dịch:</span> Khách hàng xác nhận. Yêu cầu hạch toán được gửi đi.</div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B2</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Định tuyến lại (Tại Chương trình 247):</span> Kiểm tra lại định dạng. Nếu là VA/Alias -> Lấy lại thông tin Cache từ bước Vấn tin.</div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B3</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Xử lý Hạch toán:</span>
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Nhánh Alias: Gửi lệnh vào Core để ghi CÓ trực tiếp vào DDA khách hàng.</li>
+                            <li>Nhánh VA: Kiểm tra tham số (số tiền, nợ cước) -> Gửi lệnh ghi CÓ vào tài khoản chuyên thu của NCC tại Core.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B4</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Gạch nợ và Hoàn tất:</span> Sau khi Core trả kết quả thành công:
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Với VA: Hệ thống gửi yêu cầu sang NCCDV/Kho dữ liệu để Gạch nợ hóa đơn.</li>
+                            <li>Ghi nhận thành công.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">B5</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Kết thúc:</span> Gửi kết quả cuối cùng về Ngân hàng ngoài.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TÓM TẮT -->
+        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+            <h4 class="font-bold text-gray-800 mb-2">Tóm tắt các hệ thống tham gia:</h4>
+            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                <li><strong>Ngân hàng ngoài:</strong> Nơi khởi tạo giao dịch.</li>
+                <li><strong>Chương trình 247:</strong> Bộ điều phối chính, quyết định luồng đi (Router).</li>
+                <li><strong>Paygate:</strong> Cổng xử lý logic cho VA/Alias, giao tiếp với đối tác.</li>
+                <li><strong>Core Banking:</strong> Hệ thống lõi quản lý tài khoản tiền và hạch toán.</li>
+                <li><strong>NCCDV/Kho dữ liệu:</strong> Hệ thống của đơn vị cung cấp dịch vụ lưu trữ hóa đơn.</li>
+            </ul>
+        </div>
+
+        <!-- 3. QUY TRÌNH ĐỀ XUẤT (Đánh số lại từ 4 -> 3) -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            3. QUY TRÌNH XỬ LÝ TÀI KHOẢN ĐỊNH DANH ĐỀ XUẤT
+        </h2>
+
+        <h3 class="sub-header text-teal-700">I. MÔ HÌNH 2 LỰA CHỌN GIAO DỊCH CHO DỊCH VỤ VIRTUAL ACCOUNT</h3>
+        <p class="mb-4 text-sm">Khi khách hàng đăng ký sử dụng VA, ngân hàng cung cấp hai lựa chọn giao dịch:</p>
+
+        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+            <!-- OPTION 1 -->
+            <div class="bg-white border-2 border-teal-100 rounded-lg p-5 shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-teal-600 text-white font-bold text-xs px-2 py-1 rounded">OPTION 1</span>
+                    <h4 class="text-teal-800 font-bold text-lg">Giao dịch trực tiếp bằng số VA</h4>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 text-justify">Khách hàng nhập số VA khi thực hiện giao dịch. Hệ thống sẽ kiểm tra VA trước, nếu hợp lệ mới cho phép thực hiện hạch toán thật vào tài khoản gốc (DDA).</p>
+                
+                <ul class="list-disc pl-5 text-sm text-gray-700 mb-4 space-y-1">
+                    <li>Nếu VA sai → giao dịch bị từ chối ngay.</li>
+                    <li>Mọi khoản tiền vào đều chắc chắn thuộc đúng VA.</li>
+                    <li>Tài khoản gốc (DDA) chỉ nhận các khoản tiền hợp lệ từ VA.</li>
+                </ul>
+
+                <div class="bg-teal-50 p-3 rounded mb-4 text-xs font-semibold text-teal-800">
+                    Phù hợp: GPMB, thu ngân sách, dự án Nhà nước. Doanh nghiệp yêu cầu quản lý chặt chẽ.
+                </div>
+
+                <div class="text-sm space-y-2 border-t pt-3">
+                    <p class="font-bold text-gray-800">Luồng xử lý (VA-first):</p>
+                    <div class="flex gap-2"><span class="font-bold text-teal-600">B1:</span> <span>Nhập số VA (thay vì DDA), tiền, nội dung.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-teal-600">B2:</span> <span>Kiểm tra VA (tồn tại, hiệu lực...). Sai → Báo lỗi.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-teal-600">B3:</span> <span>Đúng → Xác định TK gốc và ghi có.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-teal-600">B4:</span> <span>Tạo bút toán ảo VA, cập nhật Real & Roll-up.</span></div>
+                </div>
+            </div>
+
+            <!-- OPTION 2 -->
+            <div class="bg-white border-2 border-indigo-100 rounded-lg p-5 shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-indigo-600 text-white font-bold text-xs px-2 py-1 rounded">OPTION 2</span>
+                    <h4 class="text-indigo-800 font-bold text-lg">Giao dịch bằng số DDA (DDA-first)</h4>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 text-justify">Khách hàng nhập số DDA như bình thường. VA xử lý sau dựa trên nội dung (remark). Hệ thống chỉ thực hiện “VA hạch toán ảo” sau khi DDA đã nhận tiền.</p>
+                
+                <ul class="list-disc pl-5 text-sm text-gray-700 mb-4 space-y-1">
+                    <li>Không làm thay đổi thói quen doanh nghiệp.</li>
+                    <li>Vẫn giữ nguyên các luồng chuyển khoản liên ngân hàng.</li>
+                    <li>Tận dụng VA để tự động phân bổ giao dịch sau này.</li>
+                </ul>
+
+                <div class="bg-indigo-50 p-3 rounded mb-4 text-xs font-semibold text-indigo-800">
+                    Phù hợp: Doanh nghiệp quen dùng DDA, không muốn thay đổi quy trình hiện tại.
+                </div>
+
+                <div class="text-sm space-y-2 border-t pt-3">
+                    <p class="font-bold text-gray-800">Luồng xử lý (DDA-first):</p>
+                    <div class="flex gap-2"><span class="font-bold text-indigo-600">B1:</span> <span>Chuyển tiền vào số DDA.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-indigo-600">B2:</span> <span>Ghi có vào DDA như thường. Lỗi → Dừng.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-indigo-600">B3:</span> <span>Kiểm tra DDA có đăng ký VA không?</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-indigo-600">B4:</span> <span>Đọc nội dung (ghi chú) tìm VA.</span></div>
+                    <div class="flex gap-2"><span class="font-bold text-indigo-600">B5:</span> <span>Tạo bút toán ảo. Không tìm được → List chờ xử lý.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="sub-header text-teal-700">III. SƠ ĐỒ SO SÁNH NGẮN GỌN HAI LỰA CHỌN</h3>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm mb-12">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-800 font-bold uppercase text-xs">
+                    <tr>
+                        <th class="p-4 text-left border-r">Nội dung</th>
+                        <th class="p-4 text-left border-r text-teal-700">Option 1 – Dùng VA</th>
+                        <th class="p-4 text-left text-indigo-700">Option 2 – Dùng DDA & remark</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white">
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Cách khách hàng nhập</td>
+                        <td class="p-4 border-r">Nhập số VA</td>
+                        <td class="p-4">Nhập số DDA</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Kiểm tra VA</td>
+                        <td class="p-4 border-r">Kiểm tra trước khi hạch toán</td>
+                        <td class="p-4">Kiểm tra sau khi DDA nhận tiền</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Đảm bảo đúng VA</td>
+                        <td class="p-4 border-r font-bold text-green-600">Rất cao</td>
+                        <td class="p-4">Phụ thuộc vào ghi chú & quy tắc</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Rủi ro không tìm được VA</td>
+                        <td class="p-4 border-r">Không có</td>
+                        <td class="p-4 text-orange-600">Có (được đưa vào danh sách chờ xử lý)</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Phù hợp cho</td>
+                        <td class="p-4 border-r">Thu ngân sách, GPMB, kiểm soát chặt</td>
+                        <td class="p-4">Doanh nghiệp quen dùng DDA</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Độ tương thích hệ thống</td>
+                        <td class="p-4 border-r">Cần chỉnh giao diện kênh</td>
+                        <td class="p-4 font-bold text-green-600">Hoàn toàn giữ nguyên giao diện hiện tại</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. QUY TRÌNH NGHIỆP VỤ CHI TIẾT (Đánh số lại từ 5 -> 4) -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><list><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></list></svg>
+            4. QUY TRÌNH NGHIỆP VỤ CHI TIẾT
+        </h2>
+        
+        <div class="space-y-6">
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">1. Quy trình Onboarding (Thiết lập ban đầu)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Bước 1 (Tại Quầy/Core):</strong> Mở mã CIF khách hàng doanh nghiệp và Tài khoản thanh toán (DDA) thực.</li>
+                    <li>• <strong>Bước 2 (Trên VA System - Menu 'Hồ Sơ Doanh Nghiệp'):</strong> Tạo hồ sơ doanh nghiệp mới, nhập CIF.</li>
+                    <li>• <strong>Bước 3:</strong> Liên kết (Link) các tài khoản DDA thực vào hệ thống VA để làm tài khoản Master (Tài khoản tổng).</li>
+                    <li>• <strong>Bước 4:</strong> Phân quyền user quản trị và phê duyệt hạn mức (nếu có).</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">2. Quy trình Quản lý Cây Thư mục VA (VA Lifecycle)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Bước 1 (Menu 'Quản Lý VA'):</strong> Tạo VA Gốc (Root) gắn với DDA Master.</li>
+                    <li>• <strong>Bước 2:</strong> Tạo các VA cấp con (Level 1, Level 2...) theo cơ cấu tổ chức (Phòng ban, Dự án, Chi nhánh).</li>
+                    <li>• <strong>Bước 3:</strong> Thiết lập Metadata cho từng VA (Mã dự án, Mã hợp đồng) để phục vụ định danh sau này.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">3. Quy trình Định danh & Routing (Smart Mapper)</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Mục đích: Giúp hệ thống tự động nhận diện tiền vào VA nào dựa trên nội dung chuyển khoản.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Bước 1 (Menu 'Định Danh & Routing'):</strong> Chọn loại định danh (Mã số thuế, Số hợp đồng, Mã căn hộ...).</li>
+                    <li>• <strong>Bước 2:</strong> Nhập giá trị định danh (VD: HD-001) và chọn VA đích (VD: VA_Project_A).</li>
+                    <li>• <strong>Bước 3:</strong> Lưu quy tắc. Từ giờ, mọi món tiền vào DDA mẹ có nội dung chứa 'HD-001' sẽ tự động ghi có cho VA_Project_A.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">4. Quy trình Giao dịch Tiền vào (Incoming Credit)</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Luồng tiền: Khách hàng chuyển tiền -> DDA Mẹ (Core) -> VA System.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Bước 1:</strong> Core Banking ghi có vào DDA Mẹ.</li>
+                    <li>• <strong>Bước 2:</strong> VA System nhận webhook/message từ Core.</li>
+                    <li>• <strong>Bước 3:</strong> Routing Engine phân tích nội dung -> Tìm thấy Rule đã map ở Mục 3.</li>
+                    <li>• <strong>Bước 4:</strong> Ghi tăng 'Số dư thực' (Real Balance) tại VA đích.</li>
+                    <li>• <strong>Bước 5:</strong> Ghi tăng 'Số dư cộng dồn' (Roll-up Balance) cho VA đích và toàn bộ VA cha.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">5. Quy trình Chi hộ (Outgoing POBO)</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Luồng tiền: User lập lệnh từ VA -> Hệ thống trừ tiền DDA Mẹ -> Người thụ hưởng.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Bước 1 (Menu 'Chi Hộ'):</strong> Nhập thông tin thụ hưởng và số tiền.</li>
+                    <li>• <strong>Bước 2:</strong> Hệ thống kiểm tra 'Số dư thực' (Real Balance) của VA. Nếu đủ -> Tiếp tục.</li>
+                    <li>• <strong>Bước 3:</strong> Gửi lệnh Debit DDA Mẹ xuống Core Banking.</li>
+                    <li>• <strong>Bước 4:</strong> Nếu Core thành công -> Ghi giảm (Debit) số dư VA (cả Real và Roll-up).</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">6. Quy trình Điều chuyển & Cấp vốn (Internal & Fund Mgt)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Điều chuyển nội bộ (VA <-> VA):</strong> Chuyển tiền ảo giữa các VA. Chỉ thay đổi số dư VA, không sinh giao dịch trên DDA mẹ.</li>
+                    <li>• <strong>Cấp vốn (DDA -> VA):</strong> Phân bổ hạn mức từ Quỹ chung (DDA) xuống VA con để chi tiêu.</li>
+                    <li>• <strong>Thu vốn (VA -> DDA):</strong> Gom tiền từ VA con về Quỹ chung (Sweep).</li>
+                </ul>
+            </div>
+
+             <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">7. Báo cáo & Đối soát (Reconciliation)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Báo cáo Sao kê (Statement):</strong> Liệt kê chi tiết giao dịch của từng VA (giống tài khoản thật).</li>
+                    <li>• <strong>Báo cáo Tổng hợp (Summary):</strong> Xem tổng số dư Roll-up theo từng cấp.</li>
+                    <li>• <strong>Đối soát cuối ngày:</strong> Tổng số dư Real của tất cả VA con phải bằng (=) Số dư thực tế trên DDA Mẹ tại Core.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN NỘI DUNG TIẾNG ANH -->
+    <div id="content-en" class="hidden">
+        <h1 class="text-4xl font-extrabold text-[#006B68] mb-6 border-b-2 border-[#006B68] pb-4">VIRTUAL ACCOUNT USER GUIDE & PROCESS</h1>
+        
+        <div class="note-box text-sm">
+            Virtual Account is a solution built on the Deposit Business Logic layer extended by BIDV over the core deposit module to handle new deposit business requirements without affecting Core Banking performance and logic.
+        </div>
+
+        <!-- 1. GLOSSARY -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            1. GLOSSARY
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">RealBalance</span>
+                <p class="text-sm text-gray-600"><strong>Own Balance.</strong> The actual amount sitting in that specific VA account, excluding funds from child accounts.</p>
+            </div>
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">RollupBalance</span>
+                <p class="text-sm text-gray-600"><strong>Roll-up Balance.</strong> The total funds of that VA + The total Roll-up balance of all direct child VAs. Used for managing total limits.</p>
+            </div>
+            <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">VA (Virtual Account)</span>
+                <p class="text-sm text-gray-600">Virtual/Identified account linked to a main payment account (DDA). Two types: <strong>Light VA</strong> (Tagging only) and <strong>Full VA</strong> (Internal balance, limits). Helps automate reconciliation.</p>
+            </div>
+             <div class="highlight-card">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">DDA</span>
+                <p class="text-sm text-gray-600"><strong>Demand Deposit Account.</strong> The actual corporate payment account at the bank.</p>
+            </div>
+            <div class="highlight-card md:col-span-2">
+                <span class="font-bold text-blue-700 block mb-1 uppercase">Original Transaction & Shadow Transaction</span>
+                <p class="text-sm text-gray-600">
+                    <span class="font-semibold">Original Transaction:</span> Debit transaction, recorded in the DDA.<br>
+                    <span class="font-semibold">Shadow Transaction:</span> Supplementary entry recorded on detailed VAs linked to the DDA for routing and reporting purposes.
+                </p>
+            </div>
+        </div>
+
+        <!-- 2. PROCESSING WORKFLOW -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            2. CURRENT PROCESSING WORKFLOW
+        </h2>
+        
+        <!-- MỚI: Định nghĩa & Phạm vi (Moved from old Section 3) -->
+        <div class="mb-8">
+            <h3 class="sub-header text-teal-700 mt-0">1. DEFINITION & SCOPE</h3>
+            <p class="text-sm mb-3">Before diving into the process, distinguish between two account objects:</p>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-orange-50 p-4 rounded border border-orange-200">
+                    <div class="font-bold text-orange-800 mb-2">Alias</div>
+                    <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
+                        <li>String of numbers/letters used by account holder to replace real account number.</li>
+                        <li><strong>Feature:</strong> Acts as a 'mask'.</li>
+                        <li>Transfers to Alias are normal transfers, no post-processing debt clearance.</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                    <div class="font-bold text-blue-800 mb-2">Virtual Account (VA)</div>
+                    <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
+                        <li>Logical management account (not physical in Core) created by VA Engine.</li>
+                        <li><strong>Purpose:</strong> Classify detailed cash flow (project, contract...).</li>
+                        <li><strong>Mechanism:</strong> Shadow posting, uses virtual ID for auto-routing.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="sub-header text-teal-700">2. PROCESSING PHASES (HIGH-LEVEL)</h3>
+
+        <!-- PHASE 1 -->
+        <div class="mb-6 border rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-blue-100 px-4 py-3 font-bold text-blue-900 border-b border-blue-200">PHASE 1: INQUIRY (Beneficiary Check)</div>
+            <div class="p-5 space-y-4 bg-white">
+                <p class="text-sm italic text-gray-500 bg-gray-50 p-2 rounded">Purpose: Validate destination account information and amount before transfer.</p>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">1</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Initialization:</span> Customer at External Bank (Sender Bank) initiates a 247 transfer. They input beneficiary info and request inquiry.</div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">2</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Format Check (At 247 Program):</span> System receives request and checks beneficiary account format.
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>If Normal Account -> Route to Core Banking.</li>
+                            <li>If VA/Alias -> Route to Paygate System.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">3</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Processing at Paygate:</span> Paygate checks account type and parses info.
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>If VA: Send request to Service Provider/Data Warehouse for bill info.</li>
+                            <li>If Alias: Return linked DDA name and number.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">4</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Information Aggregation (At 247 Program):</span>
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Call Core Banking to query linked DDA status.</li>
+                            <li>Save temporary info (Cache): Beneficiary Name, Amount, Bill ID (for VA)...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">5</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Customer Response:</span> Result is sent back to External Bank for customer verification.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div class="mb-6 border rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-green-100 px-4 py-3 font-bold text-green-900 border-b border-green-200">PHASE 2: ACCOUNTING (Transfer Execution)</div>
+            <div class="p-5 space-y-4 bg-white">
+                <p class="text-sm italic text-gray-500 bg-gray-50 p-2 rounded">Purpose: Record cash flow and clear debt.</p>
+                
+                <div class="flex gap-4">
+                    <span class="step-badge">1</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Transaction Confirmation:</span> Customer confirms. Accounting request is sent.</div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">2</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">Re-routing (At 247 Program):</span> Re-check format. If VA/Alias -> Retrieve Cache info from Inquiry phase.</div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">3</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Accounting Processing:</span>
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>Alias Branch: Send order to Core to Credit directly to Customer DDA.</li>
+                            <li>VA Branch: Check parameters (amount, debt) -> Send order to Credit Provider's Collection Account at Core.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">4</span>
+                    <div class="text-sm">
+                        <span class="font-bold text-gray-800">Debt Clearance & Completion:</span> After Core returns success:
+                        <ul class="list-disc pl-5 mt-1 text-gray-600 text-xs">
+                            <li>For VA: System sends request to Service Provider/Data Warehouse to Clear Bill.</li>
+                            <li>Record Success.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="step-badge">5</span>
+                    <div class="text-sm"><span class="font-bold text-gray-800">End:</span> Send final result to External Bank.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+            <h4 class="font-bold text-gray-800 mb-2">System Summary:</h4>
+            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                <li><strong>External Bank:</strong> Where transaction initiates.</li>
+                <li><strong>247 Program:</strong> Main coordinator (Router).</li>
+                <li><strong>Paygate:</strong> Logic processing gateway for VA/Alias, communicates with partners.</li>
+                <li><strong>Core Banking:</strong> Core system managing money accounts and accounting.</li>
+                <li><strong>Service Provider/Data Warehouse:</strong> System storing bill/service data.</li>
+            </ul>
+        </div>
+
+        <!-- 3. PROPOSED IDENTIFIED ACCOUNT PROCESS (Renumbered from 4) -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            3. PROPOSED IDENTIFIED ACCOUNT PROCESS
+        </h2>
+
+        <h3 class="sub-header text-teal-700">I. 2 TRANSACTION OPTIONS MODEL FOR VA SERVICE</h3>
+        <p class="mb-4 text-sm">When customers register for VA, the bank provides two transaction options:</p>
+
+        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+            <!-- OPTION 1 -->
+            <div class="bg-white border-2 border-teal-100 rounded-lg p-5 shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-teal-600 text-white font-bold text-xs px-2 py-1 rounded">OPTION 1</span>
+                    <h4 class="text-teal-800 font-bold text-lg">Transaction via VA Number</h4>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 text-justify">Customer inputs VA number. System validates VA before crediting Real Account (DDA).</p>
+                
+                <ul class="list-disc pl-5 text-sm text-gray-700 mb-4 space-y-1">
+                    <li>If VA invalid → reject immediately.</li>
+                    <li>All incoming funds guaranteed to belong to correct VA.</li>
+                    <li>Real Account (DDA) only receives valid funds from VA.</li>
+                </ul>
+
+                <div class="bg-teal-50 p-3 rounded mb-4 text-xs font-semibold text-teal-800">
+                    Suitable for: Site clearance, budget collection, State projects. Strict management required.
+                </div>
+            </div>
+
+            <!-- OPTION 2 -->
+            <div class="bg-white border-2 border-indigo-100 rounded-lg p-5 shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-indigo-600 text-white font-bold text-xs px-2 py-1 rounded">OPTION 2</span>
+                    <h4 class="text-indigo-800 font-bold text-lg">Transaction via DDA (DDA-first)</h4>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 text-justify">Customer inputs DDA number. VA logic applied after DDA credit based on remark. System only performs "VA shadow accounting" after DDA receives money.</p>
+                
+                <ul class="list-disc pl-5 text-sm text-gray-700 mb-4 space-y-1">
+                    <li>No change in business habit.</li>
+                    <li>Keeps interbank transfer flows intact.</li>
+                    <li>Leverage VA for auto-allocation later.</li>
+                </ul>
+
+                <div class="bg-indigo-50 p-3 rounded mb-4 text-xs font-semibold text-indigo-800">
+                    Suitable for: Businesses used to DDA, don't want process change.
+                </div>
+            </div>
+        </div>
+
+        <h3 class="sub-header text-teal-700">III. BRIEF COMPARISON DIAGRAM</h3>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm mb-12">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-800 font-bold uppercase text-xs">
+                    <tr>
+                        <th class="p-4 text-left border-r">Content</th>
+                        <th class="p-4 text-left border-r text-teal-700">Option 1 – Use VA</th>
+                        <th class="p-4 text-left text-indigo-700">Option 2 – Use DDA & remark</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white">
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">Input Method</td>
+                        <td class="p-4 border-r">Input VA Number</td>
+                        <td class="p-4">Input DDA Number</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">VA Check</td>
+                        <td class="p-4 border-r">Check before accounting</td>
+                        <td class="p-4">Check after DDA receives money</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-gray-700">VA Accuracy</td>
+                        <td class="p-4 border-r font-bold text-green-600">Very High</td>
+                        <td class="p-4">Depends on remarks & rules</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. DETAILED BUSINESS PROCESSES (Renumbered from 5) -->
+        <h2 class="main-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600"><list><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></list></svg>
+            4. DETAILED BUSINESS PROCESSES
+        </h2>
+        
+        <div class="space-y-6">
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">1. Onboarding Process (Initial Setup)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Step 1 (At Counter/Core):</strong> Open Corporate CIF and Real Payment Account (DDA).</li>
+                    <li>• <strong>Step 2 (On VA System - 'Corp Profile' Menu):</strong> Create new corporate profile, input CIF.</li>
+                    <li>• <strong>Step 3:</strong> Link Real DDA accounts to VA system as Master Accounts.</li>
+                    <li>• <strong>Step 4:</strong> Assign Admin permissions and approve limits (if any).</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">2. VA Tree Management Process (VA Lifecycle)</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Step 1 ('VA Management' Menu):</strong> Create Root VA linked to Master DDA.</li>
+                    <li>• <strong>Step 2:</strong> Create Child VAs (Level 1, Level 2...) based on organizational structure (Dept, Project, Branch).</li>
+                    <li>• <strong>Step 3:</strong> Set Metadata for each VA (Project Code, Contract Code) for identification.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">3. Identification & Routing Process (Smart Mapper)</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Purpose: Help system auto-identify target VA based on transfer content.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Step 1 ('Identification & Routing' Menu):</strong> Select ID type (Tax ID, Contract No, Apt Code...).</li>
+                    <li>• <strong>Step 2:</strong> Input ID value (e.g., HD-001) and select Target VA (e.g., VA_Project_A).</li>
+                    <li>• <strong>Step 3:</strong> Save Rule. From now, money entering Mother DDA with content containing 'HD-001' will auto-credit VA_Project_A.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">4. Incoming Credit Process</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Flow: Customer Transfer -> Mother DDA (Core) -> VA System.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Step 1:</strong> Core Banking credits Mother DDA.</li>
+                    <li>• <strong>Step 2:</strong> VA System receives webhook/message from Core.</li>
+                    <li>• <strong>Step 3:</strong> Routing Engine parses content -> Finds Mapped Rule from Section 3.</li>
+                    <li>• <strong>Step 4:</strong> Credit 'Real Balance' at Target VA.</li>
+                    <li>• <strong>Step 5:</strong> Credit 'Roll-up Balance' for Target VA and all Parent VAs.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">5. Outgoing POBO Process</h4>
+                <p class="text-sm italic text-gray-500 mb-2">Flow: User creates order from VA -> System debits Mother DDA -> Beneficiary.</p>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Step 1 ('Payout' Menu):</strong> Input beneficiary info and amount.</li>
+                    <li>• <strong>Step 2:</strong> System checks VA 'Real Balance'. If sufficient -> Continue.</li>
+                    <li>• <strong>Step 3:</strong> Send Debit Mother DDA order to Core Banking.</li>
+                    <li>• <strong>Step 4:</strong> If Core success -> Debit VA balance (both Real and Roll-up).</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">6. Internal Transfer & Fund Management</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Internal Transfer (VA <-> VA):</strong> Virtual money transfer between VAs. Only changes VA balance, no transaction on Mother DDA.</li>
+                    <li>• <strong>Fund Allocation (DDA -> VA):</strong> Allocate limit from General Fund (DDA) down to Child VA for spending.</li>
+                    <li>• <strong>Fund Sweep (VA -> DDA):</strong> Collect money from Child VAs back to General Fund.</li>
+                </ul>
+            </div>
+
+             <div class="pl-4 border-l-4 border-teal-500">
+                <h4 class="text-teal-700 font-bold text-lg">7. Reporting & Reconciliation</h4>
+                <ul class="list-none text-sm text-gray-700 mt-2 space-y-2">
+                    <li>• <strong>Statement Report:</strong> Detail transactions of each VA (like real account).</li>
+                    <li>• <strong>Summary Report:</strong> View total Roll-up balance by level.</li>
+                    <li>• <strong>End-of-Day Reconciliation:</strong> Total Real Balance of all Child VAs must equal (=) Actual Balance on Mother DDA at Core.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCRIPT CHUYỂN NGÔN NGỮ (ĐÃ CHUYỂN XUỐNG CUỐI BODY) -->
+    <script>
+        // Hàm chuyển đổi ngôn ngữ
+        function setLanguage(lang) {
+            const vi = document.getElementById('content-vi');
+            const en = document.getElementById('content-en');
+            
+            // Bảo vệ nếu phần tử chưa load
+            if (!vi || !en) {
+                console.warn("Elements not found, retrying...");
+                return;
+            }
+
+            if (lang === 'en') {
+                vi.classList.add('hidden');
+                en.classList.remove('hidden');
+            } else {
+                vi.classList.remove('hidden');
+                en.classList.add('hidden');
+            }
+        }
+
+        // 1. Kiểm tra URL Param khi load
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialLang = urlParams.get('lang') || 'vi';
+        
+        // Chạy ngay lập tức vì script đang ở cuối body (DOM đã sẵn sàng)
+        setLanguage(initialLang);
+
+        // 2. Lắng nghe message từ App cha
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'SET_LANG') {
+                setLanguage(event.data.lang);
+            }
+        });
+    </script>
+</body>
+</html>
+
+

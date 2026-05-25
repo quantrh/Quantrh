@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        /**
+         * LOGIC ĐIỀU HƯỚNG (ROUTER)
+         * 1. Kiểm tra URL param (?lang=en hoặc ?lang=vi)
+         * 2. Mặc định là 'vi' nếu không có param.
+         * 3. Chuyển hướng sang file con tương ứng.
+         */
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Lấy lang từ URL, nếu không có thì mặc định là 'vi'
+            const lang = urlParams.get('lang') || 'vi'; 
+            
+            // Giữ lại các query param khác nếu có (ví dụ ?token=abc)
+            const queryString = window.location.search;
+
+            if (lang === 'en') {
+                window.location.replace('Architec_EN.html' + queryString);
+            } else {
+                window.location.replace('Architec_VI.html' + queryString);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <p>Đang tải dữ liệu...</p>
+</body>
+</html>
