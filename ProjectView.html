@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình xem MS Project (Gantt Chart Tương tác)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Thêm thư viện xuất Excel và PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        /* Style cho thanh kéo resize cột */
+        .resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: col-resize;
+            z-index: 10;
+        }
+        .resizer:hover, .resizing {
+            background-color: #3b82f6; /* bg-blue-500 */
+        }
+
+        /* Đồng bộ layout bảng bằng CSS Grid và biến */
+        .grid-table {
+            display: grid;
+            grid-template-columns: var(--col-id) var(--col-name) var(--col-start) var(--col-end);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen overflow-hidden flex flex-col" style="--col-id: 50px; --col-name: 260px; --col-start: 90px; --col-end: 90px;">
+
+    <!-- Navbar -->
+    <header class="bg-blue-700 text-white p-4 flex justify-between items-center shadow-md z-30 shrink-0">
+        <h1 class="text-xl font-bold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M6 12h9"/><path d="M11 18h7"/></svg>
+            Trình xem MS Project Pro
+        </h1>
+        <div>
+            <input type="file" id="fileInput" accept=".mpp,.xml" class="hidden" />
+            <button onclick="document.getElementById('fileInput').click()" class="bg-blue-500 hover:bg-blue-400 text-white px-5 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                Tải lên File Project (.xml)
+            </button>
+        </div>
+    </header>
+
+    <!-- Toolbar (Chỉ hiện khi có dữ liệu) -->
+    <div id="toolbar" class="bg-white border-b border-slate-300 px-4 py-2 flex items-center gap-5 z-20 shrink-0 hidden shadow-sm flex-wrap">
+        <div class="flex items-center gap-2">
+            <button onclick="expandAll()" class="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 flex items-center gap-1 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 21 6 15"/><polyline points="18 9 12 15 6 9"/></svg>
+                Mở rộng tất cả
+            </button>
+            <button onclick="collapseAll()" class="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 flex items-center gap-1 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                Thu gọn tất cả
+            </button>
+        </div>
+        
+        <div class="h-6 w-px bg-slate-300 hidden sm:block"></div>
+        
+        <!-- Tính năng chọn Cấp độ hiển thị -->
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-slate-600" title="Hiển thị đồng loạt các mục theo cấp độ">Hiển thị cấp:</span>
+            <select id="level-filter" onchange="filterByLevel(this.value)" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer font-medium hover:bg-slate-100">
+                <option value="all">Tất cả các cấp</option>
+                <option value="custom" hidden>Tùy chỉnh...</option>
+                <!-- JS sẽ render tự động các Option vào đây -->
+            </select>
+        </div>
+
+        <div class="h-6 w-px bg-slate-300 hidden sm:block"></div>
+
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-slate-600">Gantt Zoom:</span>
+            <button onclick="zoomOut()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu nhỏ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button onclick="zoomIn()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Phóng to">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button onclick="fitToScreen()" class="px-3 py-1.5 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded border border-blue-200 flex items-center gap-1 transition-colors ml-2" title="Gom vừa toàn bộ màn hình">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                Vừa màn hình
+            </button>
+        </div>
+
+        <div class="h-6 w-px bg-slate-300 hidden md:block"></div>
+
+        <!-- Nhóm nút Xuất file -->
+        <div class="flex items-center gap-2">
+            <button onclick="exportExcel()" class="px-3 py-1.5 text-sm bg-green-50 hover:bg-green-100 text-green-700 font-medium rounded border border-green-200 flex items-center gap-1 transition-colors" title="Xuất dữ liệu ra file Excel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Xuất Excel
+            </button>
+            <button onclick="exportPDF()" class="px-3 py-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded border border-red-200 flex items-center gap-1 transition-colors" title="Xuất biểu đồ ra file PDF">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 18v-6a2 2 0 1 1 4 0v6"/></svg>
+                Xuất PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col p-4 overflow-hidden gap-4 relative bg-slate-200/50">
+        
+        <!-- Trạng thái trống -->
+        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center z-20">
+             <div class="p-10 bg-white rounded-2xl shadow-sm border border-slate-200 text-center max-w-lg animate-fade-in-up">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mx-auto mb-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M8 10v4"/><path d="M12 10v2"/><path d="M16 10v6"/></svg>
+                 <h2 class="text-2xl font-bold text-slate-700 mb-3">Xem dữ liệu dự án của bạn</h2>
+                 <p class="text-slate-500 mb-8 leading-relaxed">Hỗ trợ đọc file <strong class="text-slate-700">MS Project XML</strong>. Các tính năng: Thu gọn đồng loạt theo Cấp, kéo giãn cột, và zoom đồ thị.</p>
+                 <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm">
+                     Chọn File Project
+                 </button>
+             </div>
+        </div>
+
+        <!-- Khung xem chính -->
+        <div id="viewer-container" class="flex-1 flex border border-slate-300 rounded-lg shadow-sm bg-white overflow-hidden hidden opacity-0 transition-opacity duration-500">
+            
+            <!-- Cột trái: Bảng danh sách công việc -->
+            <div id="left-panel" class="flex flex-col border-r border-slate-300 bg-white z-10 shrink-0 w-fit">
+                <!-- Header Bảng (Có resizer) -->
+                <div class="h-12 bg-slate-100 border-b border-slate-300 grid-table font-semibold text-sm text-slate-700 shrink-0 shadow-[0_2px_5px_rgba(0,0,0,0.02)] select-none">
+                    <div class="relative flex items-center justify-center border-r border-slate-300">
+                        ID <div class="resizer" data-col="--col-id"></div>
+                    </div>
+                    <div class="relative flex items-center px-2 border-r border-slate-300">
+                        Tên công việc <div class="resizer" data-col="--col-name"></div>
+                    </div>
+                    <div class="relative flex items-center justify-center border-r border-slate-300">
+                        Bắt đầu <div class="resizer" data-col="--col-start"></div>
+                    </div>
+                    <div class="relative flex items-center justify-center">
+                        Kết thúc <div class="resizer" data-col="--col-end"></div>
+                    </div>
+                </div>
+                <!-- Nội dung Bảng -->
+                <div id="task-list" class="flex-1 overflow-y-auto hide-scrollbar bg-white w-full">
+                    <!-- Các hàng sẽ được chèn bằng JS -->
+                </div>
+            </div>
+
+            <!-- Cột phải: Biểu đồ Gantt -->
+            <div class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden min-w-0" id="gantt-right-panel">
+                <div id="gantt-header-wrapper" class="overflow-hidden shrink-0 bg-slate-100 border-b border-slate-300 z-20 h-12 shadow-[0_2px_5px_rgba(0,0,0,0.02)] select-none">
+                    <div id="gantt-header" class="h-full flex flex-col"></div>
+                </div>
+                <div id="gantt-body-wrapper" class="flex-1 overflow-auto relative hide-scrollbar cursor-grab active:cursor-grabbing">
+                    <div id="gantt-body" class="relative"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Cảnh báo -->
+    <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50">
+       <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-fade-in-up border border-slate-200">
+           <div class="flex items-center gap-3 mb-4 text-amber-600">
+                <h3 class="text-xl font-bold text-slate-800" id="modal-title">Lưu ý Kỹ thuật</h3>
+           </div>
+           <div class="text-slate-600 mb-6 text-sm leading-relaxed" id="modal-content"></div>
+           <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+               <button id="modal-close" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors">Tôi đã hiểu</button>
+           </div>
+       </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const emptyState = document.getElementById('empty-state');
+        const viewerContainer = document.getElementById('viewer-container');
+        const toolbar = document.getElementById('toolbar');
+        const taskList = document.getElementById('task-list');
+        const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
+        const ganttHeader = document.getElementById('gantt-header');
+        const ganttBodyWrapper = document.getElementById('gantt-body-wrapper');
+        const ganttBody = document.getElementById('gantt-body');
+        const ganttRightPanel = document.getElementById('gantt-right-panel');
+        const levelFilter = document.getElementById('level-filter');
+
+        // Cấu hình hiển thị
+        const ROW_HEIGHT = 42; 
+        let dayWidth = 40; 
+        const MAX_DAY_WIDTH = 120;
+
+        // Trạng thái dữ liệu
+        let globalTasks = [];
+
+        // ------------------ EVENT LISTENERS ------------------
+
+        // Đồng bộ cuộn (scroll)
+        taskList.addEventListener('scroll', () => { ganttBodyWrapper.scrollTop = taskList.scrollTop; });
+        ganttBodyWrapper.addEventListener('scroll', () => {
+            taskList.scrollTop = ganttBodyWrapper.scrollTop;
+            ganttHeaderWrapper.scrollLeft = ganttBodyWrapper.scrollLeft;
+        });
+
+        // Kéo thả đồ thị (Drag to scroll)
+        let isDown = false, startX, startY, scrollLeft, scrollTop;
+        ganttBodyWrapper.addEventListener('mousedown', (e) => {
+            if(e.target.closest('.resizer')) return;
+            isDown = true;
+            startX = e.pageX - ganttBodyWrapper.offsetLeft;
+            startY = e.pageY - ganttBodyWrapper.offsetTop;
+            scrollLeft = ganttBodyWrapper.scrollLeft;
+            scrollTop = ganttBodyWrapper.scrollTop;
+        });
+        ganttBodyWrapper.addEventListener('mouseleave', () => isDown = false);
+        ganttBodyWrapper.addEventListener('mouseup', () => isDown = false);
+        ganttBodyWrapper.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - ganttBodyWrapper.offsetLeft;
+            const y = e.pageY - ganttBodyWrapper.offsetTop;
+            ganttBodyWrapper.scrollLeft = scrollLeft - (x - startX);
+            ganttBodyWrapper.scrollTop = scrollTop - (y - startY);
+        });
+
+        // Kéo thả thay đổi kích thước cột (Resizing columns)
+        let resizerDown = false, currentResizer, resizerStartX, resizerStartWidth;
+        document.querySelectorAll('.resizer').forEach(resizer => {
+            resizer.addEventListener('mousedown', function(e) {
+                resizerDown = true;
+                currentResizer = e.target;
+                resizerStartX = e.pageX;
+                const varName = currentResizer.getAttribute('data-col');
+                const rootStyle = getComputedStyle(document.body);
+                resizerStartWidth = parseInt(rootStyle.getPropertyValue(varName));
+                currentResizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!resizerDown) return;
+            const varName = currentResizer.getAttribute('data-col');
+            const newWidth = Math.max(30, resizerStartWidth + (e.pageX - resizerStartX)); 
+            document.body.style.setProperty(varName, `${newWidth}px`);
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (resizerDown) {
+                resizerDown = false;
+                currentResizer.classList.remove('resizing');
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // Modal
+        const showModal = (title, content) => {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        });
+
+        // ------------------ DATA PROCESSING ------------------
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            e.target.value = '';
+
+            if (file.name.toLowerCase().endsWith('.mpp')) {
+                showModal('Định dạng chưa được hỗ trợ trực tiếp', 
+                `Vui lòng Mở file .mpp bằng MS Project > <b>Save As...</b> > Chọn <b>XML Data (*.xml)</b>.<br><br>Hệ thống sẽ tải Dữ liệu Mẫu (Sample Project) để bạn trải nghiệm các tính năng mới.`);
+                loadSampleData();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    globalTasks = parseProjectXML(e.target.result);
+                    if (globalTasks.length === 0) alert("Không tìm thấy dữ liệu công việc.");
+                    else {
+                        dayWidth = 40; 
+                        updateLevelDropdown();
+                        renderViewer();
+                    }
+                } catch (err) { alert("Lỗi đọc file XML."); }
+            };
+            reader.readAsText(file);
+        });
+
+        function normalizeDate(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+        function formatDateShort(date) {
+            const d = new Date(date);
+            if (isNaN(d)) return '';
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            return `${day}/${month}/${d.getFullYear().toString().substr(-2)}`;
+        }
+
+        function parseProjectXML(xmlString) {
+            const cleanXmlString = xmlString.replace(/xmlns(:\w+)?="[^"]*"/g, '');
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(cleanXmlString, "text/xml");
+            
+            const tasks = [];
+            const taskNodes = xmlDoc.getElementsByTagName("Task");
+            
+            for (let i = 0; i < taskNodes.length; i++) {
+                const node = taskNodes[i];
+                const getVal = (tag) => { const el = node.getElementsByTagName(tag)[0]; return el ? el.textContent : ''; };
+
+                const name = getVal('Name');
+                const id = parseInt(getVal('ID'));
+                if (!name || id === 0 || isNaN(id)) continue;
+
+                let startDate = new Date(getVal('Start') || getVal('Finish'));
+                let finishDate = new Date(getVal('Finish') || getVal('Start'));
+                if (isNaN(startDate.getTime()) || isNaN(finishDate.getTime())) continue;
+
+                tasks.push({
+                    id: id,
+                    name: name,
+                    start: startDate,
+                    finish: finishDate,
+                    progress: parseInt(getVal('PercentComplete')) || 0,
+                    level: parseInt(getVal('OutlineLevel')) || 1,
+                    collapsed: false, 
+                    isParent: false   
+                });
+            }
+            
+            tasks.sort((a, b) => a.id - b.id);
+            // Xác định Parent
+            for(let i=0; i<tasks.length; i++) {
+                if(i < tasks.length - 1 && tasks[i+1].level > tasks[i].level) {
+                    tasks[i].isParent = true;
+                }
+            }
+            return tasks;
+        }
+
+        function getProjectDateRange() {
+            const visibleTasks = getVisibleTasks();
+            if (visibleTasks.length === 0) return { minDate: new Date(), maxDate: new Date(), totalDays: 1 };
+
+            let minDate = new Date(Math.min(...visibleTasks.map(t => t.start.getTime())));
+            minDate = normalizeDate(minDate);
+            minDate.setDate(minDate.getDate() - 2); 
+
+            let maxDate = new Date(Math.max(...visibleTasks.map(t => t.finish.getTime())));
+            maxDate = normalizeDate(maxDate);
+            maxDate.setDate(maxDate.getDate() + 4); 
+
+            const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+            return { minDate, maxDate, totalDays };
+        }
+
+        // ------------------ FEATURE ACTIONS ------------------
+
+        // Khởi tạo các Option cho bộ lọc Cấp độ
+        function updateLevelDropdown() {
+            levelFilter.innerHTML = '<option value="all">Tất cả các cấp</option><option value="custom" hidden>Tùy chỉnh...</option>';
+            if (globalTasks.length === 0) return;
+            
+            const maxLevel = Math.max(...globalTasks.map(t => t.level));
+            // Chỉ render nếu có từ 2 cấp trở lên
+            if (maxLevel > 1) {
+                for (let i = 1; i < maxLevel; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `Chỉ hiện đến Cấp ${i}`;
+                    levelFilter.appendChild(opt);
+                }
+            }
+            levelFilter.value = 'all';
+        }
+
+        // Hành động khi chọn từ Dropdown
+        window.filterByLevel = function(level) {
+            if (level === 'all') {
+                globalTasks.forEach(t => t.collapsed = false);
+            } else if (level !== 'custom') {
+                const targetLevel = parseInt(level);
+                globalTasks.forEach(t => {
+                    if (t.isParent) {
+                        // Nếu level hiện tại >= targetLevel thì ẩn các con bên trong nó (collapsed = true)
+                        t.collapsed = (t.level >= targetLevel);
+                    }
+                });
+            }
+            renderViewer();
+        };
+
+        // Tính năng Collapse/Expand (Hỗ trợ Shift+Click để áp dụng cho cả hàng loạt cùng Cấp)
+        window.toggleTask = function(taskId, event) {
+            if (event) event.stopPropagation(); // Ngăn chặn sự kiện click lan tỏa
+
+            const task = globalTasks.find(t => t.id === taskId);
+            if (task && task.isParent) {
+                const targetState = !task.collapsed;
+                
+                // NẾU GIỮ SHIFT: Áp dụng đóng/mở cho TOÀN BỘ các mục có cùng Level
+                if (event && event.shiftKey) {
+                    globalTasks.forEach(t => {
+                        if (t.isParent && t.level === task.level) {
+                            t.collapsed = targetState;
+                        }
+                    });
+                } else {
+                    // MẶC ĐỊNH: Chỉ áp dụng cho mục đang chọn
+                    task.collapsed = targetState;
+                }
+
+                // Chuyển Dropdown về trạng thái Tùy chỉnh vì đã có sự thay đổi thủ công
+                levelFilter.value = 'custom';
+                
+                renderViewer();
+            }
+        };
+
+        window.expandAll = function() {
+            levelFilter.value = 'all';
+            globalTasks.forEach(t => t.collapsed = false);
+            renderViewer();
+        };
+
+        window.collapseAll = function() {
+            levelFilter.value = '1'; // Tương đương chỉ hiển thị Cấp cao nhất
+            globalTasks.forEach(t => { if(t.isParent) t.collapsed = true; });
+            renderViewer();
+        };
+
+        // Lọc các task được phép hiển thị dựa trên trạng thái collapsed của cha mẹ
+        function getVisibleTasks() {
+            const visible = [];
+            let hideLevel = Infinity; 
+            
+            for (let task of globalTasks) {
+                if (task.level <= hideLevel) hideLevel = Infinity; 
+                
+                if (hideLevel === Infinity) {
+                    visible.push(task);
+                    if (task.isParent && task.collapsed) hideLevel = task.level;
+                }
+            }
+            return visible;
+        }
+
+        // Tính năng Zoom
+        window.zoomIn = function() {
+            if (dayWidth < MAX_DAY_WIDTH) {
+                dayWidth = Math.floor(dayWidth * 1.3);
+                renderViewer();
+            }
+        };
+
+        window.zoomOut = function() {
+            if (globalTasks.length === 0) return;
+            const { totalDays } = getProjectDateRange();
+            const containerWidth = ganttRightPanel.clientWidth;
+            const fitDayWidth = containerWidth / totalDays;
+
+            if (dayWidth > fitDayWidth) {
+                dayWidth = Math.max(fitDayWidth, dayWidth / 1.3);
+                renderViewer();
+            }
+        };
+
+        window.fitToScreen = function() {
+            if (globalTasks.length === 0) return;
+            const { totalDays } = getProjectDateRange();
+            const containerWidth = ganttRightPanel.clientWidth;
+            dayWidth = Math.max(0.5, containerWidth / totalDays); 
+            renderViewer();
+        };
+
+        window.addEventListener('resize', () => {
+            if (globalTasks.length > 0 && dayWidth < 15) { 
+                fitToScreen();
+            }
+        });
+
+        // Tính năng Xuất Excel
+        window.exportExcel = function() {
+            if (globalTasks.length === 0) {
+                alert("Không có dữ liệu để xuất!");
+                return;
+            }
+            
+            // Chuẩn bị dữ liệu định dạng JSON để thư viện SheetJS xử lý
+            const dataToExport = globalTasks.map(task => {
+                // Tính toán thời lượng (số ngày)
+                const duration = Math.ceil((task.finish.getTime() - task.start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                
+                return {
+                    "ID": task.id,
+                    "Tên công việc": task.name,
+                    "Cấp độ": task.level,
+                    "Phân loại": task.isParent ? "Nhóm" : "Công việc",
+                    "Bắt đầu": formatDateShort(task.start),
+                    "Kết thúc": formatDateShort(task.finish),
+                    "Thời gian (Ngày)": duration,
+                    "Tiến độ (%)": task.progress
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Tiến độ Dự án");
+            
+            // Định dạng lại chiều rộng cột cho đẹp
+            const wscols = [
+                {wch: 5},  // ID
+                {wch: 40}, // Tên
+                {wch: 10}, // Cấp độ
+                {wch: 15}, // Phân loại
+                {wch: 12}, // Bắt đầu
+                {wch: 12}, // Kết thúc
+                {wch: 15}, // Thời gian
+                {wch: 12}  // Tiến độ
+            ];
+            worksheet['!cols'] = wscols;
+
+            XLSX.writeFile(workbook, "TienDoDuAn.xlsx");
+        };
+
+        // Tính năng Xuất PDF
+        window.exportPDF = function() {
+            if (globalTasks.length === 0) {
+                alert("Không có dữ liệu để xuất!");
+                return;
+            }
+
+            // Gợi ý cho người dùng để có bản PDF đẹp nhất
+            if (dayWidth > 20) {
+                const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt trên một trang, hệ thống khuyến nghị bạn nên chọn tính năng 'Vừa màn hình' trước khi xuất. \n\nBạn có muốn hệ thống tự động gom vừa màn hình rồi xuất không?");
+                if (confirmFit) {
+                    fitToScreen();
+                }
+            }
+
+            // Cấu hình thư viện html2pdf
+            const element = document.getElementById('viewer-container');
+            const opt = {
+                margin:       0.2, // inch
+                filename:     'BieuDoGantt.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // Khổ A4 ngang
+            };
+
+            // Thực hiện chuyển đổi
+            html2pdf().set(opt).from(element).save();
+        };
+
+        // ------------------ RENDERING ------------------
+
+        function renderViewer() {
+            if(globalTasks.length === 0) return;
+
+            emptyState.style.display = 'none';
+            toolbar.classList.remove('hidden');
+            viewerContainer.classList.remove('hidden');
+            setTimeout(() => { viewerContainer.classList.remove('opacity-0'); }, 50);
+
+            const visibleTasks = getVisibleTasks();
+            const { minDate, maxDate, totalDays } = getProjectDateRange();
+
+            taskList.innerHTML = '';
+            ganttHeader.innerHTML = '';
+            ganttBody.innerHTML = '';
+
+            // ------------- 1. BẢNG DANH SÁCH (LEFT PANEL) -------------
+            visibleTasks.forEach((task) => {
+                const row = document.createElement('div');
+                row.className = `grid-table border-b border-slate-200 hover:bg-blue-50/50 text-sm box-border transition-colors ${task.isParent ? 'font-bold text-slate-800 bg-slate-50/50' : 'text-slate-600'}`;
+                row.style.height = `${ROW_HEIGHT}px`;
+                
+                const paddingLeft = (task.level - 1) * 1.25;
+                
+                // Nút thu gọn / mở rộng có gán sự kiện event để kiểm tra phím Shift
+                let toggleBtn = '';
+                if (task.isParent) {
+                    const icon = task.collapsed 
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>` // Right
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`; // Down
+                    
+                    const tooltip = `Click: Đóng/mở mục này.\nGiữ Shift + Click: Đóng/mở TOÀN BỘ các mục Cấp ${task.level} cùng lúc.`;
+                    toggleBtn = `<span class="cursor-pointer inline-flex items-center justify-center w-5 h-5 mr-1 text-slate-500 hover:bg-slate-200 rounded" onclick="toggleTask(${task.id}, event)" title="${tooltip}">${icon}</span>`;
+                } else {
+                    toggleBtn = `<span class="inline-block w-5 mr-1"></span>`; 
+                }
+
+                row.innerHTML = `
+                    <div class="flex items-center justify-center text-slate-400 text-xs border-r border-slate-100">${task.id}</div>
+                    <div class="flex items-center px-2 truncate border-r border-slate-100" style="padding-left: ${paddingLeft + 0.5}rem" title="${task.name}">
+                        ${toggleBtn}
+                        <span class="truncate">${task.name}</span>
+                    </div>
+                    <div class="flex items-center justify-center text-xs border-r border-slate-100">${formatDateShort(task.start)}</div>
+                    <div class="flex items-center justify-center text-xs">${formatDateShort(task.finish)}</div>
+                `;
+                taskList.appendChild(row);
+            });
+
+            // ------------- 2. HEADER BIỂU ĐỒ (TOP PANEL) -------------
+            const headerTotalWidth = totalDays * dayWidth;
+            ganttHeader.style.width = `${headerTotalWidth}px`;
+            
+            const monthsRow = document.createElement('div');
+            monthsRow.className = 'flex h-6 w-fit';
+            const daysRow = document.createElement('div');
+            daysRow.className = 'flex h-6 w-fit';
+
+            const monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+            let currentMonth = minDate.getMonth();
+            let monthDays = 0;
+            
+            for (let i = 0; i < totalDays; i++) {
+                const date = new Date(minDate);
+                date.setDate(date.getDate() + i);
+                
+                const dayCell = document.createElement('div');
+                const showDay = dayWidth > 20; 
+                dayCell.className = `flex-shrink-0 border-r border-slate-200 flex items-center justify-center text-[11px] text-slate-500 font-medium overflow-hidden`;
+                dayCell.style.width = `${dayWidth}px`;
+                if(showDay) dayCell.textContent = date.getDate();
+                
+                if (date.getDay() === 0 || date.getDay() === 6) dayCell.classList.add('bg-slate-200/40', 'text-slate-400');
+                daysRow.appendChild(dayCell);
+
+                if (date.getMonth() !== currentMonth || i === totalDays - 1) {
+                    if (i === totalDays - 1) monthDays++;
+                    const monthCell = document.createElement('div');
+                    monthCell.className = 'flex-shrink-0 border-r border-slate-300 flex items-center justify-center text-xs font-bold text-slate-700 bg-slate-200/50 overflow-hidden whitespace-nowrap';
+                    monthCell.style.width = `${monthDays * dayWidth}px`;
+                    
+                    const prevMonthDate = new Date(date);
+                    if (date.getMonth() !== currentMonth) prevMonthDate.setDate(date.getDate() - 1);
+                    
+                    const showFullMonth = (monthDays * dayWidth >= 80);
+                    const showShortMonth = (monthDays * dayWidth >= 30);
+                    
+                    if (showFullMonth) {
+                        monthCell.textContent = `${monthNames[prevMonthDate.getMonth()]} - ${prevMonthDate.getFullYear()}`;
+                    } else if (showShortMonth) {
+                        monthCell.textContent = `T${prevMonthDate.getMonth()+1}`;
+                    }
+                    
+                    monthsRow.appendChild(monthCell);
+                    currentMonth = date.getMonth();
+                    monthDays = 0;
+                }
+                if (i !== totalDays - 1) monthDays++;
+            }
+            
+            ganttHeader.appendChild(monthsRow);
+            ganttHeader.appendChild(daysRow);
+
+            // ------------- 3. THÂN BIỂU ĐỒ (GANTT BARS) -------------
+            ganttBody.style.width = `${headerTotalWidth}px`;
+            ganttBody.style.height = `${visibleTasks.length * ROW_HEIGHT}px`;
+
+            // Lưới dọc
+            const gridOverlay = document.createElement('div');
+            gridOverlay.className = 'absolute inset-0 flex pointer-events-none w-fit';
+            for (let i = 0; i < totalDays; i++) {
+                const date = new Date(minDate);
+                date.setDate(date.getDate() + i);
+                const col = document.createElement('div');
+                col.className = 'border-r border-slate-200/60 flex-shrink-0 h-full';
+                col.style.width = `${dayWidth}px`;
+                if (date.getDay() === 0 || date.getDay() === 6) col.classList.add('bg-slate-100/40');
+                gridOverlay.appendChild(col);
+            }
+            
+            // Lưới ngang
+            const rowsOverlay = document.createElement('div');
+            rowsOverlay.className = 'absolute inset-0 pointer-events-none w-full';
+            visibleTasks.forEach(() => {
+                const rowBg = document.createElement('div');
+                rowBg.className = 'w-full border-b border-slate-200/70';
+                rowBg.style.height = `${ROW_HEIGHT}px`;
+                rowsOverlay.appendChild(rowBg);
+            });
+
+            ganttBody.appendChild(gridOverlay);
+            ganttBody.appendChild(rowsOverlay);
+
+            // Cột Hôm nay
+            const today = normalizeDate(new Date());
+            if (today >= minDate && today <= maxDate) {
+                const todayDiffDays = (today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+                const todayLine = document.createElement('div');
+                todayLine.className = 'absolute top-0 bottom-0 w-[2px] bg-red-400 z-10 pointer-events-none';
+                todayLine.style.left = `${todayDiffDays * dayWidth + dayWidth/2}px`;
+                const todayTriangle = document.createElement('div');
+                todayTriangle.className = 'absolute -top-0 -left-[4px] w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-red-500';
+                todayLine.appendChild(todayTriangle);
+                ganttBody.appendChild(todayLine);
+            }
+
+            // Vẽ Bars
+            const barsContainer = document.createElement('div');
+            barsContainer.className = 'absolute inset-0';
+
+            visibleTasks.forEach((task, index) => {
+                const taskStart = normalizeDate(task.start);
+                const taskFinish = normalizeDate(task.finish);
+                
+                const startDiffDays = (taskStart.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+                const durationDays = (taskFinish.getTime() - taskStart.getTime()) / (1000 * 60 * 60 * 24) + 1;
+
+                const leftOffset = startDiffDays * dayWidth;
+                const barWidth = durationDays * dayWidth;
+                const topOffset = index * ROW_HEIGHT;
+
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'absolute flex items-center px-[2px] group';
+                barWrapper.style.top = `${topOffset}px`;
+                barWrapper.style.left = `${leftOffset}px`;
+                barWrapper.style.width = `${Math.max(barWidth, 2)}px`; 
+                barWrapper.style.height = `${ROW_HEIGHT}px`;
+
+                const bar = document.createElement('div');
+                if (task.isParent) {
+                    bar.className = 'bg-slate-700 h-2.5 w-full relative group-hover:bg-slate-900 transition-colors cursor-pointer';
+                    bar.innerHTML = `
+                        <div class="absolute -bottom-1.5 left-0 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-700 group-hover:border-t-slate-900 transition-colors"></div>
+                        <div class="absolute -bottom-1.5 right-0 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-700 group-hover:border-t-slate-900 transition-colors"></div>
+                    `;
+                    bar.onclick = (e) => toggleTask(task.id, e);
+                } else {
+                    bar.className = 'bg-blue-200 border border-blue-400 rounded-sm w-full relative shadow-sm flex items-center overflow-hidden group-hover:border-blue-600 transition-colors cursor-pointer';
+                    bar.style.height = '60%';
+                    if (task.progress > 0) {
+                        const progress = document.createElement('div');
+                        progress.className = 'h-full bg-blue-500/80 group-hover:bg-blue-600 transition-colors';
+                        progress.style.width = `${task.progress}%`;
+                        bar.appendChild(progress);
+                    }
+                }
+                
+                bar.title = `${task.name}\nBắt đầu: ${formatDateShort(task.start)}\nKết thúc: ${formatDateShort(task.finish)}\nTiến độ: ${task.progress}%`;
+                barWrapper.appendChild(bar);
+
+                if (!task.isParent && dayWidth > 15) { 
+                     const label = document.createElement('span');
+                     label.className = 'absolute left-full ml-1.5 text-[10px] font-bold text-slate-500 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity';
+                     label.textContent = `${task.progress}%`;
+                     barWrapper.appendChild(label);
+                }
+
+                barsContainer.appendChild(barWrapper);
+            });
+
+            ganttBody.appendChild(barsContainer);
+        }
+
+        // Tạo dữ liệu Demo
+        const loadSampleData = () => {
+            const now = new Date();
+            const d = (days) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+            
+            globalTasks = [
+                { id: 1, name: "Dự án Thiết kế Hệ thống Mới", start: d(0), finish: d(35), progress: 30, level: 1, isParent: true, collapsed: false },
+                { id: 2, name: "Giai đoạn 1: Nghiên cứu & Phân tích", start: d(0), finish: d(9), progress: 100, level: 2, isParent: true, collapsed: false },
+                { id: 3, name: "Khảo sát yêu cầu người dùng", start: d(0), finish: d(4), progress: 100, level: 3, isParent: false },
+                { id: 4, name: "Phân tích kiến trúc hệ thống", start: d(5), finish: d(9), progress: 100, level: 3, isParent: false },
+                { id: 5, name: "Giai đoạn 2: Thiết kế UI/UX", start: d(10), finish: d(20), progress: 20, level: 2, isParent: true, collapsed: false },
+                { id: 6, name: "Vẽ Wireframe cơ bản", start: d(10), finish: d(13), progress: 100, level: 3, isParent: false },
+                { id: 7, name: "Thiết kế Mockup chi tiết", start: d(14), finish: d(18), progress: 10, level: 3, isParent: false },
+                { id: 8, name: "Lấy ý kiến & Chỉnh sửa", start: d(19), finish: d(20), progress: 0, level: 3, isParent: false },
+                { id: 9, name: "Giai đoạn 3: Lập trình (Dev)", start: d(21), finish: d(35), progress: 0, level: 2, isParent: true, collapsed: false },
+                { id: 10, name: "Cấu hình Server & Database", start: d(21), finish: d(23), progress: 0, level: 3, isParent: false },
+                { id: 11, name: "Lập trình Backend APIs", start: d(24), finish: d(30), progress: 0, level: 3, isParent: false },
+                { id: 12, name: "Lập trình Frontend", start: d(26), finish: d(32), progress: 0, level: 3, isParent: false },
+                { id: 13, name: "Kiểm thử (QA/QC)", start: d(33), finish: d(35), progress: 0, level: 3, isParent: false }
+            ];
+            dayWidth = 40; 
+            updateLevelDropdown();
+            renderViewer();
+        };
+    </script>
+</body>
+</html>
