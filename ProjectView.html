@@ -130,7 +130,7 @@
         </div>
 
         <!-- Khung xem chính -->
-        <div id="viewer-container" class="flex-1 flex border border-slate-300 rounded-lg shadow-sm bg-white overflow-hidden hidden opacity-0 transition-opacity duration-500">
+        <div id="viewer-container" class="flex-1 flex border border-slate-300 rounded-lg shadow-sm bg-white overflow-hidden hidden opacity-0 transition-opacity duration-500 bg-white">
             
             <!-- Cột trái: Bảng danh sách công việc -->
             <div id="left-panel" class="flex flex-col border-r border-slate-300 bg-white z-10 shrink-0 w-fit">
@@ -540,7 +540,7 @@
             XLSX.writeFile(workbook, "TienDoDuAn.xlsx");
         };
 
-        // Tính năng Xuất PDF
+        // Tính năng Xuất PDF - ĐÃ CẬP NHẬT ĐỂ KHÔNG BỊ CẮT VIỀN
         window.exportPDF = function() {
             if (globalTasks.length === 0) {
                 alert("Không có dữ liệu để xuất!");
@@ -552,21 +552,67 @@
                 const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt trên một trang, hệ thống khuyến nghị bạn nên chọn tính năng 'Vừa màn hình' trước khi xuất. \n\nBạn có muốn hệ thống tự động gom vừa màn hình rồi xuất không?");
                 if (confirmFit) {
                     fitToScreen();
+                    // Đợi DOM áp dụng layout mới xong mới gọi hàm chụp (rất quan trọng)
+                    setTimeout(doExport, 300);
+                    return;
                 }
             }
 
-            // Cấu hình thư viện html2pdf
-            const element = document.getElementById('viewer-container');
-            const opt = {
-                margin:       0.2, // inch
-                filename:     'BieuDoGantt.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // Khổ A4 ngang
-            };
+            doExport();
 
-            // Thực hiện chuyển đổi
-            html2pdf().set(opt).from(element).save();
+            function doExport() {
+                const element = document.getElementById('viewer-container');
+                const ganttBodyWrapper = document.getElementById('gantt-body-wrapper');
+                const ganttRightPanel = document.getElementById('gantt-right-panel');
+                const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
+
+                // 1. Lưu lại các class CSS nguyên gốc
+                const origElementClasses = element.className;
+                const origBodyClasses = ganttBodyWrapper.className;
+                const origRightPanelClasses = ganttRightPanel.className;
+                const origHeaderClasses = ganttHeaderWrapper.className;
+                const origWidth = element.style.width;
+
+                // 2. Gỡ bỏ mọi thuộc tính 'overflow-hidden' hoặc 'overflow-auto' để đảm bảo không bị cắt nội dung
+                element.classList.remove('overflow-hidden');
+                ganttRightPanel.classList.remove('overflow-hidden', 'min-w-0');
+                ganttBodyWrapper.classList.remove('overflow-auto', 'hide-scrollbar');
+                ganttHeaderWrapper.classList.remove('overflow-hidden');
+
+                // Thêm một chút không gian lề phải dự phòng cho nét thanh biểu đồ cuối cùng
+                ganttBodyWrapper.style.paddingRight = '20px';
+                ganttHeaderWrapper.style.paddingRight = '20px';
+
+                // Ép chiều rộng toàn bộ container khớp với độ dài thực tế của thanh cuộn
+                const totalWidth = document.getElementById('left-panel').offsetWidth + ganttBodyWrapper.scrollWidth + 30;
+                element.style.width = totalWidth + 'px';
+
+                // 3. Cấu hình xuất file
+                const opt = {
+                    margin:       0.2, // inch
+                    filename:     'BieuDoGantt.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        logging: false,
+                        windowWidth: totalWidth + 50 // Giúp camera của html2canvas mở rộng vừa đủ
+                    },
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // Khổ A4 ngang
+                };
+
+                // 4. Bắt đầu xuất và sau đó Phục hồi lại toàn bộ giao diện như cũ
+                html2pdf().set(opt).from(element).save().then(() => {
+                    element.className = origElementClasses;
+                    ganttBodyWrapper.className = origBodyClasses;
+                    ganttRightPanel.className = origRightPanelClasses;
+                    ganttHeaderWrapper.className = origHeaderClasses;
+                    
+                    element.style.width = origWidth;
+                    ganttBodyWrapper.style.paddingRight = '';
+                    ganttHeaderWrapper.style.paddingRight = '';
+                });
+            }
         };
 
         // ------------------ RENDERING ------------------
