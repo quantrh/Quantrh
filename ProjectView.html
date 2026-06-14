@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình xem MS Project (Gantt Chart Tương tác)</title>
+    <title>Trình xem MS Project (Gantt Chart & Timeline)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Thêm thư viện xuất Excel và PDF -->
@@ -70,51 +70,53 @@
             Timeline
         </button>
         
-        <button id="btn-overdue-filter" onclick="toggleOverdueFilter()" class="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 flex items-center gap-1 transition-colors font-semibold shadow-sm" title="Lọc hiển thị các công việc quá hạn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Quá hạn
-        </button>
+        <div id="gantt-tools" class="flex items-center gap-4 transition-opacity duration-300">
+            <button id="btn-overdue-filter" onclick="toggleOverdueFilter()" class="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 flex items-center gap-1 transition-colors font-semibold shadow-sm" title="Lọc hiển thị các công việc quá hạn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Quá hạn
+            </button>
 
-        <div class="h-6 w-px bg-slate-300"></div>
+            <div class="h-6 w-px bg-slate-300"></div>
 
-        <div class="flex items-center gap-2">
-            <button onclick="expandAll()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Mở rộng tất cả">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 21 6 15"/><polyline points="18 9 12 15 6 9"/></svg>
-            </button>
-            <button onclick="collapseAll()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu gọn tất cả">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            </button>
-            <select id="level-filter" onchange="filterByLevel(this.value)" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:border-[#006B68] cursor-pointer font-medium hover:bg-slate-100 max-w-[130px]">
-                <option value="all">Mọi cấp</option>
-                <option value="custom" hidden>Tùy chỉnh</option>
-            </select>
-        </div>
+            <div class="flex items-center gap-2">
+                <button onclick="expandAll()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Mở rộng tất cả">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 21 6 15"/><polyline points="18 9 12 15 6 9"/></svg>
+                </button>
+                <button onclick="collapseAll()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu gọn tất cả">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <select id="level-filter" onchange="filterByLevel(this.value)" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:border-[#006B68] cursor-pointer font-medium hover:bg-slate-100 max-w-[130px]">
+                    <option value="all">Mọi cấp</option>
+                    <option value="custom" hidden>Tùy chỉnh</option>
+                </select>
+            </div>
 
-        <div class="h-6 w-px bg-slate-300"></div>
-        
-        <div class="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded px-2 py-1 shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            <span class="text-xs font-medium text-slate-600">Từ:</span>
-            <input type="date" id="filter-start" onchange="applyDateFilter()" class="text-xs border border-slate-200 rounded px-1 py-1 bg-white text-slate-700 focus:outline-none focus:border-[#006B68]">
-            <span class="text-xs font-medium text-slate-600">Đến:</span>
-            <input type="date" id="filter-end" onchange="applyDateFilter()" class="text-xs border border-slate-200 rounded px-1 py-1 bg-white text-slate-700 focus:outline-none focus:border-[#006B68]">
-            <button onclick="clearDateFilter()" class="p-1 hover:bg-slate-200 rounded text-slate-500" title="Xóa bộ lọc">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
+            <div class="h-6 w-px bg-slate-300"></div>
+            
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded px-2 py-1 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span class="text-xs font-medium text-slate-600">Từ:</span>
+                <input type="date" id="filter-start" onchange="applyDateFilter()" class="text-xs border border-slate-200 rounded px-1 py-1 bg-white text-slate-700 focus:outline-none focus:border-[#006B68]">
+                <span class="text-xs font-medium text-slate-600">Đến:</span>
+                <input type="date" id="filter-end" onchange="applyDateFilter()" class="text-xs border border-slate-200 rounded px-1 py-1 bg-white text-slate-700 focus:outline-none focus:border-[#006B68]">
+                <button onclick="clearDateFilter()" class="p-1 hover:bg-slate-200 rounded text-slate-500" title="Xóa bộ lọc">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
 
-        <div class="h-6 w-px bg-slate-300"></div>
+            <div class="h-6 w-px bg-slate-300"></div>
 
-        <div class="flex items-center gap-1">
-            <button onclick="zoomOut()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu nhỏ">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-            </button>
-            <button onclick="zoomIn()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Phóng to">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-            </button>
-            <button onclick="fitToScreen()" class="px-2 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded border border-blue-200 transition-colors ml-1" title="Gom vừa toàn bộ màn hình">
-                Vừa màn hình
-            </button>
+            <div class="flex items-center gap-1">
+                <button onclick="zoomOut()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu nhỏ">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button onclick="zoomIn()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Phóng to">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button onclick="fitToScreen()" class="px-2 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded border border-blue-200 transition-colors ml-1" title="Gom vừa toàn bộ màn hình">
+                    Vừa màn hình
+                </button>
+            </div>
         </div>
 
         <div class="flex-1"></div>
@@ -138,7 +140,7 @@
              <div class="p-10 bg-white rounded-2xl shadow-sm border border-slate-200 text-center max-w-lg animate-fade-in-up">
                  <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mx-auto mb-5 text-[#006B68]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M8 10v4"/><path d="M12 10v2"/><path d="M16 10v6"/></svg>
                  <h2 class="text-2xl font-bold text-slate-700 mb-3">Xem dữ liệu dự án của bạn</h2>
-                 <p class="text-slate-500 mb-8 leading-relaxed">Hỗ trợ đọc file <strong class="text-slate-700">MS Project XML</strong>. Nhấp đúp vào công việc để xem chi tiết thông tin.</p>
+                 <p class="text-slate-500 mb-8 leading-relaxed">Hỗ trợ đọc file <strong class="text-slate-700">MS Project XML</strong>. Nhấp đúp vào công việc để xem chi tiết thông tin và người thực hiện.</p>
                  <button onclick="document.getElementById('fileInput').click()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm">
                      Chọn File Project
                  </button>
@@ -147,11 +149,16 @@
 
         <div id="export-wrapper" class="flex-1 flex flex-col min-h-0 relative hidden">
             
-            <div id="timeline-view" class="hidden flex-col bg-white border border-slate-300 rounded-lg shadow-sm px-6 py-8 relative shrink-0 min-h-[140px] mb-4 z-10 transition-all">
-                <h3 class="absolute top-2 left-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Timeline (Big Picture)</h3>
-                <div id="timeline-content" class="relative w-full flex-1 mt-3"></div>
+            <!-- Timeline View -->
+            <div id="timeline-view" class="hidden flex-col bg-white border border-slate-300 rounded-lg shadow-sm px-10 py-8 relative flex-1 mb-4 z-10 transition-all overflow-auto">
+                <h3 class="absolute top-4 left-6 text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 z-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                    Tổng quan dự án (Project Timeline)
+                </h3>
+                <div id="timeline-content" class="relative w-full h-full min-w-[800px] flex items-center justify-center mt-6"></div>
             </div>
 
+            <!-- Khung xem Gantt chính -->
             <div id="viewer-container" class="flex-1 flex border border-slate-300 rounded-lg shadow-sm bg-white overflow-hidden opacity-0 transition-opacity duration-500">
                 <div id="left-panel" class="flex flex-col border-r border-slate-300 bg-white z-10 shrink-0 w-fit">
                     <div class="h-12 bg-slate-100 border-b border-slate-300 grid-table font-semibold text-sm text-slate-700 shrink-0 shadow-[0_2px_5px_rgba(0,0,0,0.02)] select-none">
@@ -177,7 +184,7 @@
     </main>
 
     <!-- Modal Cảnh báo hệ thống -->
-    <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-[100]">
        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-fade-in-up border border-slate-200">
            <div class="flex items-center gap-3 mb-4 text-amber-600">
                 <h3 class="text-xl font-bold text-slate-800" id="modal-title">Lưu ý Kỹ thuật</h3>
@@ -189,10 +196,9 @@
        </div>
     </div>
 
-    <!-- Modal Chi tiết Công việc (MỚI) -->
-    <div id="task-detail-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[60]">
+    <!-- Modal Chi tiết Công việc -->
+    <div id="task-detail-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[100]">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-0 animate-fade-in-up border border-slate-200 overflow-hidden flex flex-col">
-            <!-- Header Modal -->
             <div class="bg-slate-50 p-5 border-b border-slate-200 flex justify-between items-start">
                 <div class="pr-4">
                     <div class="flex items-center gap-2 mb-1">
@@ -206,8 +212,7 @@
                 </button>
             </div>
             
-            <!-- Body Modal -->
-            <div class="p-6 space-y-5 flex-1">
+            <div class="p-6 space-y-4 flex-1">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <p class="text-xs text-slate-500 font-medium mb-1">Bắt đầu</p>
@@ -219,7 +224,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
                     <div>
                         <p class="text-xs text-slate-500 font-medium mb-1">Thời lượng</p>
                         <p id="td-duration" class="text-sm font-bold text-slate-800">0 ngày</p>
@@ -230,8 +235,16 @@
                     </div>
                 </div>
 
+                <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                    <p class="text-xs text-slate-500 font-medium mb-1 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Người đầu mối / Thực hiện
+                    </p>
+                    <p id="td-resource" class="text-sm font-bold text-slate-800">Chưa phân công</p>
+                </div>
+
                 <div>
-                    <div class="flex justify-between items-end mb-2">
+                    <div class="flex justify-between items-end mb-2 mt-2">
                         <p class="text-xs text-slate-500 font-medium">Tiến độ hoàn thành</p>
                         <p id="td-progress-text" class="text-sm font-bold text-[#006B68]">0%</p>
                     </div>
@@ -248,7 +261,6 @@
                 </div>
             </div>
             
-            <!-- Footer Modal -->
             <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
                 <button onclick="closeTaskDetailModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">Đóng lại</button>
             </div>
@@ -256,41 +268,34 @@
     </div>
 
     <!-- Modal Hướng dẫn -->
-    <div id="help-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="help-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-[100]">
        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 animate-fade-in-up border border-slate-200 max-h-[90vh] flex flex-col">
            <div class="flex items-center gap-3 mb-4 text-[#006B68] shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-                <h3 class="text-xl font-bold text-slate-800">Hướng dẫn sử dụng chi tiết</h3>
+                <h3 class="text-xl font-bold text-slate-800">Hướng dẫn sử dụng toàn tập</h3>
            </div>
            <div class="text-slate-600 text-sm leading-relaxed overflow-y-auto flex-1 pr-2 hide-scrollbar space-y-4">
                
                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">1</span> Chế độ Timeline & Bộ lọc</h4>
+                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">1</span> Nhập dữ liệu & Chế độ xem</h4>
                    <ul class="list-disc pl-5 space-y-1">
-                       <li><b>Timeline:</b> Nút <kbd class="bg-white border rounded shadow-sm px-1">Timeline</kbd> trên thanh công cụ sẽ bật bảng xem nhanh tổng quan dự án (Big Picture). Nó sẽ tổng hợp các Giai đoạn chính (Cấp 1) và các Điểm mốc (Milestone) nằm ngang màn hình, vô cùng thích hợp cho việc báo cáo.</li>
-                       <li><b>Lọc theo ngày:</b> Bạn có thể chọn ngày <b>Từ</b> và ngày <b>Đến</b>. Nếu bỏ trống ô ngày, hệ thống sẽ mặc định lấy toàn bộ. Hệ thống sẽ <b>tự động kéo theo hiển thị cả các nhóm công việc cấp trên</b> để bạn không bị mất bối cảnh.</li>
-                       <li><b class="text-red-600">Lọc Quá hạn:</b> Bấm nút "Quá hạn" để lọc nhanh các việc đang trễ.</li>
+                       <li><b>Nguồn dữ liệu:</b> Hệ thống hỗ trợ đọc file <code class="bg-white px-1 border rounded text-red-600">.xml</code> trích xuất từ MS Project. File mặc định (nếu có) sẽ được tải ngay khi mở.</li>
+                       <li><b>Gantt Chart (Mặc định):</b> Hiển thị cấu trúc cây công việc (WBS) chi tiết dạng bảng và thanh biểu đồ ngang.</li>
+                       <li><b class="text-[#006B68]">Tổng quan Timeline:</b> Bấm nút <kbd class="bg-white border rounded shadow-sm px-1">Timeline</kbd> trên thanh công cụ. Biểu đồ chi tiết sẽ ẩn đi, hiển thị <b>Dòng thời gian tổng thể</b> thích hợp báo cáo. Thuật toán tự động xếp chữ chống đè lấp.</li>
                    </ul>
                </div>
 
                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">2</span> Xem chi tiết & Tương tác</h4>
+                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">2</span> Tương tác & Thông tin chi tiết</h4>
                    <ul class="list-disc pl-5 space-y-1">
-                       <li><b class="text-[#006B68]">Xem thông tin chi tiết (MỚI):</b> <b>Nhấp đúp chuột (Double-click)</b> vào bất kỳ công việc nào (ở danh sách bên trái hoặc thanh ngang bên phải) để mở thẻ chi tiết công việc.</li>
-                       <li><b>Đóng/Mở nhánh:</b> Bấm vào biểu tượng mũi tên cạnh tên công việc cha. Hoặc bấm <b>Shift + Click</b> để đóng/mở <b>HÀNG LOẠT</b> các mục có cùng cấp bậc.</li>
+                       <li><b class="text-[#006B68]">Xem thông tin + Người đầu mối:</b> <b>Nhấp đúp chuột (Double-click)</b> vào bất kỳ công việc nào để mở Thẻ Chi Tiết. Tên người thực hiện (Resource) sẽ được trích xuất và hiển thị.</li>
+                       <li><b>Thu gọn/Mở rộng:</b> Bấm mũi tên cạnh tên nhóm. Phím tắt <b>Shift + Click</b> để thao tác đóng/mở <b>hàng loạt</b>.</li>
                    </ul>
                </div>
 
-               <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">3</span> Quản lý Cảnh báo & Xuất file</h4>
-                   <ul class="list-disc pl-5 space-y-1">
-                       <li><b class="text-red-600">Màu đỏ:</b> Cảnh báo các công việc <b>Quá hạn</b> (Ngày kết thúc &le; Ngày hiện tại VÀ Tiến độ &lt; 100%). Cả text và thanh Gantt đều được tô màu đỏ.</li>
-                       <li><b>Xuất PDF:</b> Hệ thống sẽ gợi ý tự động gom "Vừa màn hình" trước khi xuất để biểu đồ Gantt không bị lẹm viền. Khung Timeline cũng sẽ được in kèm (nếu đang bật).</li>
-                   </ul>
-               </div>
            </div>
            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0 mt-4">
-               <button onclick="closeHelpModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">Đóng Hướng Dẫn</button>
+               <button onclick="closeHelpModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">Đã Hiểu</button>
            </div>
        </div>
     </div>
@@ -301,6 +306,7 @@
         const emptyState = document.getElementById('empty-state');
         const exportWrapper = document.getElementById('export-wrapper');
         const viewerContainer = document.getElementById('viewer-container');
+        const ganttTools = document.getElementById('gantt-tools');
         const toolbar = document.getElementById('toolbar');
         const taskList = document.getElementById('task-list');
         const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
@@ -321,8 +327,6 @@
         window.filterEndDate = null;
         window.filterOverdueOnly = false;
 
-        // ------------------ EVENT LISTENERS ------------------
-
         // Đồng bộ cuộn (scroll)
         taskList.addEventListener('scroll', () => { ganttBodyWrapper.scrollTop = taskList.scrollTop; });
         ganttBodyWrapper.addEventListener('scroll', () => {
@@ -333,7 +337,7 @@
         // Kéo thả đồ thị (Drag to scroll)
         let isDown = false, startX, startY, scrollLeft, scrollTop;
         ganttBodyWrapper.addEventListener('mousedown', (e) => {
-            if(e.target.closest('.resizer')) return;
+            if(e.target.closest('.resizer') || e.target.closest('.cursor-pointer')) return;
             isDown = true;
             startX = e.pageX - ganttBodyWrapper.offsetLeft;
             startY = e.pageY - ganttBodyWrapper.offsetTop;
@@ -381,7 +385,6 @@
             }
         });
 
-        // Modals
         const showModal = (title, content) => {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-content').innerHTML = content;
@@ -392,8 +395,6 @@
             document.getElementById('modal').classList.add('hidden');
             document.getElementById('modal').classList.remove('flex');
         });
-
-        // ------------------ TASK DETAIL MODAL LOGIC (MỚI) ------------------
 
         window.openTaskDetailModal = function(taskId) {
             const task = globalTasks.find(t => t.id === taskId);
@@ -408,19 +409,17 @@
             const isOverdue = !task.isParent && (normalizeDate(task.finish) <= today) && task.progress < 100;
             const isCompleted = task.progress === 100;
 
-            // Đổ dữ liệu vào Modal
             document.getElementById('td-id').textContent = `ID: ${task.id}`;
             document.getElementById('td-name').textContent = task.name;
             document.getElementById('td-start').textContent = startStr;
             document.getElementById('td-end').textContent = endStr;
             document.getElementById('td-duration').textContent = isMilestone ? 'Cột mốc (0 ngày)' : `${duration} ngày`;
             document.getElementById('td-level').textContent = `Cấp ${task.level}`;
+            document.getElementById('td-resource').textContent = task.resources || 'Chưa phân công';
             
-            // Xử lý Progress
             document.getElementById('td-progress-text').textContent = `${task.progress}%`;
             document.getElementById('td-progress-bar').style.width = `${task.progress}%`;
 
-            // Xử lý Loại (Type)
             const typeBadge = document.getElementById('td-type');
             if (task.isParent) {
                 typeBadge.textContent = 'Nhóm công việc';
@@ -433,7 +432,6 @@
                 typeBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700';
             }
 
-            // Xử lý Status
             const statusBox = document.getElementById('td-status');
             if (isCompleted) {
                 statusBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-700';
@@ -450,7 +448,6 @@
                 document.getElementById('td-progress-text').classList.replace('text-red-600', 'text-[#006B68]');
             }
 
-            // Hiển thị Modal
             const modal = document.getElementById('task-detail-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -462,13 +459,10 @@
             modal.classList.remove('flex');
         };
 
-        // Đóng modal khi click ra ngoài
         document.getElementById('task-detail-modal').addEventListener('click', function(e) {
             if (e.target === this) closeTaskDetailModal();
         });
 
-
-        // ------------------ DATA PROCESSING ------------------
 
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -477,7 +471,7 @@
 
             if (file.name.toLowerCase().endsWith('.mpp')) {
                 showModal('Định dạng chưa được hỗ trợ trực tiếp', 
-                `Vui lòng Mở file .mpp bằng MS Project > <b>Save As...</b> > Chọn <b>XML Data (*.xml)</b>.<br><br>Hệ thống sẽ tải Dữ liệu Mẫu (Sample Project) để bạn trải nghiệm các tính năng mới.`);
+                `Vui lòng Mở file .mpp bằng MS Project > <b>Save As...</b> > Chọn <b>XML Data (*.xml)</b>.<br><br>Hệ thống sẽ tải Dữ liệu Mẫu để bạn trải nghiệm.`);
                 loadSampleData();
                 return;
             }
@@ -490,9 +484,17 @@
                     else {
                         dayWidth = 40; 
                         updateLevelDropdown();
-                        renderViewer();
+                        const tlView = document.getElementById('timeline-view');
+                        if (!tlView.classList.contains('hidden')) {
+                             toggleTimeline();
+                        } else {
+                             renderViewer();
+                        }
                     }
-                } catch (err) { alert("Lỗi đọc file XML."); }
+                } catch (err) { 
+                    console.error(err);
+                    alert("Lỗi đọc file XML."); 
+                }
             };
             reader.readAsText(file);
         });
@@ -511,6 +513,25 @@
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(cleanXmlString, "text/xml");
             
+            const resourceMap = {}; 
+            const resourceNodes = xmlDoc.getElementsByTagName("Resource");
+            for(let i = 0; i < resourceNodes.length; i++) {
+                const uid = resourceNodes[i].getElementsByTagName("UID")[0]?.textContent;
+                const name = resourceNodes[i].getElementsByTagName("Name")[0]?.textContent;
+                if(uid && name) resourceMap[uid] = name;
+            }
+
+            const assignmentMap = {}; 
+            const assignmentNodes = xmlDoc.getElementsByTagName("Assignment");
+            for(let i = 0; i < assignmentNodes.length; i++) {
+                const taskUid = assignmentNodes[i].getElementsByTagName("TaskUID")[0]?.textContent;
+                const resUid = assignmentNodes[i].getElementsByTagName("ResourceUID")[0]?.textContent;
+                if(taskUid && resUid && resourceMap[resUid]) {
+                    if(!assignmentMap[taskUid]) assignmentMap[taskUid] = [];
+                    assignmentMap[taskUid].push(resourceMap[resUid]);
+                }
+            }
+
             const tasks = [];
             const taskNodes = xmlDoc.getElementsByTagName("Task");
             
@@ -520,11 +541,14 @@
 
                 const name = getVal('Name');
                 const id = parseInt(getVal('ID'));
+                const uid = getVal('UID');
                 if (!name || id === 0 || isNaN(id)) continue;
 
                 let startDate = new Date(getVal('Start') || getVal('Finish'));
                 let finishDate = new Date(getVal('Finish') || getVal('Start'));
                 if (isNaN(startDate.getTime()) || isNaN(finishDate.getTime())) continue;
+
+                const resourceStr = assignmentMap[uid] ? assignmentMap[uid].join(', ') : '';
 
                 tasks.push({
                     id: id,
@@ -533,13 +557,13 @@
                     finish: finishDate,
                     progress: parseInt(getVal('PercentComplete')) || 0,
                     level: parseInt(getVal('OutlineLevel')) || 1,
+                    resources: resourceStr,
                     collapsed: false, 
                     isParent: false   
                 });
             }
             
             tasks.sort((a, b) => a.id - b.id);
-            // Xác định Parent
             for(let i=0; i<tasks.length; i++) {
                 if(i < tasks.length - 1 && tasks[i+1].level > tasks[i].level) {
                     tasks[i].isParent = true;
@@ -548,14 +572,11 @@
             return tasks;
         }
 
-        // Lấy dải ngày của các task đang hiển thị (phục vụ vẽ header Gantt)
         function getProjectDateRange() {
             const visibleTasks = getVisibleTasks();
             if (visibleTasks.length === 0) {
-                // Rơi vào trường hợp filter trống trơn
                 return { minDate: new Date(), maxDate: new Date(), totalDays: 1 };
             }
-
             let minDate = new Date(Math.min(...visibleTasks.map(t => t.start.getTime())));
             minDate = normalizeDate(minDate);
             minDate.setDate(minDate.getDate() - 2); 
@@ -568,19 +589,13 @@
             return { minDate, maxDate, totalDays };
         }
 
-        // ------------------ FEATURE ACTIONS ------------------
-
-        // Tính năng Lọc Theo Ngày
         window.applyDateFilter = function() {
             const startVal = document.getElementById('filter-start').value;
             const endVal = document.getElementById('filter-end').value;
-            
             window.filterStartDate = startVal ? new Date(startVal) : null;
             if (window.filterStartDate) window.filterStartDate.setHours(0,0,0,0);
-            
             window.filterEndDate = endVal ? new Date(endVal) : null;
             if (window.filterEndDate) window.filterEndDate.setHours(23,59,59,999);
-            
             renderViewer();
         };
 
@@ -605,23 +620,37 @@
             renderViewer();
         };
 
-        // Tính năng Timeline View
         window.toggleTimeline = function() {
             const tlView = document.getElementById('timeline-view');
+            const ganttViewer = document.getElementById('viewer-container');
             const btn = document.getElementById('btn-timeline');
+            const tools = document.getElementById('gantt-tools');
             
             if (tlView.classList.contains('hidden')) {
                 tlView.classList.remove('hidden');
                 tlView.classList.add('flex');
+                
+                ganttViewer.classList.add('hidden');
+                ganttViewer.classList.remove('flex');
+                
+                tools.classList.add('opacity-30', 'pointer-events-none');
+                
                 btn.classList.add('bg-[#006B68]/10', 'border-[#006B68]', 'text-[#006B68]');
                 renderTimeline();
             } else {
                 tlView.classList.add('hidden');
                 tlView.classList.remove('flex');
+                
+                ganttViewer.classList.remove('hidden');
+                ganttViewer.classList.add('flex');
+                
+                tools.classList.remove('opacity-30', 'pointer-events-none');
+                
                 btn.classList.remove('bg-[#006B68]/10', 'border-[#006B68]', 'text-[#006B68]');
             }
         };
 
+        // THUẬT TOÁN MỚI: Xử lý đè lấp chữ trên Timeline
         function renderTimeline() {
             const tlContainer = document.getElementById('timeline-content');
             if (!tlContainer || globalTasks.length === 0) return;
@@ -630,66 +659,175 @@
             
             let minDate = new Date(Math.min(...globalTasks.map(t => t.start.getTime())));
             let maxDate = new Date(Math.max(...globalTasks.map(t => t.finish.getTime())));
-            
-            minDate.setDate(minDate.getDate() - 2);
-            maxDate.setDate(maxDate.getDate() + 2);
+            minDate.setDate(minDate.getDate() - 5);
+            maxDate.setDate(maxDate.getDate() + 5);
             const totalMs = maxDate.getTime() - minDate.getTime();
+            const totalDays = totalMs / (1000 * 60 * 60 * 24);
 
-            const line = document.createElement('div');
-            line.className = 'absolute top-1/2 left-0 right-0 h-1.5 bg-slate-300 -translate-y-1/2 rounded-full';
-            tlContainer.appendChild(line);
+            // Mở rộng không gian hiển thị (tránh bị clip)
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative w-full min-h-[500px] h-full max-w-6xl flex items-center my-12';
 
-            let topPosition = true;
+            const mainBar = document.createElement('div');
+            mainBar.className = 'absolute top-1/2 left-0 right-0 h-16 bg-[#f0ede6] border border-slate-400 rounded flex overflow-hidden shadow-sm -translate-y-1/2 z-10';
+            
+            const axisContainer = document.createElement('div');
+            axisContainer.className = 'absolute bottom-full left-0 right-0 h-8 text-xs text-slate-500 mb-1 z-0';
+            
+            const tickCount = Math.min(10, Math.max(4, Math.floor(totalDays / 14)));
+            for(let i=0; i<=tickCount; i++) {
+                const tickPercent = (i/tickCount)*100;
+                const tickDate = new Date(minDate.getTime() + (totalMs * (i/tickCount)));
+                
+                const tick = document.createElement('div');
+                tick.className = 'absolute border-l border-slate-300 h-2 pl-1.5 pt-1 left-0 flex items-end translate-y-[20px] pb-3';
+                tick.style.left = `${tickPercent}%`;
+                tick.textContent = formatDateShort(tickDate);
+                axisContainer.appendChild(tick);
+            }
+            wrapper.appendChild(axisContainer);
+
+            const phaseColors = ['bg-[#e3f0fa]', 'bg-[#e5f0d8]', 'bg-[#faeed8]', 'bg-[#f4e6fc]'];
+            let colorIdx = 0;
+            
             globalTasks.forEach(task => {
                 const durationMs = task.finish.getTime() - task.start.getTime();
-                const isMilestone = durationMs === 0;
+                const isMilestone = durationMs === 0 || (task.finish.getTime() === task.start.getTime() && !task.isParent);
                 
-                if (task.level === 1 || isMilestone) {
+                if (task.level === 1 && !isMilestone) {
                     const startPercent = ((task.start.getTime() - minDate.getTime()) / totalMs) * 100;
-                    const widthPercent = (durationMs / totalMs) * 100;
+                    const widthPercent = Math.max((durationMs / totalMs) * 100, 1);
 
-                    const blockWrapper = document.createElement('div');
-                    blockWrapper.className = 'absolute flex flex-col items-center group cursor-pointer z-10 hover:z-20';
-                    blockWrapper.style.left = `${startPercent}%`;
-                    blockWrapper.style.width = isMilestone ? 'max-content' : `${Math.max(widthPercent, 0.5)}%`;
-                    // Double click trên timeline cũng sẽ hiện modal
-                    blockWrapper.ondblclick = () => openTaskDetailModal(task.id);
+                    const phaseBlock = document.createElement('div');
+                    phaseBlock.className = `absolute h-full border-r border-slate-300 p-2 text-[11px] font-bold text-slate-800 leading-tight overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${phaseColors[colorIdx % phaseColors.length]}`;
+                    phaseBlock.style.left = `${startPercent}%`;
+                    phaseBlock.style.width = `${widthPercent}%`;
+                    phaseBlock.innerHTML = `${task.name}<br><span class="font-normal text-[9px] text-slate-500">${formatDateShort(task.start)} - ${formatDateShort(task.finish)}</span>`;
+                    phaseBlock.title = "Double click để xem chi tiết";
+                    phaseBlock.ondblclick = () => openTaskDetailModal(task.id);
                     
-                    const block = document.createElement('div');
-                    block.className = `text-[11px] font-bold px-2 py-1 border shadow-sm whitespace-nowrap overflow-hidden text-ellipsis w-full text-center ${isMilestone ? 'bg-[#FFC62F] border-[#d4a21e] text-[#006B68] rounded-full' : 'bg-white border-[#006B68] text-[#006B68] rounded'}`;
-                    block.textContent = task.name;
-                    block.title = `Double-click để xem chi tiết\n${task.name}\n${formatDateShort(task.start)} - ${formatDateShort(task.finish)}`;
-                    
-                    const connector = document.createElement('div');
-                    connector.className = 'w-0.5 bg-slate-300 h-4';
-
-                    if (topPosition) {
-                        blockWrapper.style.bottom = 'calc(50% + 2px)';
-                        blockWrapper.appendChild(block);
-                        blockWrapper.appendChild(connector);
-                    } else {
-                        blockWrapper.style.top = 'calc(50% + 2px)';
-                        blockWrapper.appendChild(connector);
-                        blockWrapper.appendChild(block);
-                    }
-                    topPosition = !topPosition;
-                    
-                    tlContainer.appendChild(blockWrapper);
+                    mainBar.appendChild(phaseBlock);
+                    colorIdx++;
                 }
             });
-            
-            const startMarker = document.createElement('div');
-            startMarker.className = 'absolute left-0 -bottom-6 text-xs text-slate-500 font-bold';
-            startMarker.textContent = formatDateShort(minDate);
-            tlContainer.appendChild(startMarker);
 
-            const endMarker = document.createElement('div');
-            endMarker.className = 'absolute right-0 -bottom-6 text-xs text-slate-500 font-bold';
-            endMarker.textContent = formatDateShort(maxDate);
-            tlContainer.appendChild(endMarker);
+            wrapper.appendChild(mainBar);
+
+            const startLabel = document.createElement('div');
+            startLabel.className = 'absolute right-[102%] top-1/2 -translate-y-1/2 text-right text-[11px] text-slate-600';
+            startLabel.innerHTML = `Start<br><span class="font-bold">${formatDateShort(minDate)}</span>`;
+            wrapper.appendChild(startLabel);
+
+            const endLabel = document.createElement('div');
+            endLabel.className = 'absolute left-[102%] top-1/2 -translate-y-1/2 text-left text-[11px] text-slate-600';
+            endLabel.innerHTML = `Finish<br><span class="font-bold">${formatDateShort(maxDate)}</span>`;
+            wrapper.appendChild(endLabel);
+
+            const today = new Date();
+            if (today >= minDate && today <= maxDate) {
+                const todayPercent = ((today.getTime() - minDate.getTime()) / totalMs) * 100;
+                const todayLine = document.createElement('div');
+                todayLine.className = 'absolute top-0 bottom-0 w-0.5 bg-green-700 z-40';
+                todayLine.style.left = `${todayPercent}%`;
+
+                const todayLabel = document.createElement('div');
+                todayLabel.className = 'absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[120%] bg-green-700 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm';
+                todayLabel.textContent = 'Today';
+                todayLine.appendChild(todayLabel);
+                wrapper.appendChild(todayLine);
+            }
+
+            // HỆ THỐNG COLLISION DETECTION CHO MILESTONES
+            let alternateTop = true;
+            const topLanes = [];    // Lưu trữ không gian đã chiếm dụng ở phía trên
+            const bottomLanes = []; // Lưu trữ không gian đã chiếm dụng ở phía dưới
+            const CALLOUT_WIDTH = 140; // Độ rộng cố định của callout (w-[140px])
+            const PADDING = 15; // Khoảng cách đệm an toàn giữa các chữ
+
+            // Lấy kích thước container để tính toán toạ độ thực tế
+            const containerWidth = tlContainer.clientWidth || 1000;
+
+            globalTasks.forEach(task => {
+                const durationMs = task.finish.getTime() - task.start.getTime();
+                const isMilestone = durationMs === 0 || (task.finish.getTime() === task.start.getTime() && !task.isParent);
+                
+                if (isMilestone) {
+                    const startPercent = ((task.start.getTime() - minDate.getTime()) / totalMs) * 100;
+                    
+                    // Tính toạ độ X dự kiến
+                    const centerX = (startPercent / 100) * containerWidth;
+                    const leftX = centerX - (CALLOUT_WIDTH / 2) - PADDING;
+                    const rightX = centerX + (CALLOUT_WIDTH / 2) + PADDING;
+
+                    let isTop = alternateTop;
+                    let targetLanes = isTop ? topLanes : bottomLanes;
+                    let laneIndex = 0;
+                    let placed = false;
+
+                    // Tìm kiếm làn (lane) trống
+                    while (!placed) {
+                        if (!targetLanes[laneIndex]) targetLanes[laneIndex] = [];
+
+                        // Kiểm tra đè lấp: (Left1 < Right2) && (Right1 > Left2)
+                        let hasCollision = targetLanes[laneIndex].some(bound => {
+                            return (leftX < bound.right) && (rightX > bound.left);
+                        });
+
+                        if (!hasCollision) {
+                            // Slot này trống, đưa vào mảng đã chiếm dụng
+                            targetLanes[laneIndex].push({ left: leftX, right: rightX });
+                            placed = true;
+                        } else {
+                            // Bị đè lấp, thử làn tiếp theo (cao/thấp hơn)
+                            laneIndex++;
+                        }
+                    }
+
+                    const callout = document.createElement('div');
+                    callout.className = 'absolute flex flex-col items-center group cursor-pointer z-30 w-[140px] -translate-x-1/2 hover:z-50';
+                    callout.style.left = `${startPercent}%`;
+                    callout.ondblclick = () => openTaskDetailModal(task.id);
+
+                    // Thêm nền backdrop-blur để các đường kẻ ở sau không đè vào chữ
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'text-[11px] font-bold text-center leading-tight whitespace-normal break-words w-full bg-white/90 backdrop-blur-sm p-1.5 rounded shadow-sm border border-slate-200 z-20 transition-all group-hover:bg-white group-hover:border-[#006B68] group-hover:shadow-md';
+                    textDiv.innerHTML = `${task.name}<br><span class="font-normal text-[10px] text-slate-500">${formatDateShort(task.start)}</span>`;
+
+                    const lineDiv = document.createElement('div');
+                    // Tăng chiều cao của đường kẻ dựa vào làn đang đứng
+                    const lineH = 30 + (laneIndex * 55); 
+                    lineDiv.className = 'w-[1px] bg-slate-400 group-hover:bg-[#006B68] transition-colors relative z-0';
+                    lineDiv.style.height = `${lineH}px`;
+
+                    const diamond = document.createElement('div');
+                    diamond.className = 'w-2.5 h-2.5 bg-amber-400 rotate-45 border border-white outline outline-1 outline-amber-500 shadow-sm relative z-10 shrink-0 group-hover:scale-125 group-hover:bg-[#FFC62F] transition-transform';
+
+                    if (isTop) {
+                        callout.style.bottom = 'calc(50% + 32px)';
+                        callout.appendChild(textDiv);
+                        callout.appendChild(lineDiv);
+                        callout.appendChild(diamond);
+                        diamond.style.marginBottom = '-5px';
+                        lineDiv.style.marginTop = '-2px'; // Kéo line sát vào thẻ chữ
+                    } else {
+                        callout.style.top = 'calc(50% + 32px)';
+                        callout.appendChild(diamond);
+                        callout.appendChild(lineDiv);
+                        callout.appendChild(textDiv);
+                        diamond.style.marginTop = '-5px';
+                        lineDiv.style.marginBottom = '-2px'; // Kéo line sát vào thẻ chữ
+                    }
+
+                    wrapper.appendChild(callout);
+                    
+                    // Đổi bên cho vòng lặp tiếp theo
+                    alternateTop = !alternateTop;
+                }
+            });
+
+            tlContainer.appendChild(wrapper);
         }
 
-        // Khởi tạo các Option cho bộ lọc Cấp độ
         function updateLevelDropdown() {
             levelFilter.innerHTML = '<option value="all">Mọi cấp</option><option value="custom" hidden>Tùy chỉnh</option>';
             if (globalTasks.length === 0) return;
@@ -706,7 +844,6 @@
             levelFilter.value = 'all';
         }
 
-        // Hành động khi chọn từ Dropdown
         window.filterByLevel = function(level) {
             if (level === 'all') {
                 globalTasks.forEach(t => t.collapsed = false);
@@ -721,7 +858,6 @@
             renderViewer();
         };
 
-        // Tính năng Collapse/Expand (Hỗ trợ Shift+Click để áp dụng cho cả hàng loạt cùng Cấp)
         window.toggleTask = function(taskId, event) {
             if (event) event.stopPropagation();
 
@@ -821,7 +957,6 @@
             return visible;
         }
 
-        // Tính năng Zoom
         window.zoomIn = function() {
             if (dayWidth < MAX_DAY_WIDTH) {
                 dayWidth = Math.floor(dayWidth * 1.3);
@@ -858,7 +993,6 @@
             }
         });
 
-        // Tính năng Xuất Excel
         window.exportExcel = function() {
             if (globalTasks.length === 0) {
                 alert("Không có dữ liệu để xuất!");
@@ -873,6 +1007,7 @@
                     "Tên công việc": task.name,
                     "Cấp độ": task.level,
                     "Phân loại": task.isParent ? "Nhóm" : "Công việc",
+                    "Người thực hiện": task.resources,
                     "Bắt đầu": formatDateShort(task.start),
                     "Kết thúc": formatDateShort(task.finish),
                     "Thời gian (Ngày)": duration,
@@ -885,22 +1020,21 @@
             XLSX.utils.book_append_sheet(workbook, worksheet, "Tiến độ Dự án");
             
             const wscols = [
-                {wch: 5}, {wch: 40}, {wch: 10}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 15}, {wch: 12}
+                {wch: 5}, {wch: 40}, {wch: 10}, {wch: 15}, {wch: 25}, {wch: 12}, {wch: 12}, {wch: 15}, {wch: 12}
             ];
             worksheet['!cols'] = wscols;
 
             XLSX.writeFile(workbook, "TienDoDuAn.xlsx");
         };
 
-        // Tính năng Xuất PDF
         window.exportPDF = function() {
             if (globalTasks.length === 0) {
                 alert("Không có dữ liệu để xuất!");
                 return;
             }
 
-            if (dayWidth > 20) {
-                const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt trên một trang, hệ thống khuyến nghị bạn nên chọn tính năng 'Vừa màn hình' trước khi xuất. \n\nBạn có muốn hệ thống tự động gom vừa màn hình rồi xuất không?");
+            if (dayWidth > 20 && document.getElementById('timeline-view').classList.contains('hidden')) {
+                const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt, hệ thống khuyến nghị bạn nên chọn 'Vừa màn hình' trước khi xuất. \n\nBạn có muốn tự động gom vừa màn hình rồi xuất không?");
                 if (confirmFit) {
                     fitToScreen();
                     setTimeout(doExport, 300);
@@ -917,6 +1051,8 @@
                 const ganttRightPanel = document.getElementById('gantt-right-panel');
                 const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
 
+                const isTimeline = !document.getElementById('timeline-view').classList.contains('hidden');
+
                 const origExportClasses = exportArea.className;
                 const origViewerClasses = viewer.className;
                 const origBodyClasses = ganttBodyWrapper.className;
@@ -925,20 +1061,26 @@
                 const origWidth = exportArea.style.width;
 
                 exportArea.classList.remove('overflow-hidden', 'min-h-0');
-                viewer.classList.remove('overflow-hidden');
-                ganttRightPanel.classList.remove('overflow-hidden', 'min-w-0');
-                ganttBodyWrapper.classList.remove('overflow-auto', 'hide-scrollbar');
-                ganttHeaderWrapper.classList.remove('overflow-hidden');
+                
+                let totalWidth = 1200; 
 
-                ganttBodyWrapper.style.paddingRight = '20px';
-                ganttHeaderWrapper.style.paddingRight = '20px';
+                if(!isTimeline) {
+                    viewer.classList.remove('overflow-hidden');
+                    ganttRightPanel.classList.remove('overflow-hidden', 'min-w-0');
+                    ganttBodyWrapper.classList.remove('overflow-auto', 'hide-scrollbar');
+                    ganttHeaderWrapper.classList.remove('overflow-hidden');
 
-                const totalWidth = document.getElementById('left-panel').offsetWidth + ganttBodyWrapper.scrollWidth + 30;
+                    ganttBodyWrapper.style.paddingRight = '20px';
+                    ganttHeaderWrapper.style.paddingRight = '20px';
+
+                    totalWidth = document.getElementById('left-panel').offsetWidth + ganttBodyWrapper.scrollWidth + 30;
+                }
+
                 exportArea.style.width = totalWidth + 'px';
 
                 const opt = {
                     margin:       0.2, 
-                    filename:     'BieuDoGantt.pdf',
+                    filename:     'BaoCaoDuAn.pdf',
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { 
                         scale: 2, 
@@ -951,19 +1093,19 @@
 
                 html2pdf().set(opt).from(exportArea).save().then(() => {
                     exportArea.className = origExportClasses;
-                    viewer.className = origViewerClasses;
-                    ganttBodyWrapper.className = origBodyClasses;
-                    ganttRightPanel.className = origRightPanelClasses;
-                    ganttHeaderWrapper.className = origHeaderClasses;
                     
+                    if(!isTimeline) {
+                        viewer.className = origViewerClasses;
+                        ganttBodyWrapper.className = origBodyClasses;
+                        ganttRightPanel.className = origRightPanelClasses;
+                        ganttHeaderWrapper.className = origHeaderClasses;
+                        ganttBodyWrapper.style.paddingRight = '';
+                        ganttHeaderWrapper.style.paddingRight = '';
+                    }
                     exportArea.style.width = origWidth;
-                    ganttBodyWrapper.style.paddingRight = '';
-                    ganttHeaderWrapper.style.paddingRight = '';
                 });
             }
         };
-
-        // ------------------ RENDERING ------------------
 
         function renderViewer() {
             if(globalTasks.length === 0) return;
@@ -981,13 +1123,12 @@
             ganttBody.innerHTML = '';
 
             if (visibleTasks.length === 0) {
-                taskList.innerHTML = `<div class="p-4 text-center text-slate-500 italic">Không có công việc nào trong khoảng thời gian này.</div>`;
+                taskList.innerHTML = `<div class="p-4 text-center text-slate-500 italic">Không có công việc nào.</div>`;
                 return;
             }
 
             const today = normalizeDate(new Date());
 
-            // ------------- 1. BẢNG DANH SÁCH (LEFT PANEL) -------------
             visibleTasks.forEach((task) => {
                 const isOverdue = !task.isParent && (normalizeDate(task.finish) <= today) && task.progress < 100;
                 
@@ -1001,7 +1142,6 @@
                 }
 
                 const row = document.createElement('div');
-                // Gắn class cursor-pointer và sự kiện ondblclick để mở modal
                 row.className = `grid-table border-b border-slate-200 text-sm box-border transition-colors cursor-pointer ${textClass}`;
                 row.style.height = `${ROW_HEIGHT}px`;
                 row.title = "Double-click để xem chi tiết";
@@ -1033,7 +1173,6 @@
                 taskList.appendChild(row);
             });
 
-            // ------------- 2. HEADER BIỂU ĐỒ (TOP PANEL) -------------
             const headerTotalWidth = totalDays * dayWidth;
             ganttHeader.style.width = `${headerTotalWidth}px`;
             
@@ -1087,7 +1226,6 @@
             ganttHeader.appendChild(monthsRow);
             ganttHeader.appendChild(daysRow);
 
-            // ------------- 3. THÂN BIỂU ĐỒ (GANTT BARS) -------------
             ganttBody.style.width = `${headerTotalWidth}px`;
             ganttBody.style.height = `${visibleTasks.length * ROW_HEIGHT}px`;
 
@@ -1149,6 +1287,8 @@
 
                 const bar = document.createElement('div');
                 const isOverdue = !task.isParent && (taskFinish <= today) && task.progress < 100;
+                
+                const milestoneCondition = durationDays <= 1 && task.start.getTime() === task.finish.getTime() && !task.isParent;
 
                 if (task.isParent) {
                     bar.className = 'bg-slate-700 h-2.5 w-full relative group-hover:bg-slate-900 transition-colors cursor-pointer';
@@ -1157,8 +1297,15 @@
                         <div class="absolute -bottom-1.5 right-0 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-700 group-hover:border-t-slate-900 transition-colors"></div>
                     `;
                     bar.onclick = (e) => toggleTask(task.id, e);
-                    // Dbl click mở modal thay vì toggle lại 2 lần
                     bar.ondblclick = (e) => {
+                        e.stopPropagation();
+                        openTaskDetailModal(task.id);
+                    };
+                } else if (milestoneCondition) {
+                     barWrapper.style.width = '16px';
+                     barWrapper.style.transform = 'translateX(-8px)';
+                     bar.className = 'w-3 h-3 bg-amber-400 rotate-45 border border-amber-600 shadow-sm cursor-pointer hover:bg-amber-500 transition-colors relative z-10 m-auto';
+                     bar.ondblclick = (e) => {
                         e.stopPropagation();
                         openTaskDetailModal(task.id);
                     };
@@ -1182,7 +1329,6 @@
                             bar.appendChild(progress);
                         }
                     }
-                    // Bắt sự kiện double click cho task con
                     bar.ondblclick = (e) => {
                         e.stopPropagation();
                         openTaskDetailModal(task.id);
@@ -1192,7 +1338,7 @@
                 bar.title = `Double-click để xem chi tiết\n\n${task.name}\nBắt đầu: ${formatDateShort(task.start)}\nKết thúc: ${formatDateShort(task.finish)}\nTiến độ: ${task.progress}%\nTrạng thái: ${isOverdue ? 'Quá hạn!' : 'Đang thực hiện'}`;
                 barWrapper.appendChild(bar);
 
-                if (!task.isParent && dayWidth > 15) { 
+                if (!task.isParent && !milestoneCondition && dayWidth > 15) { 
                      const label = document.createElement('span');
                      label.className = `absolute left-full ml-1.5 text-[10px] font-bold whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity ${isOverdue ? 'text-red-600' : 'text-slate-500'}`;
                      label.textContent = `${task.progress}%`;
@@ -1204,8 +1350,6 @@
 
             ganttBody.appendChild(barsContainer);
         }
-
-        // --- CÁC HÀM TIỆN ÍCH MỚI ---
 
         window.openHelpModal = function() {
             document.getElementById('help-modal').classList.remove('hidden');
@@ -1232,7 +1376,7 @@
                     }
                 })
                 .catch(error => {
-                    console.log("Không tìm thấy file DefaultProject.xml (hoặc bị chặn CORS). Vui lòng tải file thủ công.", error);
+                    console.log("Không tìm thấy file DefaultProject.xml, vui lòng chọn file thủ công.", error);
                 });
         });
 
@@ -1241,20 +1385,21 @@
             const d = (days) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
             
             globalTasks = [
-                { id: 1, name: "Dự án Thiết kế Hệ thống Mới", start: d(-10), finish: d(35), progress: 30, level: 1, isParent: true, collapsed: false },
-                { id: 2, name: "Giai đoạn 1: Nghiên cứu & Phân tích", start: d(-10), finish: d(-1), progress: 100, level: 2, isParent: true, collapsed: false },
-                { id: 3, name: "Khảo sát yêu cầu người dùng", start: d(-10), finish: d(-5), progress: 100, level: 3, isParent: false },
-                { id: 4, name: "Phân tích kiến trúc hệ thống", start: d(-4), finish: d(-1), progress: 100, level: 3, isParent: false },
-                { id: 5, name: "Giai đoạn 2: Thiết kế UI/UX", start: d(0), finish: d(10), progress: 20, level: 2, isParent: true, collapsed: false },
-                { id: 6, name: "Vẽ Wireframe cơ bản", start: d(0), finish: d(3), progress: 80, level: 3, isParent: false },
-                { id: 7, name: "Task thử nghiệm báo Quá Hạn", start: d(-5), finish: d(0), progress: 50, level: 3, isParent: false }, 
-                { id: 8, name: "Thiết kế Mockup chi tiết", start: d(4), finish: d(8), progress: 10, level: 3, isParent: false },
-                { id: 9, name: "Chốt giao diện với khách hàng", start: d(9), finish: d(9), progress: 0, level: 3, isParent: false }, 
-                { id: 10, name: "Giai đoạn 3: Lập trình (Dev)", start: d(11), finish: d(35), progress: 0, level: 2, isParent: true, collapsed: false },
-                { id: 11, name: "Cấu hình Server & Database", start: d(11), finish: d(13), progress: 0, level: 3, isParent: false },
-                { id: 12, name: "Lập trình Backend APIs", start: d(14), finish: d(20), progress: 0, level: 3, isParent: false },
-                { id: 13, name: "Lập trình Frontend", start: d(16), finish: d(22), progress: 0, level: 3, isParent: false },
-                { id: 14, name: "Golive Sản phẩm", start: d(35), finish: d(35), progress: 0, level: 3, isParent: false } 
+                { id: 1, name: "Dự án Thiết kế Hệ thống Mới", start: d(-10), finish: d(35), progress: 30, level: 1, resources: "Trần Văn Sếp", isParent: true, collapsed: false },
+                { id: 2, name: "Giai đoạn 1: Nghiên cứu", start: d(-10), finish: d(-1), progress: 100, level: 2, resources: "", isParent: true, collapsed: false },
+                { id: 3, name: "Khảo sát yêu cầu", start: d(-10), finish: d(-5), progress: 100, level: 3, resources: "Nguyễn Thị BA", isParent: false },
+                { id: 4, name: "Phân tích kiến trúc", start: d(-4), finish: d(-1), progress: 100, level: 3, resources: "Phạm Văn SA", isParent: false },
+                { id: 5, name: "Duyệt yêu cầu Giai đoạn 1", start: d(-1), finish: d(-1), progress: 100, level: 3, resources: "Trần Văn Sếp", isParent: false }, 
+                { id: 6, name: "Giai đoạn 2: Thiết kế UI/UX", start: d(0), finish: d(10), progress: 20, level: 2, resources: "", isParent: true, collapsed: false },
+                { id: 7, name: "Vẽ Wireframe cơ bản", start: d(0), finish: d(3), progress: 80, level: 3, resources: "Lê Thị UI", isParent: false },
+                { id: 8, name: "Mốc test chống đè lấp 1", start: d(2), finish: d(2), progress: 100, level: 3, resources: "Thằng Đang Trễ", isParent: false }, 
+                { id: 9, name: "Mốc test chống đè lấp 2", start: d(2), finish: d(2), progress: 10, level: 3, resources: "Lê Thị UI", isParent: false },
+                { id: 10, name: "Mốc test chống đè lấp 3", start: d(3), finish: d(3), progress: 0, level: 3, resources: "Khách hàng", isParent: false },
+                { id: 11, name: "Giai đoạn 3: Lập trình", start: d(11), finish: d(35), progress: 0, level: 2, resources: "", isParent: true, collapsed: false },
+                { id: 12, name: "Cấu hình Server", start: d(11), finish: d(13), progress: 0, level: 3, resources: "DevOps", isParent: false },
+                { id: 13, name: "Lập trình Backend", start: d(14), finish: d(20), progress: 0, level: 3, resources: "Backend Team", isParent: false },
+                { id: 14, name: "Lập trình Frontend", start: d(16), finish: d(22), progress: 0, level: 3, resources: "Frontend Team", isParent: false },
+                { id: 15, name: "Golive Sản phẩm", start: d(35), finish: d(35), progress: 0, level: 3, resources: "Tất cả mọi người", isParent: false }
             ];
             dayWidth = 40; 
             updateLevelDropdown();
