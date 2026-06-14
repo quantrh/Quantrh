@@ -18,7 +18,7 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+        .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
 
         /* Style cho thanh kéo resize cột */
         .resizer {
@@ -62,10 +62,9 @@
         </div>
     </header>
 
-    <!-- Toolbar (Chỉ hiện khi có dữ liệu) -->
+    <!-- Toolbar -->
     <div id="toolbar" class="bg-white border-b border-slate-300 px-4 py-2 flex items-center gap-4 z-20 shrink-0 hidden shadow-sm flex-wrap overflow-x-auto hide-scrollbar">
         
-        <!-- Toggle Timeline -->
         <button id="btn-timeline" onclick="toggleTimeline()" class="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 flex items-center gap-1 transition-colors font-semibold shadow-sm" title="Bật/Tắt chế độ xem Tổng quan dự án">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
             Timeline
@@ -78,7 +77,6 @@
 
         <div class="h-6 w-px bg-slate-300"></div>
 
-        <!-- Thu/Mở & Level Filter -->
         <div class="flex items-center gap-2">
             <button onclick="expandAll()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Mở rộng tất cả">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 21 6 15"/><polyline points="18 9 12 15 6 9"/></svg>
@@ -94,7 +92,6 @@
 
         <div class="h-6 w-px bg-slate-300"></div>
         
-        <!-- Bộ lọc ngày tháng -->
         <div class="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded px-2 py-1 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             <span class="text-xs font-medium text-slate-600">Từ:</span>
@@ -108,7 +105,6 @@
 
         <div class="h-6 w-px bg-slate-300"></div>
 
-        <!-- Zoom Controls -->
         <div class="flex items-center gap-1">
             <button onclick="zoomOut()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors" title="Thu nhỏ">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -123,7 +119,6 @@
 
         <div class="flex-1"></div>
 
-        <!-- Nhóm nút Xuất file -->
         <div class="flex items-center gap-2">
             <button onclick="exportExcel()" class="px-3 py-1.5 text-sm bg-green-50 hover:bg-green-100 text-green-700 font-medium rounded border border-green-200 flex items-center gap-1 transition-colors" title="Xuất dữ liệu ra file Excel">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -139,32 +134,25 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col p-4 overflow-hidden gap-4 relative bg-slate-200/50">
         
-        <!-- Trạng thái trống -->
         <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center z-20">
              <div class="p-10 bg-white rounded-2xl shadow-sm border border-slate-200 text-center max-w-lg animate-fade-in-up">
                  <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mx-auto mb-5 text-[#006B68]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M8 10v4"/><path d="M12 10v2"/><path d="M16 10v6"/></svg>
                  <h2 class="text-2xl font-bold text-slate-700 mb-3">Xem dữ liệu dự án của bạn</h2>
-                 <p class="text-slate-500 mb-8 leading-relaxed">Hỗ trợ đọc file <strong class="text-slate-700">MS Project XML</strong>. Tính năng mới: Timeline tổng quan, Lọc theo ngày, và Cảnh báo quá hạn.</p>
+                 <p class="text-slate-500 mb-8 leading-relaxed">Hỗ trợ đọc file <strong class="text-slate-700">MS Project XML</strong>. Nhấp đúp vào công việc để xem chi tiết thông tin.</p>
                  <button onclick="document.getElementById('fileInput').click()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm">
                      Chọn File Project
                  </button>
              </div>
         </div>
 
-        <!-- Wrapper để xuất PDF chứa cả Timeline và Chart -->
         <div id="export-wrapper" class="flex-1 flex flex-col min-h-0 relative hidden">
             
-            <!-- Timeline View (Phía trên) -->
             <div id="timeline-view" class="hidden flex-col bg-white border border-slate-300 rounded-lg shadow-sm px-6 py-8 relative shrink-0 min-h-[140px] mb-4 z-10 transition-all">
                 <h3 class="absolute top-2 left-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Timeline (Big Picture)</h3>
-                <div id="timeline-content" class="relative w-full flex-1 mt-3">
-                    <!-- JS sẽ render Timeline vào đây -->
-                </div>
+                <div id="timeline-content" class="relative w-full flex-1 mt-3"></div>
             </div>
 
-            <!-- Khung xem Gantt chính -->
             <div id="viewer-container" class="flex-1 flex border border-slate-300 rounded-lg shadow-sm bg-white overflow-hidden opacity-0 transition-opacity duration-500">
-                <!-- Cột trái: Bảng danh sách công việc -->
                 <div id="left-panel" class="flex flex-col border-r border-slate-300 bg-white z-10 shrink-0 w-fit">
                     <div class="h-12 bg-slate-100 border-b border-slate-300 grid-table font-semibold text-sm text-slate-700 shrink-0 shadow-[0_2px_5px_rgba(0,0,0,0.02)] select-none">
                         <div class="relative flex items-center justify-center border-r border-slate-300">ID <div class="resizer" data-col="--col-id"></div></div>
@@ -175,7 +163,6 @@
                     <div id="task-list" class="flex-1 overflow-y-auto hide-scrollbar bg-white w-full"></div>
                 </div>
 
-                <!-- Cột phải: Biểu đồ Gantt -->
                 <div class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden min-w-0" id="gantt-right-panel">
                     <div id="gantt-header-wrapper" class="overflow-hidden shrink-0 bg-slate-100 border-b border-slate-300 z-20 h-12 shadow-[0_2px_5px_rgba(0,0,0,0.02)] select-none">
                         <div id="gantt-header" class="h-full flex flex-col"></div>
@@ -189,7 +176,7 @@
         </div>
     </main>
 
-    <!-- Modal Cảnh báo -->
+    <!-- Modal Cảnh báo hệ thống -->
     <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50">
        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-fade-in-up border border-slate-200">
            <div class="flex items-center gap-3 mb-4 text-amber-600">
@@ -202,6 +189,72 @@
        </div>
     </div>
 
+    <!-- Modal Chi tiết Công việc (MỚI) -->
+    <div id="task-detail-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-0 animate-fade-in-up border border-slate-200 overflow-hidden flex flex-col">
+            <!-- Header Modal -->
+            <div class="bg-slate-50 p-5 border-b border-slate-200 flex justify-between items-start">
+                <div class="pr-4">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="td-id" class="text-xs font-bold text-slate-400 bg-slate-200 px-2 py-0.5 rounded">ID: 0</span>
+                        <span id="td-type" class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700">Loại</span>
+                    </div>
+                    <h3 id="td-name" class="text-xl font-bold text-slate-800 leading-tight">Tên công việc</h3>
+                </div>
+                <button onclick="closeTaskDetailModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <!-- Body Modal -->
+            <div class="p-6 space-y-5 flex-1">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <p class="text-xs text-slate-500 font-medium mb-1">Bắt đầu</p>
+                        <p id="td-start" class="text-sm font-bold text-slate-700">dd/mm/yyyy</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <p class="text-xs text-slate-500 font-medium mb-1">Kết thúc</p>
+                        <p id="td-end" class="text-sm font-bold text-slate-700">dd/mm/yyyy</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium mb-1">Thời lượng</p>
+                        <p id="td-duration" class="text-sm font-bold text-slate-800">0 ngày</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-500 font-medium mb-1">Cấp độ (Level)</p>
+                        <p id="td-level" class="text-sm font-bold text-slate-800">Cấp 1</p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <p class="text-xs text-slate-500 font-medium">Tiến độ hoàn thành</p>
+                        <p id="td-progress-text" class="text-sm font-bold text-[#006B68]">0%</p>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                        <div id="td-progress-bar" class="bg-[#006B68] h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div>
+                     <p class="text-xs text-slate-500 font-medium mb-2">Trạng thái hiện tại</p>
+                     <div id="td-status" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold">
+                         <!-- Sẽ được fill bằng JS -->
+                     </div>
+                </div>
+            </div>
+            
+            <!-- Footer Modal -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeTaskDetailModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">Đóng lại</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Hướng dẫn -->
     <div id="help-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50">
        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 animate-fade-in-up border border-slate-200 max-h-[90vh] flex flex-col">
@@ -210,43 +263,34 @@
                 <h3 class="text-xl font-bold text-slate-800">Hướng dẫn sử dụng chi tiết</h3>
            </div>
            <div class="text-slate-600 text-sm leading-relaxed overflow-y-auto flex-1 pr-2 hide-scrollbar space-y-4">
+               
                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">1</span> Tải & Hiển thị Dữ liệu</h4>
-                   <ul class="list-disc pl-5 space-y-1">
-                       <li>Ứng dụng hỗ trợ đọc file <b>XML Data</b> xuất từ MS Project.</li>
-                       <li>Mặc định khi mở, hệ thống sẽ tự động tìm và tải file <code class="bg-slate-200 px-1 rounded text-red-500">DefaultProject.xml</code> trong cùng thư mục (nếu có).</li>
-                   </ul>
-               </div>
-
-               <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">2</span> Chế độ Timeline & Bộ lọc (MỚI)</h4>
+                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">1</span> Chế độ Timeline & Bộ lọc</h4>
                    <ul class="list-disc pl-5 space-y-1">
                        <li><b>Timeline:</b> Nút <kbd class="bg-white border rounded shadow-sm px-1">Timeline</kbd> trên thanh công cụ sẽ bật bảng xem nhanh tổng quan dự án (Big Picture). Nó sẽ tổng hợp các Giai đoạn chính (Cấp 1) và các Điểm mốc (Milestone) nằm ngang màn hình, vô cùng thích hợp cho việc báo cáo.</li>
-                       <li><b>Lọc theo ngày:</b> Bạn có thể chọn ngày <b>Từ</b> và ngày <b>Đến</b>. Nếu bỏ trống ô ngày, hệ thống sẽ mặc định lấy toàn bộ. Khi một công việc thỏa mãn bộ lọc, hệ thống sẽ <b>tự động kéo theo hiển thị cả các nhóm công việc cấp trên</b> để bạn không bị mất bối cảnh (context).</li>
-                       <li><b class="text-red-600">Lọc Quá hạn:</b> Bấm nút "Quá hạn" trên thanh công cụ để lọc nhanh các việc đang trễ (và toàn bộ các cấp quản lý của nó).</li>
+                       <li><b>Lọc theo ngày:</b> Bạn có thể chọn ngày <b>Từ</b> và ngày <b>Đến</b>. Nếu bỏ trống ô ngày, hệ thống sẽ mặc định lấy toàn bộ. Hệ thống sẽ <b>tự động kéo theo hiển thị cả các nhóm công việc cấp trên</b> để bạn không bị mất bối cảnh.</li>
+                       <li><b class="text-red-600">Lọc Quá hạn:</b> Bấm nút "Quá hạn" để lọc nhanh các việc đang trễ.</li>
                    </ul>
                </div>
 
                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">3</span> Thao tác Mở rộng / Thu gọn (Collapse)</h4>
+                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">2</span> Xem chi tiết & Tương tác</h4>
                    <ul class="list-disc pl-5 space-y-1">
-                       <li><b>Cách 1 (Thanh công cụ):</b> Dùng nút "Mở rộng tất cả" / "Thu gọn tất cả" hoặc bộ lọc "Hiển thị cấp".</li>
-                       <li><b>Cách 2 (Click chuột):</b> Bấm vào biểu tượng <svg class="inline w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg> cạnh tên công việc cha để đóng/mở nhánh đó.</li>
-                       <li><b class="text-[#006B68]">Cách 3 (Phím tắt Shift):</b> Bấm <b>Shift + Click</b> vào mũi tên, hệ thống sẽ đóng/mở <b>HÀNG LOẠT</b> các mục có cùng cấp bậc trên toàn dự án.</li>
+                       <li><b class="text-[#006B68]">Xem thông tin chi tiết (MỚI):</b> <b>Nhấp đúp chuột (Double-click)</b> vào bất kỳ công việc nào (ở danh sách bên trái hoặc thanh ngang bên phải) để mở thẻ chi tiết công việc.</li>
+                       <li><b>Đóng/Mở nhánh:</b> Bấm vào biểu tượng mũi tên cạnh tên công việc cha. Hoặc bấm <b>Shift + Click</b> để đóng/mở <b>HÀNG LOẠT</b> các mục có cùng cấp bậc.</li>
                    </ul>
                </div>
 
                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">4</span> Quản lý Cảnh báo & Xuất file</h4>
+                   <h4 class="font-bold text-[#006B68] mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#FFC62F] text-[#006B68] flex items-center justify-center font-bold">3</span> Quản lý Cảnh báo & Xuất file</h4>
                    <ul class="list-disc pl-5 space-y-1">
-                       <li><b class="text-red-600">Màu đỏ:</b> Cảnh báo các công việc <b>Quá hạn</b> (Ngày kết thúc &le; Ngày hiện tại VÀ Tiến độ &lt; 100%). Cả text bên trái và thanh Gantt bên phải đều được tô màu đỏ.</li>
-                       <li><b class="text-[#006B68]">Màu xanh / Đen:</b> Nhóm cha được in đậm màu đen. Các công việc đang thực hiện hoặc chưa đến hạn sẽ hiển thị theo màu thương hiệu BIDV.</li>
+                       <li><b class="text-red-600">Màu đỏ:</b> Cảnh báo các công việc <b>Quá hạn</b> (Ngày kết thúc &le; Ngày hiện tại VÀ Tiến độ &lt; 100%). Cả text và thanh Gantt đều được tô màu đỏ.</li>
                        <li><b>Xuất PDF:</b> Hệ thống sẽ gợi ý tự động gom "Vừa màn hình" trước khi xuất để biểu đồ Gantt không bị lẹm viền. Khung Timeline cũng sẽ được in kèm (nếu đang bật).</li>
                    </ul>
                </div>
            </div>
            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0 mt-4">
-               <button onclick="closeHelpModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">Đóng</button>
+               <button onclick="closeHelpModal()" class="bg-[#006B68] hover:bg-[#00524F] text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">Đóng Hướng Dẫn</button>
            </div>
        </div>
     </div>
@@ -337,7 +381,7 @@
             }
         });
 
-        // Modal
+        // Modals
         const showModal = (title, content) => {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-content').innerHTML = content;
@@ -348,6 +392,81 @@
             document.getElementById('modal').classList.add('hidden');
             document.getElementById('modal').classList.remove('flex');
         });
+
+        // ------------------ TASK DETAIL MODAL LOGIC (MỚI) ------------------
+
+        window.openTaskDetailModal = function(taskId) {
+            const task = globalTasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const today = normalizeDate(new Date());
+            const startStr = formatDateShort(task.start);
+            const endStr = formatDateShort(task.finish);
+            const duration = Math.ceil((task.finish.getTime() - task.start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            
+            const isMilestone = duration === 1 && task.start.getTime() === task.finish.getTime();
+            const isOverdue = !task.isParent && (normalizeDate(task.finish) <= today) && task.progress < 100;
+            const isCompleted = task.progress === 100;
+
+            // Đổ dữ liệu vào Modal
+            document.getElementById('td-id').textContent = `ID: ${task.id}`;
+            document.getElementById('td-name').textContent = task.name;
+            document.getElementById('td-start').textContent = startStr;
+            document.getElementById('td-end').textContent = endStr;
+            document.getElementById('td-duration').textContent = isMilestone ? 'Cột mốc (0 ngày)' : `${duration} ngày`;
+            document.getElementById('td-level').textContent = `Cấp ${task.level}`;
+            
+            // Xử lý Progress
+            document.getElementById('td-progress-text').textContent = `${task.progress}%`;
+            document.getElementById('td-progress-bar').style.width = `${task.progress}%`;
+
+            // Xử lý Loại (Type)
+            const typeBadge = document.getElementById('td-type');
+            if (task.isParent) {
+                typeBadge.textContent = 'Nhóm công việc';
+                typeBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700';
+            } else if (isMilestone) {
+                typeBadge.textContent = 'Cột mốc (Milestone)';
+                typeBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700';
+            } else {
+                typeBadge.textContent = 'Công việc';
+                typeBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700';
+            }
+
+            // Xử lý Status
+            const statusBox = document.getElementById('td-status');
+            if (isCompleted) {
+                statusBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-700';
+                statusBox.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Đã hoàn thành`;
+            } else if (isOverdue) {
+                statusBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-red-100 text-red-700';
+                statusBox.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Quá hạn`;
+                document.getElementById('td-progress-bar').classList.replace('bg-[#006B68]', 'bg-red-500');
+                document.getElementById('td-progress-text').classList.replace('text-[#006B68]', 'text-red-600');
+            } else {
+                statusBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-[#006B68]/10 text-[#006B68]';
+                statusBox.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Đang thực hiện`;
+                document.getElementById('td-progress-bar').classList.replace('bg-red-500', 'bg-[#006B68]');
+                document.getElementById('td-progress-text').classList.replace('text-red-600', 'text-[#006B68]');
+            }
+
+            // Hiển thị Modal
+            const modal = document.getElementById('task-detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeTaskDetailModal = function() {
+            const modal = document.getElementById('task-detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        // Đóng modal khi click ra ngoài
+        document.getElementById('task-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeTaskDetailModal();
+        });
+
 
         // ------------------ DATA PROCESSING ------------------
 
@@ -509,7 +628,6 @@
             
             tlContainer.innerHTML = '';
             
-            // Timeline view luôn dựa trên toàn bộ dự án, không bị ảnh hưởng bởi filter ngày
             let minDate = new Date(Math.min(...globalTasks.map(t => t.start.getTime())));
             let maxDate = new Date(Math.max(...globalTasks.map(t => t.finish.getTime())));
             
@@ -517,12 +635,10 @@
             maxDate.setDate(maxDate.getDate() + 2);
             const totalMs = maxDate.getTime() - minDate.getTime();
 
-            // Đường chỉ kẻ ngang
             const line = document.createElement('div');
             line.className = 'absolute top-1/2 left-0 right-0 h-1.5 bg-slate-300 -translate-y-1/2 rounded-full';
             tlContainer.appendChild(line);
 
-            // Vẽ các khối (Chỉ vẽ Cấp 1 hoặc Milestone)
             let topPosition = true;
             globalTasks.forEach(task => {
                 const durationMs = task.finish.getTime() - task.start.getTime();
@@ -533,14 +649,16 @@
                     const widthPercent = (durationMs / totalMs) * 100;
 
                     const blockWrapper = document.createElement('div');
-                    blockWrapper.className = 'absolute flex flex-col items-center group cursor-default z-10 hover:z-20';
+                    blockWrapper.className = 'absolute flex flex-col items-center group cursor-pointer z-10 hover:z-20';
                     blockWrapper.style.left = `${startPercent}%`;
                     blockWrapper.style.width = isMilestone ? 'max-content' : `${Math.max(widthPercent, 0.5)}%`;
+                    // Double click trên timeline cũng sẽ hiện modal
+                    blockWrapper.ondblclick = () => openTaskDetailModal(task.id);
                     
                     const block = document.createElement('div');
                     block.className = `text-[11px] font-bold px-2 py-1 border shadow-sm whitespace-nowrap overflow-hidden text-ellipsis w-full text-center ${isMilestone ? 'bg-[#FFC62F] border-[#d4a21e] text-[#006B68] rounded-full' : 'bg-white border-[#006B68] text-[#006B68] rounded'}`;
                     block.textContent = task.name;
-                    block.title = `${task.name}\n${formatDateShort(task.start)} - ${formatDateShort(task.finish)}`;
+                    block.title = `Double-click để xem chi tiết\n${task.name}\n${formatDateShort(task.start)} - ${formatDateShort(task.finish)}`;
                     
                     const connector = document.createElement('div');
                     connector.className = 'w-0.5 bg-slate-300 h-4';
@@ -560,7 +678,6 @@
                 }
             });
             
-            // Marker ngày bắt đầu - kết thúc
             const startMarker = document.createElement('div');
             startMarker.className = 'absolute left-0 -bottom-6 text-xs text-slate-500 font-bold';
             startMarker.textContent = formatDateShort(minDate);
@@ -606,13 +723,12 @@
 
         // Tính năng Collapse/Expand (Hỗ trợ Shift+Click để áp dụng cho cả hàng loạt cùng Cấp)
         window.toggleTask = function(taskId, event) {
-            if (event) event.stopPropagation(); // Ngăn chặn sự kiện click lan tỏa
+            if (event) event.stopPropagation();
 
             const task = globalTasks.find(t => t.id === taskId);
             if (task && task.isParent) {
                 const targetState = !task.collapsed;
                 
-                // NẾU GIỮ SHIFT: Áp dụng đóng/mở cho TOÀN BỘ các mục có cùng Level
                 if (event && event.shiftKey) {
                     globalTasks.forEach(t => {
                         if (t.isParent && t.level === task.level) {
@@ -620,7 +736,6 @@
                         }
                     });
                 } else {
-                    // MẶC ĐỊNH: Chỉ áp dụng cho mục đang chọn
                     task.collapsed = targetState;
                 }
 
@@ -641,13 +756,11 @@
             renderViewer();
         };
 
-        // Lọc các task được phép hiển thị dựa trên trạng thái collapsed VÀ bộ lọc (Ngày / Quá hạn)
         function getVisibleTasks() {
             const today = normalizeDate(new Date());
             let keepIds = new Set();
             let forceExpandIds = new Set();
             
-            // Xây dựng cây phả hệ để tìm Parent dễ dàng
             let parents = {}; 
             let currentPath = [];
             globalTasks.forEach(t => {
@@ -657,7 +770,6 @@
                 }
             });
 
-            // Lọc các node thỏa mãn trực tiếp
             let explicitMatches = new Set();
             globalTasks.forEach(task => {
                 let passDate = true;
@@ -674,18 +786,16 @@
 
             let isFiltering = window.filterStartDate || window.filterEndDate || window.filterOverdueOnly;
 
-            // Truy xuất ngược lên các Parent để giữ lại Context
             if (isFiltering) {
                 explicitMatches.forEach(id => {
                     let currId = id;
                     while (currId) {
                         keepIds.add(currId);
-                        forceExpandIds.add(currId); // Force mở rộng các parent này
+                        forceExpandIds.add(currId); 
                         currId = parents[currId];
                     }
                 });
                 
-                // Mở rộng các parent chứa kết quả lọc
                 globalTasks.forEach(t => {
                     if (forceExpandIds.has(t.id) && t.isParent) {
                         t.collapsed = false;
@@ -695,7 +805,6 @@
                 globalTasks.forEach(t => keepIds.add(t.id));
             }
 
-            // Chạy Logic Collapse thông thường
             const visible = [];
             let hideLevel = Infinity; 
             
@@ -744,7 +853,6 @@
             if (globalTasks.length > 0 && dayWidth < 15) { 
                 fitToScreen();
             }
-            // Vẽ lại timeline nếu cửa sổ bị resize
             if(!document.getElementById('timeline-view').classList.contains('hidden')){
                 renderTimeline();
             }
@@ -784,7 +892,7 @@
             XLSX.writeFile(workbook, "TienDoDuAn.xlsx");
         };
 
-        // Tính năng Xuất PDF - Lưu ý: Capture cả Wrapper chứa Timeline
+        // Tính năng Xuất PDF
         window.exportPDF = function() {
             if (globalTasks.length === 0) {
                 alert("Không có dữ liệu để xuất!");
@@ -803,14 +911,12 @@
             doExport();
 
             function doExport() {
-                // Wrapper chứa cả timeline và bảng view
                 const exportArea = document.getElementById('export-wrapper');
                 const viewer = document.getElementById('viewer-container');
                 const ganttBodyWrapper = document.getElementById('gantt-body-wrapper');
                 const ganttRightPanel = document.getElementById('gantt-right-panel');
                 const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
 
-                // 1. Lưu lại các class CSS nguyên gốc
                 const origExportClasses = exportArea.className;
                 const origViewerClasses = viewer.className;
                 const origBodyClasses = ganttBodyWrapper.className;
@@ -818,7 +924,6 @@
                 const origHeaderClasses = ganttHeaderWrapper.className;
                 const origWidth = exportArea.style.width;
 
-                // 2. Gỡ bỏ mọi thuộc tính 'overflow-hidden' hoặc 'overflow-auto'
                 exportArea.classList.remove('overflow-hidden', 'min-h-0');
                 viewer.classList.remove('overflow-hidden');
                 ganttRightPanel.classList.remove('overflow-hidden', 'min-w-0');
@@ -831,7 +936,6 @@
                 const totalWidth = document.getElementById('left-panel').offsetWidth + ganttBodyWrapper.scrollWidth + 30;
                 exportArea.style.width = totalWidth + 'px';
 
-                // 3. Cấu hình xuất file
                 const opt = {
                     margin:       0.2, 
                     filename:     'BieuDoGantt.pdf',
@@ -845,7 +949,6 @@
                     jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
                 };
 
-                // 4. Bắt đầu xuất và sau đó Phục hồi
                 html2pdf().set(opt).from(exportArea).save().then(() => {
                     exportArea.className = origExportClasses;
                     viewer.className = origViewerClasses;
@@ -877,7 +980,6 @@
             ganttHeader.innerHTML = '';
             ganttBody.innerHTML = '';
 
-            // Nếu không có task nào thoả mãn filter
             if (visibleTasks.length === 0) {
                 taskList.innerHTML = `<div class="p-4 text-center text-slate-500 italic">Không có công việc nào trong khoảng thời gian này.</div>`;
                 return;
@@ -899,17 +1001,19 @@
                 }
 
                 const row = document.createElement('div');
-                row.className = `grid-table border-b border-slate-200 text-sm box-border transition-colors ${textClass}`;
+                // Gắn class cursor-pointer và sự kiện ondblclick để mở modal
+                row.className = `grid-table border-b border-slate-200 text-sm box-border transition-colors cursor-pointer ${textClass}`;
                 row.style.height = `${ROW_HEIGHT}px`;
+                row.title = "Double-click để xem chi tiết";
+                row.ondblclick = () => openTaskDetailModal(task.id);
                 
                 const paddingLeft = (task.level - 1) * 1.25;
                 
-                // Nút thu gọn / mở rộng có gán sự kiện event để kiểm tra phím Shift
                 let toggleBtn = '';
                 if (task.isParent) {
                     const icon = task.collapsed 
-                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>` // Right
-                        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`; // Down
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>` 
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`; 
                     
                     const tooltip = `Click: Đóng/mở mục này.\nGiữ Shift + Click: Đóng/mở TOÀN BỘ các mục Cấp ${task.level} cùng lúc.`;
                     toggleBtn = `<span class="cursor-pointer inline-flex items-center justify-center w-5 h-5 mr-1 text-[#006B68] hover:bg-slate-200 rounded" onclick="toggleTask(${task.id}, event)" title="${tooltip}">${icon}</span>`;
@@ -919,7 +1023,7 @@
 
                 row.innerHTML = `
                     <div class="flex items-center justify-center text-slate-400 text-xs border-r border-slate-100">${task.id}</div>
-                    <div class="flex items-center px-2 truncate border-r border-slate-100" style="padding-left: ${paddingLeft + 0.5}rem" title="${task.name}">
+                    <div class="flex items-center px-2 truncate border-r border-slate-100" style="padding-left: ${paddingLeft + 0.5}rem">
                         ${toggleBtn}
                         <span class="truncate">${task.name}</span>
                     </div>
@@ -987,7 +1091,6 @@
             ganttBody.style.width = `${headerTotalWidth}px`;
             ganttBody.style.height = `${visibleTasks.length * ROW_HEIGHT}px`;
 
-            // Lưới dọc
             const gridOverlay = document.createElement('div');
             gridOverlay.className = 'absolute inset-0 flex pointer-events-none w-fit';
             for (let i = 0; i < totalDays; i++) {
@@ -1000,7 +1103,6 @@
                 gridOverlay.appendChild(col);
             }
             
-            // Lưới ngang
             const rowsOverlay = document.createElement('div');
             rowsOverlay.className = 'absolute inset-0 pointer-events-none w-full';
             visibleTasks.forEach(() => {
@@ -1013,7 +1115,6 @@
             ganttBody.appendChild(gridOverlay);
             ganttBody.appendChild(rowsOverlay);
 
-            // Cột Hôm nay
             if (today >= minDate && today <= maxDate) {
                 const todayDiffDays = (today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
                 const todayLine = document.createElement('div');
@@ -1025,7 +1126,6 @@
                 ganttBody.appendChild(todayLine);
             }
 
-            // Vẽ Bars
             const barsContainer = document.createElement('div');
             barsContainer.className = 'absolute inset-0';
 
@@ -1048,8 +1148,6 @@
                 barWrapper.style.height = `${ROW_HEIGHT}px`;
 
                 const bar = document.createElement('div');
-                
-                // CẢNH BÁO QUÁ HẠN: Không phải Parent + Đến hạn <= Hôm nay + Tiến độ < 100%
                 const isOverdue = !task.isParent && (taskFinish <= today) && task.progress < 100;
 
                 if (task.isParent) {
@@ -1059,6 +1157,11 @@
                         <div class="absolute -bottom-1.5 right-0 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-700 group-hover:border-t-slate-900 transition-colors"></div>
                     `;
                     bar.onclick = (e) => toggleTask(task.id, e);
+                    // Dbl click mở modal thay vì toggle lại 2 lần
+                    bar.ondblclick = (e) => {
+                        e.stopPropagation();
+                        openTaskDetailModal(task.id);
+                    };
                 } else {
                     if (isOverdue) {
                         bar.className = 'bg-red-100 border border-red-500 rounded-sm w-full relative shadow-sm flex items-center overflow-hidden group-hover:border-red-600 transition-colors cursor-pointer';
@@ -1079,9 +1182,14 @@
                             bar.appendChild(progress);
                         }
                     }
+                    // Bắt sự kiện double click cho task con
+                    bar.ondblclick = (e) => {
+                        e.stopPropagation();
+                        openTaskDetailModal(task.id);
+                    };
                 }
                 
-                bar.title = `${task.name}\nBắt đầu: ${formatDateShort(task.start)}\nKết thúc: ${formatDateShort(task.finish)}\nTiến độ: ${task.progress}%\nTrạng thái: ${isOverdue ? 'Quá hạn!' : 'Đang thực hiện'}`;
+                bar.title = `Double-click để xem chi tiết\n\n${task.name}\nBắt đầu: ${formatDateShort(task.start)}\nKết thúc: ${formatDateShort(task.finish)}\nTiến độ: ${task.progress}%\nTrạng thái: ${isOverdue ? 'Quá hạn!' : 'Đang thực hiện'}`;
                 barWrapper.appendChild(bar);
 
                 if (!task.isParent && dayWidth > 15) { 
@@ -1099,7 +1207,6 @@
 
         // --- CÁC HÀM TIỆN ÍCH MỚI ---
 
-        // Đóng mở Modal Hướng dẫn
         window.openHelpModal = function() {
             document.getElementById('help-modal').classList.remove('hidden');
             document.getElementById('help-modal').classList.add('flex');
@@ -1110,7 +1217,6 @@
             document.getElementById('help-modal').classList.remove('flex');
         };
 
-        // Tự động tải DefaultProject.xml khi tải trang
         window.addEventListener('DOMContentLoaded', () => {
             fetch('DefaultProject.xml')
                 .then(response => {
@@ -1123,7 +1229,6 @@
                         dayWidth = 40; 
                         updateLevelDropdown();
                         renderViewer();
-                        console.log("Đã tự động tải thành công DefaultProject.xml");
                     }
                 })
                 .catch(error => {
@@ -1131,7 +1236,6 @@
                 });
         });
 
-        // Tạo dữ liệu Demo
         const loadSampleData = () => {
             const now = new Date();
             const d = (days) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
@@ -1143,14 +1247,14 @@
                 { id: 4, name: "Phân tích kiến trúc hệ thống", start: d(-4), finish: d(-1), progress: 100, level: 3, isParent: false },
                 { id: 5, name: "Giai đoạn 2: Thiết kế UI/UX", start: d(0), finish: d(10), progress: 20, level: 2, isParent: true, collapsed: false },
                 { id: 6, name: "Vẽ Wireframe cơ bản", start: d(0), finish: d(3), progress: 80, level: 3, isParent: false },
-                { id: 7, name: "Task thử nghiệm báo Quá Hạn", start: d(-5), finish: d(0), progress: 50, level: 3, isParent: false }, // Cố tình để quá hạn để test màu đỏ
+                { id: 7, name: "Task thử nghiệm báo Quá Hạn", start: d(-5), finish: d(0), progress: 50, level: 3, isParent: false }, 
                 { id: 8, name: "Thiết kế Mockup chi tiết", start: d(4), finish: d(8), progress: 10, level: 3, isParent: false },
-                { id: 9, name: "Chốt giao diện với khách hàng", start: d(9), finish: d(9), progress: 0, level: 3, isParent: false }, // Milestone (duration = 0)
+                { id: 9, name: "Chốt giao diện với khách hàng", start: d(9), finish: d(9), progress: 0, level: 3, isParent: false }, 
                 { id: 10, name: "Giai đoạn 3: Lập trình (Dev)", start: d(11), finish: d(35), progress: 0, level: 2, isParent: true, collapsed: false },
                 { id: 11, name: "Cấu hình Server & Database", start: d(11), finish: d(13), progress: 0, level: 3, isParent: false },
                 { id: 12, name: "Lập trình Backend APIs", start: d(14), finish: d(20), progress: 0, level: 3, isParent: false },
                 { id: 13, name: "Lập trình Frontend", start: d(16), finish: d(22), progress: 0, level: 3, isParent: false },
-                { id: 14, name: "Golive Sản phẩm", start: d(35), finish: d(35), progress: 0, level: 3, isParent: false } // Milestone
+                { id: 14, name: "Golive Sản phẩm", start: d(35), finish: d(35), progress: 0, level: 3, isParent: false } 
             ];
             dayWidth = 40; 
             updateLevelDropdown();
