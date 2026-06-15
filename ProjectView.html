@@ -650,7 +650,6 @@
             }
         };
 
-        // THUẬT TOÁN MỚI: Xử lý đè lấp chữ trên Timeline
         function renderTimeline() {
             const tlContainer = document.getElementById('timeline-content');
             if (!tlContainer || globalTasks.length === 0) return;
@@ -664,9 +663,9 @@
             const totalMs = maxDate.getTime() - minDate.getTime();
             const totalDays = totalMs / (1000 * 60 * 60 * 24);
 
-            // Mở rộng không gian hiển thị (tránh bị clip)
+            // XÓA MAX-WIDTH, CÀI ĐẶT MIN-WIDTH DỄ CO GIÃN ĐỂ HỖ TRỢ XUẤT PDF KHÔNG BỊ CẮT
             const wrapper = document.createElement('div');
-            wrapper.className = 'relative w-full min-h-[500px] h-full max-w-6xl flex items-center my-12';
+            wrapper.className = 'relative w-[calc(100%-240px)] min-w-[800px] min-h-[500px] h-full flex items-center my-12 mx-[120px]';
 
             const mainBar = document.createElement('div');
             mainBar.className = 'absolute top-1/2 left-0 right-0 h-16 bg-[#f0ede6] border border-slate-400 rounded flex overflow-hidden shadow-sm -translate-y-1/2 z-10';
@@ -714,12 +713,12 @@
             wrapper.appendChild(mainBar);
 
             const startLabel = document.createElement('div');
-            startLabel.className = 'absolute right-[102%] top-1/2 -translate-y-1/2 text-right text-[11px] text-slate-600';
+            startLabel.className = 'absolute right-[calc(100%+15px)] top-1/2 -translate-y-1/2 text-right text-[11px] text-slate-600';
             startLabel.innerHTML = `Start<br><span class="font-bold">${formatDateShort(minDate)}</span>`;
             wrapper.appendChild(startLabel);
 
             const endLabel = document.createElement('div');
-            endLabel.className = 'absolute left-[102%] top-1/2 -translate-y-1/2 text-left text-[11px] text-slate-600';
+            endLabel.className = 'absolute left-[calc(100%+15px)] top-1/2 -translate-y-1/2 text-left text-[11px] text-slate-600';
             endLabel.innerHTML = `Finish<br><span class="font-bold">${formatDateShort(maxDate)}</span>`;
             wrapper.appendChild(endLabel);
 
@@ -739,12 +738,11 @@
 
             // HỆ THỐNG COLLISION DETECTION CHO MILESTONES
             let alternateTop = true;
-            const topLanes = [];    // Lưu trữ không gian đã chiếm dụng ở phía trên
-            const bottomLanes = []; // Lưu trữ không gian đã chiếm dụng ở phía dưới
-            const CALLOUT_WIDTH = 140; // Độ rộng cố định của callout (w-[140px])
-            const PADDING = 15; // Khoảng cách đệm an toàn giữa các chữ
+            const topLanes = [];    
+            const bottomLanes = []; 
+            const CALLOUT_WIDTH = 140; 
+            const PADDING = 15; 
 
-            // Lấy kích thước container để tính toán toạ độ thực tế
             const containerWidth = tlContainer.clientWidth || 1000;
 
             globalTasks.forEach(task => {
@@ -754,7 +752,6 @@
                 if (isMilestone) {
                     const startPercent = ((task.start.getTime() - minDate.getTime()) / totalMs) * 100;
                     
-                    // Tính toạ độ X dự kiến
                     const centerX = (startPercent / 100) * containerWidth;
                     const leftX = centerX - (CALLOUT_WIDTH / 2) - PADDING;
                     const rightX = centerX + (CALLOUT_WIDTH / 2) + PADDING;
@@ -764,21 +761,17 @@
                     let laneIndex = 0;
                     let placed = false;
 
-                    // Tìm kiếm làn (lane) trống
                     while (!placed) {
                         if (!targetLanes[laneIndex]) targetLanes[laneIndex] = [];
 
-                        // Kiểm tra đè lấp: (Left1 < Right2) && (Right1 > Left2)
                         let hasCollision = targetLanes[laneIndex].some(bound => {
                             return (leftX < bound.right) && (rightX > bound.left);
                         });
 
                         if (!hasCollision) {
-                            // Slot này trống, đưa vào mảng đã chiếm dụng
                             targetLanes[laneIndex].push({ left: leftX, right: rightX });
                             placed = true;
                         } else {
-                            // Bị đè lấp, thử làn tiếp theo (cao/thấp hơn)
                             laneIndex++;
                         }
                     }
@@ -788,13 +781,11 @@
                     callout.style.left = `${startPercent}%`;
                     callout.ondblclick = () => openTaskDetailModal(task.id);
 
-                    // Thêm nền backdrop-blur để các đường kẻ ở sau không đè vào chữ
                     const textDiv = document.createElement('div');
                     textDiv.className = 'text-[11px] font-bold text-center leading-tight whitespace-normal break-words w-full bg-white/90 backdrop-blur-sm p-1.5 rounded shadow-sm border border-slate-200 z-20 transition-all group-hover:bg-white group-hover:border-[#006B68] group-hover:shadow-md';
                     textDiv.innerHTML = `${task.name}<br><span class="font-normal text-[10px] text-slate-500">${formatDateShort(task.start)}</span>`;
 
                     const lineDiv = document.createElement('div');
-                    // Tăng chiều cao của đường kẻ dựa vào làn đang đứng
                     const lineH = 30 + (laneIndex * 55); 
                     lineDiv.className = 'w-[1px] bg-slate-400 group-hover:bg-[#006B68] transition-colors relative z-0';
                     lineDiv.style.height = `${lineH}px`;
@@ -808,19 +799,17 @@
                         callout.appendChild(lineDiv);
                         callout.appendChild(diamond);
                         diamond.style.marginBottom = '-5px';
-                        lineDiv.style.marginTop = '-2px'; // Kéo line sát vào thẻ chữ
+                        lineDiv.style.marginTop = '-2px'; 
                     } else {
                         callout.style.top = 'calc(50% + 32px)';
                         callout.appendChild(diamond);
                         callout.appendChild(lineDiv);
                         callout.appendChild(textDiv);
                         diamond.style.marginTop = '-5px';
-                        lineDiv.style.marginBottom = '-2px'; // Kéo line sát vào thẻ chữ
+                        lineDiv.style.marginBottom = '-2px'; 
                     }
 
                     wrapper.appendChild(callout);
-                    
-                    // Đổi bên cho vòng lặp tiếp theo
                     alternateTop = !alternateTop;
                 }
             });
@@ -1034,7 +1023,7 @@
             }
 
             if (dayWidth > 20 && document.getElementById('timeline-view').classList.contains('hidden')) {
-                const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt, hệ thống khuyến nghị bạn nên chọn 'Vừa màn hình' trước khi xuất. \n\nBạn có muốn tự động gom vừa màn hình rồi xuất không?");
+                const confirmFit = confirm("Mẹo: Để bản in PDF hiển thị đầy đủ biểu đồ Gantt rõ nét nhất, bạn có muốn hệ thống tự động gom 'Vừa màn hình' trước khi xuất không?");
                 if (confirmFit) {
                     fitToScreen();
                     setTimeout(doExport, 300);
@@ -1045,38 +1034,79 @@
             doExport();
 
             function doExport() {
+                const mainEl = document.querySelector('main');
                 const exportArea = document.getElementById('export-wrapper');
                 const viewer = document.getElementById('viewer-container');
                 const ganttBodyWrapper = document.getElementById('gantt-body-wrapper');
                 const ganttRightPanel = document.getElementById('gantt-right-panel');
                 const ganttHeaderWrapper = document.getElementById('gantt-header-wrapper');
+                const ganttHeader = document.getElementById('gantt-header');
+                const timelineView = document.getElementById('timeline-view');
+                const taskList = document.getElementById('task-list');
 
-                const isTimeline = !document.getElementById('timeline-view').classList.contains('hidden');
+                const isTimeline = !timelineView.classList.contains('hidden');
 
-                const origExportClasses = exportArea.className;
-                const origViewerClasses = viewer.className;
-                const origBodyClasses = ganttBodyWrapper.className;
-                const origRightPanelClasses = ganttRightPanel.className;
-                const origHeaderClasses = ganttHeaderWrapper.className;
-                const origWidth = exportArea.style.width;
+                // LƯU LẠI TOÀN BỘ TRẠNG THÁI GIAO DIỆN
+                const states = {
+                    body: { className: document.body.className, cssText: document.body.style.cssText },
+                    main: { className: mainEl.className, cssText: mainEl.style.cssText },
+                    exportArea: { className: exportArea.className, cssText: exportArea.style.cssText },
+                    viewer: { className: viewer.className, cssText: viewer.style.cssText },
+                    rightPanel: { className: ganttRightPanel.className, cssText: ganttRightPanel.style.cssText },
+                    bodyWrapper: { className: ganttBodyWrapper.className, cssText: ganttBodyWrapper.style.cssText, scrollLeft: ganttBodyWrapper.scrollLeft, scrollTop: ganttBodyWrapper.scrollTop },
+                    headerWrapper: { className: ganttHeaderWrapper.className },
+                    timeline: { className: timelineView.className, cssText: timelineView.style.cssText },
+                    taskList: { scrollTop: taskList.scrollTop }
+                };
+
+                // THÁO BỎ HOÀN TOÀN GIỚI HẠN HIỂN THỊ CỦA TRÌNH DUYỆT (MỞ RỘNG TỐI ĐA ĐỂ CHỤP)
+                document.body.classList.remove('overflow-hidden', 'h-screen');
+                document.body.style.width = 'max-content';
+                document.body.style.height = 'max-content';
+                
+                mainEl.classList.remove('overflow-hidden');
+                mainEl.style.width = 'max-content';
+                mainEl.style.height = 'max-content';
 
                 exportArea.classList.remove('overflow-hidden', 'min-h-0');
+                exportArea.style.width = 'max-content';
+                exportArea.style.height = 'max-content';
                 
-                let totalWidth = 1200; 
+                let totalWidth = 1200;
 
                 if(!isTimeline) {
+                    // Xử lý nới rộng Gantt Chart
+                    ganttBodyWrapper.scrollLeft = 0;
+                    ganttBodyWrapper.scrollTop = 0;
+                    taskList.scrollTop = 0;
+
                     viewer.classList.remove('overflow-hidden');
                     ganttRightPanel.classList.remove('overflow-hidden', 'min-w-0');
                     ganttBodyWrapper.classList.remove('overflow-auto', 'hide-scrollbar');
                     ganttHeaderWrapper.classList.remove('overflow-hidden');
 
-                    ganttBodyWrapper.style.paddingRight = '20px';
-                    ganttHeaderWrapper.style.paddingRight = '20px';
+                    const leftPanelWidth = document.getElementById('left-panel').offsetWidth;
+                    const headerWidth = parseInt(ganttHeader.style.width) || ganttHeader.offsetWidth;
 
-                    totalWidth = document.getElementById('left-panel').offsetWidth + ganttBodyWrapper.scrollWidth + 30;
+                    totalWidth = leftPanelWidth + headerWidth + 50;
+
+                    viewer.style.width = totalWidth + 'px';
+                    viewer.style.minWidth = totalWidth + 'px';
+                    ganttRightPanel.style.width = (headerWidth + 20) + 'px';
+                } else {
+                    // Xử lý nới rộng Timeline
+                    timelineView.classList.remove('overflow-auto');
+                    const contentWidth = timelineView.scrollWidth;
+                    totalWidth = Math.max(1200, contentWidth + 100);
+                    timelineView.style.width = totalWidth + 'px';
+                    timelineView.style.minWidth = totalWidth + 'px';
                 }
 
-                exportArea.style.width = totalWidth + 'px';
+                // Hiển thị loading nhẹ
+                const loadingToast = document.createElement('div');
+                loadingToast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-2xl z-[9999] font-medium flex items-center gap-3 animate-fade-in-up';
+                loadingToast.innerHTML = '<svg class="animate-spin h-5 w-5 text-[#FFC62F]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Đang trích xuất PDF...';
+                document.body.appendChild(loadingToast);
 
                 const opt = {
                     margin:       0.2, 
@@ -1086,23 +1116,44 @@
                         scale: 2, 
                         useCORS: true, 
                         logging: false,
-                        windowWidth: totalWidth + 50 
+                        windowWidth: totalWidth + 100, // Thêm window width ảo cho thẻ Canvas
+                        width: totalWidth // Gắn cứng giới hạn width chụp
                     },
                     jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
                 };
 
                 html2pdf().set(opt).from(exportArea).save().then(() => {
-                    exportArea.className = origExportClasses;
+                    // PHỤC HỒI LẠI HOÀN TOÀN GIAO DIỆN CHUẨN
+                    loadingToast.remove();
+
+                    document.body.className = states.body.className;
+                    document.body.style.cssText = states.body.cssText;
                     
-                    if(!isTimeline) {
-                        viewer.className = origViewerClasses;
-                        ganttBodyWrapper.className = origBodyClasses;
-                        ganttRightPanel.className = origRightPanelClasses;
-                        ganttHeaderWrapper.className = origHeaderClasses;
-                        ganttBodyWrapper.style.paddingRight = '';
-                        ganttHeaderWrapper.style.paddingRight = '';
+                    mainEl.className = states.main.className;
+                    mainEl.style.cssText = states.main.cssText;
+                    
+                    exportArea.className = states.exportArea.className;
+                    exportArea.style.cssText = states.exportArea.cssText;
+
+                    if (!isTimeline) {
+                        viewer.className = states.viewer.className;
+                        viewer.style.cssText = states.viewer.cssText;
+                        
+                        ganttRightPanel.className = states.rightPanel.className;
+                        ganttRightPanel.style.cssText = states.rightPanel.cssText;
+                        
+                        ganttBodyWrapper.className = states.bodyWrapper.className;
+                        ganttBodyWrapper.style.cssText = states.bodyWrapper.cssText;
+                        ganttBodyWrapper.scrollLeft = states.bodyWrapper.scrollLeft;
+                        ganttBodyWrapper.scrollTop = states.bodyWrapper.scrollTop;
+                        
+                        ganttHeaderWrapper.className = states.headerWrapper.className;
+                        
+                        taskList.scrollTop = states.taskList.scrollTop;
+                    } else {
+                        timelineView.className = states.timeline.className;
+                        timelineView.style.cssText = states.timeline.cssText;
                     }
-                    exportArea.style.width = origWidth;
                 });
             }
         };
