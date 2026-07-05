@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Banking Training Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Supabase Client & CryptoJS (MD5) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Tùy chỉnh Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- DASHBOARD DARK MODE STYLES (Theo bản thiết kế) --- */
+        .dash-bg { background-color: #020b16; } /* Nền siêu tối */
+        .dash-card { 
+            background-color: #0a192f; 
+            border: 1px solid #1e3656; 
+            border-radius: 8px; 
+        }
+        .dash-text-muted { color: #8892b0; }
+        .dash-text-bright { color: #ccd6f6; }
+        .dash-accent { color: #f97316; } /* Cam nhấn */
+        
+        .progress-track-dash { 
+            background-color: #020b16; 
+            border: 1px solid #1e3656; 
+            border-radius: 99px; 
+            height: 8px; 
+            overflow: hidden; 
+        }
+        .progress-bar-dash { 
+            background-color: #8892b0; 
+            height: 100%; 
+            transition: width 0.5s ease; 
+        }
+
+        /* Light Mode Custom Styles cho các trang khác */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Toast Message */
+        #toast-container {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+        }
+        .toast {
+            background-color: #334155; color: white; padding: 12px 20px;
+            border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- LỚP PHỦ ĐĂNG NHẬP (AUTH OVERLAY) -->
+    <div id="auth-view" class="fixed inset-0 bg-[#020b16] z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0a192f] border border-[#1e3656] rounded-xl p-8 w-full max-w-md text-white shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="font-black text-3xl tracking-wider mb-2"><i class="fas fa-university text-blue-500 mr-2"></i> CORE<span class="text-blue-500">TRAIN</span></div>
+                <p class="text-[#8892b0] text-sm">Đăng nhập hệ thống đào tạo</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#8892b0] uppercase tracking-wider mb-2">Tên đăng nhập</label>
+                    <input type="text" id="auth-username" class="w-full bg-[#020b16] border border-[#1e3656] rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="Nhập username...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#8892b0] uppercase tracking-wider mb-2">Mật khẩu</label>
+                    <input type="password" id="auth-password" class="w-full bg-[#020b16] border border-[#1e3656] rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="Nhập mật khẩu...">
+                </div>
+                <button onclick="handleAuth(false)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition-colors mt-2">ĐĂNG NHẬP</button>
+                <button onclick="handleAuth(true)" class="w-full bg-transparent border border-[#1e3656] text-[#8892b0] hover:text-white hover:border-slate-500 font-bold py-3 rounded transition-colors">TẠO TÀI KHOẢN MỚI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LỚP PHỦ ĐỔI MẬT KHẨU -->
+    <div id="change-pass-view" class="fixed inset-0 bg-[#020b16]/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-[#0a192f] border border-[#1e3656] rounded-xl p-8 w-full max-w-md text-white shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 italic border-b border-[#1e3656] pb-3">Đổi mật khẩu</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#8892b0] uppercase tracking-wider mb-2">Mật khẩu cũ</label>
+                    <input type="password" id="cp-old" class="w-full bg-[#020b16] border border-[#1e3656] rounded px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#8892b0] uppercase tracking-wider mb-2">Mật khẩu mới</label>
+                    <input type="password" id="cp-new" class="w-full bg-[#020b16] border border-[#1e3656] rounded px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="document.getElementById('change-pass-view').classList.add('hidden')" class="flex-1 bg-transparent border border-[#1e3656] text-[#8892b0] py-2 rounded hover:text-white transition-colors">Hủy</button>
+                    <button onclick="handleChangePassword()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 rounded transition-colors">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 hidden md:flex z-20 shadow-xl" id="sidebar">
+        <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-white tracking-wider">
+            <i class="fas fa-university text-blue-500 mr-3 text-xl"></i> CORE<span class="text-blue-500">TRAIN</span>
+        </div>
+        
+        <nav class="flex-1 py-6 px-3 space-y-1">
+            <a href="#" onclick="navigate('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-3 rounded-lg bg-blue-600/20 text-blue-400 font-medium transition-colors">
+                <i class="fas fa-chart-pie w-6"></i> Dashboard
+            </a>
+            <a href="#" onclick="navigate('courses')" id="nav-courses" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                <i class="fas fa-book w-6"></i> Kho Tác Nghiệp
+            </a>
+            <a href="#" onclick="navigate('quiz')" id="nav-quiz" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                <i class="fas fa-clipboard-check w-6"></i> Thi Trắc Nghiệm
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 mb-4">
+                <img src="https://placehold.co/40x40/1e40af/ffffff?text=U" alt="User" class="rounded-full border-2 border-slate-700" id="sidebar-avatar">
+                <div>
+                    <p class="text-sm font-bold text-white" id="sidebar-username">Người dùng</p>
+                    <p class="text-[10px] uppercase tracking-wider text-emerald-400" id="sidebar-status">Active</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="document.getElementById('change-pass-view').classList.remove('hidden')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition-colors"><i class="fas fa-key"></i> Đổi MK</button>
+                <button onclick="handleLogout()" class="text-xs bg-red-900/50 hover:bg-red-800/80 text-red-300 py-2 rounded transition-colors"><i class="fas fa-sign-out-alt"></i> Thoát</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative transition-colors duration-300" id="main-content">
+        
+        <!-- Mobile Header -->
+        <header class="md:hidden h-14 bg-slate-900 text-white flex items-center justify-between px-4 z-10" id="mobile-header">
+            <div class="font-bold tracking-wider"><i class="fas fa-university text-blue-500 mr-2"></i> CORE<span class="text-blue-500">TRAIN</span></div>
+            <button onclick="document.getElementById('sidebar').classList.toggle('hidden')" class="text-white text-xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- View Container -->
+        <div id="view-container" class="flex-1 overflow-y-auto relative w-full h-full p-0">
+            
+            <!-- VIEW: DASHBOARD (Theo thiết kế mới) -->
+            <section id="view-dashboard" class="fade-in block w-full min-h-full dash-bg p-4 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <!-- Header Dashboard -->
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 border-b border-[#1e3656] pb-4">
+                        <div class="flex items-end gap-2 mb-4 md:mb-0">
+                            <h1 class="text-3xl font-black text-white italic tracking-wider uppercase">DASHBOARD <span class="block w-10 h-1 bg-orange-500 mt-1"></span></h1>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-[10px] text-[#8892b0] font-bold tracking-widest uppercase">CONNECTION</p>
+                                <p class="text-sm text-white font-medium flex items-center justify-end">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 shadow-[0_0_8px_#10b981]"></span>Online • Synced
+                                </p>
+                            </div>
+                            <button class="w-10 h-10 border border-[#1e3656] rounded bg-[#0a192f] text-white hover:bg-[#1e3656] transition-colors flex items-center justify-center">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Welcome Box -->
+                    <div class="dash-card p-6 md:p-8 mb-6 relative overflow-hidden">
+                        <div class="absolute right-0 bottom-0 opacity-10 pointer-events-none select-none">
+                            <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M150 200L200 150V200H150Z" fill="currentColor"/>
+                                <path d="M100 200L200 100V150L150 200H100Z" fill="currentColor"/>
+                                <path d="M50 200L200 50V100L100 200H50Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        
+                        <p class="text-[11px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-2">MY DASHBOARD</p>
+                        <h2 class="text-3xl md:text-5xl font-black text-white italic mb-3">Hello, Quan</h2>
+                        <p class="text-sm text-[#8892b0] mb-6">Last viewed: <strong class="text-white" id="last-viewed-text">Chưa xem bài nào</strong></p>
+                        
+                        <button onclick="navigate('courses')" class="flex items-center gap-2 text-[11px] font-bold text-white tracking-widest uppercase hover:text-orange-500 transition-colors">
+                            RESUME SESSION <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- 4 Metric Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="dash-card p-5 flex items-center gap-4 cursor-pointer hover:border-slate-500 transition-colors" onclick="navigate('courses')">
+                            <i class="fas fa-graduation-cap text-2xl text-[#8892b0]"></i>
+                            <div>
+                                <h3 class="text-white font-bold text-sm tracking-wider uppercase">KNOWLEDGE</h3>
+                                <p class="text-[11px] text-[#8892b0]">Track Tasks</p>
+                            </div>
+                        </div>
+                        <div class="dash-card p-5 flex items-center gap-4 cursor-pointer hover:border-slate-500 transition-colors" onclick="navigate('courses')">
+                            <i class="fas fa-book-open text-2xl text-[#8892b0]"></i>
+                            <div>
+                                <h3 class="text-white font-bold text-sm tracking-wider uppercase">LIBRARY</h3>
+                                <p class="text-[11px] text-[#8892b0]">Books & Slides</p>
+                            </div>
+                        </div>
+                        <div class="dash-card p-5 flex items-center gap-4 cursor-pointer hover:border-slate-500 transition-colors" onclick="navigate('quiz')">
+                            <i class="fas fa-edit text-2xl text-[#8892b0]"></i>
+                            <div>
+                                <h3 class="text-white font-bold text-sm tracking-wider uppercase">EXAM SIM</h3>
+                                <p class="text-[11px] text-[#8892b0]">Practice Quiz</p>
+                            </div>
+                        </div>
+                        <div class="dash-card p-5 flex items-center gap-4 cursor-pointer hover:border-slate-500 transition-colors">
+                            <i class="fas fa-bolt text-2xl text-[#8892b0]"></i>
+                            <div>
+                                <h3 class="text-white font-bold text-sm tracking-wider uppercase">FLASHCARDS</h3>
+                                <p class="text-[11px] text-[#8892b0]">Memory Aid</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Area -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
+                        
+                        <!-- Radar Chart -->
+                        <div class="dash-card p-6 lg:col-span-2 relative min-h-[400px] flex flex-col">
+                            <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-4 italic">SKILL RADAR</p>
+                            <div class="flex-1 w-full flex justify-center items-center">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Progress Section -->
+                        <div class="dash-card p-6 min-h-[400px]">
+                            <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-6 italic">TOTAL PROGRESS</p>
+                            
+                            <!-- Total Progress Bar -->
+                            <div class="mb-8">
+                                <div class="flex items-end justify-between mb-2">
+                                    <h3 class="text-4xl font-black text-white italic" id="progress-percent-total">0%</h3>
+                                    <p class="text-[10px] text-[#8892b0] font-bold tracking-wider uppercase"><span id="progress-text-done">0</span> / <span id="progress-text-all">0</span> TASKS DONE</p>
+                                </div>
+                                <div class="progress-track-dash">
+                                    <div class="progress-bar-dash bg-white" id="progress-bar-total" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Modules Progress List -->
+                            <div class="space-y-6 mt-8" id="module-progress-list">
+                                <!-- Rendered by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: COURSE LIST (Light Mode) -->
+            <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
+                
+                <div class="flex justify-between items-end mb-6 border-b pb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">Kho Tác Nghiệp Core Banking</h1>
+                        <p class="text-sm text-slate-500 mt-1">Tra cứu các quy trình và hướng dẫn hệ thống</p>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="glass-panel p-4 rounded-xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="relative md:col-span-2">
+                        <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
+                        <input type="text" id="search-input" placeholder="Tìm kiếm theo tên quy trình, mã, keyword..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <select id="filter-module" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">Tất cả Phân hệ (Module)</option>
+                            <!-- Dynamic Options -->
+                        </select>
+                    </div>
+                    <div>
+                        <select id="filter-status" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">Tất cả Trạng thái</option>
+                            <option value="done">Đã xem</option>
+                            <option value="pending">Chưa xem</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Course Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="course-list">
+                    <!-- Cards will be injected here -->
+                </div>
+                
+                <!-- Pagination info mockup -->
+                <div class="mt-6 text-center text-sm text-slate-500" id="list-count">
+                    Hiển thị 0 kết quả
+                </div>
+            </section>
+
+            <!-- VIEW: COURSE DETAIL -->
+            <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
+                
+                <button onclick="navigate('courses')" class="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </button>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <!-- Header -->
+                    <div class="bg-slate-800 p-6 text-white">
+                        <div class="flex items-center gap-2 mb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">
+                            <span id="detail-module" class="bg-blue-900/50 px-2 py-1 rounded">Module</span>
+                            <span id="detail-app" class="bg-slate-700 px-2 py-1 rounded">App</span>
+                        </div>
+                        <h1 class="text-2xl font-bold mb-2" id="detail-title">Tên quy trình</h1>
+                        
+                        <div class="flex items-start gap-2 text-sm text-slate-300 bg-slate-900/50 p-3 rounded mt-4">
+                            <i class="fas fa-route mt-1 text-orange-400"></i>
+                            <div>
+                                <span class="font-semibold text-white">Đường dẫn Menu:</span> 
+                                <span id="detail-path">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Tabs -->
+                    <div class="border-b border-slate-200">
+                        <nav class="flex -mb-px px-6" id="detail-tabs">
+                            <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors">
+                                <i class="fas fa-file-alt mr-2"></i> Tài Liệu & Slide
+                            </button>
+                            <button onclick="switchTab('video')" id="tab-btn-video" class="text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors">
+                                <i class="fas fa-play-circle mr-2"></i> Video Hướng Dẫn
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="p-6 bg-slate-50 min-h-[300px]">
+                        <!-- Doc Tab Content -->
+                        <div id="tab-content-doc" class="block space-y-4">
+                            <div id="doc-links-container" class="grid grid-cols-1 gap-3">
+                                <!-- Docs injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Video Tab Content -->
+                        <div id="tab-content-video" class="hidden space-y-4">
+                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Videos injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fas fa-comments text-blue-500 mr-2"></i> Thảo luận & Góp ý</h3>
+                    
+                    <!-- Comment List -->
+                    <div id="comment-list" class="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
+                        <!-- Comments injected here -->
+                    </div>
+
+                    <!-- Add Comment Form -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h4 class="text-sm font-semibold mb-3">Thêm góp ý của bạn</h4>
+                        <div class="flex items-center gap-1 text-amber-400 mb-3 text-xl cursor-pointer" id="star-rating">
+                            <i class="far fa-star" data-val="1"></i>
+                            <i class="far fa-star" data-val="2"></i>
+                            <i class="far fa-star" data-val="3"></i>
+                            <i class="far fa-star" data-val="4"></i>
+                            <i class="far fa-star" data-val="5"></i>
+                            <span class="text-xs text-slate-500 ml-2 font-normal">(Đánh giá)</span>
+                        </div>
+                        <textarea id="comment-input" rows="3" class="w-full p-3 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm mb-3" placeholder="Nhập nội dung góp ý hoặc câu hỏi..."></textarea>
+                        <div class="text-right">
+                            <button onclick="postComment()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium text-sm transition-colors shadow-sm">
+                                Gửi góp ý
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- VIEW: QUIZ -->
+            <section id="view-quiz" class="fade-in max-w-4xl mx-auto hidden flex-col p-4 md:p-8">
+                <div class="flex justify-between items-end mb-6 border-b pb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">Kiểm tra kiến thức (Exam Sim)</h1>
+                        <p class="text-sm text-slate-500 mt-1">Đánh giá nhanh năng lực nghiệp vụ Core Banking</p>
+                    </div>
+                    <div class="text-right bg-white px-4 py-2 rounded-lg border shadow-sm">
+                        <p class="text-xs text-slate-500 font-bold uppercase">Điểm cao nhất</p>
+                        <p class="text-xl font-black text-blue-600" id="quiz-best-score">-</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-10 text-center" id="quiz-intro">
+                    <i class="fas fa-laptop-code text-5xl text-blue-500 mb-4"></i>
+                    <h2 class="text-xl font-bold mb-2">Sẵn sàng kiểm tra?</h2>
+                    <p class="text-slate-600 mb-6 text-sm">Bài test gồm 5 câu hỏi ngẫu nhiên. Vượt qua 80% để chứng tỏ năng lực của bạn.</p>
+                    <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-md">
+                        BẮT ĐẦU THI
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hidden" id="quiz-container">
+                    <div class="flex justify-between text-sm font-semibold text-slate-500 mb-6 pb-2 border-b">
+                        <span id="quiz-progress-text">Câu 1 / 5</span>
+                        <span>Time: <span id="quiz-timer" class="text-blue-600">00:00</span></span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-slate-800 mb-6" id="quiz-question-text">Question goes here?</h3>
+                    
+                    <div class="space-y-3" id="quiz-options">
+                        <!-- Options injected here -->
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded font-medium transition-colors hidden">
+                            Câu tiếp theo <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        <button onclick="finishQuiz()" id="btn-finish-quiz" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-medium transition-colors hidden">
+                            Nộp bài <i class="fas fa-check ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center hidden" id="quiz-result">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 mb-4">
+                        <i class="fas fa-trophy text-4xl text-yellow-500"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Kết Quả Bài Thi</h2>
+                    <p class="text-slate-600 mb-6">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
+                    
+                    <div class="text-5xl font-black text-blue-600 mb-2" id="quiz-final-score">0/5</div>
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">Điểm số</p>
+                    
+                    <button onclick="navigate('dashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2 rounded font-medium transition-colors mr-2">
+                        Về Dashboard
+                    </button>
+                    <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium transition-colors">
+                        Thi Lại
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // Dữ liệu giả lập trắc nghiệm
+        const quizData = [
+            { q: "Mã phân hệ nào dùng để Quản lý Khách hàng trong Core Banking?", opts: ["CIF", "DEP", "LN", "GL"], ans: 0 },
+            { q: "Ứng dụng nào thường được Giao dịch viên sử dụng tại quầy?", opts: ["Web Admin", "TP Teller", "Mobile Banking", "ERP"], ans: 1 },
+            { q: "Trong quy trình tiền vay, 'LN' viết tắt của từ gì?", opts: ["Local Network", "Line Number", "Loan", "Ledger Note"], ans: 2 },
+            { q: "Phân hệ GL dùng để làm gì?", opts: ["Giao dịch tiền mặt", "Kế toán tổng hợp (General Ledger)", "Phát hành thẻ", "Bảo mật hệ thống"], ans: 1 },
+            { q: "Chức năng 'INBT' trong phân hệ chuyển tiền có ý nghĩa gì?", opts: ["Chuyển tiền quốc tế", "Chuyển tiền liên chi nhánh nội bộ", "Thanh toán hóa đơn", "Chuyển đổi ngoại tệ"], ans: 1 }
+        ];
+
+        // --- STREAMING_CHUNK: Cấu hình Supabase ---
+        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; // THAY URL CỦA BẠN VÀO ĐÂY
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; // THAY ANON KEY CỦA BẠN VÀO ĐÂY
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let globalProgress = []; // Lưu danh sách mã bài học đã hoàn thành
+        let globalTopScore = 0;
+        let dbData = []; // Khai báo rỗng, sẽ fetch từ database
+        let isDataLoaded = false;
+
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = isError ? `<i class="fas fa-exclamation-triangle text-red-400"></i> ${msg}` : `<i class="fas fa-check-circle text-green-400"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        const hashMD5 = (str) => CryptoJS.MD5(str).toString();
+
+        async function handleAuth(isRegister) {
+            const user = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            
+            if(!user || !pass) return showToast('Vui lòng nhập Username và Password', true);
+            const passHash = hashMD5(pass);
+
+            try {
+                if(isRegister) {
+                    // Kiểm tra user tồn tại
+                    const { data: existing } = await supabaseClient.from('core_train_users').select('id').eq('username', user).single();
+                    if(existing) return showToast('Tên đăng nhập đã tồn tại!', true);
+
+                    const { error } = await supabaseClient.from('core_train_users').insert([{ username: user, password_hash: passHash, status: 'active' }]);
+                    if(error) throw error;
+                    
+                    showToast('Đăng ký thành công! Hãy bấm ĐĂNG NHẬP.');
+                    document.getElementById('auth-password').value = ''; // Xóa mật khẩu để họ tự bấm đăng nhập
+                } else {
+                    const { data, error } = await supabaseClient.from('core_train_users').select('*').eq('username', user).eq('password_hash', passHash).single();
+                    
+                    if(error || !data) return showToast('Sai tài khoản hoặc mật khẩu', true);
+                    if(data.status !== 'active') return showToast('Tài khoản của bạn đã bị khóa', true);
+
+                    // Login thành công
+                    currentUser = data;
+                    sessionStorage.setItem('corebank_user', JSON.stringify(data));
+                    document.getElementById('sidebar-username').innerText = data.username;
+                    document.getElementById('sidebar-avatar').src = `https://placehold.co/40x40/1e40af/ffffff?text=${data.username.charAt(0).toUpperCase()}`;
+                    
+                    document.getElementById('auth-view').classList.add('hidden');
+                    showToast(`Chào mừng ${data.username} quay lại!`);
+                    
+                    await loadUserData();
+                    navigate('dashboard');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Lỗi kết nối máy chủ Supabase. Vui lòng cấu hình URL/Key!', true);
+            }
+        }
+
+        async function handleChangePassword() {
+            const oldP = document.getElementById('cp-old').value;
+            const newP = document.getElementById('cp-new').value;
+            if(!oldP || !newP) return showToast('Vui lòng nhập đủ thông tin', true);
+
+            if(hashMD5(oldP) !== currentUser.password_hash) return showToast('Mật khẩu cũ không chính xác', true);
+
+            const { error } = await supabaseClient.from('core_train_users').update({ password_hash: hashMD5(newP) }).eq('id', currentUser.id);
+            if(error) return showToast('Lỗi khi đổi mật khẩu', true);
+
+            showToast('Đổi mật khẩu thành công!');
+            currentUser.password_hash = hashMD5(newP);
+            sessionStorage.setItem('corebank_user', JSON.stringify(currentUser));
+            document.getElementById('change-pass-view').classList.add('hidden');
+            document.getElementById('cp-old').value = '';
+            document.getElementById('cp-new').value = '';
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('corebank_user');
+            currentUser = null;
+            window.location.reload();
+        }
+
+        async function loadUserData() {
+            if(!currentUser) return;
+            
+            // Lấy tiến độ từ Supabase
+            const { data: progData } = await supabaseClient.from('core_train_user_progress').select('flow_id').eq('user_id', currentUser.id);
+            if(progData) globalProgress = progData.map(p => p.flow_id);
+
+            // Lấy điểm cao nhất từ Supabase
+            const { data: scoreData } = await supabaseClient.from('core_train_user_scores').select('score').eq('user_id', currentUser.id).order('score', { ascending: false }).limit(1);
+            if(scoreData && scoreData.length > 0) globalTopScore = scoreData[0].score;
+        }
+
+        // Tải toàn bộ Data Flows từ Supabase
+        async function fetchFlowData() {
+            try {
+                showToast('Đang tải dữ liệu khóa học...');
+                const { data, error } = await supabaseClient
+                    .from('core_train_flows')
+                    .select('*')
+                    .order('id', { ascending: true }); // Sắp xếp theo ID để hiển thị đúng trình tự
+
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    dbData = data;
+                    isDataLoaded = true;
+                    initFilters(); // Khởi tạo filter sau khi có data
+                    renderDashboard(); // Cập nhật lại biểu đồ nếu đang ở trang chủ
+                    showToast('Tải dữ liệu hoàn tất!');
+                } else {
+                    showToast('Không tìm thấy dữ liệu khóa học nào.', true);
+                }
+            } catch (err) {
+                console.error("Fetch Data Error:", err);
+                showToast('Lỗi tải dữ liệu. Vui lòng kiểm tra RLS hoặc kết nối.', true);
+            }
+        }
+
+        async function saveProgressToDB(flowId) {
+            if(!globalProgress.includes(flowId)) {
+                globalProgress.push(flowId);
+                // Đẩy dữ liệu ngầm lên server
+                const { error } = await supabaseClient.from('core_train_user_progress').insert([{ user_id: currentUser.id, flow_id: flowId }]);
+                if(!error) showToast('Đã đánh dấu hoàn thành bài học!');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Core & Utils ---
+        let currentFlow = null;
+        let chartRadar = null;
+        let starSelected = 5; // Default star rating
+        
+        // Khởi tạo Select Filter Module
+        function initFilters() {
+            if(!isDataLoaded) return;
+            const moduleSet = new Set();
+            dbData.forEach(item => { if(item.module) moduleSet.add(item.module.trim()); });
+            
+            const select = document.getElementById('filter-module');
+            select.innerHTML = '<option value="">Tất cả Phân hệ (Module)</option>'; // Reset
+            
+            moduleSet.forEach(mod => {
+                const opt = document.createElement('option');
+                opt.value = mod;
+                opt.textContent = mod;
+                select.appendChild(opt);
+            });
+
+            // Gắn event listeners (chỉ gắn 1 lần)
+            document.getElementById('search-input').removeEventListener('input', renderCourseList);
+            document.getElementById('filter-module').removeEventListener('change', renderCourseList);
+            document.getElementById('filter-status').removeEventListener('change', renderCourseList);
+            
+            document.getElementById('search-input').addEventListener('input', renderCourseList);
+            document.getElementById('filter-module').addEventListener('change', renderCourseList);
+            document.getElementById('filter-status').addEventListener('change', renderCourseList);
+        }
+
+        // Điều hướng các màn hình
+        function navigate(viewId) {
+            document.querySelectorAll('section[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Xử lý active state của sidebar
+            document.querySelectorAll('nav a').forEach(el => {
+                el.classList.remove('bg-blue-600/20', 'text-blue-400');
+                el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
+            });
+
+            const activeNav = document.getElementById(`nav-${viewId === 'detail' ? 'courses' : viewId}`);
+            if(activeNav) {
+                activeNav.classList.add('bg-blue-600/20', 'text-blue-400');
+                activeNav.classList.remove('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
+            }
+
+            // Xử lý background màu theo View
+            const mainContent = document.getElementById('main-content');
+            if(viewId === 'dashboard') {
+                mainContent.classList.remove('bg-slate-50');
+                mainContent.classList.add('bg-[#020b16]'); // Dark mode cho dash
+                renderDashboard();
+            } else {
+                mainContent.classList.add('bg-slate-50');
+                mainContent.classList.remove('bg-[#020b16]');
+                if(viewId === 'courses') renderCourseList();
+                if(viewId === 'quiz') initQuizView();
+            }
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Màn hình Dashboard ---
+        function renderDashboard() {
+            const progress = globalProgress;
+            const total = dbData.length;
+            const lastViewed = sessionStorage.getItem('corebank_lastView');
+
+            if(lastViewed) {
+                document.getElementById('last-viewed-text').innerHTML = `<strong class="text-white">${lastViewed}</strong>`;
+            }
+            
+            const welcomeEl = document.querySelector('#view-dashboard h2');
+            if(welcomeEl && currentUser) welcomeEl.innerText = `Hello, ${currentUser.username}`;
+
+            if (!isDataLoaded) return; // Đợi data load xong
+
+            // Map Data by Module
+            const moduleMap = {};
+            dbData.forEach(item => {
+                const mod = item.module ? item.module.trim() : 'Other';
+                if(!moduleMap[mod]) moduleMap[mod] = { total: 0, done: 0 };
+                moduleMap[mod].total++;
+                if (progress.includes(item.flow)) moduleMap[mod].done++;
+            });
+
+            const labels = Object.keys(moduleMap).slice(0, 6); // Lấy top 6 module cho radar đẹp
+            const radarData = labels.map(l => moduleMap[l].total > 0 ? (moduleMap[l].done / moduleMap[l].total) * 100 : 0);
+
+            // Total Progress
+            const totalPercent = total > 0 ? Math.round((progress.length / total) * 100) : 0;
+            document.getElementById('progress-bar-total').style.width = `${totalPercent}%`;
+            document.getElementById('progress-percent-total').innerText = `${totalPercent}%`;
+            document.getElementById('progress-text-done').innerText = progress.length;
+            document.getElementById('progress-text-all').innerText = total;
+
+            // List Module Progress Right side
+            const moduleListContainer = document.getElementById('module-progress-list');
+            moduleListContainer.innerHTML = '';
+            
+            labels.forEach(l => {
+                const percent = moduleMap[l].total > 0 ? Math.round((moduleMap[l].done / moduleMap[l].total) * 100) : 0;
+                const html = `
+                    <div class="group cursor-pointer mb-5" onclick="document.getElementById('filter-module').value = '${l}'; navigate('courses');">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-[12px] text-white font-bold tracking-wider uppercase">${l}</span>
+                            <span class="text-[12px] text-white font-bold">${percent}%</span>
+                        </div>
+                        <div class="progress-track-dash group-hover:border-[#334155] transition-colors">
+                            <div class="progress-bar-dash ${percent > 0 ? 'bg-white' : 'bg-[#1e3656]'}" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+                moduleListContainer.innerHTML += html;
+            });
+
+            // Radar Chart Customization
+            if (chartRadar) chartRadar.destroy();
+            const ctxR = document.getElementById('radarChart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            chartRadar = new Chart(ctxR, {
+                type: 'radar',
+                data: {
+                    labels: labels.map(l => l.toUpperCase()),
+                    datasets: [{
+                        label: 'Hoàn thành (%)',
+                        data: radarData,
+                        backgroundColor: 'transparent',
+                        borderColor: '#f97316', // Orange line
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#f97316',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#f97316',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: { 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        r: { 
+                            min: 0, max: 100,
+                            ticks: { display: false, stepSize: 20 },
+                            grid: { color: '#1a365d', circular: false }, // Dark blue spider web
+                            angleLines: { color: '#1a365d' },
+                            pointLabels: {
+                                color: '#8892b0',
+                                font: { size: 10, weight: 'bold' }
+                            }
+                        } 
+                    } 
+                }
+            });
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Render Course List ---
+        function renderCourseList() {
+            const listContainer = document.getElementById('course-list');
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const modVal = document.getElementById('filter-module').value;
+            const statusVal = document.getElementById('filter-status').value;
+            const progress = globalProgress;
+
+            listContainer.innerHTML = '';
+            
+            if(!isDataLoaded) {
+                 listContainer.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">Đang tải dữ liệu, vui lòng chờ...</div>';
+                 return;
+            }
+
+            let count = 0;
+
+            dbData.forEach((item, index) => {
+                const isDone = progress.includes(item.flow);
+                
+                // Lọc
+                if (modVal && item.module !== modVal) return;
+                if (statusVal === 'done' && !isDone) return;
+                if (statusVal === 'pending' && isDone) return;
+                
+                const searchStr = `${item.flow} ${item.module} ${item.keywords || ''}`.toLowerCase();
+                if (searchVal && !searchStr.includes(searchVal)) return;
+
+                count++;
+
+                // Thẻ Card Khóa học
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group flex flex-col h-full";
+                card.onclick = () => openDetail(item);
+
+                const statusBadge = isDone 
+                    ? `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-medium"><i class="fas fa-check mr-1"></i> Đã xem</span>`
+                    : `<span class="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-medium">Chưa xem</span>`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider">${item.module || 'Chung'}</span>
+                        ${statusBadge}
+                    </div>
+                    <h3 class="font-bold text-slate-800 leading-snug mb-2 group-hover:text-blue-600 transition-colors flex-1">${item.flow}</h3>
+                    <div class="mt-4 flex items-center justify-between text-xs text-slate-500 border-t pt-3">
+                        <span><i class="fas fa-desktop mr-1"></i> ${item.app || 'System'}</span>
+                        <span><i class="fas fa-users mr-1"></i> ${item.class_id || 'All'}</span>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+
+            document.getElementById('list-count').innerText = `Hiển thị ${count} quy trình`;
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Course Detail & Tabs ---
+        function openDetail(item) {
+            currentFlow = item;
+            saveProgressToDB(item.flow);
+            sessionStorage.setItem('corebank_lastView', item.flow);
+            navigate('detail');
+
+            document.getElementById('detail-title').innerText = item.flow;
+            document.getElementById('detail-module').innerText = item.module || 'Chung';
+            document.getElementById('detail-app').innerText = item.app || 'Hệ thống';
+            document.getElementById('detail-path').innerText = item.instruc_flow || 'Chưa có thông tin đường dẫn menu chi tiết.';
+
+            // Render Documents (Links từ link_doc)
+            const docContainer = document.getElementById('doc-links-container');
+            docContainer.innerHTML = '';
+            let docs = item.link_doc ? item.link_doc.split(';') : ['Tài liệu hướng dẫn (PDF)', 'Slide trình bày (PPTX)'];
+            docs.forEach(doc => {
+                docContainer.innerHTML += `
+                    <a href="#" class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors group">
+                        <div class="w-10 h-10 rounded bg-red-100 text-red-500 flex items-center justify-center text-lg mr-4 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-slate-800 group-hover:text-blue-600 text-sm">${doc.trim()}</h4>
+                            <p class="text-xs text-slate-500 mt-1">Nhấn để xem tài liệu chi tiết</p>
+                        </div>
+                        <i class="fas fa-download text-slate-400 group-hover:text-blue-500"></i>
+                    </a>`;
+            });
+
+            // Render Videos
+            const vidContainer = document.getElementById('video-links-container');
+            vidContainer.innerHTML = '';
+            let vids = item.link_video ? item.link_video.split(';') : ['Video Hướng dẫn thao tác'];
+            vids.forEach(vid => {
+                vidContainer.innerHTML += `
+                    <div class="border border-slate-200 rounded-lg overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="h-32 bg-slate-800 relative flex items-center justify-center">
+                            <i class="fas fa-play-circle text-4xl text-white/80 group-hover:text-white group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-3 bg-white">
+                            <h4 class="font-medium text-slate-800 text-sm truncate">${vid.trim()}</h4>
+                        </div>
+                    </div>`;
+            });
+
+            switchTab('doc');
+            loadAndRenderComments();
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('tab-content-doc').classList.add('hidden');
+            document.getElementById('tab-content-video').classList.add('hidden');
+            document.getElementById('tab-btn-doc').className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
+            document.getElementById('tab-btn-video').className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
+
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabId}`).className = "text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Comments System ---
+        async function loadAndRenderComments() {
+            const list = document.getElementById('comment-list');
+            list.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Đang tải bình luận...</p>';
+            
+            let allCommentsHtml = '';
+
+            // 1. Lấy từ data gốc nếu có (Cột gopy)
+            if(currentFlow.gopy) {
+                allCommentsHtml += createCommentHTML('System Data', currentFlow.gopy, 4, 'Dữ liệu gốc');
+            }
+
+            // 2. Fetch từ Supabase Server
+            if (currentUser) {
+                const { data: dbComments, error } = await supabaseClient
+                    .from('core_train_user_comments')
+                    .select('text, stars, created_at, core_train_users(username)')
+                    .eq('flow_id', currentFlow.flow)
+                    .order('created_at', { ascending: true });
+
+                if (!error && dbComments) {
+                    dbComments.forEach(c => {
+                        const dateStr = new Date(c.created_at).toLocaleString('vi-VN');
+                        const uname = c.core_train_users ? c.core_train_users.username : 'Unknown';
+                        allCommentsHtml += createCommentHTML(uname, c.text, c.stars, dateStr);
+                    });
+                }
+            }
+
+            if(allCommentsHtml === '') {
+                list.innerHTML = `<p class="text-sm text-slate-500 text-center py-4 italic">Chưa có bình luận nào. Hãy là người đầu tiên đóng góp ý kiến!</p>`;
+            } else {
+                list.innerHTML = allCommentsHtml;
+            }
+        }
+
+        function createCommentHTML(user, text, stars, date) {
+            let starHtml = '';
+            for(let i=1; i<=5; i++) {
+                starHtml += `<i class="fas fa-star ${i <= stars ? 'text-amber-400' : 'text-slate-300'} text-xs"></i>`;
+            }
+            return `
+                <div class="flex gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+                        ${user.charAt(0)}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-sm text-slate-800">${user}</span>
+                            <span class="text-xs text-slate-400">${date}</span>
+                        </div>
+                        <div class="mb-1">${starHtml}</div>
+                        <p class="text-sm text-slate-600">${text}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function postComment() {
+            if(!currentUser) return showToast('Vui lòng đăng nhập', true);
+            
+            const text = document.getElementById('comment-input').value.trim();
+            if(!text) return;
+
+            // Khóa nút trong lúc gửi
+            document.getElementById('comment-input').disabled = true;
+
+            const { error } = await supabaseClient.from('core_train_user_comments').insert([{
+                user_id: currentUser.id,
+                flow_id: currentFlow.flow,
+                text: text,
+                stars: starSelected
+            }]);
+
+            document.getElementById('comment-input').disabled = false;
+
+            if (error) {
+                showToast('Lỗi khi gửi bình luận', true);
+            } else {
+                document.getElementById('comment-input').value = '';
+                showToast('Đã gửi góp ý thành công!');
+                loadAndRenderComments(); // Tải lại danh sách comment
+            }
+        }
+
+        // Star Rating Selection Event
+        document.querySelectorAll('#star-rating i').forEach(star => {
+            star.addEventListener('click', (e) => {
+                starSelected = parseInt(e.target.getAttribute('data-val'));
+                document.querySelectorAll('#star-rating i').forEach(s => {
+                    if(parseInt(s.getAttribute('data-val')) <= starSelected) {
+                        s.classList.remove('far', 'text-slate-300');
+                        s.classList.add('fas', 'text-amber-400');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+
+        // --- STREAMING_CHUNK:Javascript Logic - Quiz System ---
+        let currentQuizIndex = 0;
+        let score = 0;
+
+        function initQuizView() {
+            document.getElementById('quiz-best-score').innerText = `${globalTopScore}/5`;
+            document.getElementById('quiz-intro').classList.remove('hidden');
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+        }
+
+        function startQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('btn-finish-quiz').classList.add('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const qData = quizData[currentQuizIndex];
+            document.getElementById('quiz-progress-text').innerText = `Câu hỏi ${currentQuizIndex + 1} / ${quizData.length}`;
+            document.getElementById('quiz-question-text').innerText = qData.q;
+            
+            const optsContainer = document.getElementById('quiz-options');
+            optsContainer.innerHTML = '';
+            
+            qData.opts.forEach((opt, idx) => {
+                const div = document.createElement('div');
+                div.className = "p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors text-left";
+                div.innerHTML = `<label class="flex items-center cursor-pointer w-full"><input type="radio" name="quiz_ans" value="${idx}" class="mr-3 w-4 h-4 text-blue-600 focus:ring-blue-500"> <span class="text-slate-700">${opt}</span></label>`;
+                
+                div.onclick = () => { div.querySelector('input').checked = true; };
+                optsContainer.appendChild(div);
+            });
+
+            document.getElementById('btn-next-quiz').classList.remove('hidden');
+            if(currentQuizIndex === quizData.length - 1) {
+                document.getElementById('btn-next-quiz').classList.add('hidden');
+                document.getElementById('btn-finish-quiz').classList.remove('hidden');
+            }
+        }
+
+        function checkAnswer() {
+            const selected = document.querySelector('input[name="quiz_ans"]:checked');
+            if(selected && parseInt(selected.value) === quizData[currentQuizIndex].ans) {
+                score++;
+            }
+        }
+
+        function nextQuizQuestion() {
+            checkAnswer();
+            currentQuizIndex++;
+            loadQuestion();
+        }
+
+        async function finishQuiz() {
+            checkAnswer();
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-result').classList.remove('hidden');
+            document.getElementById('quiz-final-score').innerText = `${score}/${quizData.length}`;
+            
+            // Xử lý lưu điểm qua DB nếu cao hơn
+            if(score > globalTopScore && currentUser) {
+                globalTopScore = score;
+                document.getElementById('quiz-best-score').innerText = `${globalTopScore}/5`;
+                // Lưu bất đồng bộ lên Server
+                await supabaseClient.from('core_train_user_scores').insert([{ user_id: currentUser.id, score: score }]);
+            }
+        }
+
+        // --- STREAMING_CHUNK:Khởi chạy ứng dụng ---
+        window.onload = async () => {
+            // Không gọi initFilters() ngay lập tức nữa, đợi fetch xong
+            
+            // Setup Stars ban đầu (5 sao)
+            document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
+
+            // Kiểm tra trạng thái đã đăng nhập thông qua bộ nhớ Session (Phiên làm việc)
+            const savedSession = sessionStorage.getItem('corebank_user');
+            if(savedSession) {
+                currentUser = JSON.parse(savedSession);
+                
+                // Cập nhật giao diện thanh Sidebar
+                document.getElementById('sidebar-username').innerText = currentUser.username;
+                document.getElementById('sidebar-avatar').src = `https://placehold.co/40x40/1e40af/ffffff?text=${currentUser.username.charAt(0).toUpperCase()}`;
+                document.getElementById('auth-view').classList.add('hidden');
+                
+                // Load dữ liệu cá nhân từ Server
+                await loadUserData();
+                
+                // Fetch toàn bộ content bài học
+                await fetchFlowData(); 
+
+                navigate('dashboard');
+            } else {
+                // Buộc phải thao tác đăng nhập ở màn hình phủ
+                document.getElementById('auth-view').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
