@@ -17,6 +17,10 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Quill Editor (Trình soạn thảo văn bản HTML) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
     <!-- Supabase Client & CryptoJS (MD5) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -83,6 +87,22 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* Tùy chỉnh hiển thị Trình soạn thảo Quill */
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        .ql-container.ql-snow {
+            border: none !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+        .ql-editor { min-height: 250px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
@@ -130,8 +150,8 @@
         </div>
     </div>
 
-    <!-- LỚP PHỦ LOADING DỮ LIỆU -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
+    <!-- Loading Overlay for Details -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-[999] hidden flex-col items-center justify-center">
         <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4 shadow-sm rounded-full"></i>
         <p class="font-bold text-slate-700 tracking-wide" id="loading-text">Đang tải chi tiết...</p>
     </div>
@@ -226,13 +246,15 @@
                         </button>
                     </div>
 
-                    <!-- Metric Cards (Dynamic Modules) -->
+                    <!-- Module Cards (Rendered all dynamically) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dashboard-module-cards">
                         <!-- Thẻ Module sẽ được sinh ra từ Javascript -->
                     </div>
 
                     <!-- Charts Area -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
+                        
+                        <!-- Radar Chart -->
                         <div class="dash-card p-6 lg:col-span-2 relative min-h-[400px] flex flex-col">
                             <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-4 italic">SKILL RADAR</p>
                             <div class="flex-1 w-full flex justify-center items-center">
@@ -240,8 +262,11 @@
                             </div>
                         </div>
 
+                        <!-- Progress Section -->
                         <div class="dash-card p-6 min-h-[400px]">
                             <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-6 italic">TOTAL PROGRESS</p>
+                            
+                            <!-- Total Progress Bar -->
                             <div class="mb-8">
                                 <div class="flex items-end justify-between mb-2">
                                     <h3 class="text-4xl font-black text-white italic" id="progress-percent-total">0%</h3>
@@ -251,14 +276,20 @@
                                     <div class="progress-bar-dash bg-white" id="progress-bar-total" style="width: 0%"></div>
                                 </div>
                             </div>
-                            <div class="space-y-6 mt-8" id="module-progress-list"></div>
+
+                            <!-- Modules Progress List -->
+                            <div class="space-y-6 mt-8" id="module-progress-list">
+                                <!-- Rendered by JS -->
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </section>
 
             <!-- VIEW: COURSE LIST -->
             <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
+                
                 <div class="flex justify-between items-end mb-6 border-b pb-4">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-800">Bài học / Lessons</h1>
@@ -266,6 +297,7 @@
                     </div>
                 </div>
 
+                <!-- Filters & Search -->
                 <div class="glass-panel p-4 rounded-xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="relative md:col-span-2">
                         <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
@@ -285,8 +317,9 @@
                     </div>
                 </div>
 
+                <!-- Course Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="course-list">
-                    <!-- Cards injected here -->
+                    <!-- Cards will be injected here -->
                 </div>
                 
                 <div class="mt-6 text-center text-sm text-slate-500" id="list-count">
@@ -296,11 +329,13 @@
 
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
+                
                 <button onclick="navigate('courses')" class="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
                     <i class="fas fa-arrow-left"></i> Quay lại danh sách
                 </button>
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <!-- Header -->
                     <div class="bg-slate-800 p-6 text-white">
                         <div class="flex items-center gap-2 mb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">
                             <span id="detail-module" class="bg-blue-900/50 px-2 py-1 rounded">Module</span>
@@ -317,7 +352,7 @@
                         </div>
                     </div>
 
-                    <!-- TABS: Thêm Tab Nội dung -->
+                    <!-- Content Tabs -->
                     <div class="border-b border-slate-200">
                         <nav class="flex -mb-px px-2 md:px-6 overflow-x-auto" id="detail-tabs">
                             <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
@@ -333,20 +368,24 @@
                     </div>
 
                     <div class="p-6 bg-slate-50 min-h-[300px]">
-                        <!-- Doc Tab -->
+                        <!-- Doc Tab Content -->
                         <div id="tab-content-doc" class="block space-y-4">
-                            <div id="doc-links-container" class="grid grid-cols-1 gap-3"></div>
+                            <div id="doc-links-container" class="grid grid-cols-1 gap-3">
+                                <!-- Docs injected here -->
+                            </div>
                         </div>
 
-                        <!-- Video Tab -->
+                        <!-- Video Tab Content -->
                         <div id="tab-content-video" class="hidden space-y-4">
-                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Videos injected here -->
+                            </div>
                         </div>
                         
-                        <!-- Content Tab -->
+                        <!-- Content Tab (Nội dung chi tiết - Quy trình tác nghiệp) -->
                         <div id="tab-content-content" class="hidden space-y-4">
                             <div id="content-html-container" class="prose max-w-none text-slate-700 text-sm bg-white p-6 rounded border border-slate-200 shadow-inner min-h-[200px]">
-                                <!-- Nội dung step_content sẽ render ở đây -->
+                                <!-- Nội dung html step_content render tại đây -->
                             </div>
                         </div>
                     </div>
@@ -376,6 +415,7 @@
                         </div>
                     </div>
                 </div>
+
             </section>
 
             <!-- VIEW: QUIZ -->
@@ -407,6 +447,7 @@
                     </div>
 
                     <h3 class="text-lg font-bold text-slate-800 mb-6" id="quiz-question-text">Question goes here?</h3>
+                    
                     <div class="space-y-3" id="quiz-options"></div>
 
                     <div class="mt-8 flex justify-end">
@@ -425,8 +466,10 @@
                     </div>
                     <h2 class="text-2xl font-bold mb-2">Kết Quả Bài Thi</h2>
                     <p class="text-slate-600 mb-6">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
+                    
                     <div class="text-5xl font-black text-blue-600 mb-2" id="quiz-final-score">0/5</div>
                     <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">Điểm số</p>
+                    
                     <button onclick="navigate('dashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2 rounded font-medium transition-colors mr-2">
                         Về Dashboard
                     </button>
@@ -435,8 +478,8 @@
                     </button>
                 </div>
             </section>
-
-            <!-- VIEW: EDITOR -->
+            
+            <!-- VIEW: EDITOR (Biên soạn Nội dung) -->
             <section id="view-editor" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8 h-[calc(100vh-60px)] md:h-screen">
                 <div class="flex justify-between items-end mb-6 border-b pb-4">
                     <div>
@@ -481,6 +524,7 @@
                         <form id="editor-form" class="space-y-5">
                             <input type="hidden" id="edit-id">
                             
+                            <!-- Thông tin cơ bản -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
                                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Thông tin cơ bản</h3>
                                 <div>
@@ -507,6 +551,7 @@
                                 </div>
                             </div>
 
+                            <!-- Tài nguyên (Links) -->
                             <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4">
                                 <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-2">Tài nguyên học tập</h3>
                                 <div>
@@ -519,9 +564,12 @@
                                 </div>
                             </div>
 
+                            <!-- Nội dung HTML (Soạn thảo bằng Quill) -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Nội dung / Quy trình tác nghiệp (Hỗ trợ HTML)</label>
-                                <textarea id="edit-content" rows="10" placeholder="<p>Nhập nội dung quy trình tại đây...</p>" class="w-full border border-slate-300 rounded p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"></textarea>
+                                <label class="block text-xs font-semibold text-slate-600 mb-2">Nội dung / Quy trình tác nghiệp (Soạn thảo văn bản)</label>
+                                <div class="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                                    <div id="quill-editor"></div>
+                                </div>
                             </div>
 
                             <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
@@ -564,6 +612,7 @@
         let currentFlow = null;
         let chartRadar = null;
         let starSelected = 5; 
+        let quillInstance = null; // Biến lưu trữ trình soạn thảo
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -686,13 +735,14 @@
             if(scoreData && scoreData.length > 0) globalTopScore = scoreData[0].score;
         }
 
-        // --- STREAMING_CHUNK: Truy vấn Database Tối ưu ---
-        // TỐI ƯU 1: Chỉ tải các cột siêu nhẹ lúc khởi động để vẽ Dashboard & Danh sách
+        // --- STREAMING_CHUNK: Truy vấn Database Tối ưu (Tải nhẹ + Lazy Load) ---
+        
+        // TỐI ƯU 1: Lấy dữ liệu danh sách cực nhẹ
         async function fetchLightFlowData() {
             try {
                 const { data, error, status } = await supabaseClient
                     .from('core_train_flows')
-                    .select('id, module, app, flow, class_id, keywords') // Bỏ các cột nặng như link_video, link_doc, step_content
+                    .select('id, module, app, flow, class_id, keywords') 
                     .order('id', { ascending: true }); 
 
                 if (error) {
@@ -714,7 +764,7 @@
             }
         }
 
-        // TỐI ƯU 2: Lazy Loading - Chỉ tải chi tiết toàn bộ khi người dùng Click vào bài
+        // TỐI ƯU 2: Lazy Loading (Lấy chi tiết 1 bài, bao gồm nội dung HTML)
         async function fetchFullDetail(id) {
             try {
                 const { data, error, status } = await supabaseClient
@@ -815,12 +865,11 @@
                 if (progress.includes(item.flow)) moduleMap[mod].done++;
             });
 
-            // 1. Render TẤT CẢ Thẻ Phân Hệ (Module Cards)
+            // 1. Render Tất cả các Thẻ Phân Hệ (Module Cards)
             const sortedModules = Object.keys(moduleMap).sort((a, b) => moduleMap[b].total - moduleMap[a].total);
             const cardsContainer = document.getElementById('dashboard-module-cards');
             
-            // Fix Null Pointer: Chỉ render nếu tìm thấy thẻ container
-            if (cardsContainer) {
+            if(cardsContainer) {
                 cardsContainer.innerHTML = '';
                 
                 const icons = ['fa-cubes', 'fa-network-wired', 'fa-layer-group', 'fa-project-diagram', 'fa-database', 'fa-server', 'fa-microchip', 'fa-shield-alt'];
@@ -859,23 +908,24 @@
             document.getElementById('progress-text-all').innerText = total;
 
             const moduleListContainer = document.getElementById('module-progress-list');
-            moduleListContainer.innerHTML = '';
-            
-            labels.forEach(l => {
-                const percent = moduleMap[l].total > 0 ? Math.round((moduleMap[l].done / moduleMap[l].total) * 100) : 0;
-                const html = `
-                    <div class="group cursor-pointer mb-5" onclick="document.getElementById('filter-module').value = '${l}'; navigate('courses');">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[12px] text-white font-bold tracking-wider uppercase">${l}</span>
-                            <span class="text-[12px] text-white font-bold">${percent}%</span>
+            if(moduleListContainer) {
+                moduleListContainer.innerHTML = '';
+                labels.forEach(l => {
+                    const percent = moduleMap[l].total > 0 ? Math.round((moduleMap[l].done / moduleMap[l].total) * 100) : 0;
+                    const html = `
+                        <div class="group cursor-pointer mb-5" onclick="document.getElementById('filter-module').value = '${l}'; navigate('courses');">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[12px] text-white font-bold tracking-wider uppercase">${l}</span>
+                                <span class="text-[12px] text-white font-bold">${percent}%</span>
+                            </div>
+                            <div class="progress-track-dash group-hover:border-[#334155] transition-colors">
+                                <div class="progress-bar-dash ${percent > 0 ? 'bg-white' : 'bg-[#1e3656]'}" style="width: ${percent}%"></div>
+                            </div>
                         </div>
-                        <div class="progress-track-dash group-hover:border-[#334155] transition-colors">
-                            <div class="progress-bar-dash ${percent > 0 ? 'bg-white' : 'bg-[#1e3656]'}" style="width: ${percent}%"></div>
-                        </div>
-                    </div>
-                `;
-                moduleListContainer.innerHTML += html;
-            });
+                    `;
+                    moduleListContainer.innerHTML += html;
+                });
+            }
 
             if (chartRadar) chartRadar.destroy();
             const ctxR = document.getElementById('radarChart').getContext('2d');
@@ -934,7 +984,7 @@
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group flex flex-col h-full";
                 
-                // KHI BẤM VÀO ĐÂY, SẼ GỌI API LẤY CHI TIẾT
+                // Khi bấm vào card -> Gọi API lấy Full Detail
                 card.onclick = () => openDetail(item);
 
                 const statusBadge = isDone 
@@ -955,28 +1005,23 @@
                 listContainer.appendChild(card);
             });
 
-            document.getElementById('list-count').innerText = `Hiển thị ${count} quy trình`;
+            document.getElementById('list-count').innerText = `Hiển thị ${count} kết quả`;
         }
 
         // --- STREAMING_CHUNK: Logic Detail & Tabs ---
         async function openDetail(lightItem) {
-            // Hiển thị loading xoay vòng
             toggleLoading(true, "Đang tải chi tiết nội dung...");
             
-            // Gọi API lấy dữ liệu đầy đủ của 1 item
             const fullItem = await fetchFullDetail(lightItem.id);
-            toggleLoading(false); // Ẩn loading
+            toggleLoading(false); 
 
-            if (!fullItem) {
-                return showToast('Không thể tải chi tiết bài học', true);
-            }
+            if (!fullItem) return showToast('Không thể tải chi tiết bài học', true);
 
             currentFlow = fullItem;
             saveProgressToDB(fullItem.flow);
             sessionStorage.setItem('corebank_lastView', fullItem.flow);
             navigate('detail');
 
-            // Điền thông tin tiêu đề
             document.getElementById('detail-title').innerText = fullItem.flow;
             document.getElementById('detail-module').innerText = fullItem.module || 'Chung';
             document.getElementById('detail-app').innerText = fullItem.app || 'Hệ thống';
@@ -1030,7 +1075,7 @@
                 });
             }
 
-            // Render Content Tab (Hiển thị HTML của step_content)
+            // Render Content Tab (Nội dung quy trình HTML)
             const contentContainer = document.getElementById('content-html-container');
             if(fullItem.step_content) {
                 contentContainer.innerHTML = fullItem.step_content;
@@ -1043,13 +1088,11 @@
         }
 
         function switchTab(tabId) {
-            // Reset tất cả các tab
             ['doc', 'video', 'content'].forEach(t => {
                 document.getElementById(`tab-content-${t}`).classList.add('hidden');
                 document.getElementById(`tab-btn-${t}`).className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap";
             });
 
-            // Kích hoạt tab được chọn
             document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-btn-${tabId}`).className = "text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap";
         }
@@ -1221,7 +1264,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Editor System ---
+        // --- STREAMING_CHUNK:Javascript Logic - Editor System (Màn hình Biên soạn) ---
         function renderEditorList() {
             const listContainer = document.getElementById('editor-list');
             const searchVal = document.getElementById('editor-search').value.toLowerCase();
@@ -1263,13 +1306,15 @@
             document.getElementById('edit-doc').value = fullItem.link_doc || '';
             document.getElementById('edit-video').value = fullItem.link_video || '';
             document.getElementById('edit-keywords').value = fullItem.keywords || '';
-            document.getElementById('edit-content').value = fullItem.step_content || '';
+            
+            // Đẩy dữ liệu HTML vào trình soạn thảo Quill
+            if (quillInstance) {
+                quillInstance.root.innerHTML = fullItem.step_content || '';
+            }
 
-            // Chuyển đổi giao diện
+            // Mở UI Form
             document.getElementById('editor-empty-state').classList.add('hidden');
             document.getElementById('editor-form-container').classList.remove('hidden');
-            
-            // Xóa background selected ở list, set lại cho item được chọn (tùy chọn UI)
         }
 
         function closeEditor() {
@@ -1283,6 +1328,10 @@
             
             if(!id || !flowName) return showToast('Tên quy trình (Flow) không được để trống', true);
 
+            // Lấy nội dung HTML từ trình soạn thảo Quill
+            let htmlContent = quillInstance ? quillInstance.root.innerHTML : '';
+            if (htmlContent === '<p><br></p>') htmlContent = ''; // Tránh lưu thẻ rỗng mặc định
+
             const updateData = {
                 flow: flowName,
                 module: document.getElementById('edit-module').value,
@@ -1291,7 +1340,7 @@
                 link_doc: document.getElementById('edit-doc').value,
                 link_video: document.getElementById('edit-video').value,
                 keywords: document.getElementById('edit-keywords').value,
-                step_content: document.getElementById('edit-content').value
+                step_content: htmlContent
             };
 
             toggleLoading(true, "Đang lưu thay đổi lên máy chủ...");
@@ -1308,7 +1357,7 @@
                 return showToast('Lỗi khi lưu dữ liệu: ' + error.message, true);
             }
 
-            // Cập nhật local dbData (chỉ cập nhật các trường nhẹ) để danh sách không bị out-sync
+            // Cập nhật lại dbData local (giúp UI không cần tải lại từ server)
             const idx = dbData.findIndex(d => d.id == id);
             if(idx !== -1) {
                 dbData[idx].flow = updateData.flow;
@@ -1321,37 +1370,41 @@
             toggleLoading(false);
             showToast('Lưu cập nhật thành công!');
             
-            // Cập nhật lại list bên trái và danh sách Courses
             renderEditorList(); 
-            initFilters(); // Render lại bộ lọc vì có thể Module đã bị đổi
+            initFilters(); 
         }
 
         // --- STREAMING_CHUNK:Khởi chạy ứng dụng ---
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
-            // 1. Kiểm tra session đăng nhập
+            // Khởi tạo Trình soạn thảo văn bản (Quill)
+            quillInstance = new Quill('#quill-editor', {
+                theme: 'snow',
+                placeholder: 'Soạn thảo nội dung quy trình (ví dụ: Bước 1..., Bước 2...)...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
             const savedSession = sessionStorage.getItem('corebank_user');
-            
             if(savedSession) {
-                // 2. Nếu ĐÃ ĐĂNG NHẬP -> Xử lý thông tin user -> Ẩn màn hình đăng nhập
                 currentUser = JSON.parse(savedSession);
                 
                 document.getElementById('sidebar-username').innerText = currentUser.username;
                 document.getElementById('sidebar-avatar').src = `https://placehold.co/40x40/1e40af/ffffff?text=${currentUser.username.charAt(0).toUpperCase()}`;
-                
                 document.getElementById('auth-view').classList.add('hidden');
                 
-                // 3. Tiến hành tải dữ liệu siêu nhẹ để vẽ Dashboard
-                toggleLoading(true, "Đang tải dữ liệu, vui lòng chờ...");
                 await loadUserData();
                 await fetchLightFlowData(); 
-                toggleLoading(false);
-
-                // 4. Mở vào Dashboard
-                navigate('dashboard');
             } else {
-                // Nếu CHƯA ĐĂNG NHẬP -> Hiện nguyên màn hình Form đăng nhập
                 document.getElementById('auth-view').classList.remove('hidden');
             }
         };
