@@ -39,7 +39,7 @@
         }
 
         /* --- DASHBOARD DARK MODE STYLES --- */
-        .dash-bg { background-color: #020b16; } /* Nền siêu tối */
+        .dash-bg { background-color: #020b16; } 
         .dash-card { 
             background-color: #0a192f; 
             border: 1px solid #1e3656; 
@@ -47,7 +47,7 @@
         }
         .dash-text-muted { color: #8892b0; }
         .dash-text-bright { color: #ccd6f6; }
-        .dash-accent { color: #f97316; } /* Cam nhấn */
+        .dash-accent { color: #f97316; } 
         
         .progress-track-dash { 
             background-color: #020b16; 
@@ -130,6 +130,12 @@
         </div>
     </div>
 
+    <!-- LỚP PHỦ LOADING DỮ LIỆU -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
+        <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4 shadow-sm rounded-full"></i>
+        <p class="font-bold text-slate-700 tracking-wide" id="loading-text">Đang tải chi tiết...</p>
+    </div>
+
     <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 hidden md:flex z-20 shadow-xl" id="sidebar">
         <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-white tracking-wider">
@@ -177,11 +183,10 @@
         <!-- View Container -->
         <div id="view-container" class="flex-1 overflow-y-auto relative w-full h-full p-0">
             
-            <!-- VIEW: DASHBOARD (Theo thiết kế mới) -->
+            <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="fade-in block w-full min-h-full dash-bg p-4 md:p-8">
                 <div class="max-w-7xl mx-auto">
                     
-                    <!-- Header Dashboard -->
                     <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 border-b border-[#1e3656] pb-4">
                         <div class="flex items-end gap-2 mb-4 md:mb-0">
                             <h1 class="text-3xl font-black text-white italic tracking-wider uppercase">DASHBOARD <span class="block w-10 h-1 bg-orange-500 mt-1"></span></h1>
@@ -252,8 +257,6 @@
 
                     <!-- Charts Area -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
-                        
-                        <!-- Radar Chart -->
                         <div class="dash-card p-6 lg:col-span-2 relative min-h-[400px] flex flex-col">
                             <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-4 italic">SKILL RADAR</p>
                             <div class="flex-1 w-full flex justify-center items-center">
@@ -261,11 +264,8 @@
                             </div>
                         </div>
 
-                        <!-- Progress Section -->
                         <div class="dash-card p-6 min-h-[400px]">
                             <p class="text-[12px] text-[#8892b0] font-bold tracking-[0.2em] uppercase mb-6 italic">TOTAL PROGRESS</p>
-                            
-                            <!-- Total Progress Bar -->
                             <div class="mb-8">
                                 <div class="flex items-end justify-between mb-2">
                                     <h3 class="text-4xl font-black text-white italic" id="progress-percent-total">0%</h3>
@@ -275,20 +275,14 @@
                                     <div class="progress-bar-dash bg-white" id="progress-bar-total" style="width: 0%"></div>
                                 </div>
                             </div>
-
-                            <!-- Modules Progress List -->
-                            <div class="space-y-6 mt-8" id="module-progress-list">
-                                <!-- Rendered by JS -->
-                            </div>
+                            <div class="space-y-6 mt-8" id="module-progress-list"></div>
                         </div>
-
                     </div>
                 </div>
             </section>
 
-            <!-- VIEW: COURSE LIST (Light Mode) -->
+            <!-- VIEW: COURSE LIST -->
             <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
-                
                 <div class="flex justify-between items-end mb-6 border-b pb-4">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-800">Kho Tác Nghiệp Core Banking</h1>
@@ -296,7 +290,6 @@
                     </div>
                 </div>
 
-                <!-- Filters & Search -->
                 <div class="glass-panel p-4 rounded-xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="relative md:col-span-2">
                         <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
@@ -305,7 +298,6 @@
                     <div>
                         <select id="filter-module" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
                             <option value="">Tất cả Phân hệ (Module)</option>
-                            <!-- Dynamic Options -->
                         </select>
                     </div>
                     <div>
@@ -317,12 +309,10 @@
                     </div>
                 </div>
 
-                <!-- Course Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="course-list">
-                    <!-- Cards will be injected here -->
+                    <!-- Cards injected here -->
                 </div>
                 
-                <!-- Pagination info mockup -->
                 <div class="mt-6 text-center text-sm text-slate-500" id="list-count">
                     Hiển thị 0 kết quả
                 </div>
@@ -330,13 +320,11 @@
 
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
-                
                 <button onclick="navigate('courses')" class="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
                     <i class="fas fa-arrow-left"></i> Quay lại danh sách
                 </button>
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                    <!-- Header -->
                     <div class="bg-slate-800 p-6 text-white">
                         <div class="flex items-center gap-2 mb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">
                             <span id="detail-module" class="bg-blue-900/50 px-2 py-1 rounded">Module</span>
@@ -353,30 +341,36 @@
                         </div>
                     </div>
 
-                    <!-- Content Tabs -->
+                    <!-- TABS: Thêm Tab Nội dung -->
                     <div class="border-b border-slate-200">
-                        <nav class="flex -mb-px px-6" id="detail-tabs">
-                            <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors">
+                        <nav class="flex -mb-px px-2 md:px-6 overflow-x-auto" id="detail-tabs">
+                            <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
                                 <i class="fas fa-file-alt mr-2"></i> Tài Liệu & Slide
                             </button>
-                            <button onclick="switchTab('video')" id="tab-btn-video" class="text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors">
+                            <button onclick="switchTab('video')" id="tab-btn-video" class="text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
                                 <i class="fas fa-play-circle mr-2"></i> Video Hướng Dẫn
+                            </button>
+                            <button onclick="switchTab('content')" id="tab-btn-content" class="text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
+                                <i class="fas fa-list-ol mr-2"></i> Nội dung bài học
                             </button>
                         </nav>
                     </div>
 
                     <div class="p-6 bg-slate-50 min-h-[300px]">
-                        <!-- Doc Tab Content -->
+                        <!-- Doc Tab -->
                         <div id="tab-content-doc" class="block space-y-4">
-                            <div id="doc-links-container" class="grid grid-cols-1 gap-3">
-                                <!-- Docs injected here -->
-                            </div>
+                            <div id="doc-links-container" class="grid grid-cols-1 gap-3"></div>
                         </div>
 
-                        <!-- Video Tab Content -->
+                        <!-- Video Tab -->
                         <div id="tab-content-video" class="hidden space-y-4">
-                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Videos injected here -->
+                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                        </div>
+                        
+                        <!-- Content Tab -->
+                        <div id="tab-content-content" class="hidden space-y-4">
+                            <div id="content-html-container" class="prose max-w-none text-slate-700 text-sm bg-white p-6 rounded border border-slate-200 shadow-inner min-h-[200px]">
+                                <!-- Nội dung step_content sẽ render ở đây -->
                             </div>
                         </div>
                     </div>
@@ -386,12 +380,8 @@
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fas fa-comments text-blue-500 mr-2"></i> Thảo luận & Góp ý</h3>
                     
-                    <!-- Comment List -->
-                    <div id="comment-list" class="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
-                        <!-- Comments injected here -->
-                    </div>
+                    <div id="comment-list" class="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2"></div>
 
-                    <!-- Add Comment Form -->
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <h4 class="text-sm font-semibold mb-3">Thêm góp ý của bạn</h4>
                         <div class="flex items-center gap-1 text-amber-400 mb-3 text-xl cursor-pointer" id="star-rating">
@@ -410,7 +400,6 @@
                         </div>
                     </div>
                 </div>
-
             </section>
 
             <!-- VIEW: QUIZ -->
@@ -442,10 +431,7 @@
                     </div>
 
                     <h3 class="text-lg font-bold text-slate-800 mb-6" id="quiz-question-text">Question goes here?</h3>
-                    
-                    <div class="space-y-3" id="quiz-options">
-                        <!-- Options injected here -->
-                    </div>
+                    <div class="space-y-3" id="quiz-options"></div>
 
                     <div class="mt-8 flex justify-end">
                         <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded font-medium transition-colors hidden">
@@ -463,10 +449,8 @@
                     </div>
                     <h2 class="text-2xl font-bold mb-2">Kết Quả Bài Thi</h2>
                     <p class="text-slate-600 mb-6">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
-                    
                     <div class="text-5xl font-black text-blue-600 mb-2" id="quiz-final-score">0/5</div>
                     <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">Điểm số</p>
-                    
                     <button onclick="navigate('dashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2 rounded font-medium transition-colors mr-2">
                         Về Dashboard
                     </button>
@@ -491,7 +475,7 @@
             { q: "Chức năng 'INBT' trong phân hệ chuyển tiền có ý nghĩa gì?", opts: ["Chuyển tiền quốc tế", "Chuyển tiền liên chi nhánh nội bộ", "Thanh toán hóa đơn", "Chuyển đổi ngoại tệ"], ans: 1 }
         ];
 
-        // --- STREAMING_CHUNK: Cấu hình Supabase ---
+        // --- STREAMING_CHUNK: Cấu hình Supabase & Utilities ---
         const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; // THAY URL CỦA BẠN VÀO ĐÂY
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; // THAY ANON KEY CỦA BẠN VÀO ĐÂY
         
@@ -500,8 +484,11 @@
         let currentUser = null;
         let globalProgress = []; 
         let globalTopScore = 0;
-        let dbData = []; 
+        let dbData = []; // Dữ liệu siêu nhẹ để vẽ danh sách
         let isDataLoaded = false;
+        let currentFlow = null;
+        let chartRadar = null;
+        let starSelected = 5; 
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -512,8 +499,28 @@
             setTimeout(() => { toast.remove(); }, 3000);
         }
 
+        function toggleLoading(show, text="Đang tải dữ liệu...") {
+            const el = document.getElementById('loading-overlay');
+            document.getElementById('loading-text').innerText = text;
+            if (show) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        }
+
         const hashMD5 = (str) => CryptoJS.MD5(str).toString();
 
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? `https://www.youtube-nocookie.com/embed/${match[2]}` : null;
+        }
+
+        // --- STREAMING_CHUNK: Quản lý Authentication ---
         async function handleAuth(isRegister) {
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
@@ -522,11 +529,16 @@
             const passHash = hashMD5(pass);
 
             try {
+                toggleLoading(true, "Đang xử lý đăng nhập...");
                 if(isRegister) {
                     const { data: existing } = await supabaseClient.from('core_train_users').select('id').eq('username', user).single();
-                    if(existing) return showToast('Tên đăng nhập đã tồn tại!', true);
+                    if(existing) {
+                        toggleLoading(false);
+                        return showToast('Tên đăng nhập đã tồn tại!', true);
+                    }
 
                     const { error } = await supabaseClient.from('core_train_users').insert([{ username: user, password_hash: passHash, status: 'active' }]);
+                    toggleLoading(false);
                     if(error) throw error;
                     
                     showToast('Đăng ký thành công! Hãy bấm ĐĂNG NHẬP.');
@@ -534,8 +546,14 @@
                 } else {
                     const { data, error } = await supabaseClient.from('core_train_users').select('*').eq('username', user).eq('password_hash', passHash).single();
                     
-                    if(error || !data) return showToast('Sai tài khoản hoặc mật khẩu', true);
-                    if(data.status !== 'active') return showToast('Tài khoản của bạn đã bị khóa', true);
+                    if(error || !data) {
+                        toggleLoading(false);
+                        return showToast('Sai tài khoản hoặc mật khẩu', true);
+                    }
+                    if(data.status !== 'active') {
+                        toggleLoading(false);
+                        return showToast('Tài khoản của bạn đã bị khóa', true);
+                    }
 
                     currentUser = data;
                     sessionStorage.setItem('corebank_user', JSON.stringify(data));
@@ -546,11 +564,15 @@
                     showToast(`Chào mừng ${data.username} quay lại!`);
                     
                     await loadUserData();
+                    await fetchLightFlowData(); // Chỉ tải data nhẹ sau khi đăng nhập
+                    
+                    toggleLoading(false);
                     navigate('dashboard');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Lỗi kết nối máy chủ Supabase. Vui lòng cấu hình URL/Key!', true);
+                toggleLoading(false);
+                showToast('Lỗi kết nối máy chủ Supabase.', true);
             }
         }
 
@@ -558,10 +580,12 @@
             const oldP = document.getElementById('cp-old').value;
             const newP = document.getElementById('cp-new').value;
             if(!oldP || !newP) return showToast('Vui lòng nhập đủ thông tin', true);
-
             if(hashMD5(oldP) !== currentUser.password_hash) return showToast('Mật khẩu cũ không chính xác', true);
 
+            toggleLoading(true, "Đang đổi mật khẩu...");
             const { error } = await supabaseClient.from('core_train_users').update({ password_hash: hashMD5(newP) }).eq('id', currentUser.id);
+            toggleLoading(false);
+
             if(error) return showToast('Lỗi khi đổi mật khẩu', true);
 
             showToast('Đổi mật khẩu thành công!');
@@ -580,7 +604,6 @@
 
         async function loadUserData() {
             if(!currentUser) return;
-            
             const { data: progData } = await supabaseClient.from('core_train_user_progress').select('flow_id').eq('user_id', currentUser.id);
             if(progData) globalProgress = progData.map(p => p.flow_id);
 
@@ -588,12 +611,13 @@
             if(scoreData && scoreData.length > 0) globalTopScore = scoreData[0].score;
         }
 
-        async function fetchFlowData() {
+        // --- STREAMING_CHUNK: Truy vấn Database Tối ưu ---
+        // TỐI ƯU 1: Chỉ tải các cột siêu nhẹ lúc khởi động để vẽ Dashboard & Danh sách
+        async function fetchLightFlowData() {
             try {
-                showToast('Đang tải dữ liệu khóa học...');
                 const { data, error } = await supabaseClient
                     .from('core_train_flows')
-                    .select('*')
+                    .select('id, module, app, flow, class_id, keywords') // Bỏ các cột nặng như link_video, link_doc, step_content
                     .order('id', { ascending: true }); 
 
                 if (error) throw error;
@@ -603,13 +627,26 @@
                     isDataLoaded = true;
                     initFilters();
                     renderDashboard(); 
-                    showToast('Tải dữ liệu hoàn tất!');
-                } else {
-                    showToast('Không tìm thấy dữ liệu khóa học nào.', true);
                 }
             } catch (err) {
                 console.error("Fetch Data Error:", err);
-                showToast('Lỗi tải dữ liệu. Vui lòng kiểm tra RLS hoặc kết nối.', true);
+                showToast('Lỗi tải dữ liệu khóa học', true);
+            }
+        }
+
+        // TỐI ƯU 2: Lazy Loading - Chỉ tải chi tiết toàn bộ khi người dùng Click vào bài
+        async function fetchFullDetail(id) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('core_train_flows')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                if (error) throw error;
+                return data;
+            } catch (err) {
+                console.error("Fetch Detail Error:", err);
+                return null;
             }
         }
 
@@ -619,22 +656,6 @@
                 const { error } = await supabaseClient.from('core_train_user_progress').insert([{ user_id: currentUser.id, flow_id: flowId }]);
                 if(!error) showToast('Đã đánh dấu hoàn thành bài học!');
             }
-        }
-
-        // --- STREAMING_CHUNK:Javascript Logic - Core & Utils ---
-        let currentFlow = null;
-        let chartRadar = null;
-        let starSelected = 5; 
-        
-        // HÀM MỚI: Tự động nhận diện và trích xuất URL nhúng của YouTube
-        function getYouTubeEmbedUrl(url) {
-            if (!url) return null;
-            // Regex lấy ID video từ nhiều định dạng link youtube khác nhau
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            // ID của Youtube luôn là chuỗi 11 ký tự
-            // Sử dụng youtube-nocookie.com để khắc phục lỗi "Error 153" khi chạy file HTML cục bộ (file:///)
-            return (match && match[2].length === 11) ? `https://www.youtube-nocookie.com/embed/${match[2]}` : null;
         }
 
         function initFilters() {
@@ -652,10 +673,6 @@
                 select.appendChild(opt);
             });
 
-            document.getElementById('search-input').removeEventListener('input', renderCourseList);
-            document.getElementById('filter-module').removeEventListener('change', renderCourseList);
-            document.getElementById('filter-status').removeEventListener('change', renderCourseList);
-            
             document.getElementById('search-input').addEventListener('input', renderCourseList);
             document.getElementById('filter-module').addEventListener('change', renderCourseList);
             document.getElementById('filter-status').addEventListener('change', renderCourseList);
@@ -689,8 +706,10 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Màn hình Dashboard ---
+        // --- STREAMING_CHUNK: Logic Dashboard & Course List ---
         function renderDashboard() {
+            if (!isDataLoaded) return; 
+
             const progress = globalProgress;
             const total = dbData.length;
             const lastViewed = sessionStorage.getItem('corebank_lastView');
@@ -698,11 +717,8 @@
             if(lastViewed) {
                 document.getElementById('last-viewed-text').innerHTML = `<strong class="text-white">${lastViewed}</strong>`;
             }
-            
             const welcomeEl = document.querySelector('#view-dashboard h2');
             if(welcomeEl && currentUser) welcomeEl.innerText = `Hello, ${currentUser.username}`;
-
-            if (!isDataLoaded) return; 
 
             const moduleMap = {};
             dbData.forEach(item => {
@@ -742,26 +758,18 @@
 
             if (chartRadar) chartRadar.destroy();
             const ctxR = document.getElementById('radarChart').getContext('2d');
-            
             Chart.defaults.font.family = "'Inter', sans-serif";
-
             chartRadar = new Chart(ctxR, {
                 type: 'radar',
                 data: {
                     labels: labels.map(l => l.toUpperCase()),
                     datasets: [{
-                        label: 'Hoàn thành (%)',
                         data: radarData,
                         backgroundColor: 'transparent',
                         borderColor: '#f97316', 
                         borderWidth: 2,
                         pointBackgroundColor: '#fff',
-                        pointBorderColor: '#f97316',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: '#f97316',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBorderWidth: 2
+                        pointBorderColor: '#f97316'
                     }]
                 },
                 options: { 
@@ -773,17 +781,13 @@
                             ticks: { display: false, stepSize: 20 },
                             grid: { color: '#1a365d', circular: false }, 
                             angleLines: { color: '#1a365d' },
-                            pointLabels: {
-                                color: '#8892b0',
-                                font: { size: 10, weight: 'bold' }
-                            }
+                            pointLabels: { color: '#8892b0', font: { size: 10, weight: 'bold' } }
                         } 
                     } 
                 }
             });
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Render Course List ---
         function renderCourseList() {
             const listContainer = document.getElementById('course-list');
             const searchVal = document.getElementById('search-input').value.toLowerCase();
@@ -793,16 +797,11 @@
 
             listContainer.innerHTML = '';
             
-            if(!isDataLoaded) {
-                 listContainer.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">Đang tải dữ liệu, vui lòng chờ...</div>';
-                 return;
-            }
+            if(!isDataLoaded) return;
 
             let count = 0;
-
-            dbData.forEach((item, index) => {
+            dbData.forEach((item) => {
                 const isDone = progress.includes(item.flow);
-                
                 if (modVal && item.module !== modVal) return;
                 if (statusVal === 'done' && !isDone) return;
                 if (statusVal === 'pending' && isDone) return;
@@ -811,9 +810,10 @@
                 if (searchVal && !searchStr.includes(searchVal)) return;
 
                 count++;
-
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group flex flex-col h-full";
+                
+                // KHI BẤM VÀO ĐÂY, SẼ GỌI API LẤY CHI TIẾT
                 card.onclick = () => openDetail(item);
 
                 const statusBadge = isDone 
@@ -837,22 +837,34 @@
             document.getElementById('list-count').innerText = `Hiển thị ${count} quy trình`;
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Course Detail & Tabs Cập nhật mã nhúng Video ---
-        function openDetail(item) {
-            currentFlow = item;
-            saveProgressToDB(item.flow);
-            sessionStorage.setItem('corebank_lastView', item.flow);
+        // --- STREAMING_CHUNK: Logic Detail & Tabs ---
+        async function openDetail(lightItem) {
+            // Hiển thị loading xoay vòng
+            toggleLoading(true, "Đang tải chi tiết nội dung...");
+            
+            // Gọi API lấy dữ liệu đầy đủ của 1 item
+            const fullItem = await fetchFullDetail(lightItem.id);
+            toggleLoading(false); // Ẩn loading
+
+            if (!fullItem) {
+                return showToast('Không thể tải chi tiết bài học', true);
+            }
+
+            currentFlow = fullItem;
+            saveProgressToDB(fullItem.flow);
+            sessionStorage.setItem('corebank_lastView', fullItem.flow);
             navigate('detail');
 
-            document.getElementById('detail-title').innerText = item.flow;
-            document.getElementById('detail-module').innerText = item.module || 'Chung';
-            document.getElementById('detail-app').innerText = item.app || 'Hệ thống';
-            document.getElementById('detail-path').innerText = item.instruc_flow || 'Chưa có thông tin đường dẫn menu chi tiết.';
+            // Điền thông tin tiêu đề
+            document.getElementById('detail-title').innerText = fullItem.flow;
+            document.getElementById('detail-module').innerText = fullItem.module || 'Chung';
+            document.getElementById('detail-app').innerText = fullItem.app || 'Hệ thống';
+            document.getElementById('detail-path').innerText = fullItem.instruc_flow || 'Chưa có thông tin đường dẫn menu chi tiết.';
 
-            // Render Documents
+            // Render Documents Tab
             const docContainer = document.getElementById('doc-links-container');
             docContainer.innerHTML = '';
-            let docs = item.link_doc ? item.link_doc.split(';') : ['Tài liệu hướng dẫn (PDF)', 'Slide trình bày (PPTX)'];
+            let docs = fullItem.link_doc ? fullItem.link_doc.split(';') : ['Tài liệu hướng dẫn (PDF)', 'Slide trình bày (PPTX)'];
             docs.forEach(doc => {
                 docContainer.innerHTML += `
                     <a href="#" class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors group">
@@ -861,51 +873,48 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="font-medium text-slate-800 group-hover:text-blue-600 text-sm">${doc.trim()}</h4>
-                            <p class="text-xs text-slate-500 mt-1">Nhấn để xem tài liệu chi tiết</p>
                         </div>
                         <i class="fas fa-download text-slate-400 group-hover:text-blue-500"></i>
                     </a>`;
             });
 
-            // Render Videos (Đã sửa lỗi hiển thị Video)
+            // Render Videos Tab
             const vidContainer = document.getElementById('video-links-container');
             vidContainer.innerHTML = '';
+            let vids = fullItem.link_video ? fullItem.link_video.split(';') : ['https://www.youtube.com/watch?v=hg5qmzqNWuI']; 
             
-            // Nếu có link video thì cắt bằng dấu ; (hỗ trợ nhiều video), nếu rỗng sẽ để link demo
-            let vids = item.link_video ? item.link_video.split(';') : ['https://www.youtube.com/watch?v=hg5qmzqNWuI']; 
-            
-            if (vids.length === 0) {
+            if (vids.length === 0 || !fullItem.link_video) {
                  vidContainer.innerHTML = '<p class="text-slate-500 text-sm py-4 col-span-2">Chưa có video hướng dẫn cho quy trình này.</p>';
             } else {
                 vids.forEach(vidStr => {
                     const vid = vidStr.trim();
-                    // Thử chuyển đổi chuỗi văn bản thành Link Iframe của Youtube
                     const embedUrl = getYouTubeEmbedUrl(vid);
-                    
                     if (embedUrl) {
-                        // Nếu là Link Youtube Hợp lệ -> Chèn mã Iframe kèm chính sách Referrer để tránh lỗi 153
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-lg overflow-hidden shadow-sm flex flex-col">
                                 <div class="relative w-full aspect-video">
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="${embedUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                                 </div>
-                                <div class="p-3 bg-white">
-                                    <h4 class="font-medium text-slate-800 text-sm truncate">Video Hướng Dẫn</h4>
-                                </div>
+                                <div class="p-3 bg-white"><h4 class="font-medium text-slate-800 text-sm truncate">Video Hướng Dẫn</h4></div>
                             </div>`;
                     } else {
-                        // Nếu không phải là Link, hiển thị dưới dạng chữ kèm icon (Dự phòng)
                         vidContainer.innerHTML += `
-                            <div class="border border-slate-200 rounded-lg overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
+                            <div class="border border-slate-200 rounded-lg overflow-hidden group cursor-pointer">
                                 <div class="h-32 bg-slate-800 relative flex items-center justify-center">
-                                    <i class="fas fa-play-circle text-4xl text-white/80 group-hover:text-white group-hover:scale-110 transition-transform"></i>
+                                    <i class="fas fa-play-circle text-4xl text-white/80 group-hover:text-white transition-transform"></i>
                                 </div>
-                                <div class="p-3 bg-white">
-                                    <h4 class="font-medium text-slate-800 text-sm truncate">${vid}</h4>
-                                </div>
+                                <div class="p-3 bg-white"><h4 class="font-medium text-slate-800 text-sm truncate">${vid}</h4></div>
                             </div>`;
                     }
                 });
+            }
+
+            // Render Content Tab (Hiển thị HTML của step_content)
+            const contentContainer = document.getElementById('content-html-container');
+            if(fullItem.step_content) {
+                contentContainer.innerHTML = fullItem.step_content;
+            } else {
+                contentContainer.innerHTML = '<p class="text-slate-500 italic">Chưa có nội dung chi tiết dạng văn bản cho bài học này.</p>';
             }
 
             switchTab('doc');
@@ -913,20 +922,21 @@
         }
 
         function switchTab(tabId) {
-            document.getElementById('tab-content-doc').classList.add('hidden');
-            document.getElementById('tab-content-video').classList.add('hidden');
-            document.getElementById('tab-btn-doc').className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
-            document.getElementById('tab-btn-video').className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
+            // Reset tất cả các tab
+            ['doc', 'video', 'content'].forEach(t => {
+                document.getElementById(`tab-content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap";
+            });
 
+            // Kích hoạt tab được chọn
             document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabId}`).className = "text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors";
+            document.getElementById(`tab-btn-${tabId}`).className = "text-blue-600 border-blue-600 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap";
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Comments System ---
+        // --- STREAMING_CHUNK: Hệ thống Bình luận (Comments) ---
         async function loadAndRenderComments() {
             const list = document.getElementById('comment-list');
             list.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Đang tải bình luận...</p>';
-            
             let allCommentsHtml = '';
 
             if(currentFlow.gopy) {
@@ -1019,7 +1029,7 @@
             });
         });
 
-        // --- STREAMING_CHUNK:Javascript Logic - Quiz System ---
+        // --- STREAMING_CHUNK: Hệ thống Quiz ---
         let currentQuizIndex = 0;
         let score = 0;
 
@@ -1090,23 +1100,32 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Khởi chạy ứng dụng ---
+        // --- STREAMING_CHUNK: Khởi chạy Ứng dụng ---
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
+            // 1. Kiểm tra session đăng nhập
             const savedSession = sessionStorage.getItem('corebank_user');
+            
             if(savedSession) {
+                // 2. Nếu ĐÃ ĐĂNG NHẬP -> Xử lý thông tin user -> Ẩn màn hình đăng nhập
                 currentUser = JSON.parse(savedSession);
                 
                 document.getElementById('sidebar-username').innerText = currentUser.username;
                 document.getElementById('sidebar-avatar').src = `https://placehold.co/40x40/1e40af/ffffff?text=${currentUser.username.charAt(0).toUpperCase()}`;
+                
                 document.getElementById('auth-view').classList.add('hidden');
                 
+                // 3. Tiến hành tải dữ liệu siêu nhẹ để vẽ Dashboard
+                toggleLoading(true, "Đang tải dữ liệu, vui lòng chờ...");
                 await loadUserData();
-                await fetchFlowData(); 
+                await fetchLightFlowData(); 
+                toggleLoading(false);
 
+                // 4. Mở vào Dashboard
                 navigate('dashboard');
             } else {
+                // Nếu CHƯA ĐĂNG NHẬP -> Hiện nguyên màn hình Form đăng nhập
                 document.getElementById('auth-view').classList.remove('hidden');
             }
         };
