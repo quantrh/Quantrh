@@ -146,14 +146,11 @@
             <a href="#" onclick="navigate('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-3 rounded-lg bg-blue-600/20 text-blue-400 font-medium transition-colors">
                 <i class="fas fa-chart-pie w-6"></i> Dashboard
             </a>
-            <a href="#" onclick="navigate('courses')" id="nav-courses" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors text-slate-300">
-                <i class="fas fa-book-open w-6"></i> Bài học / Lessons
+            <a href="#" onclick="navigate('courses')" id="nav-courses" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                <i class="fas fa-book w-6"></i> Kho Tác Nghiệp
             </a>
-            <a href="#" onclick="navigate('quiz')" id="nav-quiz" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors text-slate-300">
+            <a href="#" onclick="navigate('quiz')" id="nav-quiz" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
                 <i class="fas fa-clipboard-check w-6"></i> Thi Trắc Nghiệm
-            </a>
-            <a href="#" onclick="navigate('editor')" id="nav-editor" class="flex items-center px-3 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors text-slate-300">
-                <i class="fas fa-pen-to-square w-6"></i> Biên Soạn
             </a>
         </nav>
 
@@ -288,7 +285,7 @@
             <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
                 <div class="flex justify-between items-end mb-6 border-b pb-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-800">Bài học / Lessons</h1>
+                        <h1 class="text-2xl font-bold text-slate-800">Kho Tác Nghiệp Core Banking</h1>
                         <p class="text-sm text-slate-500 mt-1">Tra cứu các quy trình và hướng dẫn hệ thống</p>
                     </div>
                 </div>
@@ -354,7 +351,7 @@
                                 <i class="fas fa-play-circle mr-2"></i> Video Hướng Dẫn
                             </button>
                             <button onclick="switchTab('content')" id="tab-btn-content" class="text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 py-4 px-4 block border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
-                                <i class="fas fa-list-ol mr-2"></i> Quy trình tác nghiệp
+                                <i class="fas fa-list-ol mr-2"></i> Nội dung bài học
                             </button>
                         </nav>
                     </div>
@@ -460,105 +457,6 @@
                     <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium transition-colors">
                         Thi Lại
                     </button>
-                </div>
-            </section>
-
-            <!-- VIEW: EDITOR -->
-            <section id="view-editor" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8 h-[calc(100vh-60px)] md:h-screen">
-                <div class="flex justify-between items-end mb-6 border-b pb-4">
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-800">Biên Soạn Nội Dung</h1>
-                        <p class="text-sm text-slate-500 mt-1">Cập nhật tài liệu, video và quy trình tác nghiệp</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-6 h-full pb-10">
-                    <!-- Left: List -->
-                    <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full max-h-[800px]">
-                        <div class="p-4 border-b bg-slate-50 rounded-t-xl">
-                            <div class="relative">
-                                <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
-                                <input type="text" id="editor-search" placeholder="Tìm kiếm bài học cần sửa..." class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="renderEditorList()">
-                            </div>
-                        </div>
-                        <div class="flex-1 overflow-y-auto p-2" id="editor-list">
-                            <!-- List items injected here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Right: Empty State -->
-                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center p-6 h-full max-h-[800px]" id="editor-empty-state">
-                        <div class="text-center text-slate-500">
-                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-pen-to-square text-3xl text-slate-300"></i>
-                            </div>
-                            <p class="font-medium text-slate-700">Chưa chọn bài học</p>
-                            <p class="text-sm mt-1">Chọn một bài học ở danh sách bên trái để bắt đầu chỉnh sửa</p>
-                        </div>
-                    </div>
-
-                    <!-- Right: Form Edit -->
-                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-y-auto p-6 hidden h-full max-h-[800px]" id="editor-form-container">
-                        <div class="flex items-center justify-between mb-6 border-b pb-4">
-                            <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-edit text-blue-500 mr-2"></i> Chỉnh sửa thông tin</h2>
-                            <button type="button" onclick="closeEditor()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
-                        <form id="editor-form" class="space-y-5">
-                            <input type="hidden" id="edit-id">
-                            
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
-                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Thông tin cơ bản</h3>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tên quy trình (Flow) <span class="text-red-500">*</span></label>
-                                    <input type="text" id="edit-flow" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Phân hệ (Module)</label>
-                                        <input type="text" id="edit-module" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Ứng dụng (App)</label>
-                                        <input type="text" id="edit-app" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Đối tượng (Class ID)</label>
-                                        <input type="text" id="edit-class" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Từ khóa tìm kiếm (Keywords)</label>
-                                    <input type="text" id="edit-keywords" placeholder="Ví dụ: vay, CIF, mở thẻ..." class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                </div>
-                            </div>
-
-                            <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4">
-                                <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-2">Tài nguyên học tập</h3>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Link Tài liệu / Slide <span class="text-slate-400 font-normal">(Cách nhau bởi dấu chấm phẩy ;)</span></label>
-                                    <input type="text" id="edit-doc" placeholder="Tên tài liệu 1; Tên tài liệu 2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Link Video <span class="text-slate-400 font-normal">(Cách nhau bởi dấu chấm phẩy ;)</span></label>
-                                    <input type="text" id="edit-video" placeholder="https://youtube.com/... ; https://youtube.com/..." class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Nội dung / Quy trình tác nghiệp (Hỗ trợ HTML)</label>
-                                <textarea id="edit-content" rows="10" placeholder="<p>Nhập nội dung quy trình tại đây...</p>" class="w-full border border-slate-300 rounded p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"></textarea>
-                            </div>
-
-                            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                                <button type="button" onclick="closeEditor()" class="px-6 py-2.5 border border-slate-300 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors">Hủy</button>
-                                <button type="button" onclick="saveFlowEdit()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center">
-                                    <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </section>
         </div>
@@ -805,7 +703,6 @@
                 mainContent.classList.remove('bg-[#020b16]');
                 if(viewId === 'courses') renderCourseList();
                 if(viewId === 'quiz') initQuizView();
-                if(viewId === 'editor') renderEditorList();
             }
         }
 
@@ -1017,7 +914,7 @@
             if(fullItem.step_content) {
                 contentContainer.innerHTML = fullItem.step_content;
             } else {
-                contentContainer.innerHTML = '<p class="text-slate-500 italic">Chưa có quy trình tác nghiệp cho bài học này.</p>';
+                contentContainer.innerHTML = '<p class="text-slate-500 italic">Chưa có nội dung chi tiết dạng văn bản cho bài học này.</p>';
             }
 
             switchTab('doc');
@@ -1203,109 +1100,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Editor System ---
-        function renderEditorList() {
-            const listContainer = document.getElementById('editor-list');
-            const searchVal = document.getElementById('editor-search').value.toLowerCase();
-            listContainer.innerHTML = '';
-            
-            if(!isDataLoaded) return;
-            
-            dbData.forEach(item => {
-                const searchStr = `${item.flow} ${item.module} ${item.keywords || ''}`.toLowerCase();
-                if (searchVal && !searchStr.includes(searchVal)) return;
-
-                const div = document.createElement('div');
-                div.className = "p-3 border-b border-slate-100 hover:bg-blue-50 cursor-pointer rounded transition-colors text-sm mb-1 flex items-center justify-between group";
-                div.innerHTML = `
-                    <div class="truncate pr-2">
-                        <div class="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">${item.flow}</div>
-                        <div class="text-xs text-slate-500 mt-1"><span class="bg-slate-200 px-1 rounded">${item.module || 'Chung'}</span> - ${item.app || 'N/A'}</div>
-                    </div>
-                    <i class="fas fa-edit text-slate-300 group-hover:text-blue-500 transition-colors"></i>
-                `;
-                div.onclick = () => openEditorForm(item.id);
-                listContainer.appendChild(div);
-            });
-        }
-
-        async function openEditorForm(id) {
-            toggleLoading(true, "Đang tải dữ liệu bài học để sửa...");
-            const fullItem = await fetchFullDetail(id);
-            toggleLoading(false);
-
-            if (!fullItem) return showToast('Lỗi khi tải chi tiết bài học', true);
-
-            // Gán dữ liệu vào Form
-            document.getElementById('edit-id').value = fullItem.id;
-            document.getElementById('edit-flow').value = fullItem.flow || '';
-            document.getElementById('edit-module').value = fullItem.module || '';
-            document.getElementById('edit-app').value = fullItem.app || '';
-            document.getElementById('edit-class').value = fullItem.class_id || '';
-            document.getElementById('edit-doc').value = fullItem.link_doc || '';
-            document.getElementById('edit-video').value = fullItem.link_video || '';
-            document.getElementById('edit-keywords').value = fullItem.keywords || '';
-            document.getElementById('edit-content').value = fullItem.step_content || '';
-
-            // Chuyển đổi giao diện
-            document.getElementById('editor-empty-state').classList.add('hidden');
-            document.getElementById('editor-form-container').classList.remove('hidden');
-            
-            // Xóa background selected ở list, set lại cho item được chọn (tùy chọn UI)
-        }
-
-        function closeEditor() {
-            document.getElementById('editor-form-container').classList.add('hidden');
-            document.getElementById('editor-empty-state').classList.remove('hidden');
-        }
-
-        async function saveFlowEdit() {
-            const id = document.getElementById('edit-id').value;
-            const flowName = document.getElementById('edit-flow').value.trim();
-            
-            if(!id || !flowName) return showToast('Tên quy trình (Flow) không được để trống', true);
-
-            const updateData = {
-                flow: flowName,
-                module: document.getElementById('edit-module').value,
-                app: document.getElementById('edit-app').value,
-                class_id: document.getElementById('edit-class').value,
-                link_doc: document.getElementById('edit-doc').value,
-                link_video: document.getElementById('edit-video').value,
-                keywords: document.getElementById('edit-keywords').value,
-                step_content: document.getElementById('edit-content').value
-            };
-
-            toggleLoading(true, "Đang lưu thay đổi lên máy chủ...");
-            const { error } = await supabaseClient
-                .from('core_train_flows')
-                .update(updateData)
-                .eq('id', id);
-            
-            if (error) {
-                toggleLoading(false);
-                return showToast('Lỗi khi lưu dữ liệu: ' + error.message, true);
-            }
-
-            // Cập nhật local dbData (chỉ cập nhật các trường nhẹ) để danh sách không bị out-sync
-            const idx = dbData.findIndex(d => d.id == id);
-            if(idx !== -1) {
-                dbData[idx].flow = updateData.flow;
-                dbData[idx].module = updateData.module;
-                dbData[idx].app = updateData.app;
-                dbData[idx].class_id = updateData.class_id;
-                dbData[idx].keywords = updateData.keywords;
-            }
-
-            toggleLoading(false);
-            showToast('Lưu cập nhật thành công!');
-            
-            // Cập nhật lại list bên trái và danh sách Courses
-            renderEditorList(); 
-            initFilters(); // Render lại bộ lọc vì có thể Module đã bị đổi
-        }
-
-        // --- STREAMING_CHUNK:Khởi chạy ứng dụng ---
+        // --- STREAMING_CHUNK: Khởi chạy Ứng dụng ---
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
