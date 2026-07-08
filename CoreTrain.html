@@ -349,9 +349,19 @@
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
                 
-                <button onclick="navigate('courses')" class="mb-4 text-slate-500 hover:text-bidv-primary text-sm font-bold flex items-center gap-2 transition-colors w-fit">
-                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
-                </button>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                    <button onclick="navigate('courses')" class="text-slate-500 hover:text-bidv-primary text-sm font-bold flex items-center gap-2 transition-colors w-fit">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-prev-course" onclick="navigateCourse(-1)" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
+                            <i class="fas fa-chevron-left"></i> Bài trước
+                        </button>
+                        <button id="btn-next-course" onclick="navigateCourse(1)" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
+                            Bài sau <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
                     <!-- Header -->
@@ -396,7 +406,7 @@
 
                         <!-- Video Tab Content -->
                         <div id="tab-content-video" class="hidden space-y-4">
-                            <div id="video-links-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div id="video-links-container" class="grid grid-cols-1 gap-6">
                                 <!-- Videos injected here -->
                             </div>
                         </div>
@@ -572,9 +582,15 @@
                                         <input type="text" id="edit-class" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Từ khóa tìm kiếm (Keywords)</label>
-                                    <input type="text" id="edit-keywords" placeholder="Ví dụ: vay, CIF, mở thẻ..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Từ khóa tìm kiếm (Keywords)</label>
+                                        <input type="text" id="edit-keywords" placeholder="Ví dụ: vay, CIF, mở thẻ..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Đường dẫn Menu (instruc_flow)</label>
+                                        <input type="text" id="edit-instruc-flow" placeholder="Ví dụ: Phân hệ LN -> Menu ABC..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    </div>
                                 </div>
                             </div>
 
@@ -631,7 +647,7 @@
             { q: "Chức năng 'INBT' trong phân hệ chuyển tiền có ý nghĩa gì?", opts: ["Chuyển tiền quốc tế", "Chuyển tiền liên chi nhánh nội bộ", "Thanh toán hóa đơn", "Chuyển đổi ngoại tệ"], ans: 1 }
         ];
 
-        // --- STREAMING_CHUNK: Cấu hình Supabase & Utilities ---
+        // --- Cấu hình Supabase & Utilities ---
         const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; // THAY URL CỦA BẠN VÀO ĐÂY
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; // THAY ANON KEY CỦA BẠN VÀO ĐÂY
         
@@ -686,14 +702,12 @@
             return (match && match[2].length === 11) ? `https://www.youtube-nocookie.com/embed/${match[2]}` : null;
         }
 
-        // --- Cập nhật: Hàm chuyển đổi Link Document thành dạng Embed ---
+        // --- Hàm chuyển đổi Link Document thành dạng Embed ---
         const formatDocUrlForEmbed = (url) => {
             if (!url) return "";
             let embedUrl = url;
             // Xử lý link OneDrive / SharePoint
             if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
-                // Sửa lỗi: Giữ nguyên link ban đầu vì OneDrive tự render được trong iframe tốt hơn
-                // Không thêm action=embedview để tránh phá hỏng các link OneDrive video hoặc link đã có param sẵn.
                 embedUrl = url;
             } 
             // Xử lý mở rộng thêm hỗ trợ link Google Drive
@@ -703,7 +717,7 @@
             return embedUrl;
         };
 
-        // --- STREAMING_CHUNK: Quản lý Authentication ---
+        // --- Quản lý Authentication ---
         async function handleAuth(isRegister) {
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
@@ -794,7 +808,7 @@
             if(scoreData && scoreData.length > 0) globalTopScore = scoreData[0].score;
         }
 
-        // --- STREAMING_CHUNK: Truy vấn Database Tối ưu ---
+        // --- Truy vấn Database Tối ưu ---
         async function fetchLightFlowData() {
             try {
                 const { data, error, status } = await supabaseClient
@@ -894,7 +908,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Logic Dashboard & Course List ---
+        // --- Logic Dashboard & Course List ---
         function renderDashboard() {
             if (!isDataLoaded) return; 
 
@@ -1057,7 +1071,20 @@
             document.getElementById('list-count').innerText = `Tìm thấy ${count} kết quả`;
         }
 
-        // --- STREAMING_CHUNK: Cập nhật hiển thị Detail & Tài liệu (Documents) ---
+        // --- Điều hướng chi tiết Bài học ---
+        async function navigateCourse(direction) {
+            if (!currentFlow || !dbData.length) return;
+            const currentIndex = dbData.findIndex(d => d.id === currentFlow.id);
+            if (currentIndex === -1) return;
+            
+            const targetIndex = currentIndex + direction;
+            if (targetIndex >= 0 && targetIndex < dbData.length) {
+                const targetCourse = dbData[targetIndex];
+                await openDetail(targetCourse);
+            }
+        }
+
+        // --- Cập nhật hiển thị Detail & Tài liệu (Documents) ---
         async function openDetail(lightItem) {
             toggleLoading(true, "Đang tải chi tiết nội dung...");
             
@@ -1070,6 +1097,13 @@
             saveProgressToDB(fullItem.flow);
             sessionStorage.setItem('corebank_lastView', fullItem.flow);
             navigate('detail');
+
+            // Cập nhật trạng thái nút Prev/Next
+            const currentIndex = dbData.findIndex(d => d.id === lightItem.id);
+            const btnPrev = document.getElementById('btn-prev-course');
+            const btnNext = document.getElementById('btn-next-course');
+            if(btnPrev) btnPrev.disabled = currentIndex <= 0;
+            if(btnNext) btnNext.disabled = currentIndex >= dbData.length - 1;
 
             document.getElementById('detail-title').innerText = fullItem.flow;
             document.getElementById('detail-module').innerText = fullItem.module || 'Chung';
@@ -1133,19 +1167,20 @@
 
             // Render Videos Tab
             const vidContainer = document.getElementById('video-links-container');
+            vidContainer.className = 'grid grid-cols-1 gap-6'; // Ép 1 cột để video to full chiều ngang
             vidContainer.innerHTML = '';
             let vids = fullItem.link_video ? fullItem.link_video.split(';') : [];
             vids = vids.map(v => v.trim()).filter(v => v.length > 0);
             
             if (vids.length === 0) {
-                 vidContainer.innerHTML = '<div class="col-span-2 text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-video-slash text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Chưa có video hướng dẫn</p></div>';
+                 vidContainer.innerHTML = '<div class="text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-video-slash text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Chưa có video hướng dẫn</p></div>';
             } else {
                 vids.forEach(vidStr => {
                     const embedUrl = getYouTubeEmbedUrl(vidStr);
                     if (embedUrl) {
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
-                                <div class="relative w-full aspect-video bg-slate-900">
+                                <div class="relative w-full h-[400px] md:h-[600px] bg-slate-900">
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="${embedUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                                 </div>
                                 <div class="p-4 border-t border-slate-100 flex items-center justify-between">
@@ -1159,8 +1194,8 @@
                     } else if (vidStr.includes('1drv.ms') || vidStr.includes('sharepoint.com') || vidStr.includes('live.com')) {
                         // Áp dụng giải pháp từ test.html cho OneDrive Video
                         vidContainer.innerHTML += `
-                            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white md:col-span-2">
-                                <div class="relative w-full h-[500px] bg-black">
+                            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
+                                <div class="relative w-full h-[400px] md:h-[600px] bg-black">
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="${vidStr}" frameborder="0" scrolling="no" allowfullscreen></iframe>
                                 </div>
                                 <div class="p-4 border-t border-slate-100 flex items-center justify-between">
@@ -1208,7 +1243,7 @@
             document.getElementById(`tab-btn-${tabId}`).className = "text-bidv-primary border-bidv-primary py-4 px-5 block border-b-2 font-bold text-sm transition-colors whitespace-nowrap";
         }
 
-        // --- STREAMING_CHUNK: Hệ thống Bình luận (Comments) ---
+        // --- Hệ thống Bình luận (Comments) ---
         async function loadAndRenderComments() {
             const list = document.getElementById('comment-list');
             list.innerHTML = '<div class="text-center py-6"><i class="fas fa-spinner fa-spin text-bidv-primary text-2xl"></i></div>';
@@ -1304,7 +1339,7 @@
             });
         });
 
-        // --- STREAMING_CHUNK: Hệ thống Quiz ---
+        // --- Hệ thống Quiz ---
         let currentQuizIndex = 0;
         let score = 0;
 
@@ -1378,7 +1413,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Javascript Logic - Editor System (Màn hình Biên soạn) ---
+        // --- Javascript Logic - Editor System (Màn hình Biên soạn) ---
         function renderEditorList() {
             const listContainer = document.getElementById('editor-list');
             const searchVal = document.getElementById('editor-search').value.toLowerCase();
@@ -1422,6 +1457,7 @@
             document.getElementById('edit-doc').value = fullItem.link_doc || '';
             document.getElementById('edit-video').value = fullItem.link_video || '';
             document.getElementById('edit-keywords').value = fullItem.keywords || '';
+            document.getElementById('edit-instruc-flow').value = fullItem.instruc_flow || '';
             
             // Gán dữ liệu HTML
             if (quillInstance) {
@@ -1470,6 +1506,7 @@
                 link_doc: document.getElementById('edit-doc').value,
                 link_video: document.getElementById('edit-video').value,
                 keywords: document.getElementById('edit-keywords').value,
+                instruc_flow: document.getElementById('edit-instruc-flow').value,
                 step_content: htmlContent
             };
 
@@ -1531,7 +1568,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Khởi chạy ứng dụng ---
+        // --- Khởi chạy ứng dụng ---
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
