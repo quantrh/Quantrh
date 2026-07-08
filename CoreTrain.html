@@ -690,10 +690,11 @@
         const formatDocUrlForEmbed = (url) => {
             if (!url) return "";
             let embedUrl = url;
-            // Xử lý link OneDrive / SharePoint (Theo logic của Cbap.html)
+            // Xử lý link OneDrive / SharePoint
             if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
-                let cleanUrl = url.replace(/[?&]action=[^&]+/, '');
-                embedUrl = cleanUrl.includes('?') ? `${cleanUrl}&action=embedview` : `${cleanUrl}?action=embedview`;
+                // Sửa lỗi: Giữ nguyên link ban đầu vì OneDrive tự render được trong iframe tốt hơn
+                // Không thêm action=embedview để tránh phá hỏng các link OneDrive video hoặc link đã có param sẵn.
+                embedUrl = url;
             } 
             // Xử lý mở rộng thêm hỗ trợ link Google Drive
             else if (url.includes('drive.google.com/file/d/')) {
@@ -1108,7 +1109,8 @@
                                         <i class="fas fa-circle-notch fa-spin text-3xl text-bidv-primary mb-3"></i>
                                         <span class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Đang tải tài liệu...</span>
                                     </div>
-                                    <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-transparent" onload="this.previousElementSibling.style.display='none'"></iframe>
+                                    <!-- Sửa lỗi iFrame: bổ sung allowfullscreen, frameborder, scrolling -->
+                                    <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-transparent" allowfullscreen="true" frameborder="0" scrolling="no" onload="this.previousElementSibling.style.display='none'"></iframe>
                                 </div>
                             </div>
                         `;
