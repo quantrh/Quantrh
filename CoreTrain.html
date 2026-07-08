@@ -169,6 +169,21 @@
         </div>
     </div>
 
+    <!-- LỚP PHỦ DUYỆT TÀI KHOẢN MỚI -->
+    <div id="approval-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl border-t-4 border-bidv-primary flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
+                <h2 class="text-xl font-bold text-bidv-primary flex items-center gap-2"><i class="fas fa-user-check"></i> Phê duyệt tài khoản</h2>
+                <button onclick="document.getElementById('approval-view').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="pending-users-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- Danh sách pending sẽ được JavaScript chèn vào đây -->
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
         <i class="fas fa-circle-notch fa-spin text-5xl text-bidv-primary mb-4"></i>
@@ -204,6 +219,11 @@
                     <p class="text-[10px] uppercase tracking-wider text-bidv-secondary" id="sidebar-status">Trực tuyến</p>
                 </div>
             </div>
+            
+            <button onclick="openApprovalModal()" class="w-full mb-3 text-xs bg-bidv-secondary/20 hover:bg-bidv-secondary/40 text-bidv-secondary py-2.5 rounded transition-colors border border-bidv-secondary/30 flex items-center justify-center gap-2 font-bold shadow-sm">
+                <i class="fas fa-user-check"></i> Duyệt tài khoản mới
+            </button>
+            
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="document.getElementById('change-pass-view').classList.remove('hidden')" class="text-xs bg-white/10 hover:bg-white/20 text-white py-2 rounded transition-colors border border-white/20"><i class="fas fa-key"></i> Đổi MK</button>
                 <button onclick="handleLogout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-200 py-2 rounded transition-colors border border-red-500/30"><i class="fas fa-sign-out-alt"></i> Thoát</button>
@@ -349,6 +369,7 @@
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
                 
+                <!-- Bổ sung nút Bài trước & Bài sau -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                     <button onclick="navigate('courses')" class="text-slate-500 hover:text-bidv-primary text-sm font-bold flex items-center gap-2 transition-colors w-fit">
                         <i class="fas fa-arrow-left"></i> Quay lại danh sách
@@ -400,7 +421,7 @@
                         <!-- Doc Tab Content -->
                         <div id="tab-content-doc" class="block space-y-4">
                             <div id="doc-links-container" class="grid grid-cols-1 gap-6">
-                                <!-- Docs injected here with new iFrame logic -->
+                                <!-- Docs injected here -->
                             </div>
                         </div>
 
@@ -734,11 +755,20 @@
                         return showToast('Tên đăng nhập đã tồn tại!', true);
                     }
 
-                    const { error } = await supabaseClient.from('core_train_users').insert([{ username: user, password_hash: passHash, status: 'active' }]);
+                    // Tự động kiểm tra: Nếu hệ thống chưa có ai, account đầu tiên sẽ được kích hoạt luôn.
+                    // Các account sau sẽ vào trạng thái 'pending' chờ duyệt.
+                    const { count } = await supabaseClient.from('core_train_users').select('*', { count: 'exact', head: true });
+                    const newStatus = (count === 0) ? 'active' : 'pending';
+
+                    const { error } = await supabaseClient.from('core_train_users').insert([{ username: user, password_hash: passHash, status: newStatus }]);
                     toggleLoading(false);
                     if(error) throw error;
                     
-                    showToast('Đăng ký thành công! Hãy bấm ĐĂNG NHẬP.');
+                    if(newStatus === 'active') {
+                        showToast('Đăng ký thành công tài khoản quản trị đầu tiên! Hãy bấm ĐĂNG NHẬP.');
+                    } else {
+                        showToast('Đăng ký thành công! Vui lòng chờ một tài khoản đã đăng nhập DUYỆT xác nhận.');
+                    }
                     document.getElementById('auth-password').value = ''; 
                 } else {
                     const { data, error } = await supabaseClient.from('core_train_users').select('*').eq('username', user).eq('password_hash', passHash).single();
@@ -746,6 +776,10 @@
                     if(error || !data) {
                         toggleLoading(false);
                         return showToast('Sai tài khoản hoặc mật khẩu', true);
+                    }
+                    if(data.status === 'pending') {
+                        toggleLoading(false);
+                        return showToast('Tài khoản đang chờ duyệt! Vui lòng nhờ một người dùng khác xác nhận.', true);
                     }
                     if(data.status !== 'active') {
                         toggleLoading(false);
@@ -791,6 +825,66 @@
             document.getElementById('change-pass-view').classList.add('hidden');
             document.getElementById('cp-old').value = '';
             document.getElementById('cp-new').value = '';
+        }
+
+        // --- Quản lý Duyệt Tài khoản (Approval) ---
+        async function openApprovalModal() {
+            document.getElementById('approval-view').classList.remove('hidden');
+            loadPendingUsers();
+        }
+
+        async function loadPendingUsers() {
+            const list = document.getElementById('pending-users-list');
+            list.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-bidv-primary text-xl"></i></div>';
+            
+            const { data, error } = await supabaseClient.from('core_train_users').select('id, username, created_at').eq('status', 'pending').order('created_at', { ascending: false });
+            
+            if (error) {
+                list.innerHTML = '<div class="text-center text-red-500 py-4 font-bold">Lỗi tải dữ liệu</div>';
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-500 py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300 font-medium">Không có tài khoản nào đang chờ duyệt</div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            data.forEach(u => {
+                const dateStr = u.created_at ? new Date(u.created_at).toLocaleString('vi-VN') : 'Mới đây';
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors">
+                        <div>
+                            <div class="font-bold text-slate-800">${u.username}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">Đăng ký: ${dateStr}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="approveUser(${u.id}, '${u.username}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-check"></i> Duyệt</button>
+                            <button onclick="rejectUser(${u.id}, '${u.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-times"></i> Xóa</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function approveUser(id, username) {
+            if(!confirm(`Bạn chắc chắn muốn duyệt cho phép tài khoản "${username}" đăng nhập?`)) return;
+            toggleLoading(true, "Đang duyệt tài khoản...");
+            const { error } = await supabaseClient.from('core_train_users').update({ status: 'active' }).eq('id', id);
+            toggleLoading(false);
+            if(error) return showToast('Lỗi khi duyệt: ' + error.message, true);
+            showToast(`Đã duyệt tài khoản ${username} thành công!`);
+            loadPendingUsers();
+        }
+
+        async function rejectUser(id, username) {
+            if(!confirm(`Bạn có chắc muốn xóa/từ chối tài khoản "${username}" vĩnh viễn?`)) return;
+            toggleLoading(true, "Đang từ chối tài khoản...");
+            const { error } = await supabaseClient.from('core_train_users').delete().eq('id', id);
+            toggleLoading(false);
+            if(error) return showToast('Lỗi khi xóa: ' + error.message, true);
+            showToast(`Đã xóa tài khoản ${username} khỏi hệ thống.`);
+            loadPendingUsers();
         }
 
         function handleLogout() {
@@ -1426,14 +1520,15 @@
                 if (searchVal && !searchStr.includes(searchVal)) return;
 
                 const div = document.createElement('div');
-                div.className = "p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer rounded-lg transition-colors text-sm mb-1 flex items-center justify-between group";
+                div.className = "editor-list-item p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer rounded-lg transition-colors text-sm mb-1 flex items-center justify-between group";
+                div.id = `editor-item-${item.id}`;
                 div.innerHTML = `
                     <div class="truncate pr-2">
-                        <div class="font-bold text-slate-700 truncate group-hover:text-bidv-primary transition-colors">${item.flow}</div>
+                        <div class="flow-name font-bold text-slate-700 truncate group-hover:text-bidv-primary transition-colors">${item.flow}</div>
                         <div class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider"><span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">${item.module || 'Chung'}</span> • ${item.app || 'N/A'}</div>
                     </div>
                     <div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-bidv-primary/10 transition-colors">
-                        <i class="fas fa-edit text-slate-300 group-hover:text-bidv-primary transition-colors"></i>
+                        <i class="fas fa-edit text-slate-300 group-hover:text-bidv-primary transition-colors edit-icon"></i>
                     </div>
                 `;
                 div.onclick = () => openEditorForm(item.id);
@@ -1442,6 +1537,28 @@
         }
 
         async function openEditorForm(id) {
+            // Hiệu ứng Highlight Item được chọn
+            document.querySelectorAll('.editor-list-item').forEach(el => {
+                // Xóa trạng thái highlight cũ
+                el.classList.remove('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
+                el.classList.add('hover:bg-slate-50');
+                el.querySelector('.flow-name').classList.remove('text-bidv-primary');
+                el.querySelector('.flow-name').classList.add('text-slate-700');
+                el.querySelector('.edit-icon').classList.remove('text-bidv-primary');
+                el.querySelector('.edit-icon').classList.add('text-slate-300');
+            });
+            
+            const selectedItem = document.getElementById(`editor-item-${id}`);
+            if (selectedItem) {
+                // Thêm trạng thái highlight mới
+                selectedItem.classList.remove('hover:bg-slate-50');
+                selectedItem.classList.add('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
+                selectedItem.querySelector('.flow-name').classList.remove('text-slate-700');
+                selectedItem.querySelector('.flow-name').classList.add('text-bidv-primary');
+                selectedItem.querySelector('.edit-icon').classList.remove('text-slate-300');
+                selectedItem.querySelector('.edit-icon').classList.add('text-bidv-primary');
+            }
+
             toggleLoading(true, "Đang tải dữ liệu bài học để sửa...");
             const fullItem = await fetchFullDetail(id);
             toggleLoading(false);
@@ -1481,6 +1598,16 @@
         function closeEditor() {
             document.getElementById('editor-form-container').classList.add('hidden');
             document.getElementById('editor-empty-state').classList.remove('hidden');
+            
+            // Xóa highlight khi đóng form
+            document.querySelectorAll('.editor-list-item').forEach(el => {
+                el.classList.remove('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
+                el.classList.add('hover:bg-slate-50');
+                el.querySelector('.flow-name').classList.remove('text-bidv-primary');
+                el.querySelector('.flow-name').classList.add('text-slate-700');
+                el.querySelector('.edit-icon').classList.remove('text-bidv-primary');
+                el.querySelector('.edit-icon').classList.add('text-slate-300');
+            });
         }
 
         async function saveFlowEdit() {
@@ -1538,6 +1665,19 @@
             
             renderEditorList(); 
             initFilters(); 
+            
+            // Tự động chọn lại item vừa chỉnh sửa để duy trì highlight
+            setTimeout(() => {
+                const selectedItem = document.getElementById(`editor-item-${id}`);
+                if(selectedItem) {
+                    selectedItem.classList.remove('hover:bg-slate-50');
+                    selectedItem.classList.add('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
+                    selectedItem.querySelector('.flow-name').classList.remove('text-slate-700');
+                    selectedItem.querySelector('.flow-name').classList.add('text-bidv-primary');
+                    selectedItem.querySelector('.edit-icon').classList.remove('text-slate-300');
+                    selectedItem.querySelector('.edit-icon').classList.add('text-bidv-primary');
+                }
+            }, 100);
         }
 
         // --- HÀM CHUYỂN ĐỔI CHẾ ĐỘ SOẠN THẢO HTML ---
