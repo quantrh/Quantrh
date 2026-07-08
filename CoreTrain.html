@@ -723,16 +723,12 @@
             return (match && match[2].length === 11) ? `https://www.youtube-nocookie.com/embed/${match[2]}` : null;
         }
 
-        // --- Hàm chuyển đổi Link Document thành dạng Embed ---
         const formatDocUrlForEmbed = (url) => {
             if (!url) return "";
             let embedUrl = url;
-            // Xử lý link OneDrive / SharePoint
             if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
                 embedUrl = url;
-            } 
-            // Xử lý mở rộng thêm hỗ trợ link Google Drive
-            else if (url.includes('drive.google.com/file/d/')) {
+            } else if (url.includes('drive.google.com/file/d/')) {
                 embedUrl = url.replace(/\/view.*$/, '/preview');
             }
             return embedUrl;
@@ -755,8 +751,6 @@
                         return showToast('Tên đăng nhập đã tồn tại!', true);
                     }
 
-                    // Tự động kiểm tra: Nếu hệ thống chưa có ai, account đầu tiên sẽ được kích hoạt luôn.
-                    // Các account sau sẽ vào trạng thái 'pending' chờ duyệt.
                     const { count } = await supabaseClient.from('core_train_users').select('*', { count: 'exact', head: true });
                     const newStatus = (count === 0) ? 'active' : 'pending';
 
@@ -833,6 +827,7 @@
             loadPendingUsers();
         }
 
+        // ĐÃ FIX: Lỗi Syntax Error do truyền chuỗi username chưa escape vào onclick
         async function loadPendingUsers() {
             const list = document.getElementById('pending-users-list');
             list.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-bidv-primary text-xl"></i></div>';
@@ -852,18 +847,29 @@
             list.innerHTML = '';
             data.forEach(u => {
                 const dateStr = u.created_at ? new Date(u.created_at).toLocaleString('vi-VN') : 'Mới đây';
-                list.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors">
-                        <div>
-                            <div class="font-bold text-slate-800">${u.username}</div>
-                            <div class="text-[11px] text-slate-500 mt-0.5">Đăng ký: ${dateStr}</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="approveUser(${u.id}, '${u.username}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-check"></i> Duyệt</button>
-                            <button onclick="rejectUser(${u.id}, '${u.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-times"></i> Xóa</button>
-                        </div>
+                
+                // Tạo một bản ghi DOM ảo để tránh lỗi xung đột chuỗi (XSS/Token Error)
+                const userRow = document.createElement('div');
+                userRow.className = "flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors";
+                userRow.innerHTML = `
+                    <div>
+                        <div class="font-bold text-slate-800 user-name-text"></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Đăng ký: ${dateStr}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-approve bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-check"></i> Duyệt</button>
+                        <button class="btn-reject bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-times"></i> Xóa</button>
                     </div>
                 `;
+                
+                // Gán text an toàn chống lỗi Token
+                userRow.querySelector('.user-name-text').innerText = u.username;
+                
+                // Lắng nghe sự kiện click trực tiếp bằng code thay vì viết vào thuộc tính HTML
+                userRow.querySelector('.btn-approve').addEventListener('click', () => approveUser(u.id, u.username));
+                userRow.querySelector('.btn-reject').addEventListener('click', () => rejectUser(u.id, u.username));
+                
+                list.appendChild(userRow);
             });
         }
 
@@ -1237,13 +1243,11 @@
                                         <i class="fas fa-circle-notch fa-spin text-3xl text-bidv-primary mb-3"></i>
                                         <span class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Đang tải tài liệu...</span>
                                     </div>
-                                    <!-- Sửa lỗi iFrame: bổ sung allowfullscreen, frameborder, scrolling -->
                                     <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-transparent" allowfullscreen="true" frameborder="0" scrolling="no" onload="this.previousElementSibling.style.display='none'"></iframe>
                                 </div>
                             </div>
                         `;
                     } else {
-                         // Xử lý đối với các trường dữ liệu bị nhập "chuỗi text" không phải link (Fallback)
                          docContainer.innerHTML += `
                             <div class="flex items-center p-4 border border-slate-200 bg-slate-50 rounded-lg">
                                 <div class="w-12 h-12 rounded-lg bg-slate-200 text-slate-400 flex items-center justify-center text-xl mr-4">
@@ -1261,7 +1265,7 @@
 
             // Render Videos Tab
             const vidContainer = document.getElementById('video-links-container');
-            vidContainer.className = 'grid grid-cols-1 gap-6'; // Ép 1 cột để video to full chiều ngang
+            vidContainer.className = 'grid grid-cols-1 gap-6'; 
             vidContainer.innerHTML = '';
             let vids = fullItem.link_video ? fullItem.link_video.split(';') : [];
             vids = vids.map(v => v.trim()).filter(v => v.length > 0);
@@ -1286,7 +1290,6 @@
                                 </div>
                             </div>`;
                     } else if (vidStr.includes('1drv.ms') || vidStr.includes('sharepoint.com') || vidStr.includes('live.com')) {
-                        // Áp dụng giải pháp từ test.html cho OneDrive Video
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
                                 <div class="relative w-full h-[400px] md:h-[600px] bg-black">
@@ -1537,9 +1540,7 @@
         }
 
         async function openEditorForm(id) {
-            // Hiệu ứng Highlight Item được chọn
             document.querySelectorAll('.editor-list-item').forEach(el => {
-                // Xóa trạng thái highlight cũ
                 el.classList.remove('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
                 el.classList.add('hover:bg-slate-50');
                 el.querySelector('.flow-name').classList.remove('text-bidv-primary');
@@ -1550,7 +1551,6 @@
             
             const selectedItem = document.getElementById(`editor-item-${id}`);
             if (selectedItem) {
-                // Thêm trạng thái highlight mới
                 selectedItem.classList.remove('hover:bg-slate-50');
                 selectedItem.classList.add('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
                 selectedItem.querySelector('.flow-name').classList.remove('text-slate-700');
@@ -1565,7 +1565,6 @@
 
             if (!fullItem) return showToast('Lỗi khi tải chi tiết bài học', true);
 
-            // Gán dữ liệu vào Form
             document.getElementById('edit-id').value = fullItem.id;
             document.getElementById('edit-flow').value = fullItem.flow || '';
             document.getElementById('edit-module').value = fullItem.module || '';
@@ -1576,13 +1575,11 @@
             document.getElementById('edit-keywords').value = fullItem.keywords || '';
             document.getElementById('edit-instruc-flow').value = fullItem.instruc_flow || '';
             
-            // Gán dữ liệu HTML
             if (quillInstance) {
                 quillInstance.root.innerHTML = fullItem.step_content || '';
             }
             document.getElementById('edit-content-html').value = fullItem.step_content || '';
 
-            // Mặc định mở chế độ soạn thảo Trực quan
             isHtmlMode = false;
             document.getElementById('quill-container').classList.remove('hidden');
             document.getElementById('edit-content-html').classList.add('hidden');
@@ -1590,7 +1587,6 @@
             btnToggle.innerHTML = '<i class="fas fa-code"></i> Chèn mã HTML';
             btnToggle.className = "text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
 
-            // Mở UI Form
             document.getElementById('editor-empty-state').classList.add('hidden');
             document.getElementById('editor-form-container').classList.remove('hidden');
         }
@@ -1599,7 +1595,6 @@
             document.getElementById('editor-form-container').classList.add('hidden');
             document.getElementById('editor-empty-state').classList.remove('hidden');
             
-            // Xóa highlight khi đóng form
             document.querySelectorAll('.editor-list-item').forEach(el => {
                 el.classList.remove('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
                 el.classList.add('hover:bg-slate-50');
@@ -1616,7 +1611,6 @@
             
             if(!id || !flowName) return showToast('Tên quy trình (Flow) không được để trống', true);
 
-            // Lấy nội dung HTML tùy thuộc vào chế độ
             let htmlContent = '';
             if (isHtmlMode) {
                 htmlContent = document.getElementById('edit-content-html').value;
@@ -1666,7 +1660,6 @@
             renderEditorList(); 
             initFilters(); 
             
-            // Tự động chọn lại item vừa chỉnh sửa để duy trì highlight
             setTimeout(() => {
                 const selectedItem = document.getElementById(`editor-item-${id}`);
                 if(selectedItem) {
@@ -1680,7 +1673,6 @@
             }, 100);
         }
 
-        // --- HÀM CHUYỂN ĐỔI CHẾ ĐỘ SOẠN THẢO HTML ---
         function toggleHtmlMode() {
             isHtmlMode = !isHtmlMode;
             const quillContainer = document.getElementById('quill-container');
@@ -1712,7 +1704,6 @@
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
-            // Khởi tạo Trình soạn thảo văn bản (Quill)
             quillInstance = new Quill('#quill-editor', {
                 theme: 'snow',
                 placeholder: 'Soạn thảo nội dung quy trình (ví dụ: Bước 1..., Bước 2...)...',
