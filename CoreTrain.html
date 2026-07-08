@@ -1156,6 +1156,21 @@
                                     <a href="${vidStr}" target="_blank" class="text-xs text-slate-400 hover:text-bidv-primary transition-colors"><i class="fas fa-external-link-alt"></i></a>
                                 </div>
                             </div>`;
+                    } else if (vidStr.includes('1drv.ms') || vidStr.includes('sharepoint.com') || vidStr.includes('live.com')) {
+                        // Áp dụng giải pháp từ test.html cho OneDrive Video
+                        vidContainer.innerHTML += `
+                            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white md:col-span-2">
+                                <div class="relative w-full h-[500px] bg-black">
+                                    <iframe class="absolute top-0 left-0 w-full h-full" src="${vidStr}" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fas fa-play-circle text-bidv-primary text-xl"></i>
+                                        <h4 class="font-bold text-slate-800 text-sm truncate">Video Hướng Dẫn (OneDrive)</h4>
+                                    </div>
+                                    <a href="${vidStr}" target="_blank" class="text-xs text-slate-400 hover:text-bidv-primary transition-colors font-bold"><i class="fas fa-external-link-alt"></i> Mở cửa sổ ngoài</a>
+                                </div>
+                            </div>`;
                     } else {
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden group cursor-pointer bg-white hover:border-bidv-primary hover:shadow-md transition-all">
