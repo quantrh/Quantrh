@@ -46,7 +46,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F8FAFC; /* Màu nền sáng, mát mẻ */
+            background-color: #F8FAFC;
         }
 
         /* Tùy chỉnh Scrollbar cho nền sáng */
@@ -54,6 +54,10 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #006B68; }
+        
+        /* Ẩn thanh cuộn cho các tabs trên mobile nhưng vẫn vuốt được */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn {
@@ -76,13 +80,13 @@
 
         /* Toast Message */
         #toast-container {
-            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            position: fixed; top: 20px; right: 20px; z-index: 99999;
         }
         .toast {
             background-color: #FFFFFF; color: #006B68; padding: 12px 20px;
             border-left: 4px solid #FFC62F;
             border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             font-weight: 500;
             animation: slideInRight 0.3s ease-out forwards;
         }
@@ -91,7 +95,7 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Khôi phục Quill Editor về Light Mode mặc định + nhấn nhá màu BIDV */
+        /* Khôi phục Quill Editor về Light Mode mặc định */
         .ql-toolbar.ql-snow {
             border: 1px solid #E2E8F0 !important;
             border-bottom: none !important;
@@ -112,37 +116,38 @@
         .ql-snow .ql-picker-options { background-color: #FFFFFF; border-color: #E2E8F0; }
         
         /* Nội dung HTML Content hiển thị */
-        .content-html h1, .content-html h2, .content-html h3 { color: #006B68; margin-bottom: 0.5rem; font-weight: bold; }
+        .content-html h1, .content-html h2, .content-html h3 { color: #006B68; margin-bottom: 0.5rem; font-weight: bold; line-height: 1.3; }
         .content-html p { margin-bottom: 0.75rem; color: #334155; line-height: 1.6; }
         .content-html ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
         .content-html ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
-        .content-html a { color: #006B68; text-decoration: underline; }
+        .content-html a { color: #006B68; text-decoration: underline; word-break: break-all; }
         .content-html strong { color: #006B68; }
+        .content-html img { max-width: 100%; height: auto; border-radius: 8px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
 
     <!-- LỚP PHỦ ĐĂNG NHẬP -->
     <div id="auth-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border-t-4 border-bidv-primary">
-            <div class="text-center mb-8">
-                <div class="font-black text-3xl tracking-wider mb-2 text-bidv-primary">
+        <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl border-t-4 border-bidv-primary">
+            <div class="text-center mb-6 md:mb-8">
+                <div class="font-black text-2xl md:text-3xl tracking-wider mb-2 text-bidv-primary">
                     <i class="fas fa-university mr-2 text-bidv-secondary"></i>CORE<span class="text-bidv-secondary">TRAIN</span>
                 </div>
-                <p class="text-slate-500 text-sm font-medium">Nền tảng đào tạo nghiệp vụ Core Banking</p>
+                <p class="text-slate-500 text-xs md:text-sm font-medium">Nền tảng đào tạo nghiệp vụ Core Banking</p>
             </div>
-            <div class="space-y-5">
+            <div class="space-y-4 md:space-y-5">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên đăng nhập</label>
-                    <input type="text" id="auth-username" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all" placeholder="Nhập username...">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 md:mb-2">Tên đăng nhập</label>
+                    <input type="text" id="auth-username" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all text-sm md:text-base" placeholder="Nhập username...">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
-                    <input type="password" id="auth-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all" placeholder="Nhập mật khẩu...">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 md:mb-2">Mật khẩu</label>
+                    <input type="password" id="auth-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all text-sm md:text-base" placeholder="Nhập mật khẩu...">
                 </div>
                 <div class="pt-2">
-                    <button onclick="handleAuth(false)" class="w-full bg-bidv-primary hover:bg-bidv-primary-dark text-white font-bold py-3 rounded-lg transition-colors shadow-md">ĐĂNG NHẬP</button>
-                    <button onclick="handleAuth(true)" class="w-full mt-3 bg-transparent border border-slate-300 text-slate-600 hover:text-bidv-primary hover:border-bidv-primary font-bold py-3 rounded-lg transition-colors">TẠO TÀI KHOẢN MỚI</button>
+                    <button onclick="handleAuth(false)" class="w-full bg-bidv-primary hover:bg-bidv-primary-dark text-white font-bold py-3 rounded-lg transition-colors shadow-md text-sm md:text-base">ĐĂNG NHẬP</button>
+                    <button onclick="handleAuth(true)" class="w-full mt-3 bg-transparent border border-slate-300 text-slate-600 hover:text-bidv-primary hover:border-bidv-primary font-bold py-3 rounded-lg transition-colors text-sm md:text-base">TẠO TÀI KHOẢN MỚI</button>
                 </div>
             </div>
         </div>
@@ -150,20 +155,20 @@
 
     <!-- LỚP PHỦ ĐỔI MẬT KHẨU -->
     <div id="change-pass-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border-t-4 border-bidv-secondary">
-            <h2 class="text-2xl font-bold mb-6 border-b border-slate-200 pb-3 text-bidv-primary">Đổi mật khẩu</h2>
+        <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl border-t-4 border-bidv-secondary">
+            <h2 class="text-xl md:text-2xl font-bold mb-6 border-b border-slate-200 pb-3 text-bidv-primary">Đổi mật khẩu</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu cũ</label>
-                    <input type="password" id="cp-old" class="w-full bg-slate-50 border border-slate-300 rounded px-4 py-2 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary">
+                    <input type="password" id="cp-old" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu mới</label>
-                    <input type="password" id="cp-new" class="w-full bg-slate-50 border border-slate-300 rounded px-4 py-2 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary">
+                    <input type="password" id="cp-new" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary">
                 </div>
                 <div class="flex gap-3 mt-6 pt-2">
-                    <button onclick="document.getElementById('change-pass-view').classList.add('hidden')" class="flex-1 bg-slate-100 border border-slate-300 text-slate-600 py-2 rounded font-medium hover:bg-slate-200 transition-colors">Hủy</button>
-                    <button onclick="handleChangePassword()" class="flex-1 bg-bidv-secondary hover:bg-bidv-secondary-dark text-slate-900 font-bold py-2 rounded transition-colors shadow-sm">Cập nhật</button>
+                    <button onclick="document.getElementById('change-pass-view').classList.add('hidden')" class="flex-1 bg-slate-100 border border-slate-300 text-slate-600 py-2.5 rounded-lg font-medium hover:bg-slate-200 transition-colors">Hủy</button>
+                    <button onclick="handleChangePassword()" class="flex-1 bg-bidv-secondary hover:bg-bidv-secondary-dark text-slate-900 font-bold py-2.5 rounded-lg transition-colors shadow-sm">Cập nhật</button>
                 </div>
             </div>
         </div>
@@ -171,73 +176,81 @@
 
     <!-- LỚP PHỦ DUYỆT TÀI KHOẢN MỚI -->
     <div id="approval-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl border-t-4 border-bidv-primary flex flex-col max-h-[80vh]">
+        <div class="bg-white rounded-2xl p-4 md:p-6 w-full max-w-lg shadow-2xl border-t-4 border-bidv-primary flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
-                <h2 class="text-xl font-bold text-bidv-primary flex items-center gap-2"><i class="fas fa-user-check"></i> Phê duyệt tài khoản</h2>
-                <button onclick="document.getElementById('approval-view').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors">
+                <h2 class="text-lg md:text-xl font-bold text-bidv-primary flex items-center gap-2"><i class="fas fa-user-check"></i> Phê duyệt tài khoản</h2>
+                <button onclick="document.getElementById('approval-view').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors p-1">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <div id="pending-users-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+            <div id="pending-users-list" class="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
                 <!-- Danh sách pending sẽ được JavaScript chèn vào đây -->
             </div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
+    <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
         <i class="fas fa-circle-notch fa-spin text-5xl text-bidv-primary mb-4"></i>
         <p class="font-bold text-bidv-primary tracking-wide" id="loading-text">Đang tải chi tiết...</p>
     </div>
 
-    <!-- Sidebar (Theme BIDV Primary) -->
-    <aside class="w-64 bg-bidv-primary text-white flex flex-col transition-all duration-300 hidden md:flex z-20 shadow-xl" id="sidebar">
-        <div class="h-16 flex items-center px-6 bg-bidv-primary-dark font-black text-white tracking-wider border-b border-white/10">
-            <i class="fas fa-university text-bidv-secondary mr-3 text-xl"></i> CORE<span class="text-bidv-secondary">TRAIN</span>
+    <!-- Lớp phủ (Backdrop) cho Sidebar trên Mobile -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar (Theme BIDV Primary) - Chuẩn Responsive -->
+    <aside class="w-64 md:w-64 bg-bidv-primary text-white flex flex-col fixed md:relative z-50 h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 left-0 top-0 shadow-2xl md:shadow-none" id="sidebar">
+        <div class="h-14 md:h-16 flex items-center justify-between px-6 bg-bidv-primary-dark border-b border-white/10 shrink-0">
+            <div class="font-black text-white tracking-wider">
+                <i class="fas fa-university text-bidv-secondary mr-2 text-xl"></i> CORE<span class="text-bidv-secondary">TRAIN</span>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-white/70 hover:text-white p-2 -mr-2">
+                <i class="fas fa-times text-lg"></i>
+            </button>
         </div>
         
-        <nav class="flex-1 py-6 px-3 space-y-2">
-            <a href="#" onclick="navigate('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-3 rounded-lg bg-bidv-secondary text-slate-900 font-bold transition-colors shadow-sm">
+        <nav class="flex-1 py-6 px-3 space-y-2 overflow-y-auto hide-scrollbar">
+            <a href="#" onclick="navigate('dashboard'); if(window.innerWidth < 768) toggleSidebar();" id="nav-dashboard" class="flex items-center px-4 py-3.5 md:py-3 rounded-lg bg-bidv-secondary text-slate-900 font-bold transition-colors shadow-sm text-sm md:text-base">
                 <i class="fas fa-chart-pie w-6"></i> Dashboard
             </a>
-            <a href="#" onclick="navigate('courses')" id="nav-courses" class="flex items-center px-3 py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium">
+            <a href="#" onclick="navigate('courses'); if(window.innerWidth < 768) toggleSidebar();" id="nav-courses" class="flex items-center px-4 py-3.5 md:py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium text-sm md:text-base">
                 <i class="fas fa-book-open w-6"></i> Bài học / Lessons
             </a>
-            <a href="#" onclick="navigate('quiz')" id="nav-quiz" class="flex items-center px-3 py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium">
+            <a href="#" onclick="navigate('quiz'); if(window.innerWidth < 768) toggleSidebar();" id="nav-quiz" class="flex items-center px-4 py-3.5 md:py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium text-sm md:text-base">
                 <i class="fas fa-clipboard-check w-6"></i> Thi Trắc Nghiệm
             </a>
-            <a href="#" onclick="navigate('editor')" id="nav-editor" class="flex items-center px-3 py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium">
+            <a href="#" onclick="navigate('editor'); if(window.innerWidth < 768) toggleSidebar();" id="nav-editor" class="flex items-center px-4 py-3.5 md:py-3 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors font-medium text-sm md:text-base">
                 <i class="fas fa-pen-to-square w-6"></i> Biên Soạn
             </a>
         </nav>
 
-        <div class="p-4 border-t border-white/10 bg-bidv-primary-dark/50">
+        <div class="p-4 border-t border-white/10 bg-bidv-primary-dark/50 shrink-0">
             <div class="flex items-center gap-3 mb-4">
-                <img src="https://placehold.co/40x40/FFC62F/006B68?text=U" alt="User" class="rounded-full border-2 border-white" id="sidebar-avatar">
-                <div>
-                    <p class="text-sm font-bold text-white" id="sidebar-username">Người dùng</p>
-                    <p class="text-[10px] uppercase tracking-wider text-bidv-secondary" id="sidebar-status">Trực tuyến</p>
+                <img src="https://placehold.co/40x40/FFC62F/006B68?text=U" alt="User" class="rounded-full border-2 border-white w-10 h-10 object-cover" id="sidebar-avatar">
+                <div class="truncate">
+                    <p class="text-sm font-bold text-white truncate" id="sidebar-username">Người dùng</p>
+                    <p class="text-[10px] uppercase tracking-wider text-bidv-secondary">Trực tuyến</p>
                 </div>
             </div>
             
-            <button onclick="openApprovalModal()" class="w-full mb-3 text-xs bg-bidv-secondary/20 hover:bg-bidv-secondary/40 text-bidv-secondary py-2.5 rounded transition-colors border border-bidv-secondary/30 flex items-center justify-center gap-2 font-bold shadow-sm">
+            <button onclick="openApprovalModal()" class="w-full mb-3 text-xs md:text-sm bg-bidv-secondary/20 hover:bg-bidv-secondary/40 text-bidv-secondary py-2.5 rounded-lg transition-colors border border-bidv-secondary/30 flex items-center justify-center gap-2 font-bold shadow-sm">
                 <i class="fas fa-user-check"></i> Duyệt tài khoản mới
             </button>
             
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="document.getElementById('change-pass-view').classList.remove('hidden')" class="text-xs bg-white/10 hover:bg-white/20 text-white py-2 rounded transition-colors border border-white/20"><i class="fas fa-key"></i> Đổi MK</button>
-                <button onclick="handleLogout()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-200 py-2 rounded transition-colors border border-red-500/30"><i class="fas fa-sign-out-alt"></i> Thoát</button>
+                <button onclick="document.getElementById('change-pass-view').classList.remove('hidden'); if(window.innerWidth < 768) toggleSidebar();" class="text-xs md:text-sm bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-lg transition-colors border border-white/20"><i class="fas fa-key"></i> Đổi MK</button>
+                <button onclick="handleLogout()" class="text-xs md:text-sm bg-red-500/20 hover:bg-red-500/40 text-red-200 py-2.5 rounded-lg transition-colors border border-red-500/30"><i class="fas fa-sign-out-alt"></i> Thoát</button>
             </div>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative transition-colors duration-300" id="main-content">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative transition-colors duration-300 w-full" id="main-content">
         
         <!-- Mobile Header -->
-        <header class="md:hidden h-14 bg-bidv-primary text-white flex items-center justify-between px-4 z-10 shadow-md" id="mobile-header">
-            <div class="font-black tracking-wider"><i class="fas fa-university text-bidv-secondary mr-2"></i> CORE<span class="text-bidv-secondary">TRAIN</span></div>
-            <button onclick="document.getElementById('sidebar').classList.toggle('hidden')" class="text-bidv-secondary text-xl">
+        <header class="md:hidden h-14 bg-bidv-primary text-white flex items-center justify-between px-4 z-10 shadow-md shrink-0 w-full" id="mobile-header">
+            <div class="font-black tracking-wider text-lg"><i class="fas fa-university text-bidv-secondary mr-2"></i> CORE<span class="text-bidv-secondary">TRAIN</span></div>
+            <button onclick="toggleSidebar()" class="text-bidv-secondary text-xl p-2 focus:outline-none -mr-2">
                 <i class="fas fa-bars"></i>
             </button>
         </header>
@@ -249,44 +262,44 @@
             <section id="view-dashboard" class="fade-in block w-full min-h-full p-4 md:p-8 bg-slate-50">
                 <div class="max-w-7xl mx-auto">
                     
-                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 border-b border-slate-200 pb-4">
-                        <div class="flex items-end gap-2 mb-4 md:mb-0">
-                            <h1 class="text-3xl font-black text-bidv-primary tracking-wider uppercase">DASHBOARD <span class="block w-10 h-1 bg-bidv-secondary mt-1"></span></h1>
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 md:mb-8 border-b border-slate-200 pb-4">
+                        <div class="flex items-end gap-2 mb-3 md:mb-0">
+                            <h1 class="text-2xl md:text-3xl font-black text-bidv-primary tracking-wider uppercase">DASHBOARD <span class="block w-10 h-1 bg-bidv-secondary mt-1"></span></h1>
                         </div>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-4">
                             <div class="text-right">
                                 <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">TRẠNG THÁI</p>
-                                <p class="text-sm text-bidv-primary font-bold flex items-center justify-end">
+                                <p class="text-xs md:text-sm text-bidv-primary font-bold flex items-center justify-end">
                                     <span class="w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_5px_#22c55e]"></span>Đã đồng bộ
                                 </p>
                             </div>
-                            <button class="w-10 h-10 border border-slate-200 rounded-lg bg-white text-bidv-primary hover:bg-slate-100 transition-colors shadow-sm flex items-center justify-center">
+                            <button class="w-9 h-9 md:w-10 md:h-10 border border-slate-200 rounded-lg bg-white text-bidv-primary hover:bg-slate-100 transition-colors shadow-sm flex items-center justify-center shrink-0">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Welcome Box -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6 relative overflow-hidden">
-                        <div class="absolute right-0 bottom-0 opacity-5 pointer-events-none select-none text-bidv-primary">
-                            <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8 mb-6 relative overflow-hidden">
+                        <div class="absolute right-0 bottom-0 opacity-5 pointer-events-none select-none text-bidv-primary w-32 h-32 md:w-48 md:h-48">
+                            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M150 200L200 150V200H150Z" fill="currentColor"/>
                                 <path d="M100 200L200 100V150L150 200H100Z" fill="currentColor"/>
                                 <path d="M50 200L200 50V100L100 200H50Z" fill="currentColor"/>
                             </svg>
                         </div>
                         
-                        <p class="text-[11px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-2">TỔNG QUAN HỌC TẬP</p>
-                        <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-3">Xin chào, <span class="text-bidv-primary" id="welcome-username">User</span></h2>
-                        <p class="text-sm text-slate-500 mb-6">Bài học xem gần nhất: <strong class="text-slate-800" id="last-viewed-text">Chưa xem bài nào</strong></p>
+                        <p class="text-[10px] md:text-[11px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-1 md:mb-2 relative z-10">TỔNG QUAN HỌC TẬP</p>
+                        <h2 class="text-2xl md:text-5xl font-black text-slate-800 mb-2 md:mb-3 relative z-10 break-words">Xin chào, <span class="text-bidv-primary block sm:inline" id="welcome-username">User</span></h2>
+                        <p class="text-xs md:text-sm text-slate-500 mb-5 md:mb-6 relative z-10">Bài học xem gần nhất: <strong class="text-slate-800 break-words" id="last-viewed-text">Chưa xem bài nào</strong></p>
                         
-                        <button onclick="navigate('courses')" class="flex items-center gap-2 text-xs font-bold text-white bg-bidv-primary px-5 py-2.5 rounded-lg tracking-wide uppercase hover:bg-bidv-primary-dark transition-colors shadow-sm">
+                        <button onclick="navigate('courses')" class="flex items-center justify-center gap-2 text-xs font-bold text-white bg-bidv-primary px-5 py-3 md:py-2.5 w-full sm:w-auto rounded-lg tracking-wide uppercase hover:bg-bidv-primary-dark transition-colors shadow-sm relative z-10">
                             TIẾP TỤC HỌC <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
 
                     <!-- Module Cards (Rendered all dynamically) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dashboard-module-cards">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6" id="dashboard-module-cards">
                         <!-- Thẻ Module sẽ được sinh ra từ Javascript -->
                     </div>
 
@@ -294,22 +307,22 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
                         
                         <!-- Radar Chart -->
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:col-span-2 relative min-h-[400px] flex flex-col">
-                            <p class="text-[12px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-4">PHÂN TÍCH NĂNG LỰC (RADAR)</p>
-                            <div class="flex-1 w-full flex justify-center items-center">
-                                <canvas id="radarChart"></canvas>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 lg:col-span-2 relative h-[300px] md:min-h-[350px] flex flex-col">
+                            <p class="text-[12px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-2 md:mb-4 shrink-0">PHÂN TÍCH NĂNG LỰC</p>
+                            <div class="flex-1 w-full h-full flex justify-center items-center relative">
+                                <canvas id="radarChart" class="absolute inset-0"></canvas>
                             </div>
                         </div>
 
                         <!-- Progress Section -->
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[400px]">
-                            <p class="text-[12px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-6">TIẾN ĐỘ TỔNG THỂ</p>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 min-h-[350px]">
+                            <p class="text-[12px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-4 md:mb-6">TIẾN ĐỘ TỔNG THỂ</p>
                             
                             <!-- Total Progress Bar -->
-                            <div class="mb-8 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <div class="mb-6 md:mb-8 bg-slate-50 p-4 rounded-lg border border-slate-100">
                                 <div class="flex items-end justify-between mb-2">
-                                    <h3 class="text-4xl font-black text-bidv-primary" id="progress-percent-total">0%</h3>
-                                    <p class="text-[10px] text-slate-500 font-bold tracking-wider uppercase"><span class="text-bidv-primary" id="progress-text-done">0</span> / <span id="progress-text-all">0</span> BÀI ĐÃ HỌC</p>
+                                    <h3 class="text-3xl md:text-4xl font-black text-bidv-primary leading-none" id="progress-percent-total">0%</h3>
+                                    <p class="text-[10px] text-slate-500 font-bold tracking-wider uppercase text-right"><span class="text-bidv-primary" id="progress-text-done">0</span> / <span id="progress-text-all">0</span><br class="md:hidden"> ĐÃ HỌC</p>
                                 </div>
                                 <div class="progress-track-dash">
                                     <div class="progress-bar-dash" id="progress-bar-total" style="width: 0%"></div>
@@ -317,7 +330,7 @@
                             </div>
 
                             <!-- Modules Progress List -->
-                            <div class="space-y-5 mt-4" id="module-progress-list">
+                            <div class="space-y-4 md:space-y-5 mt-4 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar" id="module-progress-list">
                                 <!-- Rendered by JS -->
                             </div>
                         </div>
@@ -329,22 +342,22 @@
             <!-- VIEW: COURSE LIST -->
             <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
                 
-                <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                <div class="flex flex-col md:flex-row justify-between md:items-end gap-3 mb-4 md:mb-6 border-b border-slate-200 pb-3 md:pb-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-bidv-primary">Bài học / Lessons</h1>
-                        <p class="text-sm text-slate-500 mt-1">Tra cứu quy trình và hướng dẫn hệ thống Core Banking</p>
+                        <h1 class="text-xl md:text-2xl font-bold text-bidv-primary">Bài học / Lessons</h1>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1">Tra cứu quy trình và hướng dẫn hệ thống Core Banking</p>
                     </div>
                 </div>
 
                 <!-- Filters & Search -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
                     <div class="relative md:col-span-2">
                         <i class="fas fa-search absolute left-3 top-3.5 text-slate-400"></i>
-                        <input type="text" id="search-input" placeholder="Tìm kiếm theo tên quy trình, mã, keyword..." class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidv-primary bg-slate-50 text-slate-800 text-sm transition-all">
+                        <input type="text" id="search-input" placeholder="Tìm tên, mã quy trình..." class="w-full pl-9 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidv-primary bg-slate-50 text-slate-800 text-sm transition-all">
                     </div>
                     <div>
                         <select id="filter-module" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bidv-primary bg-slate-50 text-slate-800 text-sm transition-all">
-                            <option value="">Tất cả Phân hệ (Module)</option>
+                            <option value="">Tất cả Phân hệ</option>
                         </select>
                     </div>
                     <div>
@@ -357,11 +370,11 @@
                 </div>
 
                 <!-- Course Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="course-list">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5" id="course-list">
                     <!-- Cards will be injected here -->
                 </div>
                 
-                <div class="mt-6 text-center text-sm font-medium text-slate-500 bg-white py-2 rounded-lg border border-slate-200 shadow-sm" id="list-count">
+                <div class="mt-6 text-center text-xs md:text-sm font-medium text-slate-500 bg-white py-2 md:py-2.5 rounded-lg border border-slate-200 shadow-sm" id="list-count">
                     Hiển thị 0 kết quả
                 </div>
             </section>
@@ -369,16 +382,16 @@
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
                 
-                <!-- Bổ sung nút Bài trước & Bài sau -->
+                <!-- Bố cục Navigation thu gọn, rõ ràng trên điện thoại -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-                    <button onclick="navigate('courses')" class="text-slate-500 hover:text-bidv-primary text-sm font-bold flex items-center gap-2 transition-colors w-fit">
-                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    <button onclick="navigate('courses')" class="text-slate-600 hover:text-bidv-primary text-sm font-bold flex items-center justify-center gap-2 transition-colors w-full sm:w-fit bg-white sm:bg-transparent px-4 py-2.5 sm:p-0 rounded-lg border border-slate-200 sm:border-transparent shadow-sm sm:shadow-none">
+                        <i class="fas fa-arrow-left"></i> Về danh sách
                     </button>
-                    <div class="flex items-center gap-2">
-                        <button id="btn-prev-course" onclick="navigateCourse(-1)" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button id="btn-prev-course" onclick="navigateCourse(-1)" class="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
                             <i class="fas fa-chevron-left"></i> Bài trước
                         </button>
-                        <button id="btn-next-course" onclick="navigateCourse(1)" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
+                        <button id="btn-next-course" onclick="navigateCourse(1)" class="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-bidv-primary hover:border-bidv-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm">
                             Bài sau <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -386,55 +399,55 @@
 
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
                     <!-- Header -->
-                    <div class="bg-bidv-primary p-6 md:p-8 text-white relative overflow-hidden">
-                        <div class="absolute right-[-20px] top-[-20px] opacity-10 text-9xl"><i class="fas fa-book-open"></i></div>
+                    <div class="bg-bidv-primary p-5 md:p-8 text-white relative overflow-hidden">
+                        <div class="absolute right-[-20px] top-[-20px] opacity-10 text-9xl hidden md:block"><i class="fas fa-book-open"></i></div>
                         <div class="relative z-10">
-                            <div class="flex items-center gap-2 mb-3 text-xs font-bold text-bidv-secondary uppercase tracking-wider">
-                                <span id="detail-module" class="bg-black/20 px-3 py-1 rounded-full border border-bidv-secondary/50">Module</span>
-                                <span id="detail-app" class="bg-white/20 px-3 py-1 rounded-full text-white">App</span>
+                            <div class="flex flex-wrap items-center gap-2 mb-2 md:mb-3 text-[10px] md:text-xs font-bold text-bidv-secondary uppercase tracking-wider">
+                                <span id="detail-module" class="bg-black/20 px-2 md:px-3 py-1 rounded-full border border-bidv-secondary/50">Module</span>
+                                <span id="detail-app" class="bg-white/20 px-2 md:px-3 py-1 rounded-full text-white">App</span>
                             </div>
-                            <h1 class="text-2xl md:text-3xl font-bold mb-2 leading-tight" id="detail-title">Tên quy trình</h1>
+                            <h1 class="text-xl md:text-3xl font-bold mb-2 leading-snug break-words" id="detail-title">Tên quy trình</h1>
                             
-                            <div class="flex items-start gap-3 text-sm text-white/90 bg-black/10 border border-white/10 p-3 rounded-lg mt-5 backdrop-blur-sm inline-block">
-                                <i class="fas fa-route mt-1 text-bidv-secondary"></i>
-                                <span class="font-medium">Menu:</span> <span id="detail-path">N/A</span>
+                            <div class="flex items-start gap-2.5 text-xs md:text-sm text-white/90 bg-black/10 border border-white/10 p-3 rounded-lg mt-4 backdrop-blur-sm w-full md:w-auto inline-block">
+                                <i class="fas fa-route mt-0.5 text-bidv-secondary shrink-0"></i>
+                                <div><span class="font-medium">Menu:</span> <span id="detail-path" class="break-words">N/A</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Content Tabs -->
-                    <div class="border-b border-slate-200 bg-slate-50">
-                        <nav class="flex -mb-px px-2 md:px-6 overflow-x-auto" id="detail-tabs">
-                            <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-bidv-primary border-bidv-primary py-4 px-5 block border-b-2 font-bold text-sm transition-colors whitespace-nowrap">
-                                <i class="fas fa-file-alt mr-2"></i> Tài Liệu & Slide
+                    <!-- Content Tabs (Vuốt ngang trên mobile mượt mà) -->
+                    <div class="border-b border-slate-200 bg-slate-50 w-full overflow-hidden">
+                        <nav class="flex flex-nowrap overflow-x-auto px-2 md:px-6 hide-scrollbar w-full" id="detail-tabs">
+                            <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-bidv-primary border-bidv-primary py-3 md:py-4 px-4 md:px-5 block border-b-2 font-bold text-sm transition-colors whitespace-nowrap shrink-0">
+                                <i class="fas fa-file-alt mr-1.5"></i> Tài Liệu
                             </button>
-                            <button onclick="switchTab('video')" id="tab-btn-video" class="text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-4 px-5 block border-b-2 font-semibold text-sm transition-colors whitespace-nowrap">
-                                <i class="fas fa-play-circle mr-2"></i> Video Hướng Dẫn
+                            <button onclick="switchTab('video')" id="tab-btn-video" class="text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-3 md:py-4 px-4 md:px-5 block border-b-2 font-semibold text-sm transition-colors whitespace-nowrap shrink-0">
+                                <i class="fas fa-play-circle mr-1.5"></i> Video Hướng Dẫn
                             </button>
-                            <button onclick="switchTab('content')" id="tab-btn-content" class="text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-4 px-5 block border-b-2 font-semibold text-sm transition-colors whitespace-nowrap">
-                                <i class="fas fa-list-ol mr-2"></i> Quy trình tác nghiệp
+                            <button onclick="switchTab('content')" id="tab-btn-content" class="text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-3 md:py-4 px-4 md:px-5 block border-b-2 font-semibold text-sm transition-colors whitespace-nowrap shrink-0">
+                                <i class="fas fa-list-ol mr-1.5"></i> Quy trình
                             </button>
                         </nav>
                     </div>
 
-                    <div class="p-6 md:p-8 bg-white min-h-[300px]">
+                    <div class="p-4 md:p-8 bg-white min-h-[300px]">
                         <!-- Doc Tab Content -->
                         <div id="tab-content-doc" class="block space-y-4">
-                            <div id="doc-links-container" class="grid grid-cols-1 gap-6">
+                            <div id="doc-links-container" class="grid grid-cols-1 gap-4 md:gap-6">
                                 <!-- Docs injected here -->
                             </div>
                         </div>
 
                         <!-- Video Tab Content -->
                         <div id="tab-content-video" class="hidden space-y-4">
-                            <div id="video-links-container" class="grid grid-cols-1 gap-6">
+                            <div id="video-links-container" class="grid grid-cols-1 gap-4 md:gap-6">
                                 <!-- Videos injected here -->
                             </div>
                         </div>
                         
                         <!-- Content Tab (Nội dung chi tiết - HTML) -->
                         <div id="tab-content-content" class="hidden space-y-4">
-                            <div id="content-html-container" class="content-html max-w-none bg-slate-50 p-6 md:p-8 rounded-xl border border-slate-200 shadow-inner min-h-[200px]">
+                            <div id="content-html-container" class="content-html max-w-none bg-slate-50 p-4 md:p-8 rounded-xl border border-slate-200 shadow-inner min-h-[200px] overflow-x-auto text-sm md:text-base">
                                 <!-- Nội dung html step_content render tại đây -->
                             </div>
                         </div>
@@ -442,26 +455,26 @@
                 </div>
 
                 <!-- Comments Section -->
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6 md:p-8">
-                    <h3 class="text-lg font-bold text-slate-800 mb-5 border-b border-slate-200 pb-3 flex items-center gap-2">
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-8">
+                    <h3 class="text-base md:text-lg font-bold text-slate-800 mb-4 md:mb-5 border-b border-slate-200 pb-3 flex items-center gap-2">
                         <i class="fas fa-comments text-bidv-primary"></i> Thảo luận & Góp ý
                     </h3>
                     
-                    <div id="comment-list" class="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2"></div>
+                    <div id="comment-list" class="space-y-4 mb-6 md:mb-8 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar"></div>
 
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                        <h4 class="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Thêm góp ý của bạn</h4>
-                        <div class="flex items-center gap-1 text-bidv-secondary mb-3 text-xl cursor-pointer" id="star-rating">
+                    <div class="bg-slate-50 p-4 md:p-5 rounded-xl border border-slate-200">
+                        <h4 class="text-xs md:text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Thêm góp ý của bạn</h4>
+                        <div class="flex items-center gap-1 text-bidv-secondary mb-3 text-lg md:text-xl cursor-pointer" id="star-rating">
                             <i class="far fa-star" data-val="1"></i>
                             <i class="far fa-star" data-val="2"></i>
                             <i class="far fa-star" data-val="3"></i>
                             <i class="far fa-star" data-val="4"></i>
                             <i class="far fa-star" data-val="5"></i>
-                            <span class="text-xs text-slate-500 ml-2 font-medium">(Đánh giá)</span>
+                            <span class="text-[10px] md:text-xs text-slate-500 ml-2 font-medium">(Đánh giá)</span>
                         </div>
                         <textarea id="comment-input" rows="3" class="w-full bg-white p-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary focus:outline-none text-sm text-slate-800 mb-3 transition-all" placeholder="Nhập nội dung góp ý hoặc câu hỏi..."></textarea>
                         <div class="text-right">
-                            <button onclick="postComment()" class="bg-bidv-primary hover:bg-bidv-primary-dark text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2 ml-auto">
+                            <button onclick="postComment()" class="bg-bidv-primary hover:bg-bidv-primary-dark text-white w-full md:w-auto px-6 py-3 md:py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex justify-center items-center gap-2 md:ml-auto">
                                 <i class="fas fa-paper-plane"></i> Gửi góp ý
                             </button>
                         </div>
@@ -472,63 +485,63 @@
 
             <!-- VIEW: QUIZ -->
             <section id="view-quiz" class="fade-in max-w-4xl mx-auto hidden flex-col p-4 md:p-8">
-                <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                <div class="flex flex-col md:flex-row justify-between md:items-end gap-3 mb-6 border-b border-slate-200 pb-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-bidv-primary">Kiểm tra kiến thức</h1>
-                        <p class="text-sm text-slate-500 mt-1">Đánh giá nhanh năng lực nghiệp vụ Core Banking</p>
+                        <h1 class="text-xl md:text-2xl font-bold text-bidv-primary">Kiểm tra kiến thức</h1>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1">Đánh giá nhanh năng lực nghiệp vụ</p>
                     </div>
-                    <div class="text-right bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                    <div class="text-center md:text-right bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm inline-block w-full md:w-fit">
                         <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Điểm cao nhất</p>
                         <p class="text-xl font-black text-bidv-primary" id="quiz-best-score">-</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-8 md:p-12 text-center" id="quiz-intro">
-                    <div class="w-24 h-24 bg-blue-50 text-bidv-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-laptop-code text-5xl"></i>
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6 md:p-12 text-center" id="quiz-intro">
+                    <div class="w-20 h-20 md:w-24 md:h-24 bg-blue-50 text-bidv-primary rounded-full flex items-center justify-center mx-auto mb-5 md:mb-6">
+                        <i class="fas fa-laptop-code text-4xl md:text-5xl"></i>
                     </div>
-                    <h2 class="text-2xl font-black mb-3 text-slate-800">Sẵn sàng kiểm tra?</h2>
-                    <p class="text-slate-600 mb-8 max-w-md mx-auto">Bài test gồm 5 câu hỏi ngẫu nhiên. Vượt qua 80% để chứng tỏ năng lực và nhận chứng chỉ hoàn thành phân hệ của bạn.</p>
-                    <button onclick="startQuiz()" class="bg-bidv-secondary hover:bg-bidv-secondary-dark text-slate-900 px-10 py-3.5 rounded-lg font-bold transition-colors shadow-md text-lg">
+                    <h2 class="text-xl md:text-2xl font-black mb-3 text-slate-800">Sẵn sàng kiểm tra?</h2>
+                    <p class="text-sm md:text-base text-slate-600 mb-6 md:mb-8 max-w-md mx-auto">Bài test gồm 5 câu hỏi ngẫu nhiên. Vượt qua 80% để chứng tỏ năng lực và nhận chứng chỉ.</p>
+                    <button onclick="startQuiz()" class="bg-bidv-secondary hover:bg-bidv-secondary-dark text-slate-900 w-full md:w-auto px-10 py-3.5 rounded-lg font-bold transition-colors shadow-md text-base md:text-lg">
                         BẮT ĐẦU THI NGAY
                     </button>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6 md:p-10 hidden" id="quiz-container">
-                    <div class="flex justify-between items-center text-sm font-bold text-slate-500 mb-8 pb-3 border-b border-slate-200">
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-5 md:p-10 hidden" id="quiz-container">
+                    <div class="flex justify-between items-center text-xs md:text-sm font-bold text-slate-500 mb-6 md:mb-8 pb-3 border-b border-slate-200">
                         <span id="quiz-progress-text" class="bg-slate-100 px-3 py-1 rounded-md text-bidv-primary">Câu 1 / 5</span>
                         <span class="flex items-center gap-2"><i class="far fa-clock"></i> <span id="quiz-timer" class="text-bidv-primary">00:00</span></span>
                     </div>
 
-                    <h3 class="text-xl font-bold text-slate-800 mb-6 leading-relaxed" id="quiz-question-text">Question goes here?</h3>
+                    <h3 class="text-base md:text-xl font-bold text-slate-800 mb-5 md:mb-6 leading-relaxed" id="quiz-question-text">Question goes here?</h3>
                     
                     <div class="space-y-3" id="quiz-options"></div>
 
-                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
-                        <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 px-6 py-2.5 rounded-lg font-bold transition-colors hidden flex items-center gap-2">
+                    <div class="mt-6 md:mt-8 pt-5 md:pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3">
+                        <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="w-full sm:w-auto bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 px-6 py-3 md:py-2.5 rounded-lg font-bold transition-colors hidden flex items-center justify-center gap-2">
                             Câu tiếp theo <i class="fas fa-arrow-right text-bidv-primary"></i>
                         </button>
-                        <button onclick="finishQuiz()" id="btn-finish-quiz" class="bg-bidv-primary hover:bg-bidv-primary-dark text-white px-8 py-2.5 rounded-lg font-bold transition-colors hidden flex items-center gap-2 shadow-sm">
+                        <button onclick="finishQuiz()" id="btn-finish-quiz" class="w-full sm:w-auto bg-bidv-primary hover:bg-bidv-primary-dark text-white px-8 py-3 md:py-2.5 rounded-lg font-bold transition-colors hidden flex items-center justify-center gap-2 shadow-sm">
                             Nộp bài <i class="fas fa-check-circle"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-10 text-center hidden" id="quiz-result">
-                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-yellow-50 mb-6 border-4 border-bidv-secondary/30">
-                        <i class="fas fa-trophy text-5xl text-bidv-secondary"></i>
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-8 md:p-10 text-center hidden" id="quiz-result">
+                    <div class="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-yellow-50 mb-5 md:mb-6 border-4 border-bidv-secondary/30">
+                        <i class="fas fa-trophy text-4xl md:text-5xl text-bidv-secondary"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2 text-slate-800">Kết Quả Bài Thi</h2>
-                    <p class="text-slate-500 mb-8">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
+                    <h2 class="text-xl md:text-2xl font-bold mb-2 text-slate-800">Kết Quả Bài Thi</h2>
+                    <p class="text-sm text-slate-500 mb-6 md:mb-8">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
                     
-                    <div class="text-6xl font-black text-bidv-primary mb-2" id="quiz-final-score">0/5</div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">ĐIỂM SỐ ĐẠT ĐƯỢC</p>
+                    <div class="text-5xl md:text-6xl font-black text-bidv-primary mb-2" id="quiz-final-score">0/5</div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 md:mb-10">ĐIỂM SỐ ĐẠT ĐƯỢC</p>
                     
-                    <div class="flex justify-center gap-3">
-                        <button onclick="navigate('dashboard')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-6 py-2.5 rounded-lg font-bold transition-colors">
+                    <div class="flex flex-col sm:flex-row justify-center gap-3">
+                        <button onclick="navigate('dashboard')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-6 py-3 md:py-2.5 rounded-lg font-bold transition-colors w-full sm:w-auto">
                             Về Dashboard
                         </button>
-                        <button onclick="startQuiz()" class="bg-bidv-primary hover:bg-bidv-primary-dark text-white px-8 py-2.5 rounded-lg font-bold transition-colors shadow-sm">
+                        <button onclick="startQuiz()" class="bg-bidv-primary hover:bg-bidv-primary-dark text-white px-8 py-3 md:py-2.5 rounded-lg font-bold transition-colors shadow-sm w-full sm:w-auto">
                             Thi Lại
                         </button>
                     </div>
@@ -536,119 +549,129 @@
             </section>
             
             <!-- VIEW: EDITOR (Biên soạn Nội dung) -->
-            <section id="view-editor" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8 h-[calc(100vh-60px)] md:h-[calc(100vh-40px)]">
-                <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+            <section id="view-editor" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8 h-full w-full">
+                <div class="flex justify-between items-end mb-4 md:mb-6 border-b border-slate-200 pb-3 md:pb-4 shrink-0">
                     <div>
-                        <h1 class="text-2xl font-bold text-bidv-primary">Biên Soạn Nội Dung</h1>
-                        <p class="text-sm text-slate-500 mt-1">Cập nhật tài liệu, video và quy trình tác nghiệp</p>
+                        <h1 class="text-xl md:text-2xl font-bold text-bidv-primary">Biên Soạn</h1>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1 hidden sm:block">Cập nhật tài liệu, video và quy trình</p>
                     </div>
                 </div>
 
-                <div class="flex flex-col md:flex-row gap-6 h-full pb-10">
+                <!-- Bố cục Flex Responsive: Điện thoại ẩn List khi mở Form -->
+                <div class="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 pb-4 md:pb-6 relative">
+                    
                     <!-- Left: List -->
-                    <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full max-h-[800px]">
-                        <div class="p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl">
+                    <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full shrink-0 md:shrink transition-all duration-300" id="editor-list-container">
+                        <div class="p-3 md:p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl shrink-0">
                             <div class="relative">
                                 <i class="fas fa-search absolute left-3 top-3.5 text-slate-400"></i>
-                                <input type="text" id="editor-search" placeholder="Tìm kiếm bài học cần sửa..." class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary transition-all" oninput="renderEditorList()">
+                                <input type="text" id="editor-search" placeholder="Tìm kiếm bài học..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary transition-all" oninput="renderEditorList()">
                             </div>
                         </div>
-                        <div class="flex-1 overflow-y-auto p-2" id="editor-list">
+                        <div class="flex-1 overflow-y-auto p-2 hide-scrollbar" id="editor-list">
                             <!-- List items injected here -->
                         </div>
                     </div>
                     
-                    <!-- Right: Empty State -->
-                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center p-6 h-full max-h-[800px]" id="editor-empty-state">
+                    <!-- Right: Empty State (Ẩn trên mobile mặc định để thấy list) -->
+                    <div class="hidden md:flex w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 items-center justify-center p-6 h-full min-h-[300px] transition-all" id="editor-empty-state">
                         <div class="text-center text-slate-400">
-                            <div class="w-24 h-24 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-5">
-                                <i class="fas fa-pen-to-square text-4xl text-slate-300"></i>
+                            <div class="w-20 h-20 md:w-24 md:h-24 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5">
+                                <i class="fas fa-pen-to-square text-3xl md:text-4xl text-slate-300"></i>
                             </div>
-                            <p class="font-bold text-slate-600 text-lg">Chưa chọn bài học</p>
-                            <p class="text-sm mt-2">Chọn một bài học ở danh sách bên trái để bắt đầu chỉnh sửa nội dung</p>
+                            <p class="font-bold text-slate-600 text-base md:text-lg">Chưa chọn bài học</p>
+                            <p class="text-xs md:text-sm mt-2 max-w-xs mx-auto">Chọn một bài học ở danh sách bên trái để bắt đầu chỉnh sửa</p>
                         </div>
                     </div>
 
-                    <!-- Right: Form Edit -->
-                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-y-auto p-6 hidden h-full max-h-[800px]" id="editor-form-container">
-                        <div class="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
-                            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                <i class="fas fa-edit text-bidv-primary"></i> Chỉnh sửa thông tin
-                            </h2>
-                            <button type="button" onclick="closeEditor()" class="text-slate-400 hover:text-red-500 transition-colors bg-slate-100 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center">
+                    <!-- Right: Form Edit (Giao diện chuẩn không bị sụp Form) -->
+                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-col hidden h-full transition-all" id="editor-form-container">
+                        <div class="flex items-center justify-between p-4 md:p-5 border-b border-slate-200 bg-slate-50 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <!-- Nút Back xuất hiện trên Mobile -->
+                                <button type="button" onclick="closeEditor()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 shadow-sm">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <h2 class="text-base md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <i class="fas fa-edit text-bidv-primary hidden md:inline-block"></i> Chỉnh sửa
+                                </h2>
+                            </div>
+                            <button type="button" onclick="closeEditor()" class="hidden md:flex text-slate-400 hover:text-red-500 transition-colors bg-white border border-slate-200 shadow-sm hover:bg-red-50 w-8 h-8 rounded-full items-center justify-center">
                                 <i class="fas fa-times text-lg"></i>
                             </button>
                         </div>
-                        <form id="editor-form" class="space-y-6">
-                            <input type="hidden" id="edit-id">
-                            
-                            <!-- Thông tin cơ bản -->
-                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                                <h3 class="text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">Thông tin cơ bản</h3>
+                        
+                        <div class="flex-1 overflow-y-auto p-4 md:p-6">
+                            <form id="editor-form" class="space-y-5 md:space-y-6">
+                                <input type="hidden" id="edit-id">
+                                
+                                <!-- Thông tin cơ bản -->
+                                <h3 class="text-[11px] md:text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">Thông tin cơ bản</h3>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Tên quy trình (Flow) <span class="text-red-500">*</span></label>
+                                    <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Tên quy trình (Flow) <span class="text-red-500">*</span></label>
                                     <input type="text" id="edit-flow" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all font-medium">
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Phân hệ (Module)</label>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Phân hệ</label>
                                         <input type="text" id="edit-module" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Ứng dụng (App)</label>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Ứng dụng</label>
                                         <input type="text" id="edit-app" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Đối tượng (Class ID)</label>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Đối tượng</label>
                                         <input type="text" id="edit-class" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Từ khóa tìm kiếm (Keywords)</label>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Từ khóa (Keywords)</label>
                                         <input type="text" id="edit-keywords" placeholder="Ví dụ: vay, CIF, mở thẻ..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Đường dẫn Menu (instruc_flow)</label>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Đường dẫn Menu</label>
                                         <input type="text" id="edit-instruc-flow" placeholder="Ví dụ: Phân hệ LN -> Menu ABC..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Tài nguyên (Links) -->
-                            <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100 space-y-4">
-                                <h3 class="text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-blue-200/50 pb-2">Tài nguyên học tập</h3>
+                            <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl border border-blue-100 space-y-4">
+                                <h3 class="text-[11px] md:text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-blue-200/50 pb-2">Tài nguyên học tập</h3>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Link Tài liệu / Slide <span class="text-slate-400 font-normal ml-1">(Nhập Link URL, cách nhau bởi dấu chấm phẩy ;)</span></label>
-                                    <input type="text" id="edit-doc" placeholder="https://1drv.ms/w/... ; https://drive.google.com/file/d/..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Tài liệu / Slide</label>
+                                    <input type="text" id="edit-doc" placeholder="Nhập Link, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Link Video <span class="text-slate-400 font-normal ml-1">(Cách nhau bởi dấu chấm phẩy ;)</span></label>
-                                    <input type="text" id="edit-video" placeholder="https://youtube.com/... ; https://youtube.com/..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Video</label>
+                                    <input type="text" id="edit-video" placeholder="Nhập link Youtube/OneDrive, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                 </div>
                             </div>
 
                             <!-- Nội dung HTML -->
                             <div class="pb-4">
                                 <div class="flex justify-between items-end mb-2">
-                                    <label class="block text-xs font-bold text-slate-700">Nội dung / Quy trình tác nghiệp</label>
-                                    <button type="button" onclick="toggleHtmlMode()" id="btn-toggle-html" class="text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300">
-                                        <i class="fas fa-code"></i> Chèn mã HTML
+                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700">Nội dung quy trình</label>
+                                    <button type="button" onclick="toggleHtmlMode()" id="btn-toggle-html" class="text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300">
+                                        <i class="fas fa-code"></i> HTML
                                     </button>
                                 </div>
                                 <div id="quill-container" class="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-bidv-primary focus-within:border-bidv-primary transition-all">
                                     <div id="quill-editor"></div>
                                 </div>
-                                <textarea id="edit-content-html" rows="12" class="w-full bg-slate-800 border border-slate-700 text-green-400 rounded-lg p-4 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none font-mono hidden leading-relaxed tracking-wide shadow-inner" placeholder="<!-- Dán trực tiếp mã HTML của bạn vào đây... -->"></textarea>
+                                <textarea id="edit-content-html" rows="12" class="w-full bg-slate-800 border border-slate-700 text-green-400 rounded-lg p-4 text-xs md:text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none font-mono hidden leading-relaxed tracking-wide shadow-inner" placeholder="<!-- Dán trực tiếp mã HTML của bạn vào đây... -->"></textarea>
                             </div>
 
-                            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 sticky bottom-0 bg-white p-2">
-                                <button type="button" onclick="closeEditor()" class="px-6 py-2.5 border border-slate-300 bg-slate-50 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition-colors">Hủy</button>
-                                <button type="button" onclick="saveFlowEdit()" class="px-8 py-2.5 bg-bidv-primary text-white rounded-lg font-bold hover:bg-bidv-primary-dark transition-colors shadow-md flex items-center">
+                            <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200 bg-white">
+                                <button type="button" onclick="closeEditor()" class="w-full sm:w-auto px-6 py-3 md:py-2.5 border border-slate-300 bg-slate-50 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition-colors">Đóng</button>
+                                <button type="button" onclick="saveFlowEdit()" class="w-full sm:w-auto px-8 py-3 md:py-2.5 bg-bidv-primary text-white rounded-lg font-bold hover:bg-bidv-primary-dark transition-colors shadow-md flex items-center justify-center">
                                     <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -669,8 +692,8 @@
         ];
 
         // --- Cấu hình Supabase & Utilities ---
-        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co'; // THAY URL CỦA BẠN VÀO ĐÂY
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; // THAY ANON KEY CỦA BẠN VÀO ĐÂY
+        const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
         
         // Cấu hình Header chống Tường lửa
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -697,7 +720,7 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = isError ? `<i class="fas fa-exclamation-triangle text-red-500 text-lg"></i> <span class="text-slate-800">${msg}</span>` : `<i class="fas fa-check-circle text-bidv-primary text-lg"></i> <span class="text-slate-800">${msg}</span>`;
+            toast.innerHTML = isError ? `<i class="fas fa-exclamation-triangle text-red-500 text-lg"></i> <span class="text-slate-800 text-sm md:text-base">${msg}</span>` : `<i class="fas fa-check-circle text-bidv-primary text-lg"></i> <span class="text-slate-800 text-sm md:text-base">${msg}</span>`;
             container.appendChild(toast);
             setTimeout(() => { toast.remove(); }, 3000);
         }
@@ -711,6 +734,22 @@
             } else {
                 el.classList.add('hidden');
                 el.classList.remove('flex');
+            }
+        }
+        
+        // Logic Sidebar trượt (Drawer) Responsive
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Mở sidebar
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                // Đóng sidebar
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
             }
         }
 
@@ -728,7 +767,8 @@
             let embedUrl = url;
             if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
                 embedUrl = url;
-            } else if (url.includes('drive.google.com/file/d/')) {
+            } 
+            else if (url.includes('drive.google.com/file/d/')) {
                 embedUrl = url.replace(/\/view.*$/, '/preview');
             }
             return embedUrl;
@@ -743,7 +783,7 @@
             const passHash = hashMD5(pass);
 
             try {
-                toggleLoading(true, "Đang xử lý đăng nhập...");
+                toggleLoading(true, "Đang xử lý...");
                 if(isRegister) {
                     const { data: existing } = await supabaseClient.from('core_train_users').select('id').eq('username', user).single();
                     if(existing) {
@@ -773,7 +813,7 @@
                     }
                     if(data.status === 'pending') {
                         toggleLoading(false);
-                        return showToast('Tài khoản đang chờ duyệt! Vui lòng nhờ một người dùng khác xác nhận.', true);
+                        return showToast('Tài khoản đang chờ duyệt!', true);
                     }
                     if(data.status !== 'active') {
                         toggleLoading(false);
@@ -786,7 +826,7 @@
                     document.getElementById('sidebar-avatar').src = `https://placehold.co/40x40/FFC62F/006B68?text=${data.username.charAt(0).toUpperCase()}`;
                     
                     document.getElementById('auth-view').classList.add('hidden');
-                    showToast(`Chào mừng ${data.username} quay lại!`);
+                    showToast(`Chào mừng ${data.username}!`);
                     
                     await loadUserData();
                     await fetchLightFlowData(); 
@@ -824,10 +864,10 @@
         // --- Quản lý Duyệt Tài khoản (Approval) ---
         async function openApprovalModal() {
             document.getElementById('approval-view').classList.remove('hidden');
+            if (window.innerWidth < 768) toggleSidebar();
             loadPendingUsers();
         }
 
-        // ĐÃ FIX: Lỗi Syntax Error do truyền chuỗi username chưa escape vào onclick
         async function loadPendingUsers() {
             const list = document.getElementById('pending-users-list');
             list.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-bidv-primary text-xl"></i></div>';
@@ -840,7 +880,7 @@
             }
             
             if (!data || data.length === 0) {
-                list.innerHTML = '<div class="text-center text-slate-500 py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300 font-medium">Không có tài khoản nào đang chờ duyệt</div>';
+                list.innerHTML = '<div class="text-center text-slate-500 py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300 font-medium text-sm">Không có tài khoản nào đang chờ duyệt</div>';
                 return;
             }
             
@@ -848,24 +888,22 @@
             data.forEach(u => {
                 const dateStr = u.created_at ? new Date(u.created_at).toLocaleString('vi-VN') : 'Mới đây';
                 
-                // Tạo một bản ghi DOM ảo để tránh lỗi xung đột chuỗi (XSS/Token Error)
                 const userRow = document.createElement('div');
-                userRow.className = "flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors";
+                userRow.className = "flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors";
+                
                 userRow.innerHTML = `
-                    <div>
-                        <div class="font-bold text-slate-800 user-name-text"></div>
+                    <div class="w-full sm:w-auto">
+                        <div class="font-bold text-slate-800 user-name-text break-all"></div>
                         <div class="text-[11px] text-slate-500 mt-0.5">Đăng ký: ${dateStr}</div>
                     </div>
-                    <div class="flex gap-2">
-                        <button class="btn-approve bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-check"></i> Duyệt</button>
-                        <button class="btn-reject bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm"><i class="fas fa-times"></i> Xóa</button>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button class="btn-approve flex-1 sm:flex-none flex justify-center items-center bg-green-500 hover:bg-green-600 text-white px-3 py-2 sm:py-1.5 rounded text-xs font-bold transition-colors shadow-sm gap-1"><i class="fas fa-check"></i> Duyệt</button>
+                        <button class="btn-reject flex-1 sm:flex-none flex justify-center items-center bg-red-500 hover:bg-red-600 text-white px-3 py-2 sm:py-1.5 rounded text-xs font-bold transition-colors shadow-sm gap-1"><i class="fas fa-times"></i> Xóa</button>
                     </div>
                 `;
                 
-                // Gán text an toàn chống lỗi Token
                 userRow.querySelector('.user-name-text').innerText = u.username;
                 
-                // Lắng nghe sự kiện click trực tiếp bằng code thay vì viết vào thuộc tính HTML
                 userRow.querySelector('.btn-approve').addEventListener('click', () => approveUser(u.id, u.username));
                 userRow.querySelector('.btn-reject').addEventListener('click', () => rejectUser(u.id, u.username));
                 
@@ -875,7 +913,7 @@
 
         async function approveUser(id, username) {
             if(!confirm(`Bạn chắc chắn muốn duyệt cho phép tài khoản "${username}" đăng nhập?`)) return;
-            toggleLoading(true, "Đang duyệt tài khoản...");
+            toggleLoading(true, "Đang duyệt...");
             const { error } = await supabaseClient.from('core_train_users').update({ status: 'active' }).eq('id', id);
             toggleLoading(false);
             if(error) return showToast('Lỗi khi duyệt: ' + error.message, true);
@@ -885,7 +923,7 @@
 
         async function rejectUser(id, username) {
             if(!confirm(`Bạn có chắc muốn xóa/từ chối tài khoản "${username}" vĩnh viễn?`)) return;
-            toggleLoading(true, "Đang từ chối tài khoản...");
+            toggleLoading(true, "Đang xóa...");
             const { error } = await supabaseClient.from('core_train_users').delete().eq('id', id);
             toggleLoading(false);
             if(error) return showToast('Lỗi khi xóa: ' + error.message, true);
@@ -908,7 +946,6 @@
             if(scoreData && scoreData.length > 0) globalTopScore = scoreData[0].score;
         }
 
-        // --- Truy vấn Database Tối ưu ---
         async function fetchLightFlowData() {
             try {
                 const { data, error, status } = await supabaseClient
@@ -1030,7 +1067,6 @@
                 if (progress.includes(item.flow)) moduleMap[mod].done++;
             });
 
-            // 1. Render TẤT CẢ Thẻ Phân Hệ
             const sortedModules = Object.keys(moduleMap).sort((a, b) => moduleMap[b].total - moduleMap[a].total);
             const cardsContainer = document.getElementById('dashboard-module-cards');
             cardsContainer.innerHTML = '';
@@ -1042,12 +1078,12 @@
                 const isAllDone = stat.total > 0 && stat.done === stat.total;
                 
                 const html = `
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 cursor-pointer hover:border-bidv-primary hover:shadow-md transition-all group" 
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-5 flex items-center gap-4 cursor-pointer hover:border-bidv-primary hover:shadow-md transition-all group" 
                          onclick="document.getElementById('filter-module').value = '${mod}'; navigate('courses');">
-                        <div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-bidv-primary group-hover:border-bidv-primary transition-colors">
-                            <i class="fas ${icons[idx % icons.length]} text-xl text-bidv-primary group-hover:text-white transition-colors"></i>
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-bidv-primary group-hover:border-bidv-primary transition-colors shrink-0">
+                            <i class="fas ${icons[idx % icons.length]} text-lg md:text-xl text-bidv-primary group-hover:text-white transition-colors"></i>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 overflow-hidden">
                             <h3 class="text-slate-800 font-bold text-sm tracking-wider uppercase truncate group-hover:text-bidv-primary transition-colors" title="${mod}">${mod}</h3>
                             <div class="flex items-center justify-between mt-1">
                                 <p class="text-[11px] text-slate-500 font-medium">${stat.total} bài học</p>
@@ -1077,8 +1113,8 @@
                     const html = `
                         <div class="group cursor-pointer mb-5" onclick="document.getElementById('filter-module').value = '${l}'; navigate('courses');">
                             <div class="flex justify-between items-end mb-2">
-                                <span class="text-[12px] text-slate-700 font-bold tracking-wider uppercase group-hover:text-bidv-primary transition-colors">${l}</span>
-                                <span class="text-[12px] text-slate-700 font-bold group-hover:text-bidv-primary transition-colors">${percent}%</span>
+                                <span class="text-[11px] md:text-[12px] text-slate-700 font-bold tracking-wider uppercase group-hover:text-bidv-primary transition-colors truncate pr-2">${l}</span>
+                                <span class="text-[11px] md:text-[12px] text-slate-700 font-bold group-hover:text-bidv-primary transition-colors">${percent}%</span>
                             </div>
                             <div class="progress-track-dash group-hover:bg-slate-200 transition-colors">
                                 <div class="progress-bar-dash" style="width: ${percent}%"></div>
@@ -1095,7 +1131,7 @@
             chartRadar = new Chart(ctxR, {
                 type: 'radar',
                 data: {
-                    labels: labels.map(l => l.toUpperCase()),
+                    labels: labels.map(l => l.toUpperCase().substring(0, 10)),
                     datasets: [{
                         data: radarData,
                         backgroundColor: 'rgba(0, 107, 104, 0.1)', 
@@ -1116,7 +1152,7 @@
                             ticks: { display: false, stepSize: 20 },
                             grid: { color: '#E2E8F0', circular: false }, 
                             angleLines: { color: '#E2E8F0' },
-                            pointLabels: { color: '#64748B', font: { size: 10, weight: 'bold' } }
+                            pointLabels: { color: '#64748B', font: { size: window.innerWidth < 768 ? 8 : 10, weight: 'bold' } }
                         } 
                     } 
                 }
@@ -1146,23 +1182,23 @@
 
                 count++;
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md hover:border-bidv-primary transition-all cursor-pointer relative group flex flex-col h-full";
+                card.className = "bg-white rounded-xl p-4 md:p-5 border border-slate-200 shadow-sm hover:shadow-md hover:border-bidv-primary transition-all cursor-pointer relative group flex flex-col h-full";
                 
                 card.onclick = () => openDetail(item);
 
                 const statusBadge = isDone 
-                    ? `<span class="bg-green-50 text-green-600 border border-green-200 text-xs px-2.5 py-1 rounded-md font-bold tracking-wide"><i class="fas fa-check mr-1"></i> Đã học</span>`
-                    : `<span class="bg-slate-100 border border-slate-200 text-slate-500 text-xs px-2.5 py-1 rounded-md font-bold tracking-wide">Chưa học</span>`;
+                    ? `<span class="bg-green-50 text-green-600 border border-green-200 text-[10px] md:text-xs px-2.5 py-1 rounded-md font-bold tracking-wide"><i class="fas fa-check mr-1"></i> Đã học</span>`
+                    : `<span class="bg-slate-100 border border-slate-200 text-slate-500 text-[10px] md:text-xs px-2.5 py-1 rounded-md font-bold tracking-wide">Chưa học</span>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-xs font-black text-bidv-primary bg-bidv-primary/10 px-2.5 py-1 rounded-md uppercase tracking-wider border border-bidv-primary/20">${item.module || 'Chung'}</span>
+                        <span class="text-[10px] md:text-xs font-black text-bidv-primary bg-bidv-primary/10 px-2.5 py-1 rounded-md uppercase tracking-wider border border-bidv-primary/20">${item.module || 'Chung'}</span>
                         ${statusBadge}
                     </div>
-                    <h3 class="font-bold text-slate-800 text-lg leading-snug mb-3 group-hover:text-bidv-primary transition-colors flex-1">${item.flow}</h3>
-                    <div class="mt-4 flex items-center justify-between text-xs font-semibold text-slate-500 border-t border-slate-100 pt-3">
-                        <span class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-desktop text-bidv-secondary"></i> ${item.app || 'System'}</span>
-                        <span class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-users text-bidv-secondary"></i> ${item.class_id || 'All'}</span>
+                    <h3 class="font-bold text-slate-800 text-base md:text-xl leading-snug mb-3 group-hover:text-bidv-primary transition-colors flex-1">${item.flow}</h3>
+                    <div class="mt-3 md:mt-4 flex items-center justify-between text-[11px] md:text-xs font-semibold text-slate-500 border-t border-slate-100 pt-3">
+                        <span class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-desktop text-bidv-secondary"></i> <span class="truncate max-w-[80px]">${item.app || 'System'}</span></span>
+                        <span class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-users text-bidv-secondary"></i> <span class="truncate max-w-[80px]">${item.class_id || 'All'}</span></span>
                     </div>
                 `;
                 listContainer.appendChild(card);
@@ -1171,7 +1207,6 @@
             document.getElementById('list-count').innerText = `Tìm thấy ${count} kết quả`;
         }
 
-        // --- Điều hướng chi tiết Bài học ---
         async function navigateCourse(direction) {
             if (!currentFlow || !dbData.length) return;
             const currentIndex = dbData.findIndex(d => d.id === currentFlow.id);
@@ -1184,9 +1219,8 @@
             }
         }
 
-        // --- Cập nhật hiển thị Detail & Tài liệu (Documents) ---
         async function openDetail(lightItem) {
-            toggleLoading(true, "Đang tải chi tiết nội dung...");
+            toggleLoading(true, "Đang tải nội dung...");
             
             const fullItem = await fetchFullDetail(lightItem.id);
             toggleLoading(false); 
@@ -1198,7 +1232,6 @@
             sessionStorage.setItem('corebank_lastView', fullItem.flow);
             navigate('detail');
 
-            // Cập nhật trạng thái nút Prev/Next
             const currentIndex = dbData.findIndex(d => d.id === lightItem.id);
             const btnPrev = document.getElementById('btn-prev-course');
             const btnNext = document.getElementById('btn-next-course');
@@ -1208,40 +1241,37 @@
             document.getElementById('detail-title').innerText = fullItem.flow;
             document.getElementById('detail-module').innerText = fullItem.module || 'Chung';
             document.getElementById('detail-app').innerText = fullItem.app || 'Hệ thống';
-            document.getElementById('detail-path').innerText = fullItem.instruc_flow || 'Chưa có thông tin đường dẫn menu chi tiết.';
+            document.getElementById('detail-path').innerText = fullItem.instruc_flow || 'Chưa có thông tin.';
 
-            // Render Documents Tab (Cập nhật sử dụng Iframe nhúng)
             const docContainer = document.getElementById('doc-links-container');
             docContainer.innerHTML = '';
             
             let docs = fullItem.link_doc ? fullItem.link_doc.split(';') : [];
-            // Lọc bỏ khoảng trắng thừa hoặc chuỗi rỗng
             docs = docs.map(d => d.trim()).filter(d => d.length > 0);
             
             if (docs.length === 0) {
-                 docContainer.innerHTML = '<div class="text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-file-pdf text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Chưa có tài liệu đính kèm</p></div>';
+                 docContainer.innerHTML = '<div class="text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-file-pdf text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium text-sm">Chưa có tài liệu đính kèm</p></div>';
             } else {
                 docs.forEach((docStr, index) => {
                     const docUrl = docStr;
-                    // Kiểm tra xem có phải là URL chuẩn không
                     const isUrl = docUrl.startsWith('http');
                     
                     if (isUrl) {
                         const embedUrl = formatDocUrlForEmbed(docUrl);
                         docContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
-                                <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center z-20 relative">
-                                    <h4 class="text-bidv-primary text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                                        <i class="fas fa-file-pdf text-red-500 text-lg"></i> Tài liệu ${index + 1}
+                                <div class="p-3 md:p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center z-20 relative">
+                                    <h4 class="text-bidv-primary text-xs md:text-sm font-bold uppercase tracking-wider flex items-center gap-2 truncate pr-2">
+                                        <i class="fas fa-file-pdf text-red-500 text-base md:text-lg"></i> Tài liệu ${index + 1}
                                     </h4>
-                                    <a href="${docUrl}" target="_blank" class="text-xs text-slate-600 hover:text-bidv-primary flex items-center gap-1.5 transition-colors font-bold border border-slate-300 px-3 py-1.5 rounded bg-white hover:bg-slate-100 shadow-sm" title="Mở trong tab mới nếu hiển thị lỗi">
-                                        <i class="fas fa-external-link-alt"></i> Mở cửa sổ ngoài
+                                    <a href="${docUrl}" target="_blank" class="text-[11px] md:text-xs text-slate-600 hover:text-bidv-primary flex items-center gap-1.5 transition-colors font-bold border border-slate-300 px-3 py-1.5 rounded bg-white hover:bg-slate-100 shadow-sm shrink-0">
+                                        <i class="fas fa-external-link-alt"></i> Mở ngoài
                                     </a>
                                 </div>
-                                <div class="relative w-full h-[600px] bg-slate-100 flex items-center justify-center">
+                                <div class="relative w-full h-[350px] sm:h-[450px] md:h-[600px] bg-slate-100 flex items-center justify-center">
                                     <div class="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none">
-                                        <i class="fas fa-circle-notch fa-spin text-3xl text-bidv-primary mb-3"></i>
-                                        <span class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Đang tải tài liệu...</span>
+                                        <i class="fas fa-circle-notch fa-spin text-2xl md:text-3xl text-bidv-primary mb-2 md:mb-3"></i>
+                                        <span class="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase">Đang tải...</span>
                                     </div>
                                     <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-none z-10 bg-transparent" allowfullscreen="true" frameborder="0" scrolling="no" onload="this.previousElementSibling.style.display='none'"></iframe>
                                 </div>
@@ -1249,13 +1279,13 @@
                         `;
                     } else {
                          docContainer.innerHTML += `
-                            <div class="flex items-center p-4 border border-slate-200 bg-slate-50 rounded-lg">
-                                <div class="w-12 h-12 rounded-lg bg-slate-200 text-slate-400 flex items-center justify-center text-xl mr-4">
+                            <div class="flex items-center p-3 md:p-4 border border-slate-200 bg-slate-50 rounded-lg">
+                                <div class="w-10 h-10 rounded-lg bg-slate-200 text-slate-400 flex items-center justify-center text-lg mr-3 shrink-0">
                                     <i class="fas fa-file-pdf"></i>
                                 </div>
-                                <div class="flex-1">
-                                    <h4 class="font-bold text-slate-800 text-sm mb-1">${docUrl}</h4>
-                                    <p class="text-xs text-red-500 font-medium">Trường dữ liệu này không chứa Link URL hợp lệ để nhúng.</p>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="font-bold text-slate-800 text-xs md:text-sm mb-1 truncate">${docUrl}</h4>
+                                    <p class="text-[10px] md:text-xs text-red-500 font-medium truncate">Không hỗ trợ nhúng text thuần.</p>
                                 </div>
                             </div>
                         `;
@@ -1263,67 +1293,65 @@
                 });
             }
 
-            // Render Videos Tab
             const vidContainer = document.getElementById('video-links-container');
-            vidContainer.className = 'grid grid-cols-1 gap-6'; 
+            vidContainer.className = 'grid grid-cols-1 gap-4 md:gap-6'; 
             vidContainer.innerHTML = '';
             let vids = fullItem.link_video ? fullItem.link_video.split(';') : [];
             vids = vids.map(v => v.trim()).filter(v => v.length > 0);
             
             if (vids.length === 0) {
-                 vidContainer.innerHTML = '<div class="text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-video-slash text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Chưa có video hướng dẫn</p></div>';
+                 vidContainer.innerHTML = '<div class="text-center py-10 bg-slate-50 border border-slate-200 rounded-lg"><i class="fas fa-video-slash text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium text-sm">Chưa có video hướng dẫn</p></div>';
             } else {
                 vids.forEach(vidStr => {
                     const embedUrl = getYouTubeEmbedUrl(vidStr);
                     if (embedUrl) {
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
-                                <div class="relative w-full h-[400px] md:h-[600px] bg-slate-900">
+                                <div class="relative w-full h-[220px] sm:h-[400px] md:h-[600px] bg-slate-900">
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="${embedUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                                 </div>
-                                <div class="p-4 border-t border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-play-circle text-bidv-primary text-xl"></i>
-                                        <h4 class="font-bold text-slate-800 text-sm truncate">Video Hướng Dẫn</h4>
+                                <div class="p-3 md:p-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-2 md:gap-3">
+                                        <i class="fas fa-play-circle text-bidv-primary text-lg md:text-xl shrink-0"></i>
+                                        <h4 class="font-bold text-slate-800 text-xs md:text-sm truncate">Video Hướng Dẫn</h4>
                                     </div>
-                                    <a href="${vidStr}" target="_blank" class="text-xs text-slate-400 hover:text-bidv-primary transition-colors"><i class="fas fa-external-link-alt"></i></a>
+                                    <a href="${vidStr}" target="_blank" class="text-xs text-slate-400 hover:text-bidv-primary transition-colors p-2 shrink-0"><i class="fas fa-external-link-alt"></i></a>
                                 </div>
                             </div>`;
                     } else if (vidStr.includes('1drv.ms') || vidStr.includes('sharepoint.com') || vidStr.includes('live.com')) {
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col bg-white">
-                                <div class="relative w-full h-[400px] md:h-[600px] bg-black">
+                                <div class="relative w-full h-[220px] sm:h-[400px] md:h-[600px] bg-black">
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="${vidStr}" frameborder="0" scrolling="no" allowfullscreen></iframe>
                                 </div>
-                                <div class="p-4 border-t border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-play-circle text-bidv-primary text-xl"></i>
-                                        <h4 class="font-bold text-slate-800 text-sm truncate">Video Hướng Dẫn (OneDrive)</h4>
+                                <div class="p-3 md:p-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-2 md:gap-3">
+                                        <i class="fas fa-play-circle text-bidv-primary text-lg md:text-xl shrink-0"></i>
+                                        <h4 class="font-bold text-slate-800 text-xs md:text-sm truncate">Video Hướng Dẫn</h4>
                                     </div>
-                                    <a href="${vidStr}" target="_blank" class="text-xs text-slate-400 hover:text-bidv-primary transition-colors font-bold"><i class="fas fa-external-link-alt"></i> Mở cửa sổ ngoài</a>
+                                    <a href="${vidStr}" target="_blank" class="text-[10px] md:text-xs text-slate-400 hover:text-bidv-primary transition-colors font-bold shrink-0"><i class="fas fa-external-link-alt mr-1"></i> Mở ngoài</a>
                                 </div>
                             </div>`;
                     } else {
                         vidContainer.innerHTML += `
                             <div class="border border-slate-200 rounded-xl overflow-hidden group cursor-pointer bg-white hover:border-bidv-primary hover:shadow-md transition-all">
-                                <div class="h-40 bg-slate-100 relative flex items-center justify-center border-b border-slate-200 group-hover:bg-bidv-primary/5 transition-colors">
-                                    <i class="fas fa-play-circle text-5xl text-slate-300 group-hover:text-bidv-primary transition-transform group-hover:scale-110"></i>
+                                <div class="h-24 md:h-40 bg-slate-100 relative flex items-center justify-center border-b border-slate-200 group-hover:bg-bidv-primary/5 transition-colors">
+                                    <i class="fas fa-play-circle text-3xl md:text-5xl text-slate-300 group-hover:text-bidv-primary transition-transform group-hover:scale-110"></i>
                                 </div>
-                                <div class="p-4 flex items-center gap-3">
-                                    <i class="fas fa-link text-slate-400"></i>
-                                    <h4 class="font-bold text-slate-800 group-hover:text-bidv-primary text-sm truncate transition-colors">${vidStr}</h4>
+                                <div class="p-3 md:p-4 flex items-center gap-3">
+                                    <i class="fas fa-link text-slate-400 shrink-0"></i>
+                                    <h4 class="font-bold text-slate-800 group-hover:text-bidv-primary text-xs md:text-sm truncate transition-colors">${vidStr}</h4>
                                 </div>
                             </div>`;
                     }
                 });
             }
 
-            // Render Content Tab
             const contentContainer = document.getElementById('content-html-container');
             if(fullItem.step_content) {
                 contentContainer.innerHTML = fullItem.step_content;
             } else {
-                contentContainer.innerHTML = '<div class="text-center py-10"><i class="fas fa-clipboard-list text-5xl text-slate-200 mb-4"></i><p class="text-slate-500 font-medium">Chưa có nội dung quy trình tác nghiệp cho bài học này.</p></div>';
+                contentContainer.innerHTML = '<div class="text-center py-10"><i class="fas fa-clipboard-list text-4xl md:text-5xl text-slate-200 mb-4"></i><p class="text-sm text-slate-500 font-medium">Chưa có nội dung quy trình.</p></div>';
             }
 
             switchTab('doc');
@@ -1333,14 +1361,13 @@
         function switchTab(tabId) {
             ['doc', 'video', 'content'].forEach(t => {
                 document.getElementById(`tab-content-${t}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${t}`).className = "text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-4 px-5 block border-b-2 font-semibold text-sm transition-colors whitespace-nowrap";
+                document.getElementById(`tab-btn-${t}`).className = "text-slate-500 border-transparent hover:text-bidv-primary hover:border-slate-300 py-3 md:py-4 px-4 md:px-5 block border-b-2 font-semibold text-xs md:text-sm transition-colors whitespace-nowrap shrink-0";
             });
 
             document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabId}`).className = "text-bidv-primary border-bidv-primary py-4 px-5 block border-b-2 font-bold text-sm transition-colors whitespace-nowrap";
+            document.getElementById(`tab-btn-${tabId}`).className = "text-bidv-primary border-bidv-primary py-3 md:py-4 px-4 md:px-5 block border-b-2 font-bold text-xs md:text-sm transition-colors whitespace-nowrap shrink-0";
         }
 
-        // --- Hệ thống Bình luận (Comments) ---
         async function loadAndRenderComments() {
             const list = document.getElementById('comment-list');
             list.innerHTML = '<div class="text-center py-6"><i class="fas fa-spinner fa-spin text-bidv-primary text-2xl"></i></div>';
@@ -1367,7 +1394,7 @@
             }
 
             if(allCommentsHtml === '') {
-                list.innerHTML = `<div class="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="far fa-comments text-4xl text-slate-300 mb-3"></i><p class="text-sm text-slate-500 font-medium">Chưa có bình luận nào. Hãy là người đầu tiên đóng góp ý kiến!</p></div>`;
+                list.innerHTML = `<div class="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="far fa-comments text-3xl md:text-4xl text-slate-300 mb-3"></i><p class="text-xs md:text-sm text-slate-500 font-medium">Chưa có góp ý. Hãy là người đầu tiên!</p></div>`;
             } else {
                 list.innerHTML = allCommentsHtml;
             }
@@ -1376,17 +1403,17 @@
         function createCommentHTML(user, text, stars, date) {
             let starHtml = '';
             for(let i=1; i<=5; i++) {
-                starHtml += `<i class="fas fa-star ${i <= stars ? 'text-bidv-secondary' : 'text-slate-200'} text-xs"></i>`;
+                starHtml += `<i class="fas fa-star ${i <= stars ? 'text-bidv-secondary' : 'text-slate-200'} text-[10px] md:text-xs"></i>`;
             }
             return `
-                <div class="flex gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <div class="w-10 h-10 rounded-full bg-bidv-primary text-white flex items-center justify-center font-bold text-sm shrink-0 uppercase shadow-sm">
+                <div class="flex flex-col sm:flex-row gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="w-8 h-8 rounded-full bg-bidv-primary text-white flex items-center justify-center font-bold text-xs shrink-0 uppercase shadow-sm">
                         ${user.charAt(0)}
                     </div>
                     <div class="flex-1">
-                        <div class="flex items-center justify-between mb-1">
+                        <div class="flex flex-wrap items-center justify-between mb-1 gap-1">
                             <span class="font-bold text-sm text-slate-800">${user}</span>
-                            <span class="text-xs text-slate-400 font-medium"><i class="far fa-clock mr-1"></i> ${date}</span>
+                            <span class="text-[10px] text-slate-400 font-medium"><i class="far fa-clock mr-1"></i> ${date}</span>
                         </div>
                         <div class="mb-2">${starHtml}</div>
                         <p class="text-sm text-slate-600 bg-white p-3 rounded-lg border border-slate-200/50 shadow-sm leading-relaxed">${text}</p>
@@ -1467,10 +1494,10 @@
             
             qData.opts.forEach((opt, idx) => {
                 const div = document.createElement('div');
-                div.className = "p-4 border border-slate-200 bg-white rounded-lg cursor-pointer hover:border-bidv-primary hover:bg-slate-50 transition-colors text-left flex items-center gap-3";
+                div.className = "p-3 md:p-4 border border-slate-200 bg-white rounded-lg cursor-pointer hover:border-bidv-primary hover:bg-slate-50 transition-colors text-left flex items-start md:items-center gap-3";
                 div.innerHTML = `
-                    <input type="radio" name="quiz_ans" value="${idx}" class="w-4 h-4 text-bidv-primary focus:ring-bidv-primary"> 
-                    <span class="text-slate-700 font-medium">${opt}</span>
+                    <input type="radio" name="quiz_ans" value="${idx}" class="mt-1 md:mt-0 w-4 h-4 text-bidv-primary focus:ring-bidv-primary shrink-0"> 
+                    <span class="text-slate-700 font-medium text-sm md:text-base">${opt}</span>
                 `;
                 
                 div.onclick = () => { div.querySelector('input').checked = true; };
@@ -1510,7 +1537,7 @@
             }
         }
 
-        // --- Javascript Logic - Editor System (Màn hình Biên soạn) ---
+        // --- Javascript Logic - Editor System ---
         function renderEditorList() {
             const listContainer = document.getElementById('editor-list');
             const searchVal = document.getElementById('editor-search').value.toLowerCase();
@@ -1528,9 +1555,9 @@
                 div.innerHTML = `
                     <div class="truncate pr-2">
                         <div class="flow-name font-bold text-slate-700 truncate group-hover:text-bidv-primary transition-colors">${item.flow}</div>
-                        <div class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider"><span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">${item.module || 'Chung'}</span> • ${item.app || 'N/A'}</div>
+                        <div class="text-[10px] md:text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider"><span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">${item.module || 'Chung'}</span> • ${item.app || 'N/A'}</div>
                     </div>
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-bidv-primary/10 transition-colors">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-bidv-primary/10 transition-colors shrink-0">
                         <i class="fas fa-edit text-slate-300 group-hover:text-bidv-primary transition-colors edit-icon"></i>
                     </div>
                 `;
@@ -1559,7 +1586,12 @@
                 selectedItem.querySelector('.edit-icon').classList.add('text-bidv-primary');
             }
 
-            toggleLoading(true, "Đang tải dữ liệu bài học để sửa...");
+            // Giao diện Responsive: Mobile ẩn khung danh sách, nhường chỗ cho form
+            if (window.innerWidth < 768) {
+                document.getElementById('editor-list-container').classList.add('hidden');
+            }
+
+            toggleLoading(true, "Đang tải dữ liệu...");
             const fullItem = await fetchFullDetail(id);
             toggleLoading(false);
 
@@ -1584,16 +1616,31 @@
             document.getElementById('quill-container').classList.remove('hidden');
             document.getElementById('edit-content-html').classList.add('hidden');
             const btnToggle = document.getElementById('btn-toggle-html');
-            btnToggle.innerHTML = '<i class="fas fa-code"></i> Chèn mã HTML';
-            btnToggle.className = "text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
+            btnToggle.innerHTML = '<i class="fas fa-code"></i> HTML';
+            btnToggle.className = "text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
 
+            // SỬA LỖI Ở ĐÂY: Xóa bỏ class md:flex gây xung đột trên Desktop
+            document.getElementById('editor-empty-state').classList.remove('md:flex');
             document.getElementById('editor-empty-state').classList.add('hidden');
-            document.getElementById('editor-form-container').classList.remove('hidden');
+            
+            const formEl = document.getElementById('editor-form-container');
+            formEl.classList.remove('hidden');
+            formEl.classList.add('flex');
         }
 
         function closeEditor() {
-            document.getElementById('editor-form-container').classList.add('hidden');
+            const formEl = document.getElementById('editor-form-container');
+            formEl.classList.remove('flex');
+            formEl.classList.add('hidden');
+            
+            // SỬA LỖI Ở ĐÂY: Trả lại class md:flex để hiển thị lại thông báo khi đóng form trên Desktop
             document.getElementById('editor-empty-state').classList.remove('hidden');
+            document.getElementById('editor-empty-state').classList.add('hidden', 'md:flex');
+            
+            // Hiện lại list danh sách trên Mobile nếu nó bị ẩn
+            if (window.innerWidth < 768) {
+                document.getElementById('editor-list-container').classList.remove('hidden');
+            }
             
             document.querySelectorAll('.editor-list-item').forEach(el => {
                 el.classList.remove('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
@@ -1631,7 +1678,7 @@
                 step_content: htmlContent
             };
 
-            toggleLoading(true, "Đang lưu thay đổi lên máy chủ...");
+            toggleLoading(true, "Đang lưu thay đổi...");
             const { error, status } = await supabaseClient
                 .from('core_train_flows')
                 .update(updateData)
@@ -1659,18 +1706,7 @@
             
             renderEditorList(); 
             initFilters(); 
-            
-            setTimeout(() => {
-                const selectedItem = document.getElementById(`editor-item-${id}`);
-                if(selectedItem) {
-                    selectedItem.classList.remove('hover:bg-slate-50');
-                    selectedItem.classList.add('bg-bidv-primary/10', 'border-bidv-primary/30', 'shadow-inner');
-                    selectedItem.querySelector('.flow-name').classList.remove('text-slate-700');
-                    selectedItem.querySelector('.flow-name').classList.add('text-bidv-primary');
-                    selectedItem.querySelector('.edit-icon').classList.remove('text-slate-300');
-                    selectedItem.querySelector('.edit-icon').classList.add('text-bidv-primary');
-                }
-            }, 100);
+            closeEditor(); // Đóng form để quay về list khi xong thao tác trên Mobile
         }
 
         function toggleHtmlMode() {
@@ -1687,16 +1723,16 @@
                 quillContainer.classList.add('hidden');
                 htmlTextarea.classList.remove('hidden');
                 
-                btnToggle.innerHTML = '<i class="fas fa-pen"></i> Soạn thảo trực quan';
-                btnToggle.className = "text-xs font-bold bg-blue-100 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-800 transition-colors flex items-center gap-1.5 shadow-sm border border-blue-200";
+                btnToggle.innerHTML = '<i class="fas fa-pen"></i> Trực quan';
+                btnToggle.className = "text-[10px] md:text-xs font-bold bg-blue-100 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-800 transition-colors flex items-center gap-1.5 shadow-sm border border-blue-200";
             } else {
                 quillInstance.root.innerHTML = htmlTextarea.value; 
                 
                 htmlTextarea.classList.add('hidden');
                 quillContainer.classList.remove('hidden');
                 
-                btnToggle.innerHTML = '<i class="fas fa-code"></i> Chèn mã HTML';
-                btnToggle.className = "text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
+                btnToggle.innerHTML = '<i class="fas fa-code"></i> HTML';
+                btnToggle.className = "text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
             }
         }
 
