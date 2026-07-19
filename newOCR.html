@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Pro - Edge Computing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tùy chỉnh màu sắc dựa trên yêu cầu: 006B68 (Xanh ngọc sậm), FFC62F (Vàng/Cam) */
+        :root {
+            --primary: #006B68;
+            --accent: #FFC62F;
+            --surface: #F8FAFC;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f5f9;
+        }
+        .text-primary { color: var(--primary); }
+        .bg-primary { background-color: var(--primary); }
+        .text-accent { color: var(--accent); }
+        .bg-accent { background-color: var(--accent); }
+        .border-primary { border-color: var(--primary); }
+        .bg-surface { background-color: var(--surface); }
+
+        /* Nút chọn tệp chuyên nghiệp */
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+            width: 0;
+            padding: 0;
+            margin: 0;
+        }
+        .custom-file-input::before {
+            content: 'Select Image';
+            display: inline-block;
+            background: var(--surface);
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 8px 16px;
+            outline: none;
+            white-space: nowrap;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--primary);
+            transition: all 0.2s;
+            margin-right: 12px;
+        }
+        .custom-file-input:hover::before {
+            background: #e2e8f0;
+            border-color: var(--primary);
+        }
+        
+        .loader {
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col items-center justify-start pt-8 pb-12 px-4">
+
+    <div class="w-full max-w-xl">
+        <!-- Header & Hướng dẫn (Có thể thu gọn) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            <!-- Header -->
+            <div class="bg-primary p-6 text-white">
+                <div class="flex items-center gap-3 mb-2">
+                    <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    <h1 class="text-3xl font-bold tracking-tight">OCR Pro Client</h1>
+                </div>
+                <p class="text-primary-100/80 text-sm font-medium text-teal-100">Local Edge Computing Powered by Apple Intelligence</p>
+            </div>
+
+            <!-- Nội dung hướng dẫn -->
+            <div class="p-6 bg-white">
+                <details class="group cursor-pointer">
+                    <summary class="flex justify-between items-center font-semibold text-primary list-none">
+                        <span>How to setup & use this tool?</span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                    </summary>
+                    <div class="text-sm text-slate-600 mt-4 space-y-3 leading-relaxed">
+                        <p>This web application acts as a front-end client for your local iOS OCR Server. It processes images directly on your local network using edge computing, ensuring <strong>100% data privacy</strong> with zero cloud dependency.</p>
+                        <ol class="list-decimal pl-5 space-y-1">
+                            <li>Download the core server app on your iPhone: <a href="https://apps.apple.com/vn/app/ocr-server/id6749533041" target="_blank" class="text-blue-600 hover:underline font-medium">OCR Server on App Store</a>.</li>
+                            <li>Open the app on your iPhone and keep the screen on (Guided Access recommended).</li>
+                            <li>Note the IP address displayed on your iPhone screen.</li>
+                            <li>Enter that IP address below. Both devices must be on the <strong>same Wi-Fi network</strong>.</li>
+                        </ol>
+                        <p class="text-xs text-slate-400 mt-2 italic">* Your IP address is saved locally in your browser for 90 days for convenience.</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Form Tương tác Chính -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+            
+            <!-- IP Input -->
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-primary mb-2">OCR Server IP Address</label>
+                <div id="ipInputContainer" class="flex items-center bg-slate-50 rounded-xl px-4 py-3 border border-slate-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                    <svg class="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    <input type="text" id="serverUrl" placeholder="http://192.168.x.x:8000" value="http://192.168.100.170:8000" class="bg-transparent flex-1 text-[15px] font-medium outline-none text-slate-700 w-full">
+                </div>
+                <!-- Vùng hiển thị lỗi IP -->
+                <p id="ipErrorMsg" class="hidden text-red-500 text-sm mt-2 font-medium"></p>
+            </div>
+
+            <!-- Vùng Upload (Sử dụng Form truyền thống để điều hướng, tránh lỗi Safari CORS) -->
+            <form id="ocrForm" method="post" enctype="multipart/form-data" class="space-y-5 bg-surface p-5 rounded-xl border border-slate-200">
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Select Target Image</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" name="file" id="fileInput" required class="custom-file-input text-slate-500 w-full" accept="image/*">
+                    </div>
+                    <p id="fileNameDisplay" class="text-xs text-slate-500 mt-2 hidden truncate"></p>
+                </div>
+
+                <!-- Vùng hiển thị ảnh xem trước -->
+                <div id="imagePreviewContainer" class="hidden w-full flex justify-center bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
+                    <img id="imagePreview" src="" alt="Image Preview" class="max-w-full max-h-48 object-contain rounded-md">
+                </div>
+
+                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                    <label class="flex items-start cursor-pointer group">
+                        <div class="flex items-center h-5">
+                            <!-- Mặc định được tick -->
+                            <input type="checkbox" id="docOcr" name="docOcr" checked class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-medium text-slate-800 group-hover:text-primary transition-colors">Document Paragraph Detection</span>
+                            <p class="text-slate-500 text-xs mt-0.5">Optimized for reading long text documents (iOS 26+)</p>
+                        </div>
+                    </label>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full flex justify-center items-center bg-accent hover:bg-yellow-400 text-primary font-bold py-3 px-4 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-70 disabled:cursor-not-allowed">
+                    Process Image (Direct Submit)
+                </button>
+            </form>
+            
+            <p class="text-center text-xs text-slate-400 mt-6 mt-4">
+                Note: Upon processing, you will be securely redirected to the raw JSON output generated directly by your local server.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY_URL = 'ocr_server_ip';
+        const STORAGE_KEY_EXPIRY = 'ocr_server_ip_expiry';
+        
+        const serverUrlInput = document.getElementById("serverUrl");
+        const form = document.getElementById("ocrForm");
+        const docOcr = document.getElementById("docOcr");
+        const ipErrorMsg = document.getElementById("ipErrorMsg");
+        const ipInputContainer = document.getElementById("ipInputContainer");
+        const submitBtn = document.getElementById("submitBtn");
+        const fileInput = document.getElementById("fileInput");
+        const fileNameDisplay = document.getElementById("fileNameDisplay");
+        const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+        const imagePreview = document.getElementById("imagePreview");
+
+        // Load từ LocalStorage khi khởi động
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem(STORAGE_KEY_URL);
+            const expiryStr = localStorage.getItem(STORAGE_KEY_EXPIRY);
+            
+            if (savedUrl && expiryStr) {
+                const expiryTime = parseInt(expiryStr, 10);
+                if (new Date().getTime() < expiryTime) {
+                    serverUrlInput.value = savedUrl;
+                } else {
+                    localStorage.removeItem(STORAGE_KEY_URL);
+                    localStorage.removeItem(STORAGE_KEY_EXPIRY);
+                }
+            }
+        });
+
+        // Xử lý hiển thị Tên File và Ảnh Xem Trước
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = "Selected: " + file.name;
+                fileNameDisplay.classList.remove('hidden');
+
+                // Khởi tạo FileReader để đọc ảnh
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                // Đọc file ảnh dưới dạng Data URL
+                reader.readAsDataURL(file);
+            } else {
+                fileNameDisplay.classList.add('hidden');
+                imagePreviewContainer.classList.add('hidden');
+                imagePreview.src = '';
+            }
+        });
+
+        // Xử lý Form Submit (Sử dụng chuyển hướng trực tiếp để vượt qua Safari Mixed Content/CORS)
+        form.addEventListener("submit", function (e) {
+            let baseUrl = serverUrlInput.value.trim();
+            
+            // Xóa lỗi cũ
+            ipErrorMsg.classList.add('hidden');
+            ipInputContainer.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+
+            if (!baseUrl) {
+                e.preventDefault();
+                ipErrorMsg.textContent = "Please enter the OCR Server IP address first.";
+                ipErrorMsg.classList.remove('hidden');
+                ipInputContainer.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                return;
+            }
+
+            // Định dạng lại URL
+            if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+                baseUrl = 'http://' + baseUrl;
+            }
+            baseUrl = baseUrl.replace(/\/$/, "");
+
+            // Lưu vào localStorage trong 90 ngày (90 days * 24h * 60m * 60s * 1000ms)
+            const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+            const expiryTime = new Date().getTime() + ninetyDaysMs;
+            localStorage.setItem(STORAGE_KEY_URL, baseUrl);
+            localStorage.setItem(STORAGE_KEY_EXPIRY, expiryTime.toString());
+
+            // Thiết lập Action TRỰC TIẾP cho Form
+            // Form sẽ tự động điều hướng (redirect) trình duyệt sang URL này, giải quyết triệt để lỗi mạng trên Safari.
+            form.action = (docOcr && docOcr.checked) ? (baseUrl + "/docOCR") : (baseUrl + "/upload");
+            
+            // Vô hiệu hóa nút trong quá trình gửi để có cảm giác loading (Dù sau đó trang sẽ nhảy)
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loader border-primary !w-4 !h-4"></span> Redirecting...';
+        });
+
+    </script>
+</body>
+</html>
