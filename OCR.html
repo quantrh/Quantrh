@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Server</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Font chữ có chân giống giao diện gốc */
+        .font-serif-custom {
+            font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+        .code-bg {
+            background-color: #dfdfdf;
+        }
+        .badge-bg {
+            background-color: #dfdfdf;
+        }
+        /* Style cho nút file giống iOS */
+        input[type=file]::file-selector-button {
+            border: 1px solid #d1d5db;
+            background-color: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #374151;
+            cursor: pointer;
+            font-size: 0.875rem;
+            margin-right: 8px;
+        }
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-white text-black min-h-screen flex justify-center">
+
+    <div class="w-full max-w-2xl px-4 py-6 md:p-8">
+        
+        <!-- Thanh địa chỉ Safari giả lập (Dùng để nhập IP thật của bạn) -->
+        <div class="flex items-center justify-between bg-gray-100 rounded-xl px-4 py-3 mb-8 shadow-sm border border-gray-200">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <input type="text" id="serverUrl" value="http://192.168.100.170:8000" class="bg-transparent flex-1 text-center text-[15px] font-medium outline-none text-black" title="Nhập địa chỉ IP OCR Server của bạn">
+            <button onclick="document.getElementById('serverUrl').value=''" class="bg-gray-200 rounded-full p-1 hover:bg-gray-300">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Nội dung chính (Giống ảnh chụp màn hình) -->
+        <h1 class="text-4xl font-bold font-serif-custom mb-8">OCR Server</h1>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-bold font-serif-custom mb-3">
+                Upload an image via <span class="badge-bg font-sans font-normal text-sm px-2 py-0.5 rounded">upload</span> API:
+            </h2>
+            <pre class="code-bg rounded-lg p-4 text-[13px] font-mono text-gray-800 overflow-x-auto">curl -H "Accept: application/json" \
+  -X POST http://&lt;YOUR IP&gt;:8000/upload \
+  -F "file=@01.png"</pre>
+        </div>
+
+        <p class="font-serif-custom mb-6">OR</p>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-bold font-serif-custom mb-3">
+                Upload an image via <span class="badge-bg font-sans font-normal text-sm px-2 py-0.5 rounded">docOCR</span> API:
+            </h2>
+            <pre class="code-bg rounded-lg p-4 text-[13px] font-mono text-gray-800 overflow-x-auto">curl -H "Accept: application/json" \
+  -X POST http://&lt;YOUR IP&gt;:8000/docOCR \
+  -F "file=@01.png"</pre>
+        </div>
+
+        <hr class="border-t-[1.5px] border-black my-6">
+
+        <h2 class="text-2xl font-bold font-serif-custom mb-6">OCR Test:</h2>
+
+        <!-- QUAN TRỌNG: Dùng form gốc thay vì Javascript fetch để tránh lỗi CORS -->
+        <form id="ocrForm" method="post" enctype="multipart/form-data">
+            
+            <div class="flex items-center mb-6">
+                <input type="checkbox" id="docOcr" name="docOcr" class="w-5 h-5 text-blue-500 rounded border-gray-300 focus:ring-blue-500 mr-3 cursor-pointer" checked>
+                <label for="docOcr" class="font-serif-custom text-lg cursor-pointer">Document Paragraph Detection</label>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mb-6 font-serif-custom text-lg">
+                <span>Choose file:</span>
+                <input type="file" name="file" required class="font-sans text-sm outline-none">
+            </div>
+
+            <button type="submit" class="bg-[#4192f7] hover:bg-blue-500 text-white font-sans text-sm font-semibold py-2 px-5 rounded-full transition-colors">
+                Upload file
+            </button>
+        </form>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("ocrForm");
+        const docOcr = document.getElementById("docOcr");
+        const serverUrlInput = document.getElementById("serverUrl");
+
+        form.addEventListener("submit", function (e) {
+            let baseUrl = serverUrlInput.value.trim();
+            
+            if (!baseUrl) {
+                e.preventDefault();
+                alert("Please enter the Server IP address at the top.");
+                return;
+            }
+
+            // Force format lại URL
+            if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+                baseUrl = 'http://' + baseUrl;
+            }
+            
+            // Xóa dấu slash ở cuối nếu có
+            baseUrl = baseUrl.replace(/\/$/, "");
+
+            // Gán lại địa chỉ chính xác dựa trên Checkbox
+            if (docOcr && docOcr.checked) {
+                form.action = baseUrl + "/docOCR";
+            } else {
+                form.action = baseUrl + "/upload";
+            }
+        });
+    </script>
+</body>
+</html>
