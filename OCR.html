@@ -58,34 +58,70 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Custom scrollbar cho khung kết quả */
+        /* Custom scrollbar */
         .result-scroll::-webkit-scrollbar { width: 8px; }
         .result-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .result-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .result-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .loader.border-primary {
+            border-color: rgba(0, 107, 104, 0.2);
+            border-top-color: #006B68;
+        }
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex items-center justify-center p-4">
 
-    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
         
-        <!-- Header -->
         <div class="bg-primary px-6 py-5 text-white">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 OCR Pro Scanner
             </h1>
-            <p class="text-primary-100 text-sm mt-1 opacity-90">Local text recognition via iPhone</p>
+            <p class="text-primary-100 text-sm mt-1 opacity-90">Local Edge-Computing OCR via iPhone</p>
+        </div>
+
+        <div class="bg-surface border-b border-slate-200">
+            <button id="guideToggle" class="w-full px-6 py-3 flex items-center justify-between text-left text-sm font-semibold text-primary hover:bg-slate-100 transition-colors focus:outline-none">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Hướng dẫn sử dụng & Giới thiệu
+                </span>
+                <svg id="guideIcon" class="w-5 h-5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="guideContent" class="hidden px-6 pb-5 text-sm text-slate-600 space-y-4">
+                <div class="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                    <h3 class="font-bold text-primary mb-2">🔥 Tính năng nổi trội:</h3>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><strong>Điện toán cận biên (Edge Computing):</strong> Biến iPhone của bạn thành máy chủ AI cục bộ ngay trong mạng nội bộ.</li>
+                        <li><strong>Bảo mật tuyệt đối:</strong> Hình ảnh không bao giờ bị gửi lên hệ thống Cloud bên ngoài. Dữ liệu hoàn toàn riêng tư.</li>
+                        <li><strong>Sức mạnh Apple Intelligence:</strong> Tận dụng năng lực của các model AI học máy tiên tiến được tích hợp sâu trên phần cứng iPhone.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-1">Cách sử dụng:</h3>
+                    <ol class="list-decimal pl-4 space-y-2">
+                        <li>Tải ứng dụng <strong>OCR Server</strong> về iPhone của bạn từ App Store: <a href="https://apps.apple.com/vn/app/ocr-server/id6749533041" target="_blank" class="text-blue-600 hover:underline font-medium break-all">https://apps.apple.com/vn/app/ocr-server/id6749533041</a></li>
+                        <li>Mở ứng dụng trên điện thoại (đảm bảo đang chung mạng Wi-Fi với máy tính). Màn hình ứng dụng sẽ hiển thị một địa chỉ IP.</li>
+                        <li>Nhập địa chỉ IP đó vào ô <strong>Server Address</strong> bên dưới. (Địa chỉ sẽ được lưu tự động trong 90 ngày).</li>
+                    </ol>
+                </div>
+            </div>
         </div>
 
         <div class="p-6">
             <!-- Server IP Config -->
             <div class="mb-6">
                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Server Address</label>
-                <div class="flex items-center bg-slate-50 rounded-lg border border-slate-200 px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                <div id="ipInputContainer" class="flex items-center bg-slate-50 rounded-lg border border-slate-200 px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                     <svg class="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-                    <input type="text" id="serverUrl" value="http://192.168.100.170:8000" class="bg-transparent flex-1 text-[15px] font-medium outline-none text-slate-700" placeholder="http://192.168.x.x:8000">
+                    <input type="text" id="serverUrl" class="bg-transparent flex-1 text-[15px] font-medium outline-none text-slate-700" placeholder="http://192.168.100.170:8000">
                 </div>
+                <p id="ipErrorMsg" class="hidden text-red-500 text-[13px] mt-1.5 font-medium"></p>
             </div>
 
             <!-- Vùng Upload (Sử dụng Form truyền thống target vào iframe) -->
@@ -107,7 +143,7 @@
                 <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <label class="flex items-start cursor-pointer group">
                         <div class="flex items-center h-5">
-                            <!-- Đã thêm thuộc tính checked vào đây -->
+                            <!-- Mặc định được tick -->
                             <input type="checkbox" id="docOcr" name="docOcr" checked class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2">
                         </div>
                         <div class="ml-3 text-sm">
@@ -122,42 +158,37 @@
                 </button>
             </form>
 
-            <!-- Result Area -->
             <div id="resultArea" class="hidden mt-6 animate-fade-in-up">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-semibold text-primary uppercase tracking-wider">Server Response</label>
                 </div>
                 
-                <div class="relative w-full h-48 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                <div class="relative w-full h-56 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
                     <!-- Loading Overlay -->
                     <div id="loadingOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10">
                         <span class="loader border-primary !w-8 !h-8 mb-3"></span>
-                        <span class="text-sm font-medium text-slate-600">Analyzing image on iPhone...</span>
+                        <span class="text-sm font-medium text-slate-600">Analyzing image securely on local edge...</span>
                     </div>
 
                     <!-- Iframe hiển thị thẳng kết quả -->
-                    <iframe name="result_iframe" id="result_iframe" class="w-full h-full border-none bg-transparent" title="OCR Result"></iframe>
+                    <iframe name="hidden_iframe" id="result_iframe" class="w-full h-full border-none bg-transparent" title="OCR Result"></iframe>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-2 text-center">Note: Due to browser security, please manually select and copy the JSON text above.</p>
+                <p class="text-[11px] text-slate-400 mt-2 text-center">Note: Manually select and copy the JSON text above if needed.</p>
             </div>
 
         </div>
     </div>
 
-    <style>
-        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Tùy chỉnh màu loader cho phù hợp nền sáng */
-        .loader.border-primary {
-            border-color: rgba(0, 107, 104, 0.2);
-            border-top-color: #006B68;
-        }
-    </style>
-
     <script>
+        // Constants for Local Storage
+        const STORAGE_KEY_URL = 'ocrPro_serverUrl';
+        const STORAGE_KEY_EXPIRY = 'ocrPro_urlExpiry';
+
         const form = document.getElementById("ocrForm");
         const docOcr = document.getElementById("docOcr");
         const serverUrlInput = document.getElementById("serverUrl");
+        const ipErrorMsg = document.getElementById("ipErrorMsg");
+        const ipInputContainer = document.getElementById("ipInputContainer");
         const iframe = document.getElementById("result_iframe");
         const btnText = document.getElementById("btnText");
         const submitBtn = document.getElementById("submitBtn");
@@ -167,26 +198,50 @@
         const fileNameDisplay = document.getElementById("fileNameDisplay");
         const imagePreviewContainer = document.getElementById("imagePreviewContainer");
         const imagePreview = document.getElementById("imagePreview");
+        
+        // Guide toggle logic
+        const guideToggle = document.getElementById('guideToggle');
+        const guideContent = document.getElementById('guideContent');
+        const guideIcon = document.getElementById('guideIcon');
+
+        guideToggle.addEventListener('click', () => {
+            guideContent.classList.toggle('hidden');
+            guideIcon.classList.toggle('rotate-180');
+        });
+
+        // Initialize Local Storage data
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem(STORAGE_KEY_URL);
+            const expiry = localStorage.getItem(STORAGE_KEY_EXPIRY);
+
+            if (savedUrl && expiry) {
+                const now = new Date().getTime();
+                if (now < parseInt(expiry, 10)) {
+                    serverUrlInput.value = savedUrl;
+                } else {
+                    // Expired (older than 90 days)
+                    localStorage.removeItem(STORAGE_KEY_URL);
+                    localStorage.removeItem(STORAGE_KEY_EXPIRY);
+                }
+            }
+        });
 
         let isSubmitting = false;
 
-        // Hiển thị tên file và xem trước ảnh khi chọn
+        // Xử lý xem trước ảnh
         fileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
                 const file = e.target.files[0];
                 
-                // Hiển thị tên
                 fileNameDisplay.textContent = `Selected: ${file.name}`;
                 fileNameDisplay.classList.remove('hidden');
 
-                // Hiển thị ảnh xem trước
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     imagePreview.src = event.target.result;
                     imagePreviewContainer.classList.remove('hidden');
                 }
                 reader.readAsDataURL(file);
-
             } else {
                 fileNameDisplay.classList.add('hidden');
                 imagePreviewContainer.classList.add('hidden');
@@ -194,12 +249,25 @@
             }
         });
 
-        // Xử lý trước khi Submit form
+        // Clear error styling on input
+        serverUrlInput.addEventListener('input', () => {
+            ipErrorMsg.classList.add('hidden');
+            ipInputContainer.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+        });
+
+        // Xử lý Form Submit
         form.addEventListener("submit", function (e) {
             let baseUrl = serverUrlInput.value.trim();
+            
+            // Xóa lỗi cũ
+            ipErrorMsg.classList.add('hidden');
+            ipInputContainer.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+
             if (!baseUrl) {
                 e.preventDefault();
-                alert("Please enter the Server address.");
+                ipErrorMsg.textContent = "Please enter the OCR Server IP address first.";
+                ipErrorMsg.classList.remove('hidden');
+                ipInputContainer.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 return;
             }
 
@@ -209,25 +277,26 @@
             }
             baseUrl = baseUrl.replace(/\/$/, "");
 
-            // Gán action cho form dựa vào checkbox
+            // Lưu vào localStorage trong 90 ngày (90 days * 24h * 60m * 60s * 1000ms)
+            const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+            const expiryTime = new Date().getTime() + ninetyDaysMs;
+            localStorage.setItem(STORAGE_KEY_URL, baseUrl);
+            localStorage.setItem(STORAGE_KEY_EXPIRY, expiryTime.toString());
+
+            // Thiết lập Action
             form.action = (docOcr && docOcr.checked) ? (baseUrl + "/docOCR") : (baseUrl + "/upload");
             
-            // Chỉ định form submit vào iframe hiển thị
-            form.target = "result_iframe";
-
-            // UI Feedback
             isSubmitting = true;
             submitBtn.disabled = true;
             btnText.textContent = 'Processing...';
             
             resultArea.classList.remove('hidden');
-            loadingOverlay.classList.remove('hidden'); // Hiện màn hình loading đè lên Iframe
+            loadingOverlay.classList.remove('hidden'); 
             
-            // Xoá nội dung iframe cũ (nếu có)
             iframe.src = "about:blank";
         });
 
-        // Lắng nghe sự kiện iframe load xong
+        // Xử lý khi Iframe tải xong
         iframe.onload = function() {
             if (!isSubmitting) return; 
             
@@ -235,7 +304,6 @@
             submitBtn.disabled = false;
             btnText.textContent = 'Process Image';
             
-            // Tắt màn hình loading để lộ ra kết quả JSON bên trong Iframe
             loadingOverlay.classList.add('hidden');
         };
     </script>
