@@ -6,6 +6,7 @@
     <title>OCR Pro - Edge Computing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Tùy chỉnh màu sắc dựa trên yêu cầu: 006B68 (Xanh ngọc sậm), FFC62F (Vàng/Cam) */
         :root {
             --primary: #006B68;
             --accent: #FFC62F;
@@ -22,6 +23,7 @@
         .border-primary { border-color: var(--primary); }
         .bg-surface { background-color: var(--surface); }
 
+        /* Nút chọn tệp chuyên nghiệp */
         .custom-file-input::-webkit-file-upload-button {
             visibility: hidden;
             width: 0;
@@ -61,24 +63,15 @@
             margin-right: 8px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Style the iframe to look like a result box */
-        iframe.result-box {
-            width: 100%;
-            height: 250px;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.5rem;
-            background-color: #f8fafc;
-            display: block;
-        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col items-center justify-start pt-8 pb-12 px-4">
 
     <div class="w-full max-w-xl">
-        <!-- Header & Instructions -->
+        <!-- Header & Hướng dẫn (Có thể thu gọn) -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            <!-- Header -->
             <div class="bg-primary p-6 text-white">
                 <div class="flex items-center gap-3 mb-2">
                     <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
@@ -87,6 +80,7 @@
                 <p class="text-primary-100/80 text-sm font-medium text-teal-100">Local Edge Computing Powered by Apple Intelligence</p>
             </div>
 
+            <!-- Nội dung hướng dẫn -->
             <div class="p-6 bg-white">
                 <details class="group cursor-pointer">
                     <summary class="flex justify-between items-center font-semibold text-primary list-none">
@@ -103,25 +97,28 @@
                             <li>Note the IP address displayed on your iPhone screen.</li>
                             <li>Enter that IP address below. Both devices must be on the <strong>same Wi-Fi network</strong>.</li>
                         </ol>
+                        <p class="text-xs text-slate-400 mt-2 italic">* Your IP address is saved locally in your browser for 90 days for convenience.</p>
                     </div>
                 </details>
             </div>
         </div>
 
-        <!-- Main Interaction Form -->
+        <!-- Form Tương tác Chính -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
             
+            <!-- IP Input -->
             <div class="mb-6">
                 <label class="block text-sm font-bold text-primary mb-2">OCR Server IP Address</label>
                 <div id="ipInputContainer" class="flex items-center bg-slate-50 rounded-xl px-4 py-3 border border-slate-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                     <svg class="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
                     <input type="text" id="serverUrl" placeholder="http://192.168.x.x:8000" value="http://192.168.100.170:8000" class="bg-transparent flex-1 text-[15px] font-medium outline-none text-slate-700 w-full">
                 </div>
+                <!-- Vùng hiển thị lỗi IP -->
                 <p id="ipErrorMsg" class="hidden text-red-500 text-sm mt-2 font-medium"></p>
             </div>
 
-            <!-- Target points to the iframe below -->
-            <form id="ocrForm" target="resultIframe" method="post" enctype="multipart/form-data" class="space-y-5 bg-surface p-5 rounded-xl border border-slate-200">
+            <!-- Vùng Upload (Sử dụng Form truyền thống để điều hướng, tránh lỗi Safari CORS) -->
+            <form id="ocrForm" method="post" enctype="multipart/form-data" class="space-y-5 bg-surface p-5 rounded-xl border border-slate-200">
                 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">Select Target Image</label>
@@ -131,6 +128,7 @@
                     <p id="fileNameDisplay" class="text-xs text-slate-500 mt-2 hidden truncate"></p>
                 </div>
 
+                <!-- Vùng hiển thị ảnh xem trước -->
                 <div id="imagePreviewContainer" class="hidden w-full flex justify-center bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
                     <img id="imagePreview" src="" alt="Image Preview" class="max-w-full max-h-48 object-contain rounded-md">
                 </div>
@@ -138,36 +136,23 @@
                 <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <label class="flex items-start cursor-pointer group">
                         <div class="flex items-center h-5">
+                            <!-- Mặc định được tick -->
                             <input type="checkbox" id="docOcr" name="docOcr" checked class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2">
                         </div>
                         <div class="ml-3 text-sm">
                             <span class="font-medium text-slate-800 group-hover:text-primary transition-colors">Document Paragraph Detection</span>
-                            <p class="text-slate-500 text-xs mt-0.5">Optimized for reading long text documents</p>
+                            <p class="text-slate-500 text-xs mt-0.5">Optimized for reading long text documents (iOS 26+)</p>
                         </div>
                     </label>
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full flex justify-center items-center bg-accent hover:bg-yellow-400 text-primary font-bold py-3 px-4 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-70 disabled:cursor-not-allowed">
-                    Process Image
+                    Process Image (Direct Submit)
                 </button>
             </form>
             
-            <!-- Result Container (Iframe) -->
-            <div id="resultContainer" class="hidden mt-6 space-y-2">
-                <div class="flex justify-between items-end">
-                    <h3 class="text-sm font-bold text-primary">JSON Response:</h3>
-                    <p class="text-xs text-slate-500">Select text inside box to copy</p>
-                </div>
-                <!-- 
-                  This iframe receives the POST response.
-                  It will display the raw JSON from the server.
-                  We DO NOT use Javascript to read its content to avoid CORS read blocks.
-                -->
-                <iframe name="resultIframe" id="resultIframe" class="result-box"></iframe>
-            </div>
-
-            <p id="safariWarning" class="hidden text-center text-xs text-amber-600 mt-4 bg-amber-50 p-2 rounded border border-amber-200">
-                If the result box stays blank, your browser is blocking Mixed Content (HTTPS -> HTTP). Please download this HTML file and open it locally.
+            <p class="text-center text-xs text-slate-400 mt-6 mt-4">
+                Note: Upon processing, you will be securely redirected to the raw JSON output generated directly by your local server.
             </p>
         </div>
     </div>
@@ -179,102 +164,89 @@
         const serverUrlInput = document.getElementById("serverUrl");
         const form = document.getElementById("ocrForm");
         const docOcr = document.getElementById("docOcr");
+        const ipErrorMsg = document.getElementById("ipErrorMsg");
+        const ipInputContainer = document.getElementById("ipInputContainer");
         const submitBtn = document.getElementById("submitBtn");
         const fileInput = document.getElementById("fileInput");
         const fileNameDisplay = document.getElementById("fileNameDisplay");
         const imagePreviewContainer = document.getElementById("imagePreviewContainer");
         const imagePreview = document.getElementById("imagePreview");
-        const resultContainer = document.getElementById("resultContainer");
-        const resultIframe = document.getElementById("resultIframe");
-        const safariWarning = document.getElementById("safariWarning");
 
-        let isSubmitting = false;
-
-        // Load from LocalStorage
+        // Load từ LocalStorage khi khởi động
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem(STORAGE_KEY_URL);
             const expiryStr = localStorage.getItem(STORAGE_KEY_EXPIRY);
-            if (savedUrl && expiryStr && (new Date().getTime() < parseInt(expiryStr, 10))) {
-                serverUrlInput.value = savedUrl;
+            
+            if (savedUrl && expiryStr) {
+                const expiryTime = parseInt(expiryStr, 10);
+                if (new Date().getTime() < expiryTime) {
+                    serverUrlInput.value = savedUrl;
+                } else {
+                    localStorage.removeItem(STORAGE_KEY_URL);
+                    localStorage.removeItem(STORAGE_KEY_EXPIRY);
+                }
             }
         });
 
-        // Image Preview
+        // Xử lý hiển thị Tên File và Ảnh Xem Trước
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 fileNameDisplay.textContent = "Selected: " + file.name;
                 fileNameDisplay.classList.remove('hidden');
+
+                // Khởi tạo FileReader để đọc ảnh
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
                     imagePreviewContainer.classList.remove('hidden');
                 };
+                // Đọc file ảnh dưới dạng Data URL
                 reader.readAsDataURL(file);
-                // Reset iframe on new file
-                resultContainer.classList.add('hidden');
-                resultIframe.src = "about:blank";
-                safariWarning.classList.add('hidden');
+            } else {
+                fileNameDisplay.classList.add('hidden');
+                imagePreviewContainer.classList.add('hidden');
+                imagePreview.src = '';
             }
         });
 
-        // Form Submit Event
+        // Xử lý Form Submit (Sử dụng chuyển hướng trực tiếp để vượt qua Safari Mixed Content/CORS)
         form.addEventListener("submit", function (e) {
             let baseUrl = serverUrlInput.value.trim();
+            
+            // Xóa lỗi cũ
+            ipErrorMsg.classList.add('hidden');
+            ipInputContainer.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+
             if (!baseUrl) {
                 e.preventDefault();
-                alert("Please enter the OCR Server IP address.");
+                ipErrorMsg.textContent = "Please enter the OCR Server IP address first.";
+                ipErrorMsg.classList.remove('hidden');
+                ipInputContainer.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 return;
             }
 
+            // Định dạng lại URL
             if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
                 baseUrl = 'http://' + baseUrl;
             }
             baseUrl = baseUrl.replace(/\/$/, "");
 
-            // Save to localStorage (90 days)
-            const expiryTime = new Date().getTime() + (90 * 24 * 60 * 60 * 1000);
+            // Lưu vào localStorage trong 90 ngày (90 days * 24h * 60m * 60s * 1000ms)
+            const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+            const expiryTime = new Date().getTime() + ninetyDaysMs;
             localStorage.setItem(STORAGE_KEY_URL, baseUrl);
             localStorage.setItem(STORAGE_KEY_EXPIRY, expiryTime.toString());
 
-            // Set Form Action dynamically
+            // Thiết lập Action TRỰC TIẾP cho Form
+            // Form sẽ tự động điều hướng (redirect) trình duyệt sang URL này, giải quyết triệt để lỗi mạng trên Safari.
             form.action = (docOcr && docOcr.checked) ? (baseUrl + "/docOCR") : (baseUrl + "/upload");
             
-            // UI Loading State
-            isSubmitting = true;
+            // Vô hiệu hóa nút trong quá trình gửi để có cảm giác loading (Dù sau đó trang sẽ nhảy)
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loader border-primary !w-4 !h-4"></span> Processing...';
-            
-            // Show iframe container and warning
-            resultContainer.classList.remove('hidden');
-            
-            // Note: If hosted on HTTPS, Safari might silently block the POST to HTTP.
-            // We show a warning just in case.
-            if(window.location.protocol === 'https:') {
-                safariWarning.classList.remove('hidden');
-            }
-            
-            // Set a timeout fallback in case iframe fails to load completely due to block
-            setTimeout(() => {
-                if(isSubmitting) {
-                    resetButton();
-                }
-            }, 5000);
+            submitBtn.innerHTML = '<span class="loader border-primary !w-4 !h-4"></span> Redirecting...';
         });
 
-        // Listen for iframe load to reset button
-        resultIframe.addEventListener("load", function() {
-            // If the src is not blank, it means a response (or error page) loaded
-            if (resultIframe.src !== "about:blank" && isSubmitting) {
-                resetButton();
-            }
-        });
-
-        function resetButton() {
-            isSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Process Image';
-        }
     </script>
 </body>
 </html>
