@@ -143,7 +143,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 md:mb-2">Mật khẩu</label>
-                    <input type="password" id="auth-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all text-sm md:text-base" placeholder="Nhập mật khẩu...">
+                    <input type="password" id="auth-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:border-bidv-primary focus:ring-1 focus:ring-bidv-primary transition-all text-sm md:text-base" placeholder="Nhập mật khẩu..." onkeypress="if(event.key === 'Enter') handleAuth(false)">
                 </div>
                 <div class="pt-2">
                     <button onclick="handleAuth(false)" class="w-full bg-bidv-primary hover:bg-bidv-primary-dark text-white font-bold py-3 rounded-lg transition-colors shadow-md text-sm md:text-base">ĐĂNG NHẬP</button>
@@ -305,7 +305,6 @@
 
                     <!-- Charts Area -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
-                        
                         <!-- Radar Chart -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 lg:col-span-2 relative h-[300px] md:min-h-[350px] flex flex-col">
                             <p class="text-[12px] text-bidv-primary font-bold tracking-[0.2em] uppercase mb-2 md:mb-4 shrink-0">PHÂN TÍCH NĂNG LỰC</p>
@@ -334,14 +333,12 @@
                                 <!-- Rendered by JS -->
                             </div>
                         </div>
-
                     </div>
                 </div>
             </section>
 
             <!-- VIEW: COURSE LIST -->
             <section id="view-courses" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8">
-                
                 <div class="flex flex-col md:flex-row justify-between md:items-end gap-3 mb-4 md:mb-6 border-b border-slate-200 pb-3 md:pb-4">
                     <div>
                         <h1 class="text-xl md:text-2xl font-bold text-bidv-primary">Bài học / Lessons</h1>
@@ -382,7 +379,7 @@
             <!-- VIEW: COURSE DETAIL -->
             <section id="view-detail" class="fade-in max-w-5xl mx-auto hidden flex-col p-4 md:p-8">
                 
-                <!-- Bố cục Navigation thu gọn, rõ ràng trên điện thoại -->
+                <!-- Navigation -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                     <button onclick="navigate('courses')" class="text-slate-600 hover:text-bidv-primary text-sm font-bold flex items-center justify-center gap-2 transition-colors w-full sm:w-fit bg-white sm:bg-transparent px-4 py-2.5 sm:p-0 rounded-lg border border-slate-200 sm:border-transparent shadow-sm sm:shadow-none">
                         <i class="fas fa-arrow-left"></i> Về danh sách
@@ -398,7 +395,7 @@
                 </div>
 
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
-                    <!-- Header -->
+                    <!-- Header with Deep Link -->
                     <div class="bg-bidv-primary p-5 md:p-8 text-white relative overflow-hidden">
                         <div class="absolute right-[-20px] top-[-20px] opacity-10 text-9xl hidden md:block"><i class="fas fa-book-open"></i></div>
                         <div class="relative z-10">
@@ -408,14 +405,25 @@
                             </div>
                             <h1 class="text-xl md:text-3xl font-bold mb-2 leading-snug break-words" id="detail-title">Tên quy trình</h1>
                             
-                            <div class="flex items-start gap-2.5 text-xs md:text-sm text-white/90 bg-black/10 border border-white/10 p-3 rounded-lg mt-4 backdrop-blur-sm w-full md:w-auto inline-block">
-                                <i class="fas fa-route mt-0.5 text-bidv-secondary shrink-0"></i>
-                                <div><span class="font-medium">Menu:</span> <span id="detail-path" class="break-words">N/A</span></div>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 w-full">
+                                <div class="flex items-start gap-2.5 text-xs md:text-sm text-white/90 bg-black/10 border border-white/10 p-3 rounded-lg backdrop-blur-sm w-full sm:w-auto">
+                                    <i class="fas fa-route mt-0.5 text-bidv-secondary shrink-0"></i>
+                                    <div><span class="font-medium">Menu:</span> <span id="detail-path" class="break-words">N/A</span></div>
+                                </div>
+                                
+                                <!-- Deep Link Input Field -->
+                                <div class="flex items-center gap-2 w-full sm:w-auto bg-black/20 p-2 rounded-lg border border-white/20 backdrop-blur-sm max-w-md">
+                                    <label class="text-[10px] font-bold text-bidv-secondary whitespace-nowrap hidden sm:block shrink-0"><i class="fas fa-link"></i> Deep Link:</label>
+                                    <input type="text" id="detail-deeplink" readonly class="flex-1 bg-black/40 text-white border border-white/10 rounded px-2 py-1.5 text-[10px] outline-none min-w-0" value="">
+                                    <button onclick="copyDeepLink()" class="bg-bidv-secondary hover:bg-bidv-secondary-dark text-slate-900 px-3 py-1.5 rounded text-[10px] font-bold transition-colors shrink-0">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Content Tabs (Vuốt ngang trên mobile mượt mà) -->
+                    <!-- Content Tabs -->
                     <div class="border-b border-slate-200 bg-slate-50 w-full overflow-hidden">
                         <nav class="flex flex-nowrap overflow-x-auto px-2 md:px-6 hide-scrollbar w-full" id="detail-tabs">
                             <button onclick="switchTab('doc')" id="tab-btn-doc" class="text-bidv-primary border-bidv-primary py-3 md:py-4 px-4 md:px-5 block border-b-2 font-bold text-sm transition-colors whitespace-nowrap shrink-0">
@@ -433,22 +441,18 @@
                     <div class="p-4 md:p-8 bg-white min-h-[300px]">
                         <!-- Doc Tab Content -->
                         <div id="tab-content-doc" class="block space-y-4">
-                            <div id="doc-links-container" class="grid grid-cols-1 gap-4 md:gap-6">
-                                <!-- Docs injected here -->
-                            </div>
+                            <div id="doc-links-container" class="grid grid-cols-1 gap-4 md:gap-6"></div>
                         </div>
 
                         <!-- Video Tab Content -->
                         <div id="tab-content-video" class="hidden space-y-4">
-                            <div id="video-links-container" class="grid grid-cols-1 gap-4 md:gap-6">
-                                <!-- Videos injected here -->
-                            </div>
+                            <div id="video-links-container" class="grid grid-cols-1 gap-4 md:gap-6"></div>
                         </div>
                         
                         <!-- Content Tab (Nội dung chi tiết - HTML) -->
                         <div id="tab-content-content" class="hidden space-y-4">
                             <div id="content-html-container" class="content-html max-w-none bg-slate-50 p-4 md:p-8 rounded-xl border border-slate-200 shadow-inner min-h-[200px] overflow-x-auto text-sm md:text-base">
-                                <!-- Nội dung html step_content render tại đây -->
+                                <!-- HTML content rendered here -->
                             </div>
                         </div>
                     </div>
@@ -496,6 +500,7 @@
                     </div>
                 </div>
 
+                <!-- Quiz HTML (same as before) -->
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6 md:p-12 text-center" id="quiz-intro">
                     <div class="w-20 h-20 md:w-24 md:h-24 bg-blue-50 text-bidv-primary rounded-full flex items-center justify-center mx-auto mb-5 md:mb-6">
                         <i class="fas fa-laptop-code text-4xl md:text-5xl"></i>
@@ -512,11 +517,8 @@
                         <span id="quiz-progress-text" class="bg-slate-100 px-3 py-1 rounded-md text-bidv-primary">Câu 1 / 5</span>
                         <span class="flex items-center gap-2"><i class="far fa-clock"></i> <span id="quiz-timer" class="text-bidv-primary">00:00</span></span>
                     </div>
-
                     <h3 class="text-base md:text-xl font-bold text-slate-800 mb-5 md:mb-6 leading-relaxed" id="quiz-question-text">Question goes here?</h3>
-                    
                     <div class="space-y-3" id="quiz-options"></div>
-
                     <div class="mt-6 md:mt-8 pt-5 md:pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3">
                         <button onclick="nextQuizQuestion()" id="btn-next-quiz" class="w-full sm:w-auto bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 px-6 py-3 md:py-2.5 rounded-lg font-bold transition-colors hidden flex items-center justify-center gap-2">
                             Câu tiếp theo <i class="fas fa-arrow-right text-bidv-primary"></i>
@@ -533,10 +535,8 @@
                     </div>
                     <h2 class="text-xl md:text-2xl font-bold mb-2 text-slate-800">Kết Quả Bài Thi</h2>
                     <p class="text-sm text-slate-500 mb-6 md:mb-8">Bạn đã hoàn thành bài kiểm tra kiến thức.</p>
-                    
                     <div class="text-5xl md:text-6xl font-black text-bidv-primary mb-2" id="quiz-final-score">0/5</div>
                     <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 md:mb-10">ĐIỂM SỐ ĐẠT ĐƯỢC</p>
-                    
                     <div class="flex flex-col sm:flex-row justify-center gap-3">
                         <button onclick="navigate('dashboard')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-6 py-3 md:py-2.5 rounded-lg font-bold transition-colors w-full sm:w-auto">
                             Về Dashboard
@@ -550,6 +550,7 @@
             
             <!-- VIEW: EDITOR (Biên soạn Nội dung) -->
             <section id="view-editor" class="fade-in max-w-7xl mx-auto hidden flex-col p-4 md:p-8 h-full w-full">
+                <!-- Editor content same as before -->
                 <div class="flex justify-between items-end mb-4 md:mb-6 border-b border-slate-200 pb-3 md:pb-4 shrink-0">
                     <div>
                         <h1 class="text-xl md:text-2xl font-bold text-bidv-primary">Biên Soạn</h1>
@@ -557,10 +558,7 @@
                     </div>
                 </div>
 
-                <!-- Bố cục Flex Responsive: Điện thoại ẩn List khi mở Form -->
                 <div class="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 pb-4 md:pb-6 relative">
-                    
-                    <!-- Left: List -->
                     <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full shrink-0 md:shrink transition-all duration-300" id="editor-list-container">
                         <div class="p-3 md:p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl shrink-0">
                             <div class="relative">
@@ -568,12 +566,9 @@
                                 <input type="text" id="editor-search" placeholder="Tìm kiếm bài học..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-bidv-primary transition-all" oninput="renderEditorList()">
                             </div>
                         </div>
-                        <div class="flex-1 overflow-y-auto p-2 hide-scrollbar" id="editor-list">
-                            <!-- List items injected here -->
-                        </div>
+                        <div class="flex-1 overflow-y-auto p-2 hide-scrollbar" id="editor-list"></div>
                     </div>
                     
-                    <!-- Right: Empty State (Ẩn trên mobile mặc định để thấy list) -->
                     <div class="hidden md:flex w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 items-center justify-center p-6 h-full min-h-[300px] transition-all" id="editor-empty-state">
                         <div class="text-center text-slate-400">
                             <div class="w-20 h-20 md:w-24 md:h-24 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5">
@@ -584,11 +579,9 @@
                         </div>
                     </div>
 
-                    <!-- Right: Form Edit (Giao diện chuẩn không bị sụp Form) -->
                     <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-col hidden h-full transition-all" id="editor-form-container">
                         <div class="flex items-center justify-between p-4 md:p-5 border-b border-slate-200 bg-slate-50 shrink-0">
                             <div class="flex items-center gap-2">
-                                <!-- Nút Back xuất hiện trên Mobile -->
                                 <button type="button" onclick="closeEditor()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 shadow-sm">
                                     <i class="fas fa-arrow-left"></i>
                                 </button>
@@ -605,7 +598,6 @@
                             <form id="editor-form" class="space-y-5 md:space-y-6">
                                 <input type="hidden" id="edit-id">
                                 
-                                <!-- Thông tin cơ bản -->
                                 <h3 class="text-[11px] md:text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">Thông tin cơ bản</h3>
                                 <div>
                                     <label class="block text-[11px] md:text-xs font-bold text-slate-600 mb-1.5">Tên quy trình (Flow) <span class="text-red-500">*</span></label>
@@ -635,42 +627,39 @@
                                         <input type="text" id="edit-instruc-flow" placeholder="Ví dụ: Phân hệ LN -> Menu ABC..." class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Tài nguyên (Links) -->
-                            <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl border border-blue-100 space-y-4">
-                                <h3 class="text-[11px] md:text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-blue-200/50 pb-2">Tài nguyên học tập</h3>
-                                <div>
-                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Tài liệu / Slide</label>
-                                    <input type="text" id="edit-doc" placeholder="Nhập Link, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl border border-blue-100 space-y-4 mt-4">
+                                    <h3 class="text-[11px] md:text-xs font-black text-bidv-primary uppercase tracking-wider mb-2 border-b border-blue-200/50 pb-2">Tài nguyên học tập</h3>
+                                    <div>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Tài liệu / Slide</label>
+                                        <input type="text" id="edit-doc" placeholder="Nhập Link, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Video</label>
+                                        <input type="text" id="edit-video" placeholder="Nhập link Youtube/OneDrive, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700 mb-1.5">Link Video</label>
-                                    <input type="text" id="edit-video" placeholder="Nhập link Youtube/OneDrive, cách nhau bởi ;" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none transition-all">
-                                </div>
-                            </div>
 
-                            <!-- Nội dung HTML -->
-                            <div class="pb-4">
-                                <div class="flex justify-between items-end mb-2">
-                                    <label class="block text-[11px] md:text-xs font-bold text-slate-700">Nội dung quy trình</label>
-                                    <button type="button" onclick="toggleHtmlMode()" id="btn-toggle-html" class="text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300">
-                                        <i class="fas fa-code"></i> HTML
+                                <div class="pb-4 mt-4">
+                                    <div class="flex justify-between items-end mb-2">
+                                        <label class="block text-[11px] md:text-xs font-bold text-slate-700">Nội dung quy trình</label>
+                                        <button type="button" onclick="toggleHtmlMode()" id="btn-toggle-html" class="text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300">
+                                            <i class="fas fa-code"></i> HTML
+                                        </button>
+                                    </div>
+                                    <div id="quill-container" class="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-bidv-primary focus-within:border-bidv-primary transition-all">
+                                        <div id="quill-editor"></div>
+                                    </div>
+                                    <textarea id="edit-content-html" rows="12" class="w-full bg-slate-800 border border-slate-700 text-green-400 rounded-lg p-4 text-xs md:text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none font-mono hidden leading-relaxed tracking-wide shadow-inner" placeholder="<!-- Dán trực tiếp mã HTML của bạn vào đây... -->"></textarea>
+                                </div>
+
+                                <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200 bg-white">
+                                    <button type="button" onclick="closeEditor()" class="w-full sm:w-auto px-6 py-3 md:py-2.5 border border-slate-300 bg-slate-50 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition-colors">Đóng</button>
+                                    <button type="button" onclick="saveFlowEdit()" class="w-full sm:w-auto px-8 py-3 md:py-2.5 bg-bidv-primary text-white rounded-lg font-bold hover:bg-bidv-primary-dark transition-colors shadow-md flex items-center justify-center">
+                                        <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
                                     </button>
                                 </div>
-                                <div id="quill-container" class="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-bidv-primary focus-within:border-bidv-primary transition-all">
-                                    <div id="quill-editor"></div>
-                                </div>
-                                <textarea id="edit-content-html" rows="12" class="w-full bg-slate-800 border border-slate-700 text-green-400 rounded-lg p-4 text-xs md:text-sm focus:ring-2 focus:ring-bidv-primary focus:border-bidv-primary outline-none font-mono hidden leading-relaxed tracking-wide shadow-inner" placeholder="<!-- Dán trực tiếp mã HTML của bạn vào đây... -->"></textarea>
-                            </div>
-
-                            <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200 bg-white">
-                                <button type="button" onclick="closeEditor()" class="w-full sm:w-auto px-6 py-3 md:py-2.5 border border-slate-300 bg-slate-50 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition-colors">Đóng</button>
-                                <button type="button" onclick="saveFlowEdit()" class="w-full sm:w-auto px-8 py-3 md:py-2.5 bg-bidv-primary text-white rounded-lg font-bold hover:bg-bidv-primary-dark transition-colors shadow-md flex items-center justify-center">
-                                    <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
-                                </button>
-                            </div>
-                        </form>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -695,7 +684,6 @@
         const SUPABASE_URL = 'https://rmbsxccrwrktbjlnezpu.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnN4Y2Nyd3JrdGJqbG5lenB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MjczNjQsImV4cCI6MjA2NDIwMzM2NH0.ydCqificftdtn1niRciFCifeuo8aX6SDGti-hCY5Z_Y'; 
         
-        // Cấu hình Header chống Tường lửa
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
             global: {
                 headers: {
@@ -715,6 +703,7 @@
         let starSelected = 5; 
         let quillInstance = null; 
         let isHtmlMode = false;
+        let pendingDeepLinkId = null; // Biến lưu trữ ID của bài học khi truy cập từ Deep Link
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -737,17 +726,13 @@
             }
         }
         
-        // Logic Sidebar trượt (Drawer) Responsive
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
             if (sidebar.classList.contains('-translate-x-full')) {
-                // Mở sidebar
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
             } else {
-                // Đóng sidebar
                 sidebar.classList.add('-translate-x-full');
                 overlay.classList.add('hidden');
             }
@@ -767,8 +752,7 @@
             let embedUrl = url;
             if (url.includes('1drv.ms') || url.includes('sharepoint.com') || url.includes('live.com')) {
                 embedUrl = url;
-            } 
-            else if (url.includes('drive.google.com/file/d/')) {
+            } else if (url.includes('drive.google.com/file/d/')) {
                 embedUrl = url.replace(/\/view.*$/, '/preview');
             }
             return embedUrl;
@@ -832,7 +816,13 @@
                     await fetchLightFlowData(); 
                     
                     toggleLoading(false);
-                    navigate('dashboard');
+                    
+                    // Logic xử lý Deep Link sau khi login
+                    if (pendingDeepLinkId) {
+                        handlePendingDeepLink();
+                    } else {
+                        navigate('dashboard');
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -887,10 +877,8 @@
             list.innerHTML = '';
             data.forEach(u => {
                 const dateStr = u.created_at ? new Date(u.created_at).toLocaleString('vi-VN') : 'Mới đây';
-                
                 const userRow = document.createElement('div');
                 userRow.className = "flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-bidv-primary transition-colors";
-                
                 userRow.innerHTML = `
                     <div class="w-full sm:w-auto">
                         <div class="font-bold text-slate-800 user-name-text break-all"></div>
@@ -901,12 +889,9 @@
                         <button class="btn-reject flex-1 sm:flex-none flex justify-center items-center bg-red-500 hover:bg-red-600 text-white px-3 py-2 sm:py-1.5 rounded text-xs font-bold transition-colors shadow-sm gap-1"><i class="fas fa-times"></i> Xóa</button>
                     </div>
                 `;
-                
                 userRow.querySelector('.user-name-text').innerText = u.username;
-                
                 userRow.querySelector('.btn-approve').addEventListener('click', () => approveUser(u.id, u.username));
                 userRow.querySelector('.btn-reject').addEventListener('click', () => rejectUser(u.id, u.username));
-                
                 list.appendChild(userRow);
             });
         }
@@ -1045,7 +1030,6 @@
             }
         }
 
-        // --- Logic Dashboard & Course List ---
         function renderDashboard() {
             if (!isDataLoaded) return; 
 
@@ -1095,7 +1079,7 @@
                 cardsContainer.innerHTML += html;
             });
 
-            // 2. Render Biểu đồ Radar và Thanh Tiến độ
+            // Render Biểu đồ Radar và Thanh Tiến độ
             const labels = sortedModules; 
             const radarData = labels.map(l => moduleMap[l].total > 0 ? (moduleMap[l].done / moduleMap[l].total) * 100 : 0);
 
@@ -1243,6 +1227,11 @@
             document.getElementById('detail-app').innerText = fullItem.app || 'Hệ thống';
             document.getElementById('detail-path').innerText = fullItem.instruc_flow || 'Chưa có thông tin.';
 
+            // Sinh URL Deep Link
+            const baseUrl = window.location.origin + window.location.pathname;
+            const deepLinkStr = `${baseUrl}?lesson_id=${fullItem.id}`;
+            document.getElementById('detail-deeplink').value = deepLinkStr;
+
             const docContainer = document.getElementById('doc-links-container');
             docContainer.innerHTML = '';
             
@@ -1368,6 +1357,37 @@
             document.getElementById(`tab-btn-${tabId}`).className = "text-bidv-primary border-bidv-primary py-3 md:py-4 px-4 md:px-5 block border-b-2 font-bold text-xs md:text-sm transition-colors whitespace-nowrap shrink-0";
         }
 
+        // --- Logic Copy Deep Link ---
+        function copyDeepLink() {
+            const inputEl = document.getElementById("detail-deeplink");
+            inputEl.select();
+            inputEl.setSelectionRange(0, 99999);
+            try {
+                document.execCommand("copy");
+                showToast("Đã sao chép đường dẫn bài học!");
+            } catch (err) {
+                showToast("Không thể sao chép liên kết", true);
+            }
+        }
+        
+        // --- Xử lý Deep Link khi có ID ---
+        async function handlePendingDeepLink() {
+            if (pendingDeepLinkId && isDataLoaded) {
+                const targetCourse = dbData.find(d => d.id === pendingDeepLinkId);
+                if (targetCourse) {
+                    // Xóa param lesson_id khỏi thanh URL để thanh lọc (không load lại trang)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    await openDetail(targetCourse);
+                    pendingDeepLinkId = null;
+                } else {
+                    showToast('Không tìm thấy bài học theo đường dẫn!', true);
+                    navigate('dashboard');
+                }
+            } else {
+                navigate('dashboard');
+            }
+        }
+
         async function loadAndRenderComments() {
             const list = document.getElementById('comment-list');
             list.innerHTML = '<div class="text-center py-6"><i class="fas fa-spinner fa-spin text-bidv-primary text-2xl"></i></div>';
@@ -1463,7 +1483,6 @@
             });
         });
 
-        // --- Hệ thống Quiz ---
         let currentQuizIndex = 0;
         let score = 0;
 
@@ -1537,7 +1556,6 @@
             }
         }
 
-        // --- Javascript Logic - Editor System ---
         function renderEditorList() {
             const listContainer = document.getElementById('editor-list');
             const searchVal = document.getElementById('editor-search').value.toLowerCase();
@@ -1586,7 +1604,6 @@
                 selectedItem.querySelector('.edit-icon').classList.add('text-bidv-primary');
             }
 
-            // Giao diện Responsive: Mobile ẩn khung danh sách, nhường chỗ cho form
             if (window.innerWidth < 768) {
                 document.getElementById('editor-list-container').classList.add('hidden');
             }
@@ -1619,7 +1636,6 @@
             btnToggle.innerHTML = '<i class="fas fa-code"></i> HTML';
             btnToggle.className = "text-[10px] md:text-xs font-bold bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-slate-700 transition-colors flex items-center gap-1.5 shadow-sm border border-slate-300";
 
-            // SỬA LỖI Ở ĐÂY: Xóa bỏ class md:flex gây xung đột trên Desktop
             document.getElementById('editor-empty-state').classList.remove('md:flex');
             document.getElementById('editor-empty-state').classList.add('hidden');
             
@@ -1633,11 +1649,9 @@
             formEl.classList.remove('flex');
             formEl.classList.add('hidden');
             
-            // SỬA LỖI Ở ĐÂY: Trả lại class md:flex để hiển thị lại thông báo khi đóng form trên Desktop
             document.getElementById('editor-empty-state').classList.remove('hidden');
             document.getElementById('editor-empty-state').classList.add('hidden', 'md:flex');
             
-            // Hiện lại list danh sách trên Mobile nếu nó bị ẩn
             if (window.innerWidth < 768) {
                 document.getElementById('editor-list-container').classList.remove('hidden');
             }
@@ -1706,7 +1720,7 @@
             
             renderEditorList(); 
             initFilters(); 
-            closeEditor(); // Đóng form để quay về list khi xong thao tác trên Mobile
+            closeEditor();
         }
 
         function toggleHtmlMode() {
@@ -1736,7 +1750,7 @@
             }
         }
 
-        // --- Khởi chạy ứng dụng ---
+        // --- Khởi chạy ứng dụng và bắt Deep Link ---
         window.onload = async () => {
             document.querySelectorAll('#star-rating i').forEach(s => s.classList.add('fas'));
 
@@ -1755,6 +1769,13 @@
                 }
             });
 
+            // 1. Kiểm tra tham số url cho tính năng Deep Link
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('lesson_id')) {
+                pendingDeepLinkId = parseInt(urlParams.get('lesson_id'));
+            }
+
+            // 2. Kiểm tra Session để Auto Login
             const savedSession = sessionStorage.getItem('corebank_user');
             if(savedSession) {
                 currentUser = JSON.parse(savedSession);
@@ -1765,6 +1786,12 @@
                 
                 await loadUserData();
                 await fetchLightFlowData(); 
+                
+                // 3. Nếu Auto login mà đang có Deep link, hãy mở trực tiếp luôn!
+                if (pendingDeepLinkId) {
+                    handlePendingDeepLink();
+                }
+
             } else {
                 document.getElementById('auth-view').classList.remove('hidden');
             }
