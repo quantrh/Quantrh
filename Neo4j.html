@@ -5,26 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PoC Phát hiện Đảo Nợ - Neo4j</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Cập nhật: Hạ phiên bản về 5.12.0 (bản ổn định cho Browser) để tránh lỗi r.code.startsWith -->
+    <!-- Dùng bản 5.12.0 ổn định, ít lỗi WebSocket routing trên Web -->
     <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@5.12.0/lib/browser/neo4j-web.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        #network-graph { width: 100%; height: 500px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: white; }
-        .toast { transition: opacity 0.3s ease-in-out; }
+        #network-graph, #custom-network-graph, #network-q-repay, #network-q-flow { width: 100%; height: 100%; outline: none; }
+        .toast { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        textarea { resize: vertical; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-800">
 
-    <!-- Sidebar / Settings -->
-    <aside class="w-80 bg-white border-r border-gray-200 flex flex-col z-20 shadow-sm">
-        <div class="p-5 border-b border-gray-200">
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-gray-900/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-80 bg-white border-r border-gray-200 flex flex-col z-40 shadow-xl md:shadow-sm transition-transform duration-300 ease-in-out">
+        <div class="p-5 border-b border-gray-200 flex justify-between items-center">
             <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 Demo PoC Đảo Nợ
             </h1>
-            <p class="text-xs text-gray-500 mt-1">Dựa trên Neo4j Graph Database</p>
+            <button id="btn-close-sidebar" class="md:hidden text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
 
         <div class="p-5 flex-1 overflow-y-auto">
@@ -33,196 +40,448 @@
             <form id="connection-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">URI</label>
-                    <input type="text" id="neo4j-uri" placeholder="neo4j+s://<id>.databases.neo4j.io" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
-                    <p class="text-xs text-gray-500 mt-1">Gợi ý: Nếu <code>neo4j+s://</code> bị lỗi, hãy thử dùng <code>bolt+s://</code>. Đảm bảo DB không bị Pause.</p>
+                    <input type="text" id="neo4j-uri" placeholder="neo4j+s://<id>.databases.neo4j.io" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-gray-50 focus:bg-white transition-colors" required>
+                    <p class="text-[10px] text-gray-500 mt-1">Dùng <b>neo4j+s://</b> hoặc <b>bolt+s://</b> cho Aura Cloud.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="neo4j-user" placeholder="neo4j" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
+                    <input type="text" id="neo4j-user" placeholder="neo4j" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-gray-50 focus:bg-white transition-colors" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="neo4j-pass" placeholder="••••••••" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
+                    <input type="password" id="neo4j-pass" placeholder="••••••••" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-gray-50 focus:bg-white transition-colors" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Database <span class="text-xs font-normal text-gray-400">(Tùy chọn)</span></label>
+                    <input type="text" id="neo4j-db" placeholder="neo4j" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-gray-50 focus:bg-white transition-colors">
                 </div>
                 
                 <div class="pt-2 flex flex-col gap-2">
-                    <button type="button" id="btn-connect" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center gap-2">
+                    <button type="button" id="btn-connect" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-md transition-colors flex justify-center items-center gap-2 shadow-sm">
                         <span>Kết nối & Lưu</span>
                     </button>
                     <button type="button" id="btn-clear" class="w-full bg-white hover:bg-gray-50 text-red-600 border border-red-200 font-medium py-2 px-4 rounded-md transition-colors">
-                        Xóa Local Storage
+                        Xóa Cấu hình
                     </button>
                 </div>
             </form>
 
             <div class="mt-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Trạng thái</h3>
-                <div id="status-indicator" class="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-md border border-gray-200">
-                    <div class="w-3 h-3 rounded-full bg-gray-400" id="status-dot"></div>
-                    <span id="status-text">Chưa kết nối</span>
+                <div id="status-indicator" class="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-md border border-gray-200 shadow-inner">
+                    <div class="w-3 h-3 rounded-full bg-gray-400 shadow-sm" id="status-dot"></div>
+                    <span id="status-text" class="font-medium">Chưa kết nối</span>
                 </div>
-            </div>
-            
-            <div class="mt-6 text-xs text-gray-500 bg-blue-50 p-3 rounded text-justify">
-                <strong>Lưu ý:</strong> App giả định bạn đã chạy các file <code class="bg-blue-100 px-1 rounded">01_schema</code>, <code class="bg-blue-100 px-1 rounded">02_demo_data</code>, và <code class="bg-blue-100 px-1 rounded">03_detect...</code> trên Neo4j Desktop/Aura.
             </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full bg-gray-100 overflow-hidden">
-        <!-- Tabs Header -->
-        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
-            <div class="flex space-x-1" id="tabs-container">
-                <button data-tab="tab-alerts" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-700">Q01. Cảnh báo Mức 4</button>
-                <button data-tab="tab-control" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q02. Đối chứng</button>
-                <button data-tab="tab-graph" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q06. Graph Tóm tắt</button>
-                <button data-tab="tab-custom-cypher" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Truy vấn Cypher</button>
+    <main class="flex-1 flex flex-col h-full bg-gray-100 overflow-hidden relative w-full">
+        <!-- Mobile Header Bar -->
+        <div class="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
+            <div class="flex items-center gap-3">
+                <button id="btn-open-sidebar" class="text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <span class="font-bold text-gray-800 truncate">PoC Neo4j Dashboard</span>
             </div>
-            <div>
-                <button id="btn-refresh" class="hidden text-gray-500 hover:text-blue-600 transition-colors p-2 rounded hover:bg-gray-100" title="Làm mới dữ liệu">
+        </div>
+
+        <!-- Tabs Header -->
+        <header class="bg-white border-b border-gray-200 px-2 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between z-10 shadow-sm gap-3">
+            <div class="flex space-x-1 sm:space-x-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0" id="tabs-container">
+                <button data-tab="tab-intro" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-700">Giới thiệu & HDSD</button>
+                <button data-tab="tab-alerts" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q01. Cảnh báo Mức 4</button>
+                <button data-tab="tab-control" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q02. Đối chứng</button>
+                <button data-tab="tab-graph" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q06. Graph Tóm tắt</button>
+                <button data-tab="tab-q-repay" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Vấn tin Trả nợ</button>
+                <button data-tab="tab-q-flow" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Luồng tiền X->B</button>
+                <button data-tab="tab-custom-cypher" class="tab-btn shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 flex items-center gap-1">
+                    <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> 
+                    Truy vấn Tự do
+                </button>
+            </div>
+            <div class="hidden sm:block">
+                <button id="btn-refresh" class="hidden text-gray-500 hover:text-blue-600 transition-colors p-2 rounded hover:bg-gray-100" title="Làm mới dữ liệu Tab hiện tại">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Tabs Content -->
-        <div class="flex-1 overflow-y-auto p-6 relative">
-            
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 relative">
             <!-- Overlay when disconnected -->
-            <div id="disconnected-overlay" class="absolute inset-0 bg-gray-100/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-                <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <h3 class="text-xl font-medium text-gray-700">Vui lòng kết nối cơ sở dữ liệu</h3>
-                <p class="text-gray-500 mt-2">Nhập thông tin Neo4j ở cột bên trái để tiếp tục.</p>
+            <div id="disconnected-overlay" class="absolute inset-0 bg-gray-100/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4 text-center">
+                <svg class="w-16 h-16 text-gray-400 mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <h3 class="text-xl sm:text-2xl font-semibold text-gray-700">Chưa kết nối Cơ sở dữ liệu</h3>
+                <p class="text-gray-500 mt-2 max-w-md">Vui lòng nhập URI, Username và Password của Neo4j ở thanh điều khiển để bắt đầu truy vấn.</p>
+                <button id="btn-mobile-connect-prompt" class="mt-6 md:hidden bg-blue-600 text-white px-6 py-2 rounded-md font-medium shadow-sm">Mở cài đặt kết nối</button>
             </div>
 
-            <!-- Tab 1: Alerts (Q01) -->
-            <div id="tab-alerts" class="tab-content">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h2 class="text-lg font-semibold text-gray-800">Danh sách Khách hàng Cảnh báo Mức 4 (Q01)</h2>
-                        <p class="text-sm text-gray-500">Dấu hiệu chuyên cung cấp tiền đảo nợ.</p>
+            <!-- Tab 0: Giới thiệu -->
+            <div id="tab-intro" class="tab-content h-full">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
+                    <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 shrink-0">
+                        <h2 class="text-xl font-bold text-gray-800 uppercase">Giới thiệu Ứng dụng Demo Phát hiện Khách hàng Cung cấp Tiền Đảo nợ</h2>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
-                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Loại</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Số KH vay</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Chuỗi HC</th>
-                                    <th class="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Tiền hỗ trợ (Tỷ)</th>
-                                    <th class="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Tiền về (Tỷ)</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Điểm Rủi ro</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-alerts" class="bg-white divide-y divide-gray-200">
-                                <!-- Data populated via JS -->
-                            </tbody>
-                        </table>
-                        <div id="loader-alerts" class="hidden py-10 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-                        <div id="empty-alerts" class="hidden py-10 text-center text-gray-500">Không tìm thấy dữ liệu. Hãy chắc chắn đã chạy file 03_detect_and_materialize.cypher.</div>
+                    <div class="p-6 overflow-y-auto flex-1 text-gray-700 space-y-6 text-sm leading-relaxed">
+                        
+                        <section>
+                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">1. Mục tiêu và Nguyên lý hoạt động</h3>
+                            <p class="mb-2">Ứng dụng demo sử dụng cơ sở dữ liệu đồ thị Neo4j để phát hiện khách hàng có dấu hiệu thường xuyên cung cấp nguồn tiền ngắn hạn cho nhiều khách hàng vay nhằm hỗ trợ họ trả nợ ngân hàng, sau đó thu hồi lại tiền khi các khách hàng này được giải ngân khoản vay mới.</p>
+                            <p class="mb-2">Thay vì kiểm tra một khách hàng đã được xác định trước, ứng dụng <strong>tự động rà soát toàn bộ các khoản thu nợ phát sinh trong kỳ</strong>. Đối với từng lần trả nợ, hệ thống:</p>
+                            <ul class="list-disc pl-6 mb-2 space-y-1">
+                                <li>Truy ngược các giao dịch chuyển tiền vào tài khoản khách hàng vay.</li>
+                                <li>Kiểm tra số dư trước khi nhận tiền, xác định khách hàng vay có thực sự thiếu tiền hay không.</li>
+                                <li>Tiếp tục theo dõi việc giải ngân mới và dòng tiền quay lại khách hàng đã cung cấp tiền ban đầu.</li>
+                            </ul>
+                            <div class="bg-blue-50 p-4 rounded-md border border-blue-100 mt-3 text-blue-900">
+                                <strong>Định nghĩa Vai trò trong Ứng dụng:</strong>
+                                <ul class="list-disc pl-6 mt-1 space-y-1">
+                                    <li><strong>Khách hàng X:</strong> Là khách hàng chuyển tiền hỗ trợ.</li>
+                                    <li><strong>Khách hàng B:</strong> Là khách hàng vay nhận tiền và thực hiện trả nợ.</li>
+                                </ul>
+                                <p class="mt-2 text-xs italic">X và B chỉ là tên gọi theo vai trò trong từng chuỗi giao dịch. Hệ thống có thể đồng thời phát hiện nhiều khách hàng X, nhiều khách hàng B và nhiều lần trả nợ khác nhau.</p>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">2. Kịch bản chính của Demo</h3>
+                            <p class="mb-2">Kịch bản trọng tâm mô phỏng khách hàng <strong>X001</strong> thực hiện hành vi tương tự với bốn khách hàng vay <strong>B001, B002, B003 và B004</strong>:</p>
+                            <ol class="list-decimal pl-6 space-y-1 bg-gray-50 p-4 rounded-md border border-gray-100">
+                                <li><strong>X001</strong> chuyển một khoản tiền lớn vào tài khoản của từng B ngay trước thời điểm thu nợ.</li>
+                                <li>Trước khi nhận tiền từ X001, các khách hàng B không có đủ số dư để hoàn thành nghĩa vụ trả nợ.</li>
+                                <li>Khoản tiền X001 chuyển vào bù đắp phần lớn hoặc toàn bộ số tiền mà B còn thiếu.</li>
+                                <li>Sau khi nhận tiền, các khách hàng B thực hiện trả nợ hoặc tất toán khoản vay cũ.</li>
+                                <li>Trong thời gian ngắn sau trả nợ, các khách hàng B được ngân hàng giải ngân khoản vay mới.</li>
+                                <li>Sau giải ngân, <strong>X001</strong> nhận lại các khoản tiền có tổng giá trị tương đồng với số tiền đã chuyển hỗ trợ.</li>
+                            </ol>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">3. Hướng dẫn sử dụng Tính năng Graph</h3>
+                            <p class="mb-2">Môi trường thao tác đồ thị (Graph Viewer) trên ứng dụng được thiết kế chuyên biệt để phân tích luồng tiền:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <h4 class="font-semibold text-gray-800 flex items-center gap-2"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg> Cửa sổ Thuộc tính Nổi</h4>
+                                    <p class="text-xs mt-1 text-gray-600">Click chuột trái vào bất kỳ Node (nút) hoặc Relationship (mũi tên) nào trên đồ thị, một cửa sổ <strong>Node details</strong> sẽ bật lên. Bạn có thể tự do kéo, thay đổi kích thước cửa sổ này.</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <h4 class="font-semibold text-gray-800 flex items-center gap-2"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg> Tính năng Đổi Caption</h4>
+                                    <p class="text-xs mt-1 text-gray-600">Trong cửa sổ Node details, bên cạnh mỗi thuộc tính có một nút <strong>Caption</strong>. Bấm vào nút này để lập tức lấy giá trị thuộc tính đó làm tên hiển thị (nhãn) cho toàn bộ các node cùng loại trên màn hình.</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <h4 class="font-semibold text-gray-800 flex items-center gap-2"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Đổi Layout Đồ thị</h4>
+                                    <p class="text-xs mt-1 text-gray-600">Sử dụng thanh công cụ ở góc dưới bên phải đồ thị để Zoom, hoặc click vào icon Menu để chọn giữa: <strong>Force-based layout</strong> (Đồ thị lực lơ lửng, tự bung) và <strong>Hierarchical layout</strong> (Xếp tầng từ trên xuống, lý tưởng cho luồng tiền).</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <h4 class="font-semibold text-gray-800 flex items-center gap-2"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Tự do Truy vấn</h4>
+                                    <p class="text-xs mt-1 text-gray-600">Tab "Truy vấn Tự do" cho phép bạn viết các câu lệnh Cypher tùy biến (có hỗ trợ truyền Parameter JSON). Nếu kết quả có Node/Edge, ứng dụng sẽ tự động vẽ đồ thị thay vì bảng.</p>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-center font-medium text-blue-700 bg-blue-100 p-2 rounded">Bắt đầu bằng cách nhập thông tin kết nối Cơ sở dữ liệu ở thanh điều hướng bên trái.</p>
+                        </section>
+
+                        <section class="mt-4 border-t pt-6">
+                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">4. Mã nguồn và Tài liệu (GitHub)</h3>
+                            <p class="mb-3">Bạn có thể xem chi tiết mã nguồn, dữ liệu giả lập và hướng dẫn cài đặt PoC này tại repository GitHub:</p>
+                            <a href="https://github.com/quantrh/Quantrh/tree/main/neo4j_debt_rollover_demo" target="_blank" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md border border-blue-200 shadow-sm">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                                quantrh/Quantrh (neo4j_debt_rollover_demo)
+                            </a>
+                        </section>
+
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 2: Control Group (Q02) -->
-            <div id="tab-control" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h2 class="text-lg font-semibold text-gray-800">Phân loại Khách hàng Đối chứng (Q02)</h2>
-                        <p class="text-sm text-gray-500">Kiểm tra kết quả phân loại từ X001 đến X005.</p>
+            <!-- Tab 1: Alerts (Q01) -->
+            <div id="tab-alerts" class="tab-content hidden h-full">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col relative">
+                    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Cảnh báo Mức 4 (Q01)</h2>
+                            <p class="text-sm text-gray-500">Danh sách Khách hàng nghi ngờ cung cấp nguồn tiền đảo nợ (Risk Score cao nhất).</p>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="px-4 py-2 border-b border-gray-200 bg-white">
+                        <details class="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200 shadow-sm w-full max-w-4xl">
+                            <summary class="font-medium cursor-pointer text-blue-600 hover:text-blue-800">Xem câu lệnh Cypher</summary>
+                            <pre class="mt-2 text-gray-800 font-mono whitespace-pre-wrap overflow-x-auto">MATCH (alert:DRAlert)-[:ALERT_FOR]-&gt;(x:DRCustomer)
+WHERE alert.pocDataset = 'debt_rollover_liquidity_v1'
+  AND alert.analysisMonth = '2026-06'
+  AND alert.alertLevel = 4
+RETURN
+  x.customerId AS customerX,
+  x.name AS customerName,
+  x.customerType AS customerType,
+  alert.distinctBorrowerCount AS distinctBorrowers,
+  alert.completeChainCount AS completeChains,
+  round(alert.totalSupportAmount / 1000000000.0, 3) AS totalSupportBillionVND,
+  round(alert.totalReturnAmount / 1000000000.0, 3) AS totalReturnBillionVND,
+  alert.riskScore AS riskScore
+ORDER BY riskScore DESC;</pre>
+                        </details>
+                    </div>
+                    <div class="flex-1 overflow-auto bg-white">
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Mã KH</th>
-                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Tên KH</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Mức CB</th>
-                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Phân loại chi tiết</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Chuỗi HC</th>
-                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Điểm</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Khách hàng X</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase hidden sm:table-cell">Loại</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Số lượng B</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Chuỗi HT</th>
+                                    <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase">Tiền Hỗ trợ (Tỷ)</th>
+                                    <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase">Tiền Trả về (Tỷ)</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Risk Score</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-control" class="bg-white divide-y divide-gray-200">
-                                <!-- Data populated via JS -->
-                            </tbody>
+                            <tbody id="tbody-alerts" class="bg-white divide-y divide-gray-200"></tbody>
                         </table>
-                        <div id="loader-control" class="hidden py-10 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                        <div id="loader-alerts" class="hidden py-20 flex justify-center"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                        <div id="empty-alerts" class="hidden py-20 text-center text-gray-500 flex flex-col items-center">
+                            <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                            <p>Không có dữ liệu Cảnh báo Mức 4.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Control (Q02) -->
+            <div id="tab-control" class="tab-content hidden h-full">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col relative">
+                    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Nhóm Khách hàng Đối chứng (Q02)</h2>
+                            <p class="text-sm text-gray-500">Giải thích lý do không bị đưa vào Cảnh báo Mức 4 (X002 - X005).</p>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 border-b border-gray-200 bg-white">
+                        <details class="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200 shadow-sm w-full max-w-4xl">
+                            <summary class="font-medium cursor-pointer text-blue-600 hover:text-blue-800">Xem câu lệnh Cypher</summary>
+                            <pre class="mt-2 text-gray-800 font-mono whitespace-pre-wrap overflow-x-auto">MATCH (x:DRCustomer)
+WHERE x.pocDataset = 'debt_rollover_liquidity_v1'
+  AND x.customerId IN ['X001','X002','X003','X004','X005']
+OPTIONAL MATCH (alert:DRAlert)-[:ALERT_FOR]-&gt;(x)
+WHERE alert.analysisMonth = '2026-06'
+RETURN
+  x.customerId AS customerId,
+  x.name AS customerName,
+  coalesce(alert.alertLevel, 0) AS alertLevel,
+  coalesce(alert.alertLevelLabel, 'KHÔNG CẢNH BÁO') AS classification,
+  coalesce(alert.completeChainCount, 0) AS completeChains,
+  alert.riskScore AS riskScore
+ORDER BY customerId;</pre>
+                        </details>
+                    </div>
+                    <div class="flex-1 overflow-auto bg-white">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Khách hàng X</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Tên</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Mức cảnh báo</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Phân loại / Lý do</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Chuỗi HT</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Risk Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-control" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                        <div id="loader-control" class="hidden py-20 flex justify-center"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
                     </div>
                 </div>
             </div>
 
             <!-- Tab 3: Graph (Q06) -->
             <div id="tab-graph" class="tab-content hidden h-full flex flex-col">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Graph Tóm tắt Chuỗi Dẫn xuất (Q06)</h2>
-                            <p class="text-sm text-gray-500">X ở trung tâm, các B và chuỗi xung quanh (Mặc định tải X001).</p>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
+                    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-start gap-3 shrink-0">
+                        <div class="flex-1">
+                            <h2 class="text-lg font-semibold text-gray-800">Graph Tóm tắt Chuỗi (Q06)</h2>
+                            <p class="text-sm text-gray-500 mb-2">Mô hình hóa quan hệ người cấp vốn và chuỗi vay.</p>
+                            <details class="text-xs text-gray-600 bg-white p-2 rounded border border-gray-200 shadow-sm w-full max-w-2xl">
+                                <summary class="font-medium cursor-pointer text-blue-600 hover:text-blue-800">Xem câu lệnh Cypher</summary>
+                                <pre class="mt-2 text-gray-800 font-mono whitespace-pre-wrap overflow-x-auto">MATCH (alert:DRAlert {alertId:'ALT-2026-06-' + $customerId})-[:ALERT_FOR]-&gt;(x:DRCustomer)
+MATCH (alert)-[:INCLUDES_CHAIN]-&gt;(chain:DRDetectedChain)-[source:SOURCE_CUSTOMER]-&gt;(x)
+MATCH (chain)-[borrowerRel:BORROWER]-&gt;(b:DRCustomer)
+RETURN x, source, chain, borrowerRel, b;</pre>
+                            </details>
                         </div>
-                        <select id="graph-customer-select" class="border-gray-300 rounded-md text-sm p-2 bg-white">
-                            <option value="X001">Tải Graph X001</option>
-                            <option value="X003">Tải Graph X003</option>
-                        </select>
+                        <div class="flex gap-2 items-center shrink-0">
+                            <select id="graph-customer-select" class="border-gray-300 rounded-md text-sm p-2 bg-white shadow-sm border focus:ring-blue-500 focus:border-blue-500">
+                                <option value="X001">Khách hàng X001</option>
+                                <option value="X003">Khách hàng X003</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="flex-1 p-4 bg-gray-50 relative">
-                         <div id="loader-graph" class="absolute inset-0 bg-white/80 z-10 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
-                         <div id="network-graph"></div>
+                    <div class="flex-1 bg-gray-50 relative h-full">
+                         <div id="loader-graph" class="absolute inset-0 bg-white/80 z-20 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                         
+                         <!-- Unified Graph Toolbar (Bottom Right) -->
+                         <div class="absolute bottom-4 right-4 z-10 flex items-center bg-white rounded-md shadow-md border border-gray-200 text-gray-600">
+                            <button class="btn-zoom-in p-2 hover:bg-gray-100 border-r border-gray-200 transition-colors" title="Zoom In"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                            <button class="btn-zoom-out p-2 hover:bg-gray-100 border-r border-gray-200 transition-colors" title="Zoom Out"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                            <button class="btn-fit p-2 hover:bg-gray-100 border-r border-gray-200 transition-colors" title="Fit to screen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
+                            
+                            <div class="relative dropdown-container">
+                                <button class="btn-layout-toggle p-2 hover:bg-gray-100 flex items-center gap-1 transition-colors rounded-r-md" title="Layout Options">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                                </button>
+                                <div class="layout-menu hidden absolute bottom-full right-0 mb-2 w-56 bg-white rounded-md shadow-xl border border-gray-200 py-1 overflow-hidden">
+                                    <button data-layout="force" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors">
+                                        <svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        Force-based layout
+                                    </button>
+                                    <button data-layout="hierarchical" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors">
+                                        <svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                        Hierarchical layout
+                                    </button>
+                                </div>
+                            </div>
+                         </div>
+                         <div id="network-graph" class="h-full min-h-[400px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Vấn tin Trả nợ -->
+            <div id="tab-q-repay" class="tab-content hidden h-full flex flex-col">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
+                    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex flex-col gap-2 shrink-0">
+                        <h2 class="text-lg font-semibold text-gray-800">Vấn tin các tài khoản vay có giao dịch trả nợ</h2>
+                        <details class="text-xs text-gray-600 bg-white p-2 rounded border border-gray-200 shadow-sm w-full max-w-4xl" open>
+                            <summary class="font-medium cursor-pointer text-blue-600 hover:text-blue-800">Xem câu lệnh Cypher</summary>
+                            <pre class="mt-2 text-gray-800 font-mono whitespace-pre-wrap overflow-x-auto">MATCH (b:DRCustomer)-[madeRepayment:MADE_REPAYMENT]-&gt;(repayment:DRRepayment)-[repaid:REPAID]-&gt;(oldLoan:DRLoan)
+RETURN b, madeRepayment, repayment, repaid, oldLoan LIMIT 100;</pre>
+                        </details>
+                    </div>
+                    <div class="flex-1 bg-gray-50 relative h-full">
+                         <div id="loader-q-repay" class="absolute inset-0 bg-white/80 z-20 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                         <!-- Unified Graph Toolbar -->
+                         <div class="absolute bottom-4 right-4 z-10 flex items-center bg-white rounded-md shadow-md border border-gray-200 text-gray-600">
+                            <button class="btn-zoom-in p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                            <button class="btn-zoom-out p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                            <button class="btn-fit p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
+                            <div class="relative dropdown-container">
+                                <button class="btn-layout-toggle p-2 hover:bg-gray-100 flex items-center gap-1 rounded-r-md"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <div class="layout-menu hidden absolute bottom-full right-0 mb-2 w-56 bg-white rounded-md shadow-xl border border-gray-200 py-1">
+                                    <button data-layout="force" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Force-based layout</button>
+                                    <button data-layout="hierarchical" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Hierarchical layout</button>
+                                </div>
+                            </div>
+                         </div>
+                         <div id="network-q-repay" class="h-full min-h-[400px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Q-Flow -->
+            <div id="tab-q-flow" class="tab-content hidden h-full flex flex-col">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
+                    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex flex-col gap-2 shrink-0">
+                        <h2 class="text-lg font-semibold text-gray-800">Vấn tin luồng KH X chuyển tiền cho KHb, KH B có giao dịch thu nợ</h2>
+                        <details class="text-xs text-gray-600 bg-white p-2 rounded border border-gray-200 shadow-sm w-full max-w-4xl" open>
+                            <summary class="font-medium cursor-pointer text-blue-600 hover:text-blue-800">Xem câu lệnh Cypher</summary>
+                            <pre class="mt-2 text-gray-800 font-mono whitespace-pre-wrap overflow-x-auto">MATCH (x:DRCustomer)-[xOwns:OWNS]-&gt;(xAccount:DRAccount)
+      -[sent:SENT]-&gt;(supportTx:DRTransfer)
+      -[received:RECEIVED_BY]-&gt;(bAccount:DRAccount)
+      &lt;-[bOwns:OWNS]-(b:DRCustomer)
+MATCH (b)-[madeRepayment:MADE_REPAYMENT]-&gt;(repayment:DRRepayment)-[repaid:REPAID]-&gt;(oldLoan:DRLoan)
+MATCH (bAccount)-[paymentAccount:PAYMENT_ACCOUNT_FOR]-&gt;(repayment)
+RETURN x, xOwns, xAccount, sent, supportTx, received, bAccount, bOwns, b, paymentAccount, madeRepayment, repayment, repaid, oldLoan LIMIT 100;</pre>
+                        </details>
+                    </div>
+                    <div class="flex-1 bg-gray-50 relative h-full">
+                         <div id="loader-q-flow" class="absolute inset-0 bg-white/80 z-20 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                         <!-- Unified Graph Toolbar -->
+                         <div class="absolute bottom-4 right-4 z-10 flex items-center bg-white rounded-md shadow-md border border-gray-200 text-gray-600">
+                            <button class="btn-zoom-in p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                            <button class="btn-zoom-out p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                            <button class="btn-fit p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
+                            <div class="relative dropdown-container">
+                                <button class="btn-layout-toggle p-2 hover:bg-gray-100 flex items-center gap-1 rounded-r-md"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <div class="layout-menu hidden absolute bottom-full right-0 mb-2 w-56 bg-white rounded-md shadow-xl border border-gray-200 py-1">
+                                    <button data-layout="force" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Force-based layout</button>
+                                    <button data-layout="hierarchical" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Hierarchical layout</button>
+                                </div>
+                            </div>
+                         </div>
+                         <div id="network-q-flow" class="h-full min-h-[400px]"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Tab 4: Custom Cypher -->
             <div id="tab-custom-cypher" class="tab-content hidden h-full flex flex-col gap-4">
-                <!-- Cypher Input -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col shrink-0">
-                    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <h2 class="text-sm font-semibold text-gray-800">Nhập lệnh Cypher</h2>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col shrink-0">
+                    <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h2 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Cypher Editor
+                        </h2>
                         <div class="flex gap-2">
-                            <button id="btn-clear-cypher" class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200">Xóa trắng</button>
-                            <button id="btn-run-cypher" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1.5 px-4 rounded transition-colors flex items-center gap-1 shadow-sm">
+                            <button id="btn-clear-cypher" class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded">Xóa</button>
+                            <button id="btn-run-cypher" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1.5 px-4 rounded shadow-sm flex items-center gap-1 transition-colors">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Thực thi
+                                Run Query
                             </button>
                         </div>
                     </div>
-                    <textarea id="cypher-input" rows="4" class="w-full p-4 font-mono text-sm border-none focus:ring-0 resize-y text-gray-800 bg-gray-900 text-green-400" placeholder="MATCH (n:DRCustomer) RETURN n LIMIT 100..." spellcheck="false"></textarea>
+                    
+                    <div class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                        <div class="flex-1 flex flex-col">
+                            <label class="block text-xs font-medium text-gray-500 px-4 py-1 bg-gray-100/50">Lệnh truy vấn</label>
+                            <textarea id="cypher-input" rows="4" class="w-full flex-1 p-4 font-mono text-sm border-none focus:ring-0 text-gray-100 bg-gray-900 outline-none" placeholder="MATCH (n) RETURN n LIMIT 100" spellcheck="false"></textarea>
+                        </div>
+                        <div class="w-full md:w-1/3 flex flex-col bg-gray-50">
+                            <label class="block text-xs font-medium text-gray-500 px-4 py-1 bg-gray-100/50 border-b border-gray-200">Parameters (JSON - Tùy chọn)</label>
+                            <textarea id="cypher-params" rows="4" class="w-full flex-1 p-4 font-mono text-xs border-none focus:ring-0 bg-transparent outline-none" placeholder='{"customerId": "X001", "limit": 100}' spellcheck="false"></textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Cypher Results -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
-                    <div id="loader-custom-cypher" class="absolute inset-0 bg-white/80 z-20 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative min-h-[300px]">
+                    <div id="loader-custom-cypher" class="absolute inset-0 bg-white/80 z-20 hidden flex flex-col items-center justify-center backdrop-blur-sm">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                        <span class="text-sm text-gray-600">Đang truy vấn...</span>
+                    </div>
                     
-                    <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-                        <span class="text-sm font-semibold text-gray-700">Kết quả <span id="custom-query-stats" class="text-xs font-normal text-gray-500 ml-2"></span></span>
+                    <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+                        <span class="text-sm font-semibold text-gray-700 truncate">Kết quả <span id="custom-query-stats" class="text-xs font-normal text-gray-500 ml-1"></span></span>
                         
-                        <!-- Toggle Table / Graph -->
-                        <div class="flex bg-gray-200 p-0.5 rounded-lg">
+                        <div class="flex bg-gray-200 p-0.5 rounded-lg shrink-0 self-start sm:self-auto">
                             <button id="toggle-view-table" class="px-3 py-1 text-xs font-medium rounded-md shadow-sm bg-white text-gray-800 transition-all">Dạng Bảng</button>
                             <button id="toggle-view-graph" class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-800 transition-all">Đồ thị Graph</button>
                         </div>
                     </div>
 
-                    <!-- Result View: Table -->
-                    <div id="view-custom-table" class="flex-1 overflow-auto">
+                    <div id="view-custom-table" class="flex-1 overflow-auto bg-white">
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50 sticky top-0 z-10" id="thead-custom-cypher">
-                                <!-- Headers populated dynamically -->
-                            </thead>
+                            <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm" id="thead-custom-cypher"></thead>
                             <tbody id="tbody-custom-cypher" class="bg-white divide-y divide-gray-200">
-                                <tr><td class="px-6 py-10 text-center text-gray-500 italic">Chưa có kết quả truy vấn.</td></tr>
+                                <tr><td class="px-6 py-10 text-center text-gray-500 italic">Nhập câu lệnh và ấn "Run Query" để xem kết quả.</td></tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Result View: Graph -->
-                    <div id="view-custom-graph" class="flex-1 bg-gray-50 relative hidden">
-                        <div id="custom-network-graph" class="w-full h-full"></div>
-                        <div id="empty-custom-graph" class="absolute inset-0 flex items-center justify-center text-gray-500 hidden bg-gray-50 z-10">
-                            Kết quả không chứa Node / Relationship nào để vẽ đồ thị.
-                        </div>
+                    <div id="view-custom-graph" class="flex-1 bg-gray-50 relative hidden h-full">
+                         <!-- Unified Graph Toolbar -->
+                         <div class="absolute bottom-4 right-4 z-10 flex items-center bg-white rounded-md shadow-md border border-gray-200 text-gray-600">
+                            <button class="btn-zoom-in p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                            <button class="btn-zoom-out p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                            <button class="btn-fit p-2 hover:bg-gray-100 border-r border-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
+                            <div class="relative dropdown-container">
+                                <button class="btn-layout-toggle p-2 hover:bg-gray-100 flex items-center gap-1 rounded-r-md"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <div class="layout-menu hidden absolute bottom-full right-0 mb-2 w-56 bg-white rounded-md shadow-xl border border-gray-200 py-1">
+                                    <button data-layout="force" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Force-based layout</button>
+                                    <button data-layout="hierarchical" class="layout-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3"><svg class="check-icon w-4 h-4 text-blue-600 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Hierarchical layout</button>
+                                </div>
+                            </div>
+                         </div>
+                        <div id="custom-network-graph" class="w-full h-full min-h-[300px]"></div>
+                        <div id="empty-custom-graph" class="absolute inset-0 flex items-center justify-center text-gray-500 hidden bg-gray-50 z-10">Kết quả không chứa Node / Relationship nào để vẽ đồ thị.</div>
                     </div>
                 </div>
             </div>
@@ -230,35 +489,65 @@
         </div>
     </main>
 
+    <!-- Floating Properties Panel -->
+    <div id="properties-panel" class="hidden fixed bg-white shadow-2xl rounded-lg border border-gray-200 flex flex-col z-50" style="width: 350px; min-height: 200px; max-height: 80vh; top: 100px; right: 20px; resize: both; overflow: hidden;">
+        <div id="properties-panel-header" class="bg-gray-100 border-b border-gray-200 px-3 py-2 flex justify-between items-center cursor-move select-none">
+            <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2" id="properties-panel-title">Chi tiết</h3>
+            <button id="btn-close-properties" class="text-gray-500 hover:text-red-500 p-1 rounded hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="properties-panel-content" class="p-0 overflow-y-auto flex-1 bg-white text-sm"></div>
+    </div>
+
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 bg-gray-800 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50">
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 px-4 py-3 rounded shadow-xl flex items-center gap-3 z-50 transition-all duration-300">
         <span id="toast-icon"></span>
-        <span id="toast-msg" class="text-sm font-medium"></span>
+        <span id="toast-msg" class="text-sm font-medium max-w-sm"></span>
     </div>
 
     <script>
-        // State
+        // State Variables
         let neo4jDriver = null;
-        let network = null; // Vis.js network instance cho Q06
-        let customNetwork = null; // Vis.js network instance cho Custom Cypher
+        let networkQ06 = null; 
+        let customNetwork = null; 
+        let networkQRepay = null;
+        let networkQFlow = null;
+        // Sử dụng các biến DataSet để dễ dàng cập nhật Node (VD: Caption)
+        let q06NodesDataset = null; 
+        let customNodesDataset = null; 
+        let qRepayNodesDataset = null;
+        let qFlowNodesDataset = null;
+        
+        // Cập nhật mặc định sang hierarchical layout
+        let currentLayoutMode = 'hierarchical'; // Global layout mode: 'force' | 'hierarchical'
+        let captionPreferences = {}; // Save user caption preferences (Label -> Property Key)
 
         // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        const btnOpenSidebar = document.getElementById('btn-open-sidebar');
+        const btnCloseSidebar = document.getElementById('btn-close-sidebar');
+        const btnMobileConnectPrompt = document.getElementById('btn-mobile-connect-prompt');
+        
         const form = document.getElementById('connection-form');
         const uriInput = document.getElementById('neo4j-uri');
         const userInput = document.getElementById('neo4j-user');
         const passInput = document.getElementById('neo4j-pass');
+        const dbInput = document.getElementById('neo4j-db');
         const btnConnect = document.getElementById('btn-connect');
         const btnClear = document.getElementById('btn-clear');
         const btnRefresh = document.getElementById('btn-refresh');
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
         const overlay = document.getElementById('disconnected-overlay');
+        
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
         const selectGraphCustomer = document.getElementById('graph-customer-select');
 
-        // Custom Cypher DOM Elements
         const cypherInput = document.getElementById('cypher-input');
+        const cypherParams = document.getElementById('cypher-params');
         const btnRunCypher = document.getElementById('btn-run-cypher');
         const btnClearCypher = document.getElementById('btn-clear-cypher');
         const viewTable = document.getElementById('view-custom-table');
@@ -271,24 +560,108 @@
         const loaderCustomCypher = document.getElementById('loader-custom-cypher');
         const emptyCustomGraph = document.getElementById('empty-custom-graph');
 
-        // Helpers
+        const propertiesPanel = document.getElementById('properties-panel');
+        const propertiesPanelHeader = document.getElementById('properties-panel-header');
+        const propertiesPanelContent = document.getElementById('properties-panel-content');
+        const propertiesPanelTitle = document.getElementById('properties-panel-title');
+        const btnCloseProperties = document.getElementById('btn-close-properties');
+
+        btnCloseProperties.addEventListener('click', () => propertiesPanel.classList.add('hidden'));
+
+        // Make Properties Panel Draggable
+        let propPanelPos1 = 0, propPanelPos2 = 0, propPanelPos3 = 0, propPanelPos4 = 0;
+        propertiesPanelHeader.onmousedown = (e) => {
+            e.preventDefault();
+            propPanelPos3 = e.clientX; propPanelPos4 = e.clientY;
+            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmousemove = (e) => {
+                e.preventDefault();
+                propPanelPos1 = propPanelPos3 - e.clientX; propPanelPos2 = propPanelPos4 - e.clientY;
+                propPanelPos3 = e.clientX; propPanelPos4 = e.clientY;
+                propertiesPanel.style.top = (propertiesPanel.offsetTop - propPanelPos2) + "px";
+                propertiesPanel.style.left = (propertiesPanel.offsetLeft - propPanelPos1) + "px";
+                propertiesPanel.style.right = 'auto'; // Disable CSS right anchor when dragging
+            };
+        };
+
+        const formatNeo4jProperty = (value) => {
+            if (value === null || value === undefined) return '';
+            if (typeof value.toNumber === 'function') return value.toNumber();
+            
+            // Nếu là Object, check xem có phải kiểu Date hoặc DateTime của Neo4j không (chứa year, month, day)
+            if (typeof value === 'object' && value !== null) {
+                if ('year' in value && 'month' in value && 'day' in value) {
+                    const getNum = (v) => typeof v?.toNumber === 'function' ? v.toNumber() : v;
+                    let year = getNum(value.year);
+                    let month = getNum(value.month);
+                    let day = getNum(value.day);
+                    
+                    let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    
+                    // Nếu là DateTime thì có thêm hour, minute, second
+                    if ('hour' in value && 'minute' in value && 'second' in value) {
+                        let hour = getNum(value.hour);
+                        let minute = getNum(value.minute);
+                        let second = getNum(value.second);
+                        dateStr += ` ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+                    }
+                    return dateStr;
+                }
+                // Fallback nếu object thường
+                return JSON.stringify(value);
+            }
+            return value;
+        };
+
+        const showPropertiesPanel = (type, labels, properties, elementId) => {
+            propertiesPanel.classList.remove('hidden');
+            let labelName = labels ? (Array.isArray(labels) ? labels.join(' : ') : labels) : 'Unknown';
+            let primaryLabel = labels ? (Array.isArray(labels) ? labels[0] : labels) : 'Unknown';
+            let bgColor = type === 'Node' ? '#006B68' : '#C62828';
+            
+            propertiesPanelTitle.innerHTML = `<span style="background-color:${bgColor}; color:white; padding:2px 8px; border-radius:12px; font-size:11px;">${labelName}</span>`;
+
+            let tbody = `<table class="w-full text-left border-collapse"><tbody class="divide-y divide-gray-100">`;
+            if (elementId) {
+                tbody += `<tr><td class="py-2 px-3 text-gray-500 font-medium w-1/3 bg-gray-50 border-r border-gray-100">&lt;id&gt;</td><td class="py-2 px-3 text-gray-800 break-all">${elementId}</td></tr>`;
+            }
+            
+            let count = 0;
+            for (const [key, value] of Object.entries(properties || {})) {
+                let displayVal = formatNeo4jProperty(value);
+                
+                let captionHtml = '';
+                if (type === 'Node' && primaryLabel !== 'Unknown') {
+                    let isCaption = captionPreferences[primaryLabel] === key;
+                    captionHtml = `<button class="caption-btn shrink-0 ml-1 text-[10px] px-1.5 py-0.5 rounded transition-colors ${isCaption ? 'bg-blue-600 text-white shadow-inner' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}" data-label="${primaryLabel}" data-key="${key}" title="Dùng thuộc tính này làm Caption trên đồ thị">Caption</button>`;
+                }
+                // Nếu giá trị là số mà quá dài, ta chỉ in bình thường không format tiền ở panel để giữ nguyên gốc
+                tbody += `<tr><td class="py-2 px-3 text-gray-500 font-medium w-1/3 bg-gray-50 border-r border-gray-100 align-top"><div class="flex items-center justify-between"><span>${key}</span>${captionHtml}</div></td><td class="py-2 px-3 text-gray-800 break-all">${displayVal}</td></tr>`;
+                count++;
+            }
+            if (count === 0 && !elementId) tbody += `<tr><td colspan="2" class="py-4 px-3 text-center text-gray-400 italic">Không có thuộc tính</td></tr>`;
+            tbody += `</tbody></table>`;
+            propertiesPanelContent.innerHTML = tbody;
+        };
+
         const showToast = (msg, type = 'success') => {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').textContent = msg;
             
             if(type === 'success') {
-                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-green-600 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50';
+                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-green-600 text-white px-4 py-3 rounded shadow-xl flex items-center gap-3 z-50';
                 icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else if (type === 'warning') {
+                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-yellow-500 text-white px-4 py-3 rounded shadow-xl flex items-center gap-3 z-50';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
             } else {
-                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50';
+                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-4 py-3 rounded shadow-xl flex items-center gap-3 z-50';
                 icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
             }
 
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
         };
 
         const formatCurrency = (num) => {
@@ -296,7 +669,28 @@
             return parseFloat(num).toLocaleString('vi-VN');
         };
 
-        // Connection Logic
+        const toggleSidebar = (show) => {
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        };
+
+        btnOpenSidebar.addEventListener('click', () => toggleSidebar(true));
+        btnCloseSidebar.addEventListener('click', () => toggleSidebar(false));
+        mobileOverlay.addEventListener('click', () => toggleSidebar(false));
+        btnMobileConnectPrompt.addEventListener('click', () => toggleSidebar(true));
+
+        const getSessionConfig = () => {
+            const config = { defaultAccessMode: neo4j.session.READ };
+            const dbName = dbInput.value.trim();
+            if (dbName) config.database = dbName;
+            return config;
+        };
+
         const checkStorage = () => {
             const credsStr = localStorage.getItem('neo4j_poc_creds');
             if (credsStr) {
@@ -305,618 +699,575 @@
                     uriInput.value = creds.uri || '';
                     userInput.value = creds.user || '';
                     passInput.value = creds.pass || '';
-                    connectToNeo4j(creds.uri, creds.user, creds.pass);
-                } catch (e) {
-                    console.error('Lỗi đọc localStorage', e);
-                }
+                    dbInput.value = creds.db || '';
+                    connectToNeo4j(creds.uri, creds.user, creds.pass, creds.db);
+                } catch (e) { console.error('Lỗi đọc localStorage', e); }
             }
         };
 
-        const connectToNeo4j = async (uri, user, pass) => {
+        const connectToNeo4j = async (uri, user, pass, db) => {
             btnConnect.disabled = true;
             btnConnect.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Đang kết nối...';
             
             try {
-                if (neo4jDriver) {
-                    await neo4jDriver.close();
-                }
+                if (neo4jDriver) await neo4jDriver.close();
                 
+                let cleanUri = uri.trim();
                 neo4jDriver = neo4j.driver(
-                    uri.trim(), 
-                    neo4j.auth.basic(user.trim(), pass.trim())
+                    cleanUri, 
+                    neo4j.auth.basic(user.trim(), pass.trim()),
+                    { maxConnectionPoolSize: 50, connectionTimeout: 10000 }
                 );
                 
-                // Thay vì verifyConnectivity() (hay gây lỗi routing trên trình duyệt), ta test bằng 1 query nhỏ
-                const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
-                try {
-                    await session.run('RETURN 1 AS test');
-                } finally {
-                    await session.close();
-                }
+                const session = neo4jDriver.session(getSessionConfig());
+                try { await session.run('RETURN 1 AS test'); } 
+                finally { await session.close(); }
                 
-                // Connection Success
-                statusDot.className = 'w-3 h-3 rounded-full bg-green-500';
-                statusText.textContent = `Đã kết nối (Thành công)`;
-                statusText.classList.add('text-green-700');
+                statusDot.className = 'w-3 h-3 rounded-full bg-green-500 shadow-sm';
+                statusText.textContent = `Đã kết nối`;
+                statusText.className = 'font-medium text-green-700 truncate max-w-[200px]';
                 overlay.classList.add('hidden');
                 btnRefresh.classList.remove('hidden');
+                if (window.innerWidth < 768) toggleSidebar(false);
                 
-                showToast('Kết nối Neo4j thành công!');
-                
-                // Save to local storage
-                localStorage.setItem('neo4j_poc_creds', JSON.stringify({ uri, user, pass }));
-
-                // Load initial data
+                showToast('Kết nối Database thành công!');
+                localStorage.setItem('neo4j_poc_creds', JSON.stringify({ uri: cleanUri, user, pass, db }));
                 loadCurrentTab();
 
             } catch (error) {
-                console.error("Lỗi kết nối chi tiết:", error);
-                
-                let errorMsg = 'Kết nối thất bại. Vui lòng kiểm tra lại thông tin.';
-                
-                if (error && error.message) {
-                    // Bắt các lỗi liên quan đến mạng hoặc bug của neo4j-driver
-                    if (error.message.includes('startsWith') || error.name === 'TypeError' || error.message.includes('WebSocket')) {
-                        errorMsg = 'Lỗi mạng WebSockets (Aura). Thử đổi "neo4j+s://" thành "bolt+s://" và tắt trình chặn quảng cáo/VPN.';
-                    } else {
-                        errorMsg = error.message;
-                    }
-                }
+                console.error("Lỗi kết nối:", error);
+                let errorMsg = 'Lỗi kết nối. Kiểm tra lại URI/Auth/Database.';
+                if (error && error.message) errorMsg = error.message;
 
-                statusDot.className = 'w-3 h-3 rounded-full bg-red-500';
+                statusDot.className = 'w-3 h-3 rounded-full bg-red-500 shadow-sm';
                 statusText.textContent = 'Kết nối thất bại';
-                statusText.classList.add('text-red-700');
+                statusText.className = 'font-medium text-red-700';
                 overlay.classList.remove('hidden');
                 btnRefresh.classList.add('hidden');
                 
-                // Rút gọn thông báo nếu quá dài
-                if(errorMsg.length > 80) errorMsg = errorMsg.substring(0, 80) + '...';
+                if(errorMsg.length > 100) errorMsg = errorMsg.substring(0, 100) + '...';
                 showToast(errorMsg, 'error');
                 
-                if (neo4jDriver) {
-                    neo4jDriver.close().catch(() => {});
-                    neo4jDriver = null;
-                }
+                if (neo4jDriver) { neo4jDriver.close().catch(() => {}); neo4jDriver = null; }
             } finally {
                 btnConnect.disabled = false;
                 btnConnect.innerHTML = 'Kết nối & Lưu';
             }
         };
 
-        // UI Event Listeners
         btnConnect.addEventListener('click', () => {
-            if(form.checkValidity()) {
-                connectToNeo4j(uriInput.value, userInput.value, passInput.value);
-            } else {
-                form.reportValidity();
-            }
+            if(form.checkValidity()) connectToNeo4j(uriInput.value, userInput.value, passInput.value, dbInput.value);
+            else form.reportValidity();
         });
 
         btnClear.addEventListener('click', () => {
             localStorage.removeItem('neo4j_poc_creds');
-            uriInput.value = '';
-            userInput.value = '';
-            passInput.value = '';
-            if (neo4jDriver) {
-                neo4jDriver.close();
-                neo4jDriver = null;
-            }
+            uriInput.value = ''; userInput.value = ''; passInput.value = ''; dbInput.value = '';
+            if (neo4jDriver) { neo4jDriver.close(); neo4jDriver = null; }
             statusDot.className = 'w-3 h-3 rounded-full bg-gray-400';
             statusText.textContent = 'Chưa kết nối';
-            statusText.classList.remove('text-green-700', 'text-red-700');
+            statusText.className = 'font-medium text-gray-500';
             overlay.classList.remove('hidden');
             btnRefresh.classList.add('hidden');
-            showToast('Đã xóa cấu hình');
+            showToast('Đã xóa thông tin kết nối');
             
-            // Clear tables
             document.getElementById('tbody-alerts').innerHTML = '';
             document.getElementById('tbody-control').innerHTML = '';
-            if(network) network.destroy();
+            if(networkQ06) networkQ06.destroy();
+            if(customNetwork) customNetwork.destroy();
+            if(networkQRepay) networkQRepay.destroy();
+            if(networkQFlow) networkQFlow.destroy();
         });
 
-        btnRefresh.addEventListener('click', () => {
-            if(neo4jDriver) loadCurrentTab();
-        });
+        btnRefresh.addEventListener('click', () => { if(neo4jDriver) loadCurrentTab(); });
+        selectGraphCustomer.addEventListener('change', () => { if(neo4jDriver) loadGraphData(selectGraphCustomer.value); });
+        btnClearCypher.addEventListener('click', () => { cypherInput.value = ''; cypherParams.value = ''; });
 
-        selectGraphCustomer.addEventListener('change', () => {
-            if(neo4jDriver) loadGraphData(selectGraphCustomer.value);
-        });
+        const setActiveToggle = (btnActive, btnInactive, viewActive, viewInactive) => {
+            btnActive.className = "px-3 py-1 text-xs font-medium rounded-md shadow-sm bg-white text-gray-800 transition-all";
+            btnInactive.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-800 transition-all";
+            viewActive.classList.remove('hidden'); viewInactive.classList.add('hidden');
+        };
+        btnToggleTable.addEventListener('click', () => setActiveToggle(btnToggleTable, btnToggleGraph, viewTable, viewGraph));
+        btnToggleGraph.addEventListener('click', () => setActiveToggle(btnToggleGraph, btnToggleTable, viewGraph, viewTable));
 
-        // Toggle Custom Query Views (Table/Graph)
-        const setActiveToggle = (activeBtn, inactiveBtn, activeView, inactiveView) => {
-            activeBtn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
-            activeBtn.classList.remove('text-gray-500', 'hover:text-gray-800');
-            inactiveBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
-            inactiveBtn.classList.add('text-gray-500', 'hover:text-gray-800');
-            activeView.classList.remove('hidden');
-            inactiveView.classList.add('hidden');
+        const loadCurrentTab = () => {
+            const activeTab = document.querySelector('.tab-btn.bg-blue-100');
+            if(!activeTab) return;
+            const targetId = activeTab.getAttribute('data-tab');
+            if (targetId === 'tab-alerts') loadAlertsData();
+            else if (targetId === 'tab-control') loadControlData();
+            else if (targetId === 'tab-graph') loadGraphData(selectGraphCustomer.value);
+            else if (targetId === 'tab-q-repay') loadQRepayData();
+            else if (targetId === 'tab-q-flow') loadQFlowData();
         };
 
-        btnToggleTable.addEventListener('click', () => setActiveToggle(btnToggleTable, btnToggleGraph, viewTable, viewGraph));
-        btnToggleGraph.addEventListener('click', () => {
-            setActiveToggle(btnToggleGraph, btnToggleTable, viewGraph, viewTable);
-            if (customNetwork) {
-                // Resize fix for Vis.js when hidden container becomes visible
-                setTimeout(() => customNetwork.fit(), 50); 
-            }
-        });
-
-        btnClearCypher.addEventListener('click', () => cypherInput.value = '');
-
-        // Tab Switching Logic
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                // Update styling
-                tabs.forEach(t => {
-                    t.classList.remove('bg-blue-100', 'text-blue-700');
-                    t.classList.add('text-gray-600', 'hover:bg-gray-100');
-                });
+                tabs.forEach(t => { t.classList.remove('bg-blue-100', 'text-blue-700'); t.classList.add('text-gray-600', 'hover:bg-gray-100'); });
                 tab.classList.remove('text-gray-600', 'hover:bg-gray-100');
                 tab.classList.add('bg-blue-100', 'text-blue-700');
-
-                // Toggle content
                 contents.forEach(c => c.classList.add('hidden'));
                 const targetId = tab.getAttribute('data-tab');
                 document.getElementById(targetId).classList.remove('hidden');
-
-                if (neo4jDriver) loadCurrentTab();
+                
+                if (neo4jDriver && targetId !== 'tab-custom-cypher' && targetId !== 'tab-intro') loadCurrentTab(); 
             });
         });
 
-        const loadCurrentTab = () => {
-            const activeTab = document.querySelector('.tab-btn.bg-blue-100').getAttribute('data-tab');
-            if (activeTab === 'tab-alerts') loadAlertsData();
-            if (activeTab === 'tab-control') loadControlData();
-            if (activeTab === 'tab-graph') loadGraphData(selectGraphCustomer.value);
-            // Tab custom cypher không auto-load khi switch tab để tránh chạy nhầm query nặng
+        const getLayoutOptions = () => {
+            if (currentLayoutMode === 'hierarchical') {
+                return { layout: { hierarchical: { enabled: true, direction: 'UD', sortMethod: 'directed', nodeSpacing: 150, levelSeparation: 150 } }, physics: { enabled: false } };
+            } else {
+                return { layout: { hierarchical: false }, physics: { enabled: true, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -60, centralGravity: 0.01, springLength: 150, damping: 0.8 } } };
+            }
         };
 
-        // Custom Cypher Execution
-        btnRunCypher.addEventListener('click', async () => {
-            const query = cypherInput.value.trim();
-            if (!query) {
-                showToast('Vui lòng nhập lệnh Cypher', 'error');
-                return;
-            }
-            if (!neo4jDriver) {
-                showToast('Chưa kết nối đến cơ sở dữ liệu', 'error');
-                return;
-            }
-
-            loaderCustomCypher.classList.remove('hidden');
-            theadCustomCypher.innerHTML = '';
-            tbodyCustomCypher.innerHTML = '';
-            emptyCustomGraph.classList.add('hidden');
-            statsCustomCypher.textContent = '';
-            if (customNetwork) {
-                customNetwork.destroy();
-                customNetwork = null;
-            }
-
-            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
-            const startTime = performance.now();
-
-            try {
-                const result = await session.run(query);
-                const timeTaken = Math.round(performance.now() - startTime);
-                statsCustomCypher.textContent = `(Trả về ${result.records.length} bản ghi trong ${timeTaken}ms)`;
-                
-                renderCustomTable(result.records);
-                renderCustomGraph(result.records);
-
-            } catch (error) {
-                console.error("Lỗi Query Tự do:", error);
-                showToast(`Lỗi Cypher: ${error.message}`, 'error');
-                tbodyCustomCypher.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-500">Lỗi cú pháp hoặc thực thi: ${error.message}</td></tr>`;
-            } finally {
-                await session.close();
-                loaderCustomCypher.classList.add('hidden');
-            }
-        });
-
-        // Render Table for Custom Query
-        const formatNeo4jValueForTable = (val) => {
-            if (val === null) return '<span class="text-gray-400">null</span>';
-            if (val === undefined) return '';
-            
-            // Xử lý Integer của Neo4j
-            if (neo4j.isInt(val)) return val.toString();
-            
-            if (typeof val === 'object') {
-                // Xử lý Node
-                if (val.labels && val.identity) {
-                    let props = JSON.stringify(val.properties);
-                    if(props.length > 50) props = props.substring(0, 50) + '...}';
-                    return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title='${JSON.stringify(val.properties)}'>(:${val.labels.join(':')} ${props})</span>`;
-                }
-                // Xử lý Relationship
-                if (val.type && val.identity && val.start && val.end) {
-                    return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800" title='${JSON.stringify(val.properties)}'>-[:${val.type}]-&gt;</span>`;
-                }
-                // Xử lý Path (Bỏ qua chi tiết phức tạp, in ra chuỗi JSON)
-                if (val.segments) {
-                    return `<span class="text-xs text-gray-500 italic">Path (${val.segments.length} segments)</span>`;
-                }
-                
-                // Mảng hoặc Object thông thường
-                try {
-                    return `<pre class="text-xs text-gray-600 m-0 whitespace-pre-wrap">${JSON.stringify(val)}</pre>`;
-                } catch(e) { return String(val); }
-            }
-            
-            return String(val);
-        };
-
-        const renderCustomTable = (records) => {
-            if (records.length === 0) {
-                tbodyCustomCypher.innerHTML = `<tr><td class="px-6 py-10 text-center text-gray-500">Không có dữ liệu trả về.</td></tr>`;
-                return;
-            }
-
-            const keys = records[0].keys;
-            
-            // Tạo Header
-            const trHead = document.createElement('tr');
-            keys.forEach(key => {
-                trHead.innerHTML += `<th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap">${key}</th>`;
+        const updateLayoutMenuUI = () => {
+            document.querySelectorAll('.layout-option').forEach(btn => {
+                const mode = btn.getAttribute('data-layout');
+                const check = btn.querySelector('.check-icon');
+                if (mode === currentLayoutMode) check.classList.remove('opacity-0');
+                else check.classList.add('opacity-0');
             });
-            theadCustomCypher.appendChild(trHead);
+        };
 
-            // Tạo Body
-            records.forEach(record => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                keys.forEach(key => {
-                    const val = record.get(key);
-                    tr.innerHTML += `<td class="px-6 py-4 border-b border-gray-100 text-sm align-top break-words max-w-xs">${formatNeo4jValueForTable(val)}</td>`;
+        document.addEventListener('click', (e) => {
+            // 1. Toggle Layout Dropdown
+            const layoutToggleBtn = e.target.closest('.btn-layout-toggle');
+            if (layoutToggleBtn) {
+                const menu = layoutToggleBtn.nextElementSibling;
+                document.querySelectorAll('.layout-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+                menu.classList.toggle('hidden');
+                return;
+            }
+
+            // Close dropdowns when clicking outside
+            if (!e.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.layout-menu').forEach(m => m.classList.add('hidden'));
+            }
+
+            // 2. Select Layout Option
+            const layoutOpt = e.target.closest('.layout-option');
+            if (layoutOpt) {
+                currentLayoutMode = layoutOpt.getAttribute('data-layout');
+                updateLayoutMenuUI();
+                layoutOpt.closest('.layout-menu').classList.add('hidden');
+                
+                const activeTab = document.querySelector('.tab-btn.bg-blue-100').getAttribute('data-tab');
+                let targetNet = null;
+                if (activeTab === 'tab-graph') targetNet = networkQ06;
+                else if (activeTab === 'tab-custom-cypher') targetNet = customNetwork;
+                else if (activeTab === 'tab-q-repay') targetNet = networkQRepay;
+                else if (activeTab === 'tab-q-flow') targetNet = networkQFlow;
+                
+                if (targetNet) {
+                    targetNet.setOptions(getLayoutOptions());
+                    setTimeout(() => targetNet.fit({ animation: { duration: 500 } }), 100);
+                }
+                return;
+            }
+
+            // 3. Fit to screen
+            if (e.target.closest('.btn-fit')) {
+                 const activeTab = document.querySelector('.tab-btn.bg-blue-100').getAttribute('data-tab');
+                 let targetNet = null;
+                 if (activeTab === 'tab-graph') targetNet = networkQ06;
+                 else if (activeTab === 'tab-custom-cypher') targetNet = customNetwork;
+                 else if (activeTab === 'tab-q-repay') targetNet = networkQRepay;
+                 else if (activeTab === 'tab-q-flow') targetNet = networkQFlow;
+
+                 if (targetNet) targetNet.fit({ animation: { duration: 500 }});
+                 return;
+            }
+            
+            // 4. Zoom
+            if (e.target.closest('.btn-zoom-in') || e.target.closest('.btn-zoom-out')) {
+                 const activeTab = document.querySelector('.tab-btn.bg-blue-100').getAttribute('data-tab');
+                 let targetNet = null;
+                 if (activeTab === 'tab-graph') targetNet = networkQ06;
+                 else if (activeTab === 'tab-custom-cypher') targetNet = customNetwork;
+                 else if (activeTab === 'tab-q-repay') targetNet = networkQRepay;
+                 else if (activeTab === 'tab-q-flow') targetNet = networkQFlow;
+
+                 if(targetNet) {
+                     const scale = targetNet.getScale();
+                     const newScale = e.target.closest('.btn-zoom-in') ? scale * 1.3 : scale / 1.3;
+                     targetNet.moveTo({ scale: newScale, animation: { duration: 200 } });
+                 }
+                 return;
+            }
+
+            // 5. Caption Toggle
+            const captionBtn = e.target.closest('.caption-btn');
+            if (captionBtn) {
+                const label = captionBtn.getAttribute('data-label');
+                const key = captionBtn.getAttribute('data-key');
+                captionPreferences[label] = key;
+                
+                document.querySelectorAll('.caption-btn').forEach(b => {
+                    if (b.getAttribute('data-label') === label) {
+                        b.className = (b.getAttribute('data-key') === key) 
+                            ? 'caption-btn shrink-0 ml-1 text-[10px] px-1.5 py-0.5 rounded transition-colors bg-blue-600 text-white shadow-inner' 
+                            : 'caption-btn shrink-0 ml-1 text-[10px] px-1.5 py-0.5 rounded transition-colors bg-gray-200 text-gray-500 hover:bg-gray-300';
+                    }
                 });
-                tbodyCustomCypher.appendChild(tr);
-            });
+
+                // Cập nhật nhãn trực tiếp trên các DataSet đang tồn tại của đồ thị
+                const updateNodes = (dataset) => {
+                    if (!dataset) return;
+                    const updates = [];
+                    dataset.forEach(node => {
+                        if (node.rawLabels && node.rawLabels.includes(label)) {
+                            // ÉP KIỂU SANG STRING BẰNG String(newLabel) ĐỂ FIX LỖI VIS.JS
+                            let newLabel = node.rawProps[key] !== undefined ? formatNeo4jProperty(node.rawProps[key]) : (node.rawLabels.length > 0 ? node.rawLabels[0] : 'Node');
+                            updates.push({ id: node.id, label: String(newLabel) });
+                        }
+                    });
+                    if (updates.length > 0) dataset.update(updates);
+                };
+                updateNodes(q06NodesDataset); 
+                updateNodes(customNodesDataset); 
+                updateNodes(qRepayNodesDataset); 
+                updateNodes(qFlowNodesDataset);
+                return;
+            }
+        });
+
+        const getNeo4jEntityId = (entity) => {
+            if(entity.elementId) return entity.elementId;
+            if(entity.identity && typeof entity.identity.toNumber === 'function') return entity.identity.toNumber();
+            return entity.identity;
         };
 
-        // Render Graph for Custom Query (Tự động bóc tách Node/Rel)
-        const renderCustomGraph = (records) => {
+        const getNeo4jStyle = (labels, props) => {
+            let st = { bg: '#D9E8E7', font: '#333333', border: '#B0C4C3', label: labels[0] || 'Node', size: 28 };
+            if (labels.includes('DRAlert')) { st.bg = '#C62828'; st.font = '#ffffff'; st.border = '#8e1d1d'; st.label = props.alertLevelLabel || labels[0]; st.size = 58; }
+            else if (labels.includes('DRDetectedChain')) { st.bg = '#FFC62F'; st.font = '#333333'; st.border = '#d49b14'; st.label = props.borrowerId || labels[0]; st.size = 42; }
+            else if (labels.includes('DRCustomer')) { st.bg = '#006B68'; st.font = '#ffffff'; st.border = '#004a48'; st.label = props.customerId || labels[0]; st.size = 44; }
+            else if (labels.includes('DRAccount')) { st.bg = '#8BC6C3'; st.font = '#333333'; st.border = '#5fa3a0'; st.label = props.accountId || labels[0]; st.size = 28; }
+            else if (labels.includes('DRLoan')) { st.bg = '#5470C6'; st.font = '#ffffff'; st.border = '#354d96'; st.label = props.loanId || labels[0]; st.size = 32; }
+            else if (labels.includes('DRTransfer')) { st.bg = '#91CC75'; st.font = '#333333'; st.border = '#66a34a'; st.label = props.transferId || labels[0]; st.size = 26; }
+            else if (labels.includes('DRRepayment')) { st.bg = '#EE6666'; st.font = '#ffffff'; st.border = '#c74444'; st.label = props.repaymentId || labels[0]; st.size = 34; }
+            else if (labels.includes('DRDisbursement')) { st.bg = '#73C0DE'; st.font = '#333333'; st.border = '#4e9bbb'; st.label = props.disbursementId || labels[0]; st.size = 34; }
+            else if (labels.includes('DRBalanceSnapshot')) { st.bg = '#FAC858'; st.font = '#333333'; st.border = '#d1a136'; st.label = props.snapshotId || labels[0]; st.size = 25; }
+            else if (labels.includes('DRBank')) { st.bg = '#9A60B4'; st.font = '#ffffff'; st.border = '#6c3a83'; st.label = props.bankCode || labels[0]; st.size = 30; }
+            
+            const primaryLabel = labels[0];
+            if (primaryLabel && captionPreferences[primaryLabel] && props[captionPreferences[primaryLabel]] !== undefined) {
+                st.label = String(formatNeo4jProperty(props[captionPreferences[primaryLabel]]));
+            }
+            return st;
+        };
+
+        const extractGraphFromRecords = (records) => {
             const nodesMap = new Map();
             const edgesMap = new Map();
-            const container = document.getElementById('custom-network-graph');
 
-            // Hàm đệ quy để tìm Node và Rel trong mọi ngóc ngách của kết quả (Mảng, Object, Path...)
-            const extractGraphEntities = (val) => {
+            const extractEntities = (val) => {
                 if (!val || typeof val !== 'object') return;
                 
-                // Nếu là Node
-                if (val.labels && val.identity) {
-                    if (!nodesMap.has(val.identity.toNumber())) {
-                        const id = val.identity.toNumber();
-                        const labelObj = val.labels[0] || 'Node';
-                        
-                        // Cố gắng tìm property làm label hiển thị (name, title, id...)
-                        let displayLabel = labelObj;
-                        if(val.properties.name) displayLabel = val.properties.name;
-                        else if(val.properties.id) displayLabel = val.properties.id;
-                        else if(val.properties.customerId) displayLabel = val.properties.customerId;
-                        else if(val.properties.accountId) displayLabel = val.properties.accountId;
-
-                        // Tooltip
-                        let tooltip = `<div style="padding:5px; font-family:sans-serif; font-size:12px;"><b>${val.labels.join(', ')}</b><br/>`;
-                        for(let prop in val.properties) {
-                            tooltip += `<i>${prop}:</i> ${val.properties[prop]}<br/>`;
-                        }
-                        tooltip += '</div>';
-
+                if (val.labels && (val.identity || val.elementId)) {
+                    const id = getNeo4jEntityId(val);
+                    if (!nodesMap.has(id)) {
+                        const st = getNeo4jStyle(val.labels, val.properties);
                         nodesMap.set(id, {
-                            id: id,
-                            label: displayLabel,
-                            title: tooltip,
-                            color: { background: '#D9E8E7', border: '#8BC6C3' }, // Màu mặc định chung
-                            font: { color: '#333' },
-                            shape: 'dot',
-                            size: 20
+                            id: id, label: String(st.label), 
+                            rawLabels: val.labels, rawProps: val.properties,
+                            color: { background: st.bg, border: st.border, highlight: { background: st.bg, border: '#000' } },
+                            font: { color: st.font, size: 12, face: 'Inter' }, 
+                            shape: 'circle', margin: 10, borderWidth: 2, shadow: true, size: st.size
                         });
                     }
                 } 
-                // Nếu là Relationship
-                else if (val.type && val.identity && val.start && val.end) {
-                    if (!edgesMap.has(val.identity.toNumber())) {
-                        edgesMap.set(val.identity.toNumber(), {
-                            id: val.identity.toNumber(),
-                            from: val.start.toNumber(),
-                            to: val.end.toNumber(),
-                            label: val.type,
-                            font: { size: 10, align: 'middle', color: '#6E7781' },
-                            arrows: 'to',
-                            color: { color: '#A0AEC0' }
+                else if (val.type && (val.identity || val.elementId) && (val.start || val.startNodeElementId) && (val.end || val.endNodeElementId)) {
+                    const id = getNeo4jEntityId(val);
+                    if (!edgesMap.has(id)) {
+                        const fromId = val.startNodeElementId || (typeof val.start.toNumber === 'function' ? val.start.toNumber() : val.start);
+                        const toId = val.endNodeElementId || (typeof val.end.toNumber === 'function' ? val.end.toNumber() : val.end);
+                        const cleanProps = val.properties || {};
+
+                        let st = { edgeColor: '#6E7781', width: 2, dashes: false, label: val.type };
+                        if (val.type === 'SENT' || val.type === 'RECEIVED_BY') { st.edgeColor = '#2E7D32'; st.width = 3; }
+                        else if (val.type === 'REPAID') { st.edgeColor = '#C62828'; st.width = 3; st.label = 'THU NỢ'; }
+                        else if (val.type === 'HAS_DISBURSEMENT') { st.edgeColor = '#1565C0'; st.width = 3; st.label = 'GIẢI NGÂN'; }
+                        else if (val.type === 'PAID_TO') { st.edgeColor = '#1565C0'; st.width = 3; }
+                        else if (val.type === 'UNOBSERVED_PATH') { st.edgeColor = '#B0B0B0'; st.width = 1; st.dashes = [5, 5]; st.label = cleanProps.displayLabel ? `- - ${cleanProps.displayLabel} - -` : '- - không quan sát được - -'; }
+
+                        edgesMap.set(id, {
+                            id: id, from: fromId, to: toId, label: st.label,
+                            rawLabels: [val.type], rawProps: cleanProps,
+                            font: { size: 11, align: 'middle', color: st.edgeColor, strokeWidth: 2, strokeColor: '#ffffff', background: 'rgba(255,255,255,0.7)' },
+                            arrows: 'to', color: { color: st.edgeColor, highlight: '#3B82F6' },
+                            width: st.width, dashes: st.dashes, smooth: { type: 'continuous' }
                         });
                     }
                 }
-                // Nếu là Path
                 else if (val.segments) {
-                    val.segments.forEach(seg => {
-                        extractGraphEntities(seg.start);
-                        extractGraphEntities(seg.relationship);
-                        extractGraphEntities(seg.end);
-                    });
+                    val.segments.forEach(seg => { extractEntities(seg.start); extractEntities(seg.relationship); extractEntities(seg.end); });
                 }
-                // Nếu là Mảng các giá trị
-                else if (Array.isArray(val)) {
-                    val.forEach(item => extractGraphEntities(item));
-                }
-                // Nếu là Object thông thường (có thể chứa map Node)
-                else {
-                    Object.values(val).forEach(item => extractGraphEntities(item));
-                }
+                else if (Array.isArray(val)) val.forEach(item => extractEntities(item));
+                else Object.values(val).forEach(item => extractEntities(item));
             };
 
-            // Quét toàn bộ dữ liệu trả về
-            records.forEach(record => {
-                record.keys.forEach(key => {
-                    extractGraphEntities(record.get(key));
+            records.forEach(rec => rec.keys.forEach(key => extractEntities(rec.get(key))));
+
+            edgesMap.forEach(edge => {
+                [edge.from, edge.to].forEach(nodeId => {
+                    if (!nodesMap.has(nodeId)) {
+                        nodesMap.set(nodeId, {
+                            id: nodeId, label: `Node Missing`,
+                            rawLabels: ['Missing Node'], rawProps: { info: 'Node không tồn tại trong kết quả trả về của query nhưng tồn tại Relationship.' },
+                            color: { background: '#f3f4f6', border: '#d1d5db', borderDashes: [5, 5] },
+                            font: { color: '#9ca3af', italic: true, face: 'Inter' }, shape: 'circle', margin: 10
+                        });
+                    }
                 });
             });
 
-            if (nodesMap.size === 0) {
-                emptyCustomGraph.classList.remove('hidden');
-                return;
-            }
-
-            const data = {
-                nodes: new vis.DataSet(Array.from(nodesMap.values())),
-                edges: new vis.DataSet(Array.from(edgesMap.values()))
-            };
-
-            const options = {
-                physics: { solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100 } },
-                interaction: { hover: true, tooltipDelay: 200 }
-            };
-
-            customNetwork = new vis.Network(container, data, options);
+            return { nodes: Array.from(nodesMap.values()), edges: Array.from(edgesMap.values()) };
         };
 
-        // Query Functions
+        // Khởi tạo đồ thị vis-network và thiết lập sự kiện Click
+        const initGraph = (container, records) => {
+            const { nodes, edges } = extractGraphFromRecords(records);
+            if (nodes.length === 0) {
+                showToast('Không có dữ liệu trả về', 'warning');
+                return null;
+            }
+            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+            const options = { ...getLayoutOptions(), interaction: { hover: false, zoomView: true } };
+            const network = new vis.Network(container, data, options);
+            
+            // Xử lý sự kiện hiển thị Property Panel
+            network.on('click', function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const node = network.body.data.nodes.get(nodeId);
+                    if(node) showPropertiesPanel('Node', node.rawLabels, node.rawProps, node.id);
+                } else if (params.edges.length > 0) {
+                    const edgeId = params.edges[0];
+                    const edge = network.body.data.edges.get(edgeId);
+                    if(edge) showPropertiesPanel('Relationship', edge.rawLabels, edge.rawProps, edge.id);
+                } else {
+                    propertiesPanel.classList.add('hidden');
+                }
+            });
+            return { network, data };
+        };
+
         const loadAlertsData = async () => {
             const tbody = document.getElementById('tbody-alerts');
             const loader = document.getElementById('loader-alerts');
             const emptyState = document.getElementById('empty-alerts');
             
-            tbody.innerHTML = '';
-            loader.classList.remove('hidden');
-            emptyState.classList.add('hidden');
+            tbody.innerHTML = ''; loader.classList.remove('hidden'); emptyState.classList.add('hidden');
+            const query = `MATCH (alert:DRAlert)-[:ALERT_FOR]->(x:DRCustomer) WHERE alert.pocDataset = 'debt_rollover_liquidity_v1' AND alert.analysisMonth = '2026-06' AND alert.alertLevel = 4 RETURN x.customerId AS customerX, x.name AS customerName, x.customerType AS customerType, alert.distinctBorrowerCount AS distinctBorrowers, alert.completeChainCount AS completeChains, round(alert.totalSupportAmount / 1000000000.0, 3) AS totalSupportBillionVND, round(alert.totalReturnAmount / 1000000000.0, 3) AS totalReturnBillionVND, alert.riskScore AS riskScore ORDER BY riskScore DESC;`;
 
-            const query = `
-                MATCH (alert:DRAlert)-[:ALERT_FOR]->(x:DRCustomer)
-                WHERE alert.pocDataset = 'debt_rollover_liquidity_v1'
-                  AND alert.analysisMonth = '2026-06'
-                  AND alert.alertLevel = 4
-                RETURN
-                  x.customerId AS customerX,
-                  x.name AS customerName,
-                  x.customerType AS customerType,
-                  alert.distinctBorrowerCount AS distinctBorrowers,
-                  alert.completeChainCount AS completeChains,
-                  round(alert.totalSupportAmount / 1000000000.0, 3) AS totalSupportBillionVND,
-                  round(alert.totalReturnAmount / 1000000000.0, 3) AS totalReturnBillionVND,
-                  alert.riskScore AS riskScore
-                ORDER BY riskScore DESC;
-            `;
-
-            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            const session = neo4jDriver.session(getSessionConfig());
             try {
                 const result = await session.run(query);
-                if(result.records.length === 0) {
-                    emptyState.classList.remove('hidden');
-                } else {
-                    result.records.forEach(record => {
+                if(result.records.length === 0) emptyState.classList.remove('hidden');
+                else {
+                    result.records.forEach(rec => {
                         const tr = document.createElement('tr');
-                        tr.className = "hover:bg-gray-50 transition-colors";
+                        tr.className = "hover:bg-blue-50/30 transition-colors";
                         tr.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-blue-700">${record.get('customerX')} <span class="text-gray-500 text-xs block">${record.get('customerName')}</span></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.get('customerType')}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('distinctBorrowers').toNumber()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('completeChains').toNumber()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900">${formatCurrency(record.get('totalSupportBillionVND'))}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900">${formatCurrency(record.get('totalReturnBillionVND'))}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${record.get('riskScore').toNumber()}</span></td>
+                            <td class="px-4 py-3 whitespace-nowrap font-medium text-blue-700">${rec.get('customerX')} <span class="text-gray-500 text-xs block font-normal truncate max-w-[200px]">${rec.get('customerName')}</span></td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-500 text-xs hidden sm:table-cell">${rec.get('customerType')}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center text-gray-900">${rec.get('distinctBorrowers').toNumber()}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center text-gray-900">${rec.get('completeChains').toNumber()}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right text-gray-900 font-medium">${formatCurrency(rec.get('totalSupportBillionVND'))}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right text-gray-900">${formatCurrency(rec.get('totalReturnBillionVND'))}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center"><span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 shadow-sm">${rec.get('riskScore').toNumber()}</span></td>
                         `;
                         tbody.appendChild(tr);
                     });
                 }
-            } catch (error) {
-                console.error("Lỗi Query Q01:", error);
-                showToast("Lỗi khi tải dữ liệu Cảnh báo", 'error');
-            } finally {
-                await session.close();
-                loader.classList.add('hidden');
-            }
+            } catch (err) { console.error(err); showToast("Lỗi tải dữ liệu Cảnh báo", 'error'); } 
+            finally { await session.close(); loader.classList.add('hidden'); }
         };
 
         const loadControlData = async () => {
             const tbody = document.getElementById('tbody-control');
             const loader = document.getElementById('loader-control');
-            
-            tbody.innerHTML = '';
-            loader.classList.remove('hidden');
+            tbody.innerHTML = ''; loader.classList.remove('hidden');
+            const query = `MATCH (x:DRCustomer) WHERE x.pocDataset = 'debt_rollover_liquidity_v1' AND x.customerId IN ['X001','X002','X003','X004','X005'] OPTIONAL MATCH (alert:DRAlert)-[:ALERT_FOR]->(x) WHERE alert.analysisMonth = '2026-06' RETURN x.customerId AS customerId, x.name AS customerName, coalesce(alert.alertLevel, 0) AS alertLevel, coalesce(alert.alertLevelLabel, 'KHÔNG CẢNH BÁO') AS classification, coalesce(alert.completeChainCount, 0) AS completeChains, alert.riskScore AS riskScore ORDER BY customerId;`;
 
-            const query = `
-                MATCH (x:DRCustomer)
-                WHERE x.pocDataset = 'debt_rollover_liquidity_v1'
-                  AND x.customerId IN ['X001','X002','X003','X004','X005']
-                OPTIONAL MATCH (alert:DRAlert)-[:ALERT_FOR]->(x)
-                WHERE alert.analysisMonth = '2026-06'
-                RETURN
-                  x.customerId AS customerId,
-                  x.name AS customerName,
-                  coalesce(alert.alertLevel, 0) AS alertLevel,
-                  coalesce(alert.alertLevelLabel, 'KHÔNG CẢNH BÁO') AS classification,
-                  coalesce(alert.completeChainCount, 0) AS completeChains,
-                  alert.riskScore AS riskScore
-                ORDER BY customerId;
-            `;
-
-            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            const session = neo4jDriver.session(getSessionConfig());
             try {
                 const result = await session.run(query);
-                result.records.forEach(record => {
-                    const level = record.get('alertLevel').toNumber();
-                    let badgeClass = 'bg-gray-100 text-gray-800';
-                    if (level === 4) badgeClass = 'bg-red-100 text-red-800';
-                    if (level === 3) badgeClass = 'bg-orange-100 text-orange-800';
-                    if (level === 2) badgeClass = 'bg-yellow-100 text-yellow-800';
-                    if (level === 1) badgeClass = 'bg-blue-100 text-blue-800';
-
-                    const score = record.get('riskScore');
-                    const scoreDisplay = score ? score.toNumber() : '-';
-
+                result.records.forEach(rec => {
+                    const level = rec.get('alertLevel').toNumber();
+                    const bgs = { 4: 'bg-red-100 text-red-800', 3: 'bg-orange-100 text-orange-800', 2: 'bg-yellow-100 text-yellow-800', 1: 'bg-blue-100 text-blue-800', 0: 'bg-gray-100 text-gray-600' };
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition-colors";
                     tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${record.get('customerId')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.get('customerName')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">Mức ${level}</span></td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-xs truncate max-w-xs" title="${record.get('classification')}">${record.get('classification')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('completeChains').toNumber()}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center font-semibold text-gray-700">${scoreDisplay}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-semibold text-gray-800">${rec.get('customerId')}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-500 text-xs truncate max-w-[150px]" title="${rec.get('customerName')}">${rec.get('customerName')}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center"><span class="px-2 py-0.5 inline-flex text-xs font-semibold rounded-md ${bgs[level]}">Mức ${level}</span></td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-600 text-xs truncate max-w-[250px]" title="${rec.get('classification')}">${rec.get('classification')}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center text-gray-900">${rec.get('completeChains').toNumber()}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-gray-700">${rec.get('riskScore') ? rec.get('riskScore').toNumber() : '-'}</td>
                     `;
                     tbody.appendChild(tr);
                 });
-            } catch (error) {
-                console.error("Lỗi Query Q02:", error);
-                showToast("Lỗi khi tải dữ liệu Đối chứng", 'error');
-            } finally {
-                await session.close();
-                loader.classList.add('hidden');
-            }
+            } catch (err) { console.error(err); showToast("Lỗi tải dữ liệu Đối chứng", 'error'); } 
+            finally { await session.close(); loader.classList.add('hidden'); }
         };
 
         const loadGraphData = async (customerId) => {
             const container = document.getElementById('network-graph');
             const loader = document.getElementById('loader-graph');
             loader.classList.remove('hidden');
-
-            // Hủy đồ thị cũ nếu có
-            if (network !== null) {
-                network.destroy();
-                network = null;
-            }
-
-            const query = `
-                MATCH (alert:DRAlert {alertId:'ALT-2026-06-' + $customerId})-[:ALERT_FOR]->(x:DRCustomer)
-                MATCH (alert)-[:INCLUDES_CHAIN]->(chain:DRDetectedChain)-[source:SOURCE_CUSTOMER]->(x)
-                MATCH (chain)-[borrowerRel:BORROWER]->(b:DRCustomer)
-                RETURN x, source, chain, borrowerRel, b;
-            `;
-
-            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            const query = `MATCH (alert:DRAlert {alertId:'ALT-2026-06-' + $customerId})-[:ALERT_FOR]->(x:DRCustomer)
+MATCH (alert)-[:INCLUDES_CHAIN]->(chain:DRDetectedChain)-[source:SOURCE_CUSTOMER]->(x)
+MATCH (chain)-[borrowerRel:BORROWER]->(b:DRCustomer)
+RETURN x, source, chain, borrowerRel, b;`;
+            
+            const session = neo4jDriver.session(getSessionConfig());
             try {
                 const result = await session.run(query, { customerId: customerId });
-                
-                const nodesMap = new Map();
-                const edgesMap = new Map();
-
-                // Style mapping based on the provided grass file
-                const getStyle = (labels, properties) => {
-                    let color = '#D9E8E7'; // Default
-                    let size = 20;
-                    let label = 'Node';
-                    let fontColor = '#333';
-
-                    if (labels.includes('DRCustomer')) {
-                        color = '#006B68';
-                        size = 30;
-                        label = properties.customerId || 'Customer';
-                        fontColor = '#ffffff';
-                    } else if (labels.includes('DRDetectedChain')) {
-                        color = '#FFC62F';
-                        size = 25;
-                        label = properties.borrowerId || 'Chain';
-                        fontColor = '#333';
-                    } else if (labels.includes('DRAlert')) {
-                        color = '#C62828';
-                        size = 35;
-                        label = 'ALERT';
-                        fontColor = '#ffffff';
-                    }
-
-                    return { color: { background: color, border: '#ffffff' }, size, label, font: { color: fontColor } };
-                };
-
-                result.records.forEach(record => {
-                    ['x', 'chain', 'b'].forEach(key => {
-                        const node = record.get(key);
-                        if (node && !nodesMap.has(node.identity.toNumber())) {
-                            const style = getStyle(node.labels, node.properties);
-                            
-                            // Tạo tooltip đẹp hơn
-                            let tooltip = `<div style="padding:5px; font-family:sans-serif; font-size:12px;"><b>${node.labels.join(', ')}</b><br/>`;
-                            for(let prop in node.properties) {
-                                if(prop !== 'pocDataset' && prop !== 'supportTransferIds' && prop !== 'returnTransferIds') {
-                                    tooltip += `<i>${prop}:</i> ${node.properties[prop]}<br/>`;
-                                }
-                            }
-                            tooltip += '</div>';
-
-                            nodesMap.set(node.identity.toNumber(), {
-                                id: node.identity.toNumber(),
-                                label: style.label,
-                                title: tooltip,
-                                color: style.color,
-                                size: style.size,
-                                shape: 'dot',
-                                font: style.font,
-                                shadow: true
-                            });
-                        }
-                    });
-
-                    ['source', 'borrowerRel'].forEach(key => {
-                        const rel = record.get(key);
-                        if (rel && !edgesMap.has(rel.identity.toNumber())) {
-                            edgesMap.set(rel.identity.toNumber(), {
-                                id: rel.identity.toNumber(),
-                                from: rel.start.toNumber(),
-                                to: rel.end.toNumber(),
-                                label: rel.type,
-                                font: { size: 10, align: 'middle', color: '#6E7781' },
-                                arrows: 'to',
-                                color: { color: '#6E7781' },
-                                width: 2
-                            });
-                        }
-                    });
-                });
-
-                if(nodesMap.size === 0) {
-                     showToast(`Không tìm thấy dữ liệu Graph cho ${customerId}`, 'error');
-                     loader.classList.add('hidden');
-                     return;
+                if(networkQ06) networkQ06.destroy();
+                const res = initGraph(container, result.records);
+                if(res) {
+                    networkQ06 = res.network;
+                    q06NodesDataset = res.data.nodes;
                 }
-
-                const data = {
-                    nodes: new vis.DataSet(Array.from(nodesMap.values())),
-                    edges: new vis.DataSet(Array.from(edgesMap.values()))
-                };
-
-                const options = {
-                    physics: {
-                        solver: 'forceAtlas2Based',
-                        forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100 }
-                    },
-                    interaction: { hover: true, tooltipDelay: 200 }
-                };
-
-                network = new vis.Network(container, data, options);
-
-            } catch (error) {
-                console.error("Lỗi Query Q06:", error);
-                showToast("Lỗi khi dựng Graph", 'error');
-            } finally {
-                await session.close();
-                loader.classList.add('hidden');
-            }
+            } catch (err) { console.error(err); showToast("Lỗi tải Đồ thị Tóm tắt", 'error'); } 
+            finally { await session.close(); loader.classList.add('hidden'); }
         };
 
-        // Initialize
-        checkStorage();
+        const loadQRepayData = async () => {
+            const container = document.getElementById('network-q-repay');
+            const loader = document.getElementById('loader-q-repay');
+            loader.classList.remove('hidden');
+            const query = `MATCH (b:DRCustomer)-[madeRepayment:MADE_REPAYMENT]->(repayment:DRRepayment)-[repaid:REPAID]->(oldLoan:DRLoan)
+RETURN b, madeRepayment, repayment, repaid, oldLoan LIMIT 100;`;
+            
+            const session = neo4jDriver.session(getSessionConfig());
+            try {
+                const result = await session.run(query);
+                if(networkQRepay) networkQRepay.destroy();
+                const res = initGraph(container, result.records);
+                if(res) {
+                    networkQRepay = res.network;
+                    qRepayNodesDataset = res.data.nodes;
+                }
+            } catch (err) { console.error(err); showToast("Lỗi tải Đồ thị Trả nợ", 'error'); } 
+            finally { await session.close(); loader.classList.add('hidden'); }
+        };
 
+        const loadQFlowData = async () => {
+            const container = document.getElementById('network-q-flow');
+            const loader = document.getElementById('loader-q-flow');
+            loader.classList.remove('hidden');
+            const query = `MATCH (x:DRCustomer)-[xOwns:OWNS]->(xAccount:DRAccount)
+      -[sent:SENT]->(supportTx:DRTransfer)
+      -[received:RECEIVED_BY]->(bAccount:DRAccount)
+      <-[bOwns:OWNS]-(b:DRCustomer)
+MATCH (b)-[madeRepayment:MADE_REPAYMENT]->(repayment:DRRepayment)-[repaid:REPAID]->(oldLoan:DRLoan)
+MATCH (bAccount)-[paymentAccount:PAYMENT_ACCOUNT_FOR]->(repayment)
+RETURN x, xOwns, xAccount, sent, supportTx, received, bAccount, bOwns, b, paymentAccount, madeRepayment, repayment, repaid, oldLoan LIMIT 100;`;
+            
+            const session = neo4jDriver.session(getSessionConfig());
+            try {
+                const result = await session.run(query);
+                if(networkQFlow) networkQFlow.destroy();
+                const res = initGraph(container, result.records);
+                if(res) {
+                    networkQFlow = res.network;
+                    qFlowNodesDataset = res.data.nodes;
+                }
+            } catch (err) { console.error(err); showToast("Lỗi tải Đồ thị Luồng tiền", 'error'); } 
+            finally { await session.close(); loader.classList.add('hidden'); }
+        };
+
+        // Custom Cypher Execution
+        btnRunCypher.addEventListener('click', async () => {
+            const query = cypherInput.value.trim();
+            if(!query) return showToast('Vui lòng nhập câu lệnh Cypher', 'warning');
+            
+            let params = {};
+            const paramsStr = cypherParams.value.trim();
+            if(paramsStr) {
+                try { params = JSON.parse(paramsStr); }
+                catch(e) { return showToast('Lỗi format JSON Parameters', 'error'); }
+            }
+
+            loaderCustomCypher.classList.remove('hidden');
+            emptyCustomGraph.classList.add('hidden');
+            const session = neo4jDriver.session(getSessionConfig());
+            
+            try {
+                const start = performance.now();
+                const result = await session.run(query, params);
+                const time = Math.round(performance.now() - start);
+                
+                statsCustomCypher.textContent = `(${result.records.length} records, ${time}ms)`;
+                
+                // Build Table
+                theadCustomCypher.innerHTML = ''; tbodyCustomCypher.innerHTML = '';
+                if(result.records.length === 0) {
+                    tbodyCustomCypher.innerHTML = '<tr><td class="px-6 py-10 text-center text-gray-500 italic">Không có dữ liệu trả về</td></tr>';
+                } else {
+                    const keys = result.records[0].keys;
+                    let theadHtml = '<tr>';
+                    keys.forEach(k => theadHtml += `<th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">${k}</th>`);
+                    theadHtml += '</tr>';
+                    theadCustomCypher.innerHTML = theadHtml;
+                    
+                    result.records.forEach(rec => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-blue-50/30 transition-colors";
+                        keys.forEach(k => {
+                            let val = rec.get(k);
+                            let display = '';
+                            if(val === null) display = 'null';
+                            else if(typeof val === 'object') {
+                                if(val.labels) display = `(:${val.labels.join(':')})`;
+                                else if(val.type) display = `[:${val.type}]`;
+                                else display = formatNeo4jProperty(val);
+                            } else display = String(val);
+                            
+                            const td = document.createElement('td');
+                            td.className = "px-4 py-3 whitespace-nowrap text-gray-800 text-xs truncate max-w-[200px]";
+                            td.textContent = display;
+                            td.title = display;
+                            tr.appendChild(td);
+                        });
+                        tbodyCustomCypher.appendChild(tr);
+                    });
+                }
+
+                // Build Graph
+                if(customNetwork) customNetwork.destroy();
+                const res = initGraph(document.getElementById('custom-network-graph'), result.records);
+                if(res) {
+                    customNetwork = res.network;
+                    customNodesDataset = res.data.nodes;
+                    
+                    if(!viewGraph.classList.contains('hidden') === false) {
+                        setActiveToggle(btnToggleGraph, btnToggleTable, viewGraph, viewTable);
+                    }
+                } else {
+                    emptyCustomGraph.classList.remove('hidden');
+                    if(!viewTable.classList.contains('hidden') === false) {
+                        setActiveToggle(btnToggleTable, btnToggleGraph, viewTable, viewGraph);
+                    }
+                }
+                
+            } catch (err) {
+                console.error(err);
+                showToast(err.message, 'error');
+            } finally {
+                await session.close();
+                loaderCustomCypher.classList.add('hidden');
+            }
+        });
+
+        // Initialize App
+        checkStorage();
     </script>
 </body>
 </html>
