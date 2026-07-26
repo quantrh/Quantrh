@@ -143,17 +143,224 @@
                             </div>
                         </section>
 
-                        <section>
-                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">2. Kịch bản chính của Demo</h3>
-                            <p class="mb-2">Kịch bản trọng tâm mô phỏng khách hàng <strong>X001</strong> thực hiện hành vi tương tự với bốn khách hàng vay <strong>B001, B002, B003 và B004</strong>:</p>
-                            <ol class="list-decimal pl-6 space-y-1 bg-gray-50 p-4 rounded-md border border-gray-100">
-                                <li><strong>X001</strong> chuyển một khoản tiền lớn vào tài khoản của từng B ngay trước thời điểm thu nợ.</li>
-                                <li>Trước khi nhận tiền từ X001, các khách hàng B không có đủ số dư để hoàn thành nghĩa vụ trả nợ.</li>
-                                <li>Khoản tiền X001 chuyển vào bù đắp phần lớn hoặc toàn bộ số tiền mà B còn thiếu.</li>
-                                <li>Sau khi nhận tiền, các khách hàng B thực hiện trả nợ hoặc tất toán khoản vay cũ.</li>
-                                <li>Trong thời gian ngắn sau trả nợ, các khách hàng B được ngân hàng giải ngân khoản vay mới.</li>
-                                <li>Sau giải ngân, <strong>X001</strong> nhận lại các khoản tiền có tổng giá trị tương đồng với số tiền đã chuyển hỗ trợ.</li>
-                            </ol>
+                         <section>
+                            <h3 class="text-lg font-semibold text-blue-800 mb-2 border-b pb-1">
+                                2. Kịch bản chính của Demo
+                            </h3>
+                        
+                            <p class="mb-4">
+                                Ứng dụng <strong>Knowledge Graph trên Neo4j</strong> để phát hiện khách hàng
+                                có dấu hiệu cung cấp thanh khoản ngắn hạn phục vụ đảo nợ.
+                            </p>
+                        
+                            <!-- 1. Bài toán cần phát hiện -->
+                            <div class="mb-5">
+                                <h4 class="font-semibold text-gray-800 mb-2">
+                                    1. Bài toán cần phát hiện
+                                </h4>
+                        
+                                <p class="mb-2">
+                                    Hệ thống rà soát toàn bộ các khoản thu nợ phát sinh trong tháng,
+                                    không yêu cầu nhập trước mã khách hàng nghi vấn.
+                                </p>
+                        
+                                <p class="mb-2">Trong từng chuỗi giao dịch:</p>
+                        
+                                <ul class="list-disc pl-6 space-y-1 bg-gray-50 p-4 rounded-md border border-gray-100">
+                                    <li>
+                                        <strong>Khách hàng B</strong> là khách hàng vay có phát sinh trả nợ
+                                        hoặc tất toán khoản vay.
+                                    </li>
+                                    <li>
+                                        <strong>Khách hàng X</strong> là khách hàng đã chuyển tiền vào tài khoản
+                                        của B trước thời điểm trả nợ.
+                                    </li>
+                                    <li>
+                                        Ký hiệu <strong>X</strong> và <strong>B</strong> chỉ thể hiện vai trò
+                                        trong từng chuỗi giao dịch.
+                                    </li>
+                                    <li>
+                                        Trong một kỳ phân tích, hệ thống có thể phát hiện nhiều khách hàng X,
+                                        nhiều khách hàng B và nhiều lần trả nợ khác nhau.
+                                    </li>
+                                </ul>
+                            </div>
+                        
+                            <!-- 2. Logic xử lý của POC -->
+                            <div class="mb-5">
+                                <h4 class="font-semibold text-gray-800 mb-2">
+                                    2. Logic xử lý của POC
+                                </h4>
+                        
+                                <p class="mb-3">
+                                    Đối với từng lần thu nợ trong tháng, hệ thống thực hiện các bước sau:
+                                </p>
+                        
+                                <ol class="list-decimal pl-6 space-y-5">
+                        
+                                    <!-- Bước 1 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Tìm nguồn tiền trước thu nợ
+                                        </div>
+                        
+                                        <p class="mb-2">
+                                            Hệ thống truy ngược các giao dịch chuyển tiền trực tiếp vào tài khoản
+                                            của B trong vòng <strong>72 giờ</strong> trước thời điểm trả nợ.
+                                        </p>
+                        
+                                        <p class="mb-2">
+                                            Nhiều giao dịch của cùng một X chuyển cho cùng một B trước cùng một
+                                            lần trả nợ sẽ được cộng lại.
+                                        </p>
+                        
+                                        <p class="mb-2">Nguồn tiền được tiếp tục xem xét khi:</p>
+                        
+                                        <ul class="list-disc pl-6 space-y-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+                                            <li>
+                                                Tổng giá trị từ <strong>100 triệu đồng</strong> trở lên.
+                                            </li>
+                                            <li>
+                                                Đồng thời bằng ít nhất <strong>30%</strong> số tiền B trả nợ.
+                                            </li>
+                                        </ul>
+                                    </li>
+                        
+                                    <!-- Bước 2 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Kiểm tra B có thực sự thiếu tiền hay không
+                                        </div>
+                        
+                                        <p class="mb-2">
+                                            Hệ thống lấy số dư khả dụng gần nhất của B trước khi nhận khoản tiền
+                                            đầu tiên từ X.
+                                        </p>
+                        
+                                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-2 rounded-r-md">
+                                            <strong>Phần thiếu hụt</strong>
+                                            =
+                                            <strong>Số tiền phải trả nợ</strong>
+                                            −
+                                            <strong>Số dư khả dụng trước khi nhận tiền</strong>.
+                                        </div>
+                        
+                                        <p class="mb-2">Chuỗi chỉ được giữ lại khi:</p>
+                        
+                                        <ul class="list-disc pl-6 space-y-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+                                            <li>
+                                                B thực sự không đủ tiền để trả nợ.
+                                            </li>
+                                            <li>
+                                                Tiền X chuyển bù được ít nhất <strong>50%</strong> phần thiếu hụt
+                                                của B.
+                                            </li>
+                                        </ul>
+                        
+                                        <p class="mt-2 text-gray-700">
+                                            Bước này giúp loại những trường hợp X có chuyển tiền cho B nhưng B
+                                            vốn đã có đủ số dư để trả nợ.
+                                        </p>
+                                    </li>
+                        
+                                    <!-- Bước 3 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Tìm khoản giải ngân lại
+                                        </div>
+                        
+                                        <p class="mb-2">
+                                            Sau khi B trả nợ, hệ thống kiểm tra B có được giải ngân khoản vay mới
+                                            trong vòng <strong>bảy ngày</strong> hay không.
+                                        </p>
+                        
+                                        <p>
+                                            Khoản giải ngân phải có giá trị ít nhất bằng
+                                            <strong>50%</strong> số tiền B vừa trả nợ.
+                                        </p>
+                                    </li>
+                        
+                                    <!-- Bước 4 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Tìm tiền quay lại X
+                                        </div>
+                        
+                                        <p class="mb-2">
+                                            Sau khi B được giải ngân, hệ thống tổng hợp các khoản tiền chuyển vào
+                                            tài khoản X trong vòng <strong>bảy ngày</strong>.
+                                        </p>
+                        
+                                        <p>
+                                            Người chuyển tiền về X không nhất thiết phải trực tiếp là B; tiền có
+                                            thể được chuyển qua tài khoản trung gian hoặc từ một bên liên quan.
+                                        </p>
+                                    </li>
+                        
+                                    <!-- Bước 5 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Phân loại từng chuỗi
+                                        </div>
+                        
+                                        <div class="space-y-2">
+                                            <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-md">
+                                                <strong>Mức 1:</strong>
+                                                Có nguồn tiền đáng kể từ X vào B trước thu nợ nhưng chưa có
+                                                giải ngân lại.
+                                            </div>
+                        
+                                            <div class="bg-orange-50 border border-orange-200 p-3 rounded-md">
+                                                <strong>Mức 2:</strong>
+                                                Có nguồn tiền trước thu nợ và có giải ngân lại, nhưng tiền quay
+                                                về X chưa đạt ngưỡng.
+                                            </div>
+                        
+                                            <div class="bg-green-50 border border-green-200 p-3 rounded-md">
+                                                <strong>Mức 3:</strong>
+                                                Có đầy đủ chuỗi:
+                                                <strong>
+                                                    X chuyển tiền cho B → B trả nợ → B được giải ngân lại
+                                                    → tiền quay về X.
+                                                </strong>
+                                            </div>
+                                        </div>
+                        
+                                        <p class="mt-3">
+                                            Chuỗi được xếp <strong>Mức 3</strong> khi tổng tiền quay về X nằm
+                                            trong khoảng từ <strong>50% đến 150%</strong> số tiền X đã chuyển
+                                            hỗ trợ.
+                                        </p>
+                                    </li>
+                        
+                                    <!-- Bước 6 -->
+                                    <li>
+                                        <div class="font-semibold text-blue-700 mb-2">
+                                            Phát hiện khách hàng chuyên cung cấp tiền đảo nợ
+                                        </div>
+                        
+                                        <p class="mb-2">
+                                            Sau khi đánh giá từng chuỗi, hệ thống tổng hợp toàn bộ kết quả theo
+                                            từng khách hàng X.
+                                        </p>
+                        
+                                        <p class="mb-2">
+                                            X được xếp <strong>Mức 4 – Có dấu hiệu chuyên cung cấp tiền đảo nợ</strong>
+                                            khi:
+                                        </p>
+                        
+                                        <ul class="list-disc pl-6 space-y-1 bg-red-50 p-4 rounded-md border border-red-200">
+                                            <li>
+                                                Có ít nhất <strong>ba chuỗi hoàn chỉnh Mức 3</strong>.
+                                            </li>
+                                            <li>
+                                                Các chuỗi liên quan đến ít nhất
+                                                <strong>ba khách hàng vay B khác nhau</strong>.
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
                         </section>
 
                         <section>
