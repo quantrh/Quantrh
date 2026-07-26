@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoC Phát hiện Đảo Nợ - Neo4j</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cập nhật: Hạ phiên bản về 5.12.0 (bản ổn định cho Browser) để tránh lỗi r.code.startsWith -->
+    <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@5.12.0/lib/browser/neo4j-web.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        #network-graph { width: 100%; height: 500px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: white; }
+        .toast { transition: opacity 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-gray-800">
+
+    <!-- Sidebar / Settings -->
+    <aside class="w-80 bg-white border-r border-gray-200 flex flex-col z-20 shadow-sm">
+        <div class="p-5 border-b border-gray-200">
+            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Demo PoC Đảo Nợ
+            </h1>
+            <p class="text-xs text-gray-500 mt-1">Dựa trên Neo4j Graph Database</p>
+        </div>
+
+        <div class="p-5 flex-1 overflow-y-auto">
+            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Kết nối Neo4j</h2>
+            
+            <form id="connection-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">URI</label>
+                    <input type="text" id="neo4j-uri" placeholder="neo4j+s://<id>.databases.neo4j.io" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
+                    <p class="text-xs text-gray-500 mt-1">Gợi ý: Nếu <code>neo4j+s://</code> bị lỗi, hãy thử dùng <code>bolt+s://</code>. Đảm bảo DB không bị Pause.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="neo4j-user" placeholder="neo4j" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="neo4j-pass" placeholder="••••••••" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" required>
+                </div>
+                
+                <div class="pt-2 flex flex-col gap-2">
+                    <button type="button" id="btn-connect" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center gap-2">
+                        <span>Kết nối & Lưu</span>
+                    </button>
+                    <button type="button" id="btn-clear" class="w-full bg-white hover:bg-gray-50 text-red-600 border border-red-200 font-medium py-2 px-4 rounded-md transition-colors">
+                        Xóa Local Storage
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Trạng thái</h3>
+                <div id="status-indicator" class="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-md border border-gray-200">
+                    <div class="w-3 h-3 rounded-full bg-gray-400" id="status-dot"></div>
+                    <span id="status-text">Chưa kết nối</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-xs text-gray-500 bg-blue-50 p-3 rounded text-justify">
+                <strong>Lưu ý:</strong> App giả định bạn đã chạy các file <code class="bg-blue-100 px-1 rounded">01_schema</code>, <code class="bg-blue-100 px-1 rounded">02_demo_data</code>, và <code class="bg-blue-100 px-1 rounded">03_detect...</code> trên Neo4j Desktop/Aura.
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full bg-gray-100 overflow-hidden">
+        <!-- Tabs Header -->
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
+            <div class="flex space-x-1" id="tabs-container">
+                <button data-tab="tab-alerts" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-700">Q01. Cảnh báo Mức 4</button>
+                <button data-tab="tab-control" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q02. Đối chứng</button>
+                <button data-tab="tab-graph" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100">Q06. Graph Tóm tắt</button>
+                <button data-tab="tab-custom-cypher" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Truy vấn Cypher</button>
+            </div>
+            <div>
+                <button id="btn-refresh" class="hidden text-gray-500 hover:text-blue-600 transition-colors p-2 rounded hover:bg-gray-100" title="Làm mới dữ liệu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Tabs Content -->
+        <div class="flex-1 overflow-y-auto p-6 relative">
+            
+            <!-- Overlay when disconnected -->
+            <div id="disconnected-overlay" class="absolute inset-0 bg-gray-100/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <h3 class="text-xl font-medium text-gray-700">Vui lòng kết nối cơ sở dữ liệu</h3>
+                <p class="text-gray-500 mt-2">Nhập thông tin Neo4j ở cột bên trái để tiếp tục.</p>
+            </div>
+
+            <!-- Tab 1: Alerts (Q01) -->
+            <div id="tab-alerts" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h2 class="text-lg font-semibold text-gray-800">Danh sách Khách hàng Cảnh báo Mức 4 (Q01)</h2>
+                        <p class="text-sm text-gray-500">Dấu hiệu chuyên cung cấp tiền đảo nợ.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
+                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Loại</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Số KH vay</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Chuỗi HC</th>
+                                    <th class="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Tiền hỗ trợ (Tỷ)</th>
+                                    <th class="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Tiền về (Tỷ)</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Điểm Rủi ro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-alerts" class="bg-white divide-y divide-gray-200">
+                                <!-- Data populated via JS -->
+                            </tbody>
+                        </table>
+                        <div id="loader-alerts" class="hidden py-10 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                        <div id="empty-alerts" class="hidden py-10 text-center text-gray-500">Không tìm thấy dữ liệu. Hãy chắc chắn đã chạy file 03_detect_and_materialize.cypher.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Control Group (Q02) -->
+            <div id="tab-control" class="tab-content hidden">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h2 class="text-lg font-semibold text-gray-800">Phân loại Khách hàng Đối chứng (Q02)</h2>
+                        <p class="text-sm text-gray-500">Kiểm tra kết quả phân loại từ X001 đến X005.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Mã KH</th>
+                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Tên KH</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Mức CB</th>
+                                    <th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Phân loại chi tiết</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Chuỗi HC</th>
+                                    <th class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider">Điểm</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-control" class="bg-white divide-y divide-gray-200">
+                                <!-- Data populated via JS -->
+                            </tbody>
+                        </table>
+                        <div id="loader-control" class="hidden py-10 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Graph (Q06) -->
+            <div id="tab-graph" class="tab-content hidden h-full flex flex-col">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Graph Tóm tắt Chuỗi Dẫn xuất (Q06)</h2>
+                            <p class="text-sm text-gray-500">X ở trung tâm, các B và chuỗi xung quanh (Mặc định tải X001).</p>
+                        </div>
+                        <select id="graph-customer-select" class="border-gray-300 rounded-md text-sm p-2 bg-white">
+                            <option value="X001">Tải Graph X001</option>
+                            <option value="X003">Tải Graph X003</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 p-4 bg-gray-50 relative">
+                         <div id="loader-graph" class="absolute inset-0 bg-white/80 z-10 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                         <div id="network-graph"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Custom Cypher -->
+            <div id="tab-custom-cypher" class="tab-content hidden h-full flex flex-col gap-4">
+                <!-- Cypher Input -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col shrink-0">
+                    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h2 class="text-sm font-semibold text-gray-800">Nhập lệnh Cypher</h2>
+                        <div class="flex gap-2">
+                            <button id="btn-clear-cypher" class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200">Xóa trắng</button>
+                            <button id="btn-run-cypher" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1.5 px-4 rounded transition-colors flex items-center gap-1 shadow-sm">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Thực thi
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="cypher-input" rows="4" class="w-full p-4 font-mono text-sm border-none focus:ring-0 resize-y text-gray-800 bg-gray-900 text-green-400" placeholder="MATCH (n:DRCustomer) RETURN n LIMIT 10..." spellcheck="false"></textarea>
+                </div>
+
+                <!-- Cypher Results -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
+                    <div id="loader-custom-cypher" class="absolute inset-0 bg-white/80 z-20 hidden flex items-center justify-center backdrop-blur-sm"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                    
+                    <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                        <span class="text-sm font-semibold text-gray-700">Kết quả <span id="custom-query-stats" class="text-xs font-normal text-gray-500 ml-2"></span></span>
+                        
+                        <!-- Toggle Table / Graph -->
+                        <div class="flex bg-gray-200 p-0.5 rounded-lg">
+                            <button id="toggle-view-table" class="px-3 py-1 text-xs font-medium rounded-md shadow-sm bg-white text-gray-800 transition-all">Dạng Bảng</button>
+                            <button id="toggle-view-graph" class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-800 transition-all">Đồ thị Graph</button>
+                        </div>
+                    </div>
+
+                    <!-- Result View: Table -->
+                    <div id="view-custom-table" class="flex-1 overflow-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50 sticky top-0 z-10" id="thead-custom-cypher">
+                                <!-- Headers populated dynamically -->
+                            </thead>
+                            <tbody id="tbody-custom-cypher" class="bg-white divide-y divide-gray-200">
+                                <tr><td class="px-6 py-10 text-center text-gray-500 italic">Chưa có kết quả truy vấn.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Result View: Graph -->
+                    <div id="view-custom-graph" class="flex-1 bg-gray-50 relative hidden">
+                        <div id="custom-network-graph" class="w-full h-full"></div>
+                        <div id="empty-custom-graph" class="absolute inset-0 flex items-center justify-center text-gray-500 hidden bg-gray-50 z-10">
+                            Kết quả không chứa Node / Relationship nào để vẽ đồ thị.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 bg-gray-800 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50">
+        <span id="toast-icon"></span>
+        <span id="toast-msg" class="text-sm font-medium"></span>
+    </div>
+
+    <script>
+        // State
+        let neo4jDriver = null;
+        let network = null; // Vis.js network instance cho Q06
+        let customNetwork = null; // Vis.js network instance cho Custom Cypher
+
+        // DOM Elements
+        const form = document.getElementById('connection-form');
+        const uriInput = document.getElementById('neo4j-uri');
+        const userInput = document.getElementById('neo4j-user');
+        const passInput = document.getElementById('neo4j-pass');
+        const btnConnect = document.getElementById('btn-connect');
+        const btnClear = document.getElementById('btn-clear');
+        const btnRefresh = document.getElementById('btn-refresh');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const overlay = document.getElementById('disconnected-overlay');
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        const selectGraphCustomer = document.getElementById('graph-customer-select');
+
+        // Custom Cypher DOM Elements
+        const cypherInput = document.getElementById('cypher-input');
+        const btnRunCypher = document.getElementById('btn-run-cypher');
+        const btnClearCypher = document.getElementById('btn-clear-cypher');
+        const viewTable = document.getElementById('view-custom-table');
+        const viewGraph = document.getElementById('view-custom-graph');
+        const btnToggleTable = document.getElementById('toggle-view-table');
+        const btnToggleGraph = document.getElementById('toggle-view-graph');
+        const theadCustomCypher = document.getElementById('thead-custom-cypher');
+        const tbodyCustomCypher = document.getElementById('tbody-custom-cypher');
+        const statsCustomCypher = document.getElementById('custom-query-stats');
+        const loaderCustomCypher = document.getElementById('loader-custom-cypher');
+        const emptyCustomGraph = document.getElementById('empty-custom-graph');
+
+        // Helpers
+        const showToast = (msg, type = 'success') => {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').textContent = msg;
+            
+            if(type === 'success') {
+                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-green-600 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else {
+                toast.className = 'fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 z-50';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        };
+
+        const formatCurrency = (num) => {
+            if (num === null || num === undefined) return '-';
+            return parseFloat(num).toLocaleString('vi-VN');
+        };
+
+        // Connection Logic
+        const checkStorage = () => {
+            const credsStr = localStorage.getItem('neo4j_poc_creds');
+            if (credsStr) {
+                try {
+                    const creds = JSON.parse(credsStr);
+                    uriInput.value = creds.uri || '';
+                    userInput.value = creds.user || '';
+                    passInput.value = creds.pass || '';
+                    connectToNeo4j(creds.uri, creds.user, creds.pass);
+                } catch (e) {
+                    console.error('Lỗi đọc localStorage', e);
+                }
+            }
+        };
+
+        const connectToNeo4j = async (uri, user, pass) => {
+            btnConnect.disabled = true;
+            btnConnect.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Đang kết nối...';
+            
+            try {
+                if (neo4jDriver) {
+                    await neo4jDriver.close();
+                }
+                
+                neo4jDriver = neo4j.driver(
+                    uri.trim(), 
+                    neo4j.auth.basic(user.trim(), pass.trim())
+                );
+                
+                // Thay vì verifyConnectivity() (hay gây lỗi routing trên trình duyệt), ta test bằng 1 query nhỏ
+                const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+                try {
+                    await session.run('RETURN 1 AS test');
+                } finally {
+                    await session.close();
+                }
+                
+                // Connection Success
+                statusDot.className = 'w-3 h-3 rounded-full bg-green-500';
+                statusText.textContent = `Đã kết nối (Thành công)`;
+                statusText.classList.add('text-green-700');
+                overlay.classList.add('hidden');
+                btnRefresh.classList.remove('hidden');
+                
+                showToast('Kết nối Neo4j thành công!');
+                
+                // Save to local storage
+                localStorage.setItem('neo4j_poc_creds', JSON.stringify({ uri, user, pass }));
+
+                // Load initial data
+                loadCurrentTab();
+
+            } catch (error) {
+                console.error("Lỗi kết nối chi tiết:", error);
+                
+                let errorMsg = 'Kết nối thất bại. Vui lòng kiểm tra lại thông tin.';
+                
+                if (error && error.message) {
+                    // Bắt các lỗi liên quan đến mạng hoặc bug của neo4j-driver
+                    if (error.message.includes('startsWith') || error.name === 'TypeError' || error.message.includes('WebSocket')) {
+                        errorMsg = 'Lỗi mạng WebSockets (Aura). Thử đổi "neo4j+s://" thành "bolt+s://" và tắt trình chặn quảng cáo/VPN.';
+                    } else {
+                        errorMsg = error.message;
+                    }
+                }
+
+                statusDot.className = 'w-3 h-3 rounded-full bg-red-500';
+                statusText.textContent = 'Kết nối thất bại';
+                statusText.classList.add('text-red-700');
+                overlay.classList.remove('hidden');
+                btnRefresh.classList.add('hidden');
+                
+                // Rút gọn thông báo nếu quá dài
+                if(errorMsg.length > 80) errorMsg = errorMsg.substring(0, 80) + '...';
+                showToast(errorMsg, 'error');
+                
+                if (neo4jDriver) {
+                    neo4jDriver.close().catch(() => {});
+                    neo4jDriver = null;
+                }
+            } finally {
+                btnConnect.disabled = false;
+                btnConnect.innerHTML = 'Kết nối & Lưu';
+            }
+        };
+
+        // UI Event Listeners
+        btnConnect.addEventListener('click', () => {
+            if(form.checkValidity()) {
+                connectToNeo4j(uriInput.value, userInput.value, passInput.value);
+            } else {
+                form.reportValidity();
+            }
+        });
+
+        btnClear.addEventListener('click', () => {
+            localStorage.removeItem('neo4j_poc_creds');
+            uriInput.value = '';
+            userInput.value = '';
+            passInput.value = '';
+            if (neo4jDriver) {
+                neo4jDriver.close();
+                neo4jDriver = null;
+            }
+            statusDot.className = 'w-3 h-3 rounded-full bg-gray-400';
+            statusText.textContent = 'Chưa kết nối';
+            statusText.classList.remove('text-green-700', 'text-red-700');
+            overlay.classList.remove('hidden');
+            btnRefresh.classList.add('hidden');
+            showToast('Đã xóa cấu hình');
+            
+            // Clear tables
+            document.getElementById('tbody-alerts').innerHTML = '';
+            document.getElementById('tbody-control').innerHTML = '';
+            if(network) network.destroy();
+        });
+
+        btnRefresh.addEventListener('click', () => {
+            if(neo4jDriver) loadCurrentTab();
+        });
+
+        selectGraphCustomer.addEventListener('change', () => {
+            if(neo4jDriver) loadGraphData(selectGraphCustomer.value);
+        });
+
+        // Toggle Custom Query Views (Table/Graph)
+        const setActiveToggle = (activeBtn, inactiveBtn, activeView, inactiveView) => {
+            activeBtn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
+            activeBtn.classList.remove('text-gray-500', 'hover:text-gray-800');
+            inactiveBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
+            inactiveBtn.classList.add('text-gray-500', 'hover:text-gray-800');
+            activeView.classList.remove('hidden');
+            inactiveView.classList.add('hidden');
+        };
+
+        btnToggleTable.addEventListener('click', () => setActiveToggle(btnToggleTable, btnToggleGraph, viewTable, viewGraph));
+        btnToggleGraph.addEventListener('click', () => {
+            setActiveToggle(btnToggleGraph, btnToggleTable, viewGraph, viewTable);
+            if (customNetwork) {
+                // Resize fix for Vis.js when hidden container becomes visible
+                setTimeout(() => customNetwork.fit(), 50); 
+            }
+        });
+
+        btnClearCypher.addEventListener('click', () => cypherInput.value = '');
+
+        // Tab Switching Logic
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update styling
+                tabs.forEach(t => {
+                    t.classList.remove('bg-blue-100', 'text-blue-700');
+                    t.classList.add('text-gray-600', 'hover:bg-gray-100');
+                });
+                tab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                tab.classList.add('bg-blue-100', 'text-blue-700');
+
+                // Toggle content
+                contents.forEach(c => c.classList.add('hidden'));
+                const targetId = tab.getAttribute('data-tab');
+                document.getElementById(targetId).classList.remove('hidden');
+
+                if (neo4jDriver) loadCurrentTab();
+            });
+        });
+
+        const loadCurrentTab = () => {
+            const activeTab = document.querySelector('.tab-btn.bg-blue-100').getAttribute('data-tab');
+            if (activeTab === 'tab-alerts') loadAlertsData();
+            if (activeTab === 'tab-control') loadControlData();
+            if (activeTab === 'tab-graph') loadGraphData(selectGraphCustomer.value);
+            // Tab custom cypher không auto-load khi switch tab để tránh chạy nhầm query nặng
+        };
+
+        // Custom Cypher Execution
+        btnRunCypher.addEventListener('click', async () => {
+            const query = cypherInput.value.trim();
+            if (!query) {
+                showToast('Vui lòng nhập lệnh Cypher', 'error');
+                return;
+            }
+            if (!neo4jDriver) {
+                showToast('Chưa kết nối đến cơ sở dữ liệu', 'error');
+                return;
+            }
+
+            loaderCustomCypher.classList.remove('hidden');
+            theadCustomCypher.innerHTML = '';
+            tbodyCustomCypher.innerHTML = '';
+            emptyCustomGraph.classList.add('hidden');
+            statsCustomCypher.textContent = '';
+            if (customNetwork) {
+                customNetwork.destroy();
+                customNetwork = null;
+            }
+
+            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            const startTime = performance.now();
+
+            try {
+                const result = await session.run(query);
+                const timeTaken = Math.round(performance.now() - startTime);
+                statsCustomCypher.textContent = `(Trả về ${result.records.length} bản ghi trong ${timeTaken}ms)`;
+                
+                renderCustomTable(result.records);
+                renderCustomGraph(result.records);
+
+            } catch (error) {
+                console.error("Lỗi Query Tự do:", error);
+                showToast(`Lỗi Cypher: ${error.message}`, 'error');
+                tbodyCustomCypher.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-500">Lỗi cú pháp hoặc thực thi: ${error.message}</td></tr>`;
+            } finally {
+                await session.close();
+                loaderCustomCypher.classList.add('hidden');
+            }
+        });
+
+        // Render Table for Custom Query
+        const formatNeo4jValueForTable = (val) => {
+            if (val === null) return '<span class="text-gray-400">null</span>';
+            if (val === undefined) return '';
+            
+            // Xử lý Integer của Neo4j
+            if (neo4j.isInt(val)) return val.toString();
+            
+            if (typeof val === 'object') {
+                // Xử lý Node
+                if (val.labels && val.identity) {
+                    let props = JSON.stringify(val.properties);
+                    if(props.length > 50) props = props.substring(0, 50) + '...}';
+                    return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title='${JSON.stringify(val.properties)}'>(:${val.labels.join(':')} ${props})</span>`;
+                }
+                // Xử lý Relationship
+                if (val.type && val.identity && val.start && val.end) {
+                    return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800" title='${JSON.stringify(val.properties)}'>-[:${val.type}]-&gt;</span>`;
+                }
+                // Xử lý Path (Bỏ qua chi tiết phức tạp, in ra chuỗi JSON)
+                if (val.segments) {
+                    return `<span class="text-xs text-gray-500 italic">Path (${val.segments.length} segments)</span>`;
+                }
+                
+                // Mảng hoặc Object thông thường
+                try {
+                    return `<pre class="text-xs text-gray-600 m-0 whitespace-pre-wrap">${JSON.stringify(val)}</pre>`;
+                } catch(e) { return String(val); }
+            }
+            
+            return String(val);
+        };
+
+        const renderCustomTable = (records) => {
+            if (records.length === 0) {
+                tbodyCustomCypher.innerHTML = `<tr><td class="px-6 py-10 text-center text-gray-500">Không có dữ liệu trả về.</td></tr>`;
+                return;
+            }
+
+            const keys = records[0].keys;
+            
+            // Tạo Header
+            const trHead = document.createElement('tr');
+            keys.forEach(key => {
+                trHead.innerHTML += `<th class="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap">${key}</th>`;
+            });
+            theadCustomCypher.appendChild(trHead);
+
+            // Tạo Body
+            records.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                keys.forEach(key => {
+                    const val = record.get(key);
+                    tr.innerHTML += `<td class="px-6 py-4 border-b border-gray-100 text-sm align-top break-words max-w-xs">${formatNeo4jValueForTable(val)}</td>`;
+                });
+                tbodyCustomCypher.appendChild(tr);
+            });
+        };
+
+        // Render Graph for Custom Query (Tự động bóc tách Node/Rel)
+        const renderCustomGraph = (records) => {
+            const nodesMap = new Map();
+            const edgesMap = new Map();
+            const container = document.getElementById('custom-network-graph');
+
+            // Hàm đệ quy để tìm Node và Rel trong mọi ngóc ngách của kết quả (Mảng, Object, Path...)
+            const extractGraphEntities = (val) => {
+                if (!val || typeof val !== 'object') return;
+                
+                // Nếu là Node
+                if (val.labels && val.identity) {
+                    if (!nodesMap.has(val.identity.toNumber())) {
+                        const id = val.identity.toNumber();
+                        const labelObj = val.labels[0] || 'Node';
+                        
+                        // Cố gắng tìm property làm label hiển thị (name, title, id...)
+                        let displayLabel = labelObj;
+                        if(val.properties.name) displayLabel = val.properties.name;
+                        else if(val.properties.id) displayLabel = val.properties.id;
+                        else if(val.properties.customerId) displayLabel = val.properties.customerId;
+                        else if(val.properties.accountId) displayLabel = val.properties.accountId;
+
+                        // Tooltip
+                        let tooltip = `<div style="padding:5px; font-family:sans-serif; font-size:12px;"><b>${val.labels.join(', ')}</b><br/>`;
+                        for(let prop in val.properties) {
+                            tooltip += `<i>${prop}:</i> ${val.properties[prop]}<br/>`;
+                        }
+                        tooltip += '</div>';
+
+                        nodesMap.set(id, {
+                            id: id,
+                            label: displayLabel,
+                            title: tooltip,
+                            color: { background: '#D9E8E7', border: '#8BC6C3' }, // Màu mặc định chung
+                            font: { color: '#333' },
+                            shape: 'dot',
+                            size: 20
+                        });
+                    }
+                } 
+                // Nếu là Relationship
+                else if (val.type && val.identity && val.start && val.end) {
+                    if (!edgesMap.has(val.identity.toNumber())) {
+                        edgesMap.set(val.identity.toNumber(), {
+                            id: val.identity.toNumber(),
+                            from: val.start.toNumber(),
+                            to: val.end.toNumber(),
+                            label: val.type,
+                            font: { size: 10, align: 'middle', color: '#6E7781' },
+                            arrows: 'to',
+                            color: { color: '#A0AEC0' }
+                        });
+                    }
+                }
+                // Nếu là Path
+                else if (val.segments) {
+                    val.segments.forEach(seg => {
+                        extractGraphEntities(seg.start);
+                        extractGraphEntities(seg.relationship);
+                        extractGraphEntities(seg.end);
+                    });
+                }
+                // Nếu là Mảng các giá trị
+                else if (Array.isArray(val)) {
+                    val.forEach(item => extractGraphEntities(item));
+                }
+                // Nếu là Object thông thường (có thể chứa map Node)
+                else {
+                    Object.values(val).forEach(item => extractGraphEntities(item));
+                }
+            };
+
+            // Quét toàn bộ dữ liệu trả về
+            records.forEach(record => {
+                record.keys.forEach(key => {
+                    extractGraphEntities(record.get(key));
+                });
+            });
+
+            if (nodesMap.size === 0) {
+                emptyCustomGraph.classList.remove('hidden');
+                return;
+            }
+
+            const data = {
+                nodes: new vis.DataSet(Array.from(nodesMap.values())),
+                edges: new vis.DataSet(Array.from(edgesMap.values()))
+            };
+
+            const options = {
+                physics: { solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100 } },
+                interaction: { hover: true, tooltipDelay: 200 }
+            };
+
+            customNetwork = new vis.Network(container, data, options);
+        };
+
+        // Query Functions
+        const loadAlertsData = async () => {
+            const tbody = document.getElementById('tbody-alerts');
+            const loader = document.getElementById('loader-alerts');
+            const emptyState = document.getElementById('empty-alerts');
+            
+            tbody.innerHTML = '';
+            loader.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            const query = `
+                MATCH (alert:DRAlert)-[:ALERT_FOR]->(x:DRCustomer)
+                WHERE alert.pocDataset = 'debt_rollover_liquidity_v1'
+                  AND alert.analysisMonth = '2026-06'
+                  AND alert.alertLevel = 4
+                RETURN
+                  x.customerId AS customerX,
+                  x.name AS customerName,
+                  x.customerType AS customerType,
+                  alert.distinctBorrowerCount AS distinctBorrowers,
+                  alert.completeChainCount AS completeChains,
+                  round(alert.totalSupportAmount / 1000000000.0, 3) AS totalSupportBillionVND,
+                  round(alert.totalReturnAmount / 1000000000.0, 3) AS totalReturnBillionVND,
+                  alert.riskScore AS riskScore
+                ORDER BY riskScore DESC;
+            `;
+
+            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            try {
+                const result = await session.run(query);
+                if(result.records.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    result.records.forEach(record => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50 transition-colors";
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-blue-700">${record.get('customerX')} <span class="text-gray-500 text-xs block">${record.get('customerName')}</span></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.get('customerType')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('distinctBorrowers').toNumber()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('completeChains').toNumber()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900">${formatCurrency(record.get('totalSupportBillionVND'))}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900">${formatCurrency(record.get('totalReturnBillionVND'))}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${record.get('riskScore').toNumber()}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi Query Q01:", error);
+                showToast("Lỗi khi tải dữ liệu Cảnh báo", 'error');
+            } finally {
+                await session.close();
+                loader.classList.add('hidden');
+            }
+        };
+
+        const loadControlData = async () => {
+            const tbody = document.getElementById('tbody-control');
+            const loader = document.getElementById('loader-control');
+            
+            tbody.innerHTML = '';
+            loader.classList.remove('hidden');
+
+            const query = `
+                MATCH (x:DRCustomer)
+                WHERE x.pocDataset = 'debt_rollover_liquidity_v1'
+                  AND x.customerId IN ['X001','X002','X003','X004','X005']
+                OPTIONAL MATCH (alert:DRAlert)-[:ALERT_FOR]->(x)
+                WHERE alert.analysisMonth = '2026-06'
+                RETURN
+                  x.customerId AS customerId,
+                  x.name AS customerName,
+                  coalesce(alert.alertLevel, 0) AS alertLevel,
+                  coalesce(alert.alertLevelLabel, 'KHÔNG CẢNH BÁO') AS classification,
+                  coalesce(alert.completeChainCount, 0) AS completeChains,
+                  alert.riskScore AS riskScore
+                ORDER BY customerId;
+            `;
+
+            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            try {
+                const result = await session.run(query);
+                result.records.forEach(record => {
+                    const level = record.get('alertLevel').toNumber();
+                    let badgeClass = 'bg-gray-100 text-gray-800';
+                    if (level === 4) badgeClass = 'bg-red-100 text-red-800';
+                    if (level === 3) badgeClass = 'bg-orange-100 text-orange-800';
+                    if (level === 2) badgeClass = 'bg-yellow-100 text-yellow-800';
+                    if (level === 1) badgeClass = 'bg-blue-100 text-blue-800';
+
+                    const score = record.get('riskScore');
+                    const scoreDisplay = score ? score.toNumber() : '-';
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${record.get('customerId')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.get('customerName')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">Mức ${level}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-xs truncate max-w-xs" title="${record.get('classification')}">${record.get('classification')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">${record.get('completeChains').toNumber()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center font-semibold text-gray-700">${scoreDisplay}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Lỗi Query Q02:", error);
+                showToast("Lỗi khi tải dữ liệu Đối chứng", 'error');
+            } finally {
+                await session.close();
+                loader.classList.add('hidden');
+            }
+        };
+
+        const loadGraphData = async (customerId) => {
+            const container = document.getElementById('network-graph');
+            const loader = document.getElementById('loader-graph');
+            loader.classList.remove('hidden');
+
+            // Hủy đồ thị cũ nếu có
+            if (network !== null) {
+                network.destroy();
+                network = null;
+            }
+
+            const query = `
+                MATCH (alert:DRAlert {alertId:'ALT-2026-06-' + $customerId})-[:ALERT_FOR]->(x:DRCustomer)
+                MATCH (alert)-[:INCLUDES_CHAIN]->(chain:DRDetectedChain)-[source:SOURCE_CUSTOMER]->(x)
+                MATCH (chain)-[borrowerRel:BORROWER]->(b:DRCustomer)
+                RETURN x, source, chain, borrowerRel, b;
+            `;
+
+            const session = neo4jDriver.session({ defaultAccessMode: neo4j.session.READ });
+            try {
+                const result = await session.run(query, { customerId: customerId });
+                
+                const nodesMap = new Map();
+                const edgesMap = new Map();
+
+                // Style mapping based on the provided grass file
+                const getStyle = (labels, properties) => {
+                    let color = '#D9E8E7'; // Default
+                    let size = 20;
+                    let label = 'Node';
+                    let fontColor = '#333';
+
+                    if (labels.includes('DRCustomer')) {
+                        color = '#006B68';
+                        size = 30;
+                        label = properties.customerId || 'Customer';
+                        fontColor = '#ffffff';
+                    } else if (labels.includes('DRDetectedChain')) {
+                        color = '#FFC62F';
+                        size = 25;
+                        label = properties.borrowerId || 'Chain';
+                        fontColor = '#333';
+                    } else if (labels.includes('DRAlert')) {
+                        color = '#C62828';
+                        size = 35;
+                        label = 'ALERT';
+                        fontColor = '#ffffff';
+                    }
+
+                    return { color: { background: color, border: '#ffffff' }, size, label, font: { color: fontColor } };
+                };
+
+                result.records.forEach(record => {
+                    ['x', 'chain', 'b'].forEach(key => {
+                        const node = record.get(key);
+                        if (node && !nodesMap.has(node.identity.toNumber())) {
+                            const style = getStyle(node.labels, node.properties);
+                            
+                            // Tạo tooltip đẹp hơn
+                            let tooltip = `<div style="padding:5px; font-family:sans-serif; font-size:12px;"><b>${node.labels.join(', ')}</b><br/>`;
+                            for(let prop in node.properties) {
+                                if(prop !== 'pocDataset' && prop !== 'supportTransferIds' && prop !== 'returnTransferIds') {
+                                    tooltip += `<i>${prop}:</i> ${node.properties[prop]}<br/>`;
+                                }
+                            }
+                            tooltip += '</div>';
+
+                            nodesMap.set(node.identity.toNumber(), {
+                                id: node.identity.toNumber(),
+                                label: style.label,
+                                title: tooltip,
+                                color: style.color,
+                                size: style.size,
+                                shape: 'dot',
+                                font: style.font,
+                                shadow: true
+                            });
+                        }
+                    });
+
+                    ['source', 'borrowerRel'].forEach(key => {
+                        const rel = record.get(key);
+                        if (rel && !edgesMap.has(rel.identity.toNumber())) {
+                            edgesMap.set(rel.identity.toNumber(), {
+                                id: rel.identity.toNumber(),
+                                from: rel.start.toNumber(),
+                                to: rel.end.toNumber(),
+                                label: rel.type,
+                                font: { size: 10, align: 'middle', color: '#6E7781' },
+                                arrows: 'to',
+                                color: { color: '#6E7781' },
+                                width: 2
+                            });
+                        }
+                    });
+                });
+
+                if(nodesMap.size === 0) {
+                     showToast(`Không tìm thấy dữ liệu Graph cho ${customerId}`, 'error');
+                     loader.classList.add('hidden');
+                     return;
+                }
+
+                const data = {
+                    nodes: new vis.DataSet(Array.from(nodesMap.values())),
+                    edges: new vis.DataSet(Array.from(edgesMap.values()))
+                };
+
+                const options = {
+                    physics: {
+                        solver: 'forceAtlas2Based',
+                        forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100 }
+                    },
+                    interaction: { hover: true, tooltipDelay: 200 }
+                };
+
+                network = new vis.Network(container, data, options);
+
+            } catch (error) {
+                console.error("Lỗi Query Q06:", error);
+                showToast("Lỗi khi dựng Graph", 'error');
+            } finally {
+                await session.close();
+                loader.classList.add('hidden');
+            }
+        };
+
+        // Initialize
+        checkStorage();
+
+    </script>
+</body>
+</html>
