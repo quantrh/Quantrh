@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f766e">
+  <title>TaskFlow Sheets</title>
+  <style>
+    :root {
+      --brand-900:#064e4b; --brand-800:#0f5f5b; --brand-700:#0f766e;
+      --brand-600:#0d9488; --brand-100:#ccfbf1; --brand-50:#f0fdfa;
+      --ink-950:#0f172a; --ink-800:#1e293b; --ink-700:#334155;
+      --ink-600:#475569; --ink-500:#64748b; --ink-400:#94a3b8;
+      --line:#e2e8f0; --line-soft:#eef2f7; --surface:#ffffff; --canvas:#f6f8fb;
+      --red:#dc2626; --red-bg:#fef2f2; --amber:#d97706; --amber-bg:#fffbeb;
+      --blue:#2563eb; --blue-bg:#eff6ff; --green:#059669; --green-bg:#ecfdf5;
+      --purple:#7c3aed; --purple-bg:#f5f3ff; --shadow:0 12px 40px rgba(15,23,42,.09);
+      --radius:14px; --sidebar:244px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink-800);background:var(--canvas)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .app{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr)}
+    .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);padding:22px 14px;background:linear-gradient(175deg,var(--brand-900),#083c3a);color:#fff;display:flex;flex-direction:column;z-index:20}
+    .brand{display:flex;gap:12px;align-items:center;padding:0 10px 24px}
+    .brand-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#2dd4bf,#fbbf24);color:#053d3a;font-weight:900;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+    .brand strong{display:block;font-size:16px;letter-spacing:.1px}.brand small{opacity:.68;font-size:11px}
+    .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;opacity:.5;padding:14px 12px 7px}
+    .nav{display:grid;gap:5px}
+    .nav button{border:0;color:#d8f3f0;background:transparent;text-align:left;padding:11px 12px;border-radius:9px;display:flex;align-items:center;gap:11px;font-size:13px;font-weight:650}
+    .nav button:hover{background:rgba(255,255,255,.08)}.nav button.active{background:rgba(255,255,255,.15);color:#fff;box-shadow:inset 3px 0 #fbbf24}
+    .nav-icon{width:20px;text-align:center;font-size:15px}
+    .sidebar-bottom{margin-top:auto}
+    .source-mini{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);border-radius:11px;padding:12px;margin:8px 4px}
+    .source-mini small{display:block;opacity:.58;font-size:10px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}.source-mini strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .source-mini button{width:100%;margin-top:9px;padding:7px;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(255,255,255,.08);color:#fff;font-size:11px}
+    .main{grid-column:2;min-width:0}
+    .topbar{height:70px;position:sticky;top:0;z-index:15;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 26px}
+    .mobile-menu{display:none;border:0;background:transparent;font-size:20px}
+    .search{width:min(440px,42vw);position:relative}.search input{width:100%;height:38px;border:1px solid var(--line);background:#f8fafc;border-radius:9px;padding:0 38px 0 14px;outline:none}.search input:focus{border-color:var(--brand-600);box-shadow:0 0 0 3px rgba(13,148,136,.12);background:#fff}.search span{position:absolute;right:13px;top:9px;color:var(--ink-400)}
+    .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .source-select{height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:0 30px 0 10px;max-width:210px;color:var(--ink-700);font-size:12px}
+    .user-chip{display:flex;align-items:center;gap:9px}.avatar{width:34px;height:34px;border-radius:50%;background:var(--brand-100);color:var(--brand-800);display:grid;place-items:center;font-size:11px;font-weight:800}.user-text{line-height:1.2}.user-text strong{display:block;font-size:12px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user-text small{color:var(--ink-500);font-size:10px}
+    .content{padding:26px;max-width:1600px;margin:auto}
+    .view{display:none}.view.active{display:block}
+    .page-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:22px}.page-head>div:first-child{min-width:0}.page-head h1{font-size:23px;line-height:1.2;margin:0 0 5px;color:var(--ink-950)}.page-head p{font-size:13px;color:var(--ink-500);margin:0}.page-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .btn{height:36px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink-700);padding:0 13px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn:hover{background:#f8fafc}.btn.primary{background:var(--brand-700);border-color:var(--brand-700);color:#fff}.btn.primary:hover{background:var(--brand-800)}.btn.danger{color:var(--red);border-color:#fecaca}.btn.small{height:30px;padding:0 10px;font-size:11px}.btn.icon{width:36px;padding:0}
+    .kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(155px,1fr));gap:14px;margin-bottom:18px}
+    .kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);padding:17px;box-shadow:0 2px 12px rgba(15,23,42,.035);position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:-18px;top:-22px;width:72px;height:72px;border-radius:50%;background:var(--accent-bg,#f1f5f9)}.kpi .label{font-size:11px;color:var(--ink-500);font-weight:700;margin-bottom:10px}.kpi .value{font-size:26px;font-weight:850;color:var(--ink-950);line-height:1}.kpi .note{margin-top:8px;color:var(--ink-500);font-size:10px}.kpi .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent,var(--brand-600));margin-right:5px}.kpi.alert{--accent:var(--red);--accent-bg:var(--red-bg)}.kpi.warn{--accent:var(--amber);--accent-bg:var(--amber-bg)}.kpi.good{--accent:var(--green);--accent-bg:var(--green-bg)}
+    .grid-2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.7fr);gap:16px;margin-bottom:16px}.grid-equal{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .panel{background:#fff;border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:0 2px 12px rgba(15,23,42,.035);min-width:0}.panel-head{padding:15px 17px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:10px}.panel-head h2{font-size:13px;margin:0;color:var(--ink-950)}.panel-head small{font-size:10px;color:var(--ink-500)}.panel-body{padding:16px 17px}
+    .status-row{display:grid;grid-template-columns:110px minmax(60px,1fr) 34px;align-items:center;gap:10px;margin:11px 0}.status-row label{font-size:11px;color:var(--ink-600)}.bar-track{height:8px;background:#f1f5f9;border-radius:20px;overflow:hidden}.bar-fill{height:100%;border-radius:20px;min-width:2px}.status-row b{font-size:11px;text-align:right}
+    .donut-layout{display:flex;align-items:center;justify-content:center;gap:23px;min-height:180px}.donut{width:142px;height:142px;border-radius:50%;position:relative;flex:0 0 auto}.donut:after{content:"";position:absolute;inset:26px;background:#fff;border-radius:50%}.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;z-index:1}.donut-center b{font-size:22px}.donut-center small{font-size:9px;color:var(--ink-500)}.legend{display:grid;gap:9px}.legend div{font-size:11px;display:flex;align-items:center;gap:8px}.legend i{width:8px;height:8px;border-radius:3px}.legend b{margin-left:auto;padding-left:15px}
+    .attention{display:grid;gap:8px}.attention-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line-soft);border-radius:10px;padding:10px}.attention-item:hover{border-color:#cbd5e1}.attention-item .flag{width:29px;height:29px;border-radius:8px;display:grid;place-items:center;background:var(--red-bg);color:var(--red)}.attention-item h4{font-size:11px;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.attention-item p{font-size:9px;color:var(--ink-500);margin:0}.attention-item .days{font-size:10px;font-weight:800;color:var(--red)}
+    .workload{display:grid;gap:12px}.work-row{display:grid;grid-template-columns:minmax(120px,.8fr) minmax(100px,1fr) 28px;gap:10px;align-items:center}.person{display:flex;align-items:center;gap:8px;min-width:0}.person .avatar{width:27px;height:27px;font-size:9px}.person span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.work-row b{font-size:10px;text-align:right}
+    .filters{background:#fff;border:1px solid var(--line-soft);border-radius:12px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:13px}.filter-input,.filter-select{height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 10px;color:var(--ink-700);font-size:11px;min-width:130px}.filter-input{min-width:210px}.filter-count{margin-left:auto;color:var(--ink-500);font-size:10px}
+    .table-wrap{overflow:auto}.data-table{width:100%;border-collapse:separate;border-spacing:0;min-width:990px}.data-table th{position:sticky;top:0;background:#f8fafc;color:var(--ink-500);font-size:9px;text-transform:uppercase;letter-spacing:.6px;text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}.data-table td{font-size:11px;padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}.data-table tr:last-child td{border-bottom:0}.data-table tbody tr:hover{background:#fbfdfd}.task-title{font-weight:750;color:var(--ink-950);max-width:330px}.task-title small{display:block;color:var(--ink-500);font-size:9px;font-weight:500;margin-top:3px}.clickable{cursor:pointer}
+    .badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 8px;font-size:9px;font-weight:800;white-space:nowrap;background:#f1f5f9;color:var(--ink-600)}.badge:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.badge.CRITICAL,.badge.HIGH,.badge.BLOCKED,.badge.FAILED{color:var(--red);background:var(--red-bg)}.badge.MEDIUM,.badge.REVIEW,.badge.PENDING{color:var(--amber);background:var(--amber-bg)}.badge.LOW,.badge.TODO{color:var(--blue);background:var(--blue-bg)}.badge.IN_PROGRESS{color:var(--purple);background:var(--purple-bg)}.badge.DONE,.badge.PASSED{color:var(--green);background:var(--green-bg)}.badge.BACKLOG,.badge.NONE,.badge.NOT_REQUIRED{color:var(--ink-500);background:#f1f5f9}
+    .progress{height:6px;width:72px;background:#e2e8f0;border-radius:10px;overflow:hidden}.progress span{display:block;height:100%;background:var(--brand-600);border-radius:10px}.due.overdue{color:var(--red);font-weight:750}.due.soon{color:var(--amber);font-weight:750}
+    .empty{padding:48px 24px;text-align:center;color:var(--ink-500)}.empty .empty-icon{font-size:30px;margin-bottom:10px}.empty b{display:block;color:var(--ink-700);font-size:13px;margin-bottom:4px}.empty p{font-size:11px;margin:0}
+    .kanban{display:grid;grid-template-columns:repeat(5,minmax(250px,1fr));gap:12px;overflow:auto;padding-bottom:8px}.kanban-col{background:#edf1f5;border-radius:12px;min-height:560px;padding:10px}.kanban-head{display:flex;align-items:center;padding:2px 3px 11px}.kanban-head h3{font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin:0}.kanban-head span{margin-left:auto;background:#dbe3eb;border-radius:20px;padding:3px 7px;font-size:9px;font-weight:800}.kanban-cards{display:grid;gap:9px;min-height:500px}.kanban-card{background:#fff;border:1px solid #e1e7ed;border-radius:9px;padding:11px;box-shadow:0 1px 2px rgba(15,23,42,.04);cursor:grab}.kanban-card:hover{box-shadow:0 5px 16px rgba(15,23,42,.08)}.kanban-card.dragging{opacity:.45}.kanban-card .id{font-size:8px;color:var(--ink-400);font-weight:700}.kanban-card h4{font-size:11px;line-height:1.45;margin:7px 0 10px;color:var(--ink-950)}.kanban-meta{display:flex;align-items:center;gap:6px}.kanban-meta .avatar{width:24px;height:24px;font-size:8px;margin-left:auto}.kanban-meta time{font-size:8px;color:var(--ink-500)}.drop-active{outline:2px dashed var(--brand-600);outline-offset:-5px}
+    .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.tab{border:0;background:transparent;padding:10px 13px;font-size:11px;color:var(--ink-500);font-weight:700;border-bottom:2px solid transparent}.tab.active{color:var(--brand-700);border-bottom-color:var(--brand-700)}
+    .admin-toolbar{display:flex;gap:8px;margin-bottom:12px}.admin-section{display:none}.admin-section.active{display:block}
+    .role-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}.role-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.role-card b{font-size:11px}.role-card p{font-size:9px;line-height:1.5;color:var(--ink-500);margin:5px 0 0}
+    .source-grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:13px}.source-card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff;position:relative}.source-card.active{border-color:var(--brand-600);box-shadow:0 0 0 2px rgba(13,148,136,.12)}.source-card h3{font-size:13px;margin:0 0 6px}.source-card p{font-size:9px;color:var(--ink-500);word-break:break-all;min-height:28px}.source-card .source-actions{display:flex;gap:7px;margin-top:13px}.source-status{position:absolute;right:12px;top:12px;font-size:8px;padding:3px 7px;border-radius:10px;background:var(--green-bg);color:var(--green);font-weight:800}
+    dialog{border:0;padding:0;border-radius:16px;box-shadow:var(--shadow);width:min(760px,calc(100vw - 30px));max-height:92vh;color:var(--ink-800)}dialog::backdrop{background:rgba(15,23,42,.52);backdrop-filter:blur(3px)}
+    .modal-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center}.modal-head h2{font-size:16px;margin:0}.modal-head p{font-size:10px;color:var(--ink-500);margin:4px 0 0}.modal-close{margin-left:auto;width:32px;height:32px;border-radius:8px;border:0;background:#f1f5f9;color:var(--ink-600)}
+    .modal-body{padding:19px 20px;overflow:auto;max-height:calc(92vh - 132px)}.modal-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#f8fafc}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field.full{grid-column:1/-1}.field label{display:block;font-size:10px;font-weight:750;color:var(--ink-600);margin-bottom:6px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink-800);outline:none;padding:9px 10px;font-size:11px}.field textarea{min-height:90px;resize:vertical;line-height:1.5}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand-600);box-shadow:0 0 0 3px rgba(13,148,136,.1)}.field small{display:block;font-size:9px;color:var(--ink-500);margin-top:5px}.required:after{content:" *";color:var(--red)}
+    .range-wrap{display:flex;align-items:center;gap:12px}.range-wrap input{padding:0}.range-value{min-width:40px;font-size:11px;font-weight:800;color:var(--brand-700)}
+    .callout{background:var(--blue-bg);border:1px solid #bfdbfe;color:#1e40af;border-radius:9px;padding:11px 12px;font-size:10px;line-height:1.5;margin-bottom:14px}.callout.warn{background:var(--amber-bg);border-color:#fde68a;color:#92400e}
+    .toast-stack{position:fixed;right:20px;bottom:20px;z-index:100;display:grid;gap:8px}.toast{min-width:260px;max-width:410px;background:var(--ink-950);color:#fff;padding:12px 14px;border-radius:10px;box-shadow:var(--shadow);font-size:11px;display:flex;gap:10px;align-items:flex-start;animation:toastIn .2s ease}.toast.success{background:#065f46}.toast.error{background:#991b1b}@keyframes toastIn{from{transform:translateY(8px);opacity:0}}
+    .loading{position:fixed;inset:0;background:rgba(248,250,252,.72);backdrop-filter:blur(2px);z-index:90;display:none;place-items:center}.loading.show{display:grid}.loader-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:17px 22px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;font-size:11px;font-weight:700}.spinner{width:19px;height:19px;border:3px solid #ccfbf1;border-top-color:var(--brand-700);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .mobile-overlay{display:none}
+    @media(max-width:1150px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}.source-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:800px){.app{display:block}.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:none}.main{grid-column:auto}.mobile-menu{display:block}.mobile-overlay{display:block;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:18;opacity:0;pointer-events:none}.mobile-overlay.show{opacity:1;pointer-events:auto}.topbar{padding:0 14px}.search{width:auto;flex:1}.source-select,.user-text{display:none}.content{padding:18px 13px}.kpi-grid{grid-template-columns:1fr 1fr}.grid-equal{grid-template-columns:1fr}.page-head{align-items:flex-start}.source-grid{grid-template-columns:1fr}.role-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:520px){.kpi-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.donut-layout{flex-direction:column}.page-head{display:block}.page-actions{margin-top:13px}.filters>*{width:100%;margin:0}.filter-count{text-align:right}.role-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">TF</div><div><strong>TaskFlow</strong><small>Google Sheets workspace</small></div></div>
+      <div class="nav-label">Không gian làm việc</div>
+      <nav class="nav">
+        <button class="active" data-view="dashboard"><span class="nav-icon">◫</span>Dashboard</button>
+        <button data-view="tasks"><span class="nav-icon">☷</span>Danh sách công việc</button>
+        <button data-view="kanban"><span class="nav-icon">▥</span>Bảng Kanban</button>
+      </nav>
+      <div class="nav-label">Quản trị</div>
+      <nav class="nav">
+        <button data-view="admin"><span class="nav-icon">♙</span>Cán bộ & kiểm soát</button>
+        <button data-view="sources"><span class="nav-icon">⌁</span>Nguồn Google Sheet</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="source-mini"><small>Nguồn đang dùng</small><strong id="sidebarSource">Chưa kết nối</strong><button data-view="sources">Chuyển nguồn dữ liệu</button></div>
+      </div>
+    </aside>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu">☰</button>
+        <div class="search"><input id="globalSearch" placeholder="Tìm theo tên, mã, đầu mối, nhãn…"><span>⌕</span></div>
+        <div class="top-actions">
+          <select class="source-select" id="sourceSelect" title="Chuyển nguồn Google Sheet"></select>
+          <button class="btn icon" id="refreshBtn" title="Tải lại dữ liệu">↻</button>
+          <div class="user-chip"><div class="avatar" id="userAvatar">--</div><div class="user-text"><strong id="userName">Chưa đăng nhập</strong><small id="userRole">—</small></div></div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="view active" id="view-dashboard">
+          <div class="page-head"><div><h1>Tổng quan công việc</h1><p id="dashboardSubtitle">Theo dõi tiến độ, rủi ro và tải công việc theo thời gian thực.</p></div><div class="page-actions"><button class="btn" id="dashboardRefresh">↻ Làm mới</button><button class="btn primary can-create" data-new-task>＋ Tạo công việc</button></div></div>
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="grid-2">
+            <div class="panel"><div class="panel-head"><div><h2>Phân bố theo trạng thái</h2><small>Tỷ trọng trên tổng công việc đang hiển thị</small></div></div><div class="panel-body" id="statusChart"></div></div>
+            <div class="panel"><div class="panel-head"><div><h2>Mức độ quan trọng</h2><small>Cơ cấu ưu tiên</small></div></div><div class="panel-body" id="priorityChart"></div></div>
+          </div>
+          <div class="grid-equal">
+            <div class="panel"><div class="panel-head"><div><h2>Cần chú ý</h2><small>Quá hạn, bị chặn hoặc rủi ro cao</small></div></div><div class="panel-body attention" id="attentionList"></div></div>
+            <div class="panel"><div class="panel-head"><div><h2>Tải công việc theo cán bộ</h2><small>Chưa hoàn thành theo đầu mối thực hiện</small></div></div><div class="panel-body workload" id="workloadChart"></div></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-tasks">
+          <div class="page-head"><div><h1>Danh sách công việc</h1><p>Tra cứu, lọc và cập nhật toàn bộ hồ sơ công việc.</p></div><div class="page-actions"><button class="btn primary can-create" data-new-task>＋ Tạo công việc</button></div></div>
+          <div class="filters">
+            <input class="filter-input" id="taskSearch" placeholder="Tìm công việc…">
+            <select class="filter-select" id="filterProject"><option value="">Tất cả dự án</option></select>
+            <select class="filter-select" id="filterStatus"><option value="">Tất cả trạng thái</option></select>
+            <select class="filter-select" id="filterPriority"><option value="">Tất cả ưu tiên</option></select>
+            <select class="filter-select" id="filterAssignee"><option value="">Tất cả cán bộ</option></select>
+            <button class="btn small" id="clearFilters">Xóa lọc</button>
+            <div class="filter-count" id="taskCount">0 công việc</div>
+          </div>
+          <div class="panel table-wrap"><table class="data-table"><thead><tr><th>Mã / Công việc</th><th>Dự án</th><th>Ưu tiên</th><th>Trạng thái</th><th>Thực hiện</th><th>Phụ trách</th><th>Tiến độ</th><th>Hạn</th><th>Kiểm soát</th></tr></thead><tbody id="taskTableBody"></tbody></table><div class="empty" id="taskEmpty" hidden><div class="empty-icon">☷</div><b>Không có công việc phù hợp</b><p>Thử thay đổi điều kiện lọc hoặc tạo công việc mới.</p></div></div>
+        </section>
+
+        <section class="view" id="view-kanban">
+          <div class="page-head"><div><h1>Bảng Kanban</h1><p>Kéo thả thẻ để cập nhật trạng thái; dữ liệu được ghi ngay vào Google Sheet.</p></div><div class="page-actions"><button class="btn primary can-create" data-new-task>＋ Tạo công việc</button></div></div>
+          <div class="kanban" id="kanbanBoard"></div>
+        </section>
+
+        <section class="view" id="view-admin">
+          <div class="page-head"><div><h1>Cán bộ & kiểm soát</h1><p>Quản lý danh mục nhân sự, dự án và quyền truy cập theo vai trò.</p></div></div>
+          <div class="tabs"><button class="tab active" data-admin-tab="people">Danh sách cán bộ</button><button class="tab" data-admin-tab="projects">Dự án</button><button class="tab" data-admin-tab="parameters">Tham số</button><button class="tab admin-only" data-admin-tab="access">Phân quyền</button><button class="tab" data-admin-tab="audit">Nhật ký thay đổi</button></div>
+          <div class="admin-section active" id="admin-people"><div class="admin-toolbar"><button class="btn primary can-catalog" id="newPerson">＋ Thêm cán bộ</button></div><div class="panel table-wrap"><table class="data-table"><thead><tr><th>Họ tên</th><th>Email</th><th>Đơn vị</th><th>Chức vụ</th><th>Quản lý trực tiếp</th><th>Trạng thái</th></tr></thead><tbody id="peopleBody"></tbody></table></div></div>
+          <div class="admin-section" id="admin-projects"><div class="admin-toolbar"><button class="btn primary can-catalog" id="newProject">＋ Thêm dự án</button></div><div class="panel table-wrap"><table class="data-table"><thead><tr><th>Mã</th><th>Tên dự án</th><th>Đầu mối phụ trách</th><th>Thời gian</th><th>Trạng thái</th></tr></thead><tbody id="projectsBody"></tbody></table></div></div>
+          <div class="admin-section" id="admin-parameters"><div class="admin-toolbar"><button class="btn primary can-catalog" id="newParameter">＋ Thêm tham số</button></div><div class="panel table-wrap"><table class="data-table"><thead><tr><th>Nhóm</th><th>Mã</th><th>Tên hiển thị</th><th>Thứ tự</th><th>Màu</th><th>Trạng thái</th></tr></thead><tbody id="parametersBody"></tbody></table></div></div>
+          <div class="admin-section" id="admin-access"><div class="role-grid"><div class="role-card"><b>ADMIN</b><p>Toàn quyền, gồm phân quyền người dùng.</p></div><div class="role-card"><b>MANAGER</b><p>Quản lý công việc và danh mục.</p></div><div class="role-card"><b>MEMBER</b><p>Tạo và cập nhật công việc.</p></div><div class="role-card"><b>VIEWER</b><p>Chỉ xem dữ liệu.</p></div></div><div class="admin-toolbar"><button class="btn primary admin-only" id="newAccess">＋ Thêm quyền</button></div><div class="panel table-wrap"><table class="data-table"><thead><tr><th>Người dùng</th><th>Vai trò</th><th>Phạm vi</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody id="accessBody"></tbody></table></div></div>
+          <div class="admin-section" id="admin-audit"><div class="panel table-wrap"><table class="data-table"><thead><tr><th>Thời điểm</th><th>Người thực hiện</th><th>Hành động</th><th>Đối tượng</th><th>Mã</th></tr></thead><tbody id="auditBody"></tbody></table></div></div>
+        </section>
+
+        <section class="view" id="view-sources">
+          <div class="page-head"><div><h1>Nguồn Google Sheet</h1><p>Lưu nhiều cấu hình và chuyển nguồn dữ liệu mà không cần sửa mã ứng dụng.</p></div><div class="page-actions"><button class="btn primary" id="addSource">＋ Thêm nguồn</button></div></div>
+          <div class="callout">Mỗi nguồn là một Google Sheet độc lập. ID nguồn được lưu trên trình duyệt hiện tại; quyền đọc/ghi vẫn được kiểm tra tại Apps Script và tab <b>AccessControl</b>.</div>
+          <div class="source-grid" id="sourceGrid"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="taskDialog">
+    <form id="taskForm">
+      <div class="modal-head"><div><h2 id="taskDialogTitle">Tạo công việc</h2><p>Thông tin được đồng bộ vào Google Sheet khi lưu.</p></div><button type="button" class="modal-close" data-close="taskDialog">×</button></div>
+      <div class="modal-body"><input type="hidden" name="ID"><input type="hidden" name="Version"><input type="hidden" name="Reporter"><input type="hidden" name="CompletedAt">
+        <div class="form-grid">
+          <div class="field full"><label class="required">Tên công việc</label><input name="Title" maxlength="250" required placeholder="Ví dụ: Hoàn thành kiểm thử tích hợp phiên bản 2.16"></div>
+          <div class="field full"><label>Mô tả / tiêu chí hoàn thành</label><textarea name="Description" maxlength="5000" placeholder="Phạm vi, đầu ra cần bàn giao, tiêu chí nghiệm thu…"></textarea></div>
+          <div class="field"><label>Dự án</label><select name="Project" id="taskProject"></select></div>
+          <div class="field"><label>Loại công việc</label><select name="Type" id="taskType"></select></div>
+          <div class="field"><label class="required">Mức độ quan trọng</label><select name="Priority" id="taskPriority" required></select></div>
+          <div class="field"><label>Trạng thái</label><select name="Status" id="taskStatus"></select></div>
+          <div class="field"><label class="required">Đầu mối thực hiện</label><select name="Assignee" id="taskAssignee" required></select></div>
+          <div class="field"><label class="required">Đầu mối phụ trách</label><select name="Owner" id="taskOwner" required></select></div>
+          <div class="field"><label>Ngày bắt đầu</label><input type="date" name="StartDate"></div>
+          <div class="field"><label>Hạn hoàn thành</label><input type="date" name="DueDate"></div>
+          <div class="field full"><label>Tiến độ</label><div class="range-wrap"><input type="range" name="Progress" min="0" max="100" step="5" value="0"><span class="range-value" id="progressValue">0%</span></div></div>
+          <div class="field"><label>Ước tính (giờ)</label><input type="number" min="0" step="0.5" name="EstimateHours"></div>
+          <div class="field"><label>Thực tế (giờ)</label><input type="number" min="0" step="0.5" name="ActualHours"></div>
+          <div class="field"><label>Rủi ro</label><select name="Risk" id="taskRisk"></select></div>
+          <div class="field"><label>Trạng thái kiểm soát</label><select name="ControlStatus" id="taskControl"></select></div>
+          <div class="field"><label>Nhãn</label><input name="Labels" maxlength="500" placeholder="core, release, vendor"></div>
+          <div class="field"><label>Công việc phụ thuộc</label><input name="Dependency" maxlength="500" placeholder="TSK-2026-0001"></div>
+          <div class="field full"><label>Người theo dõi</label><input name="Watchers" maxlength="1000" placeholder="email1@domain.vn, email2@domain.vn"></div>
+        </div>
+      </div>
+      <div class="modal-foot"><button type="button" class="btn danger" id="archiveTaskBtn" hidden>Lưu trữ</button><span style="flex:1"></span><button type="button" class="btn" data-close="taskDialog">Hủy</button><button class="btn primary" type="submit">Lưu công việc</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="sourceDialog">
+    <form id="sourceForm">
+      <div class="modal-head"><div><h2>Kết nối nguồn Google Sheet</h2><p>Có thể nhập URL đầy đủ hoặc Spreadsheet ID.</p></div><button type="button" class="modal-close" data-close="sourceDialog">×</button></div>
+      <div class="modal-body"><div class="callout warn">Tài khoản đang sử dụng Web App phải có quyền đối với Google Sheet. Lần đầu kết nối, ứng dụng sẽ đề nghị tạo các tab chuẩn.</div><div class="form-grid"><input type="hidden" name="ProfileID"><div class="field full"><label class="required">Tên hiển thị</label><input name="Name" required maxlength="80" placeholder="Ví dụ: Công việc Ban QLPTCB"></div><div class="field full"><label class="required">URL hoặc Spreadsheet ID</label><input name="SpreadsheetID" required placeholder="https://docs.google.com/spreadsheets/d/…"><small>Ứng dụng chỉ lưu thông tin cấu hình này trên trình duyệt.</small></div></div></div>
+      <div class="modal-foot"><button type="button" class="btn" id="useDemo">Dùng dữ liệu mẫu</button><span style="flex:1"></span><button type="button" class="btn" data-close="sourceDialog">Hủy</button><button class="btn primary" type="submit">Kiểm tra & kết nối</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="personDialog"><form id="personForm"><div class="modal-head"><div><h2>Cán bộ</h2><p>Cập nhật danh mục đầu mối thực hiện và phụ trách.</p></div><button type="button" class="modal-close" data-close="personDialog">×</button></div><div class="modal-body"><div class="form-grid"><div class="field"><label class="required">Họ tên</label><input name="FullName" required></div><div class="field"><label class="required">Email</label><input type="email" name="Email" required></div><div class="field"><label>Đơn vị</label><input name="Unit"></div><div class="field"><label>Chức vụ</label><input name="Position"></div><div class="field"><label>Email quản lý trực tiếp</label><input type="email" name="ManagerEmail"></div><div class="field"><label>Trạng thái</label><select name="Active"><option value="true">Đang hoạt động</option><option value="false">Ngừng hoạt động</option></select></div></div></div><div class="modal-foot"><button type="button" class="btn" data-close="personDialog">Hủy</button><button class="btn primary">Lưu cán bộ</button></div></form></dialog>
+
+  <dialog id="projectDialog"><form id="projectForm"><div class="modal-head"><div><h2>Dự án</h2><p>Quản lý nhóm công việc và đầu mối dự án.</p></div><button type="button" class="modal-close" data-close="projectDialog">×</button></div><div class="modal-body"><div class="form-grid"><div class="field"><label class="required">Mã dự án</label><input name="Code" required maxlength="20"></div><div class="field"><label class="required">Tên dự án</label><input name="Name" required></div><div class="field full"><label>Đầu mối phụ trách</label><select name="OwnerEmail" id="projectOwner"></select></div><div class="field"><label>Ngày bắt đầu</label><input type="date" name="StartDate"></div><div class="field"><label>Ngày kết thúc</label><input type="date" name="EndDate"></div><div class="field"><label>Trạng thái</label><select name="Active"><option value="true">Đang hoạt động</option><option value="false">Ngừng hoạt động</option></select></div></div></div><div class="modal-foot"><button type="button" class="btn" data-close="projectDialog">Hủy</button><button class="btn primary">Lưu dự án</button></div></form></dialog>
+
+  <dialog id="parameterDialog"><form id="parameterForm"><div class="modal-head"><div><h2>Tham số nghiệp vụ</h2><p>Cấu hình nhãn hiển thị, thứ tự và trạng thái sử dụng.</p></div><button type="button" class="modal-close" data-close="parameterDialog">×</button></div><div class="modal-body"><div class="form-grid"><div class="field"><label class="required">Nhóm</label><select name="Category"><option>STATUS</option><option>PRIORITY</option><option>TYPE</option><option>RISK</option><option>CONTROL_STATUS</option></select></div><div class="field"><label class="required">Mã</label><input name="Code" required maxlength="30" placeholder="UPPER_SNAKE_CASE"></div><div class="field"><label class="required">Tên hiển thị</label><input name="Label" required maxlength="100"></div><div class="field"><label>Thứ tự</label><input type="number" min="0" name="SortOrder" value="10"></div><div class="field"><label>Màu</label><input type="color" name="Color" value="#64748b"></div><div class="field"><label>Trạng thái</label><select name="Active"><option value="true">Đang hoạt động</option><option value="false">Ngừng hoạt động</option></select></div></div></div><div class="modal-foot"><button type="button" class="btn" data-close="parameterDialog">Hủy</button><button class="btn primary">Lưu tham số</button></div></form></dialog>
+
+  <dialog id="accessDialog"><form id="accessForm"><div class="modal-head"><div><h2>Quyền truy cập</h2><p>Phân quyền được kiểm tra ở cả giao diện và máy chủ.</p></div><button type="button" class="modal-close" data-close="accessDialog">×</button></div><div class="modal-body"><div class="form-grid"><div class="field"><label class="required">Email</label><input type="email" name="Email" required></div><div class="field"><label>Vai trò</label><select name="Role"><option>ADMIN</option><option>MANAGER</option><option>MEMBER</option><option>VIEWER</option></select></div><div class="field"><label>Phạm vi</label><input name="Scope" value="*" placeholder="* hoặc mã dự án"></div><div class="field"><label>Trạng thái</label><select name="Active"><option value="true">Đang hoạt động</option><option value="false">Vô hiệu hóa</option></select></div><div class="field full"><label>Ghi chú</label><textarea name="Notes"></textarea></div></div></div><div class="modal-foot"><button type="button" class="btn" data-close="accessDialog">Hủy</button><button class="btn primary">Lưu phân quyền</button></div></form></dialog>
+
+  <div class="toast-stack" id="toastStack"></div><div class="loading" id="loading"><div class="loader-card"><div class="spinner"></div><span id="loadingText">Đang tải dữ liệu…</span></div></div>
+
+  <script>
+    'use strict';
+    const STORAGE = { SOURCES:'taskflow_sources_v1', ACTIVE:'taskflow_active_source_v1', DEMO:'taskflow_demo_data_v1' };
+    const STATUS_ORDER = ['BACKLOG','TODO','IN_PROGRESS','BLOCKED','REVIEW','DONE'];
+    const KANBAN_STATUS = ['TODO','IN_PROGRESS','BLOCKED','REVIEW','DONE'];
+    const FALLBACK_LABELS = {
+      BACKLOG:'Tồn đọng',TODO:'Cần thực hiện',IN_PROGRESS:'Đang thực hiện',BLOCKED:'Bị chặn',REVIEW:'Chờ kiểm soát',DONE:'Hoàn thành',
+      CRITICAL:'Khẩn cấp',HIGH:'Cao',MEDIUM:'Trung bình',LOW:'Thấp',TASK:'Công việc',MILESTONE:'Mốc quan trọng',INCIDENT:'Sự cố',RISK:'Rủi ro',
+      NONE:'Không',NOT_REQUIRED:'Không yêu cầu',PENDING:'Chờ kiểm soát',PASSED:'Đã kiểm soát',FAILED:'Không đạt'
+    };
+    const state = { data:null, profiles:[], activeId:null, view:'dashboard', filters:{ q:'',project:'',status:'',priority:'',assignee:'' }, dragging:null };
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => Array.from(document.querySelectorAll(selector));
+    const esc = value => String(value == null ? '' : value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init(){
+      bindEvents();
+      state.profiles = readJson(STORAGE.SOURCES, []);
+      state.activeId = localStorage.getItem(STORAGE.ACTIVE) || (state.profiles[0] && state.profiles[0].id);
+      renderSourceControls();
+      if (state.activeId) connectSource(state.activeId);
+      else $('#sourceDialog').showModal();
+    }
+
+    function bindEvents(){
+      $$('.nav button[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
+      $$('[data-new-task]').forEach(button => button.addEventListener('click', () => openTask()));
+      $$('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
+      $('#mobileMenu').addEventListener('click', toggleSidebar); $('#mobileOverlay').addEventListener('click', toggleSidebar);
+      $('#refreshBtn').addEventListener('click', loadData); $('#dashboardRefresh').addEventListener('click', loadData);
+      $('#sourceSelect').addEventListener('change', event => connectSource(event.target.value));
+      $('#globalSearch').addEventListener('input', event => { state.filters.q=event.target.value; $('#taskSearch').value=event.target.value; renderAll(); });
+      $('#taskSearch').addEventListener('input', event => { state.filters.q=event.target.value; $('#globalSearch').value=event.target.value; renderTasks(); renderKanban(); });
+      ['Project','Status','Priority','Assignee'].forEach(key => $('#filter'+key).addEventListener('change', event => {state.filters[key.toLowerCase()]=event.target.value;renderTasks();renderKanban();}));
+      $('#clearFilters').addEventListener('click', clearFilters);
+      $('#taskForm').addEventListener('submit', submitTask); $('#archiveTaskBtn').addEventListener('click', archiveCurrentTask);
+      $('#taskForm [name="Progress"]').addEventListener('input', event => $('#progressValue').textContent=event.target.value+'%');
+      $('#taskForm [name="Status"]').addEventListener('change', event => {if(event.target.value==='DONE'){ $('#taskForm [name="Progress"]').value=100; $('#progressValue').textContent='100%'; }});
+      $('#addSource').addEventListener('click', openSourceDialog); $('#sourceForm').addEventListener('submit', submitSource); $('#useDemo').addEventListener('click', useDemoSource);
+      $$('.tab').forEach(tab => tab.addEventListener('click', () => switchAdminTab(tab.dataset.adminTab)));
+      $('#newPerson').addEventListener('click', () => openPerson()); $('#personForm').addEventListener('submit', submitPerson);
+      $('#newProject').addEventListener('click', () => openProject()); $('#projectForm').addEventListener('submit', submitProject);
+      $('#newParameter').addEventListener('click', () => openParameter()); $('#parameterForm').addEventListener('submit', submitParameter);
+      $('#newAccess').addEventListener('click', () => openAccess()); $('#accessForm').addEventListener('submit', submitAccess);
+    }
+
+    function toggleSidebar(){ $('#sidebar').classList.toggle('open'); $('#mobileOverlay').classList.toggle('show'); }
+    function switchView(view){
+      state.view=view; $$('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+view));
+      $$('.nav button[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+      if(innerWidth<=800 && $('#sidebar').classList.contains('open')) toggleSidebar();
+    }
+    function switchAdminTab(name){ $$('.tab').forEach(el=>el.classList.toggle('active',el.dataset.adminTab===name)); $$('.admin-section').forEach(el=>el.classList.toggle('active',el.id==='admin-'+name)); }
+
+    async function connectSource(profileId){
+      const profile=state.profiles.find(item=>item.id===profileId); if(!profile) return;
+      state.activeId=profileId; localStorage.setItem(STORAGE.ACTIVE,profileId); renderSourceControls(); setLoading(true,'Đang kết nối Google Sheet…');
+      try{
+        const info=await serverCall('getWorkspaceInfo',profile.spreadsheetId);
+        if(!info.initialized){
+          if(!confirm('Google Sheet “'+info.name+'” chưa có cấu trúc TaskFlow. Khởi tạo các tab dữ liệu ngay bây giờ?')) throw new Error('Nguồn chưa được khởi tạo.');
+          state.data=await serverCall('initializeWorkspace',profile.spreadsheetId);
+        }else state.data=await serverCall('getAppData',profile.spreadsheetId);
+        profile.actualName=state.data.workspace.name; persistProfiles(); renderAll(); toast('Đã kết nối '+state.data.workspace.name,'success');
+      }catch(error){ toast(error.message || error,'error'); state.data=null; renderAll(); switchView('sources'); }
+      finally{setLoading(false)}
+    }
+
+    async function loadData(){ if(!activeProfile()) return; setLoading(true,'Đang đồng bộ dữ liệu…'); try{state.data=await serverCall('getAppData',activeProfile().spreadsheetId);renderAll();toast('Dữ liệu đã được cập nhật','success')}catch(error){toast(error.message||error,'error')}finally{setLoading(false)} }
+
+    function renderAll(){ renderSourceControls(); renderHeader(); renderFilterOptions(); renderDashboard(); renderTasks(); renderKanban(); renderAdmin(); applyPermissions(); }
+    function renderHeader(){
+      const user=state.data&&state.data.currentUser; $('#sidebarSource').textContent=state.data?state.data.workspace.name:'Chưa kết nối';
+      $('#userName').textContent=user?(user.displayName||user.email):'Chưa đăng nhập'; $('#userRole').textContent=user?user.role:'—'; $('#userAvatar').textContent=initials(user&&(user.displayName||user.email));
+      $('#dashboardSubtitle').textContent=state.data?'Nguồn: '+state.data.workspace.name+' · cập nhật '+formatDateTime(new Date().toISOString()):'Hãy kết nối một nguồn Google Sheet để bắt đầu.';
+    }
+
+    function renderDashboard(){
+      const tasks=filteredTasks(false), today=todayKey();
+      const open=tasks.filter(t=>t.Status!=='DONE'), overdue=open.filter(t=>dateKey(t.DueDate)&&dateKey(t.DueDate)<today), blocked=open.filter(t=>t.Status==='BLOCKED');
+      const soon=open.filter(t=>{const d=daysFromToday(t.DueDate);return d>=0&&d<=7}), done=tasks.filter(t=>t.Status==='DONE');
+      const rate=tasks.length?Math.round(done.length*100/tasks.length):0;
+      $('#kpiGrid').innerHTML=[
+        kpi('Tổng công việc',tasks.length,'Trong phạm vi bộ lọc',''),kpi('Đang mở',open.length,blocked.length+' đang bị chặn',''),
+        kpi('Quá hạn',overdue.length,'Cần xử lý ngay','alert'),kpi('Sắp đến hạn',soon.length,'Trong 7 ngày tới','warn'),kpi('Tỷ lệ hoàn thành',rate+'%',done.length+' công việc','good')
+      ].join('');
+      renderStatusChart(tasks); renderPriorityChart(tasks); renderAttention(tasks); renderWorkload(tasks);
+    }
+    function kpi(label,value,note,klass){return `<div class="kpi ${klass}"><div class="label"><span class="dot"></span>${esc(label)}</div><div class="value">${esc(value)}</div><div class="note">${esc(note)}</div></div>`}
+    function renderStatusChart(tasks){
+      const max=Math.max(1,...STATUS_ORDER.map(s=>tasks.filter(t=>t.Status===s).length)); const colors={BACKLOG:'#64748b',TODO:'#2563eb',IN_PROGRESS:'#7c3aed',BLOCKED:'#dc2626',REVIEW:'#d97706',DONE:'#059669'};
+      $('#statusChart').innerHTML=STATUS_ORDER.map(status=>{const count=tasks.filter(t=>t.Status===status).length;return `<div class="status-row"><label>${esc(label(status))}</label><div class="bar-track"><div class="bar-fill" style="width:${count/max*100}%;background:${colors[status]}"></div></div><b>${count}</b></div>`}).join('');
+    }
+    function renderPriorityChart(tasks){
+      const parts=['CRITICAL','HIGH','MEDIUM','LOW'], colors=['#b91c1c','#ea580c','#2563eb','#64748b'], counts=parts.map(p=>tasks.filter(t=>t.Priority===p).length), total=Math.max(1,tasks.length); let cursor=0;
+      const stops=counts.map((count,i)=>{const start=cursor;cursor+=count/total*100;return `${colors[i]} ${start}% ${cursor}%`}); if(!tasks.length)stops.push('#e2e8f0 0 100%');
+      $('#priorityChart').innerHTML=`<div class="donut-layout"><div class="donut" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center"><b>${tasks.length}</b><small>CÔNG VIỆC</small></div></div><div class="legend">${parts.map((p,i)=>`<div><i style="background:${colors[i]}"></i><span>${esc(label(p))}</span><b>${counts[i]}</b></div>`).join('')}</div></div>`;
+    }
+    function renderAttention(tasks){
+      const list=tasks.filter(t=>t.Status!=='DONE'&&(daysFromToday(t.DueDate)<0||t.Status==='BLOCKED'||t.Risk==='HIGH')).sort((a,b)=>daysFromToday(a.DueDate)-daysFromToday(b.DueDate)).slice(0,6);
+      $('#attentionList').innerHTML=list.length?list.map(t=>{const days=daysFromToday(t.DueDate);let txt=t.Status==='BLOCKED'?'Bị chặn':t.Risk==='HIGH'?'Rủi ro cao':Math.abs(days)+' ngày quá hạn';return `<div class="attention-item clickable" data-task-id="${esc(t.ID)}"><div class="flag">!</div><div><h4>${esc(t.Title)}</h4><p>${esc(t.ID)} · ${esc(personName(t.Assignee))}</p></div><div class="days">${esc(txt)}</div></div>`}).join(''):emptyInline('Không có cảnh báo nổi bật'); bindTaskClicks($('#attentionList'));
+    }
+    function renderWorkload(tasks){
+      const open=tasks.filter(t=>t.Status!=='DONE'), counts={}; open.forEach(t=>counts[t.Assignee||'__none']=(counts[t.Assignee||'__none']||0)+1); const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7), max=Math.max(1,...rows.map(r=>r[1]));
+      $('#workloadChart').innerHTML=rows.length?rows.map(([email,count])=>`<div class="work-row"><div class="person"><div class="avatar">${initials(personName(email))}</div><span>${esc(email==='__none'?'Chưa phân công':personName(email))}</span></div><div class="bar-track"><div class="bar-fill" style="width:${count/max*100}%;background:#0d9488"></div></div><b>${count}</b></div>`).join(''):emptyInline('Chưa có công việc đang mở');
+    }
+
+    function renderFilterOptions(){ if(!state.data)return;
+      setOptions($('#filterProject'),state.data.projects.filter(active).map(p=>[p.Code,p.Name]),'Tất cả dự án',state.filters.project);
+      setOptions($('#filterStatus'),paramOptions('STATUS'),'Tất cả trạng thái',state.filters.status); setOptions($('#filterPriority'),paramOptions('PRIORITY'),'Tất cả ưu tiên',state.filters.priority);
+      setOptions($('#filterAssignee'),state.data.people.filter(active).map(p=>[p.Email,p.FullName]),'Tất cả cán bộ',state.filters.assignee);
+    }
+    function renderTasks(){
+      const tasks=filteredTasks(true); $('#taskCount').textContent=tasks.length+' công việc'; $('#taskEmpty').hidden=!!tasks.length;
+      $('#taskTableBody').innerHTML=tasks.map(t=>`<tr class="clickable" data-task-id="${esc(t.ID)}"><td><div class="task-title">${esc(t.Title)}<small>${esc(t.ID)} · ${esc(label(t.Type))}</small></div></td><td>${esc(projectName(t.Project))}</td><td><span class="badge ${esc(t.Priority)}">${esc(label(t.Priority))}</span></td><td><span class="badge ${esc(t.Status)}">${esc(label(t.Status))}</span></td><td>${personCell(t.Assignee)}</td><td>${personCell(t.Owner)}</td><td><div class="progress" title="${Number(t.Progress||0)}%"><span style="width:${Number(t.Progress||0)}%"></span></div></td><td><span class="due ${dueClass(t)}">${esc(formatDate(t.DueDate)||'—')}</span></td><td><span class="badge ${esc(t.ControlStatus)}">${esc(label(t.ControlStatus))}</span></td></tr>`).join(''); bindTaskClicks($('#taskTableBody'));
+    }
+    function renderKanban(){
+      const tasks=filteredTasks(true).filter(t=>KANBAN_STATUS.includes(t.Status));
+      $('#kanbanBoard').innerHTML=KANBAN_STATUS.map(status=>{const items=tasks.filter(t=>t.Status===status);return `<div class="kanban-col" data-drop-status="${status}"><div class="kanban-head"><h3>${esc(label(status))}</h3><span>${items.length}</span></div><div class="kanban-cards">${items.map(t=>`<article class="kanban-card" draggable="true" data-task-id="${esc(t.ID)}"><div class="id">${esc(t.ID)} · ${esc(projectName(t.Project))}</div><h4>${esc(t.Title)}</h4><div class="kanban-meta"><span class="badge ${esc(t.Priority)}">${esc(label(t.Priority))}</span><time>${esc(formatDate(t.DueDate)||'Chưa có hạn')}</time><div class="avatar" title="${esc(personName(t.Assignee))}">${initials(personName(t.Assignee))}</div></div></article>`).join('')}</div></div>`}).join(''); bindKanban();
+    }
+    function bindKanban(){
+      $$('.kanban-card').forEach(card=>{card.addEventListener('click',()=>openTask(card.dataset.taskId));card.addEventListener('dragstart',()=>{state.dragging=card.dataset.taskId;card.classList.add('dragging')});card.addEventListener('dragend',()=>{state.dragging=null;card.classList.remove('dragging');$$('.kanban-col').forEach(c=>c.classList.remove('drop-active'))})});
+      $$('.kanban-col').forEach(col=>{col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drop-active')});col.addEventListener('dragleave',()=>col.classList.remove('drop-active'));col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('drop-active');moveTask(state.dragging,col.dataset.dropStatus)})});
+    }
+    async function moveTask(id,status){const task=taskById(id);if(!task||task.Status===status)return;if(!hasPermission('TASK_UPDATE'))return toast('Bạn không có quyền cập nhật công việc','error');setLoading(true,'Đang cập nhật trạng thái…');try{await serverCall('saveTask',activeProfile().spreadsheetId,Object.assign({},task,{Status:status,Progress:status==='DONE'?100:task.Progress}));await loadData()}catch(error){toast(error.message||error,'error')}finally{setLoading(false)}}
+
+    function renderAdmin(){ if(!state.data){$('#peopleBody').innerHTML=$('#projectsBody').innerHTML=$('#parametersBody').innerHTML=$('#accessBody').innerHTML=$('#auditBody').innerHTML='';return}
+      $('#peopleBody').innerHTML=state.data.people.map(p=>`<tr class="${hasPermission('CATALOG_WRITE')?'clickable':''}" data-person="${esc(p.Email)}"><td>${personCell(p.Email)}</td><td>${esc(p.Email)}</td><td>${esc(p.Unit||'—')}</td><td>${esc(p.Position||'—')}</td><td>${esc(personName(p.ManagerEmail)||'—')}</td><td>${activeBadge(p.Active)}</td></tr>`).join('');
+      $('#projectsBody').innerHTML=state.data.projects.map(p=>`<tr class="${hasPermission('CATALOG_WRITE')?'clickable':''}" data-project="${esc(p.Code)}"><td><b>${esc(p.Code)}</b></td><td>${esc(p.Name)}</td><td>${personCell(p.OwnerEmail)}</td><td>${esc(formatDate(p.StartDate)||'—')} → ${esc(formatDate(p.EndDate)||'—')}</td><td>${activeBadge(p.Active)}</td></tr>`).join('');
+      $('#parametersBody').innerHTML=state.data.parameters.slice().sort((a,b)=>String(a.Category).localeCompare(String(b.Category))||Number(a.SortOrder)-Number(b.SortOrder)).map(p=>`<tr class="${hasPermission('CATALOG_WRITE')?'clickable':''}" data-parameter="${esc(p.Category)}:${esc(p.Code)}"><td><b>${esc(p.Category)}</b></td><td>${esc(p.Code)}</td><td>${esc(p.Label)}</td><td>${Number(p.SortOrder||0)}</td><td><span style="display:inline-block;width:18px;height:18px;border-radius:5px;background:${esc(p.Color||'#64748b')};vertical-align:middle"></span> ${esc(p.Color||'')}</td><td>${activeBadge(p.Active)}</td></tr>`).join('');
+      $('#accessBody').innerHTML=(state.data.access||[]).map(a=>`<tr class="clickable" data-access="${esc(a.Email)}"><td>${personCell(a.Email)}</td><td><b>${esc(a.Role)}</b></td><td>${esc(a.Scope||'*')}</td><td>${activeBadge(a.Active)}</td><td>${esc(a.Notes||'—')}</td></tr>`).join('');
+      $('#auditBody').innerHTML=(state.data.audit||[]).map(a=>`<tr><td>${esc(formatDateTime(a.Timestamp))}</td><td>${esc(personName(a.Actor))}</td><td><span class="badge">${esc(a.Action)}</span></td><td>${esc(a.Entity)}</td><td>${esc(a.EntityID)}</td></tr>`).join('');
+      $$('[data-person]').forEach(row=>row.addEventListener('click',()=>hasPermission('CATALOG_WRITE')&&openPerson(row.dataset.person))); $$('[data-project]').forEach(row=>row.addEventListener('click',()=>hasPermission('CATALOG_WRITE')&&openProject(row.dataset.project))); $$('[data-parameter]').forEach(row=>row.addEventListener('click',()=>hasPermission('CATALOG_WRITE')&&openParameter(row.dataset.parameter))); $$('[data-access]').forEach(row=>row.addEventListener('click',()=>openAccess(row.dataset.access)));
+    }
+    function applyPermissions(){
+      $$('.can-create').forEach(el=>el.hidden=!hasPermission('TASK_CREATE')); $$('.can-catalog').forEach(el=>el.hidden=!hasPermission('CATALOG_WRITE')); $$('.admin-only').forEach(el=>el.hidden=!hasPermission('ACCESS_WRITE'));
+      if(!hasPermission('ACCESS_WRITE') && $('#admin-access').classList.contains('active')) switchAdminTab('people');
+    }
+
+    function openTask(id){
+      if(id&&!hasPermission('TASK_UPDATE')) return toast('Bạn đang ở chế độ chỉ xem','error'); if(!id&&!hasPermission('TASK_CREATE')) return toast('Bạn không có quyền tạo công việc','error');
+      const form=$('#taskForm'); form.reset(); populateTaskSelects(); const task=id?taskById(id):null;
+      $('#taskDialogTitle').textContent=task?'Cập nhật '+task.ID:'Tạo công việc'; $('#archiveTaskBtn').hidden=!task||!hasPermission('TASK_ARCHIVE');
+      if(task) fillForm(form,task); else {form.elements.Priority.value='MEDIUM';form.elements.Status.value='TODO';form.elements.Type.value='TASK';form.elements.Risk.value='NONE';form.elements.ControlStatus.value='NOT_REQUIRED';form.elements.Project.value=state.data.projects.find(active)?.Code||'OPS';form.elements.Assignee.value=state.data.currentUser.email;form.elements.Owner.value=state.data.currentUser.email;}
+      $('#progressValue').textContent=(form.elements.Progress.value||0)+'%'; $('#taskDialog').showModal();
+    }
+    function populateTaskSelects(){ setOptions($('#taskProject'),state.data.projects.filter(active).map(p=>[p.Code,p.Name]));setOptions($('#taskType'),paramOptions('TYPE'));setOptions($('#taskPriority'),paramOptions('PRIORITY'));setOptions($('#taskStatus'),paramOptions('STATUS'));const people=state.data.people.filter(active).map(p=>[p.Email,p.FullName]);setOptions($('#taskAssignee'),people,'Chọn cán bộ');setOptions($('#taskOwner'),people,'Chọn cán bộ');setOptions($('#taskRisk'),paramOptions('RISK'));setOptions($('#taskControl'),paramOptions('CONTROL_STATUS')); }
+    async function submitTask(event){event.preventDefault();const task=formObject(event.target);task.Progress=Number(task.Progress||0);task.EstimateHours=Number(task.EstimateHours||0);task.ActualHours=Number(task.ActualHours||0);setLoading(true,'Đang lưu công việc…');try{await serverCall('saveTask',activeProfile().spreadsheetId,task);$('#taskDialog').close();await loadData();toast('Đã lưu công việc','success')}catch(error){toast(error.message||error,'error')}finally{setLoading(false)}}
+    async function archiveCurrentTask(){const form=$('#taskForm'),id=form.elements.ID.value;if(!id||!confirm('Lưu trữ công việc '+id+'? Dữ liệu vẫn được giữ trong Google Sheet.'))return;setLoading(true,'Đang lưu trữ…');try{await serverCall('archiveTask',activeProfile().spreadsheetId,id,Number(form.elements.Version.value));$('#taskDialog').close();await loadData();toast('Đã lưu trữ '+id,'success')}catch(error){toast(error.message||error,'error')}finally{setLoading(false)}}
+
+    function openPerson(email){const form=$('#personForm');form.reset();const row=email&&state.data.people.find(p=>p.Email===email);if(row)fillForm(form,row);$('#personDialog').showModal()}
+    async function submitPerson(event){event.preventDefault();const record=formObject(event.target);record.Active=record.Active==='true';await saveReference('savePerson',record,'personDialog','Đã lưu cán bộ')}
+    function openProject(code){const form=$('#projectForm');form.reset();setOptions($('#projectOwner'),state.data.people.filter(active).map(p=>[p.Email,p.FullName]),'Chọn đầu mối');const row=code&&state.data.projects.find(p=>p.Code===code);if(row)fillForm(form,row);$('#projectDialog').showModal()}
+    async function submitProject(event){event.preventDefault();const record=formObject(event.target);record.Active=record.Active==='true';await saveReference('saveProject',record,'projectDialog','Đã lưu dự án')}
+    function openParameter(key){const form=$('#parameterForm');form.reset();form.elements.Color.value='#64748b';const row=key&&state.data.parameters.find(p=>p.Category+':'+p.Code===key);if(row)fillForm(form,row);$('#parameterDialog').showModal()}
+    async function submitParameter(event){event.preventDefault();const record=formObject(event.target);record.Active=record.Active==='true';record.SortOrder=Number(record.SortOrder||0);await saveReference('saveParameter',record,'parameterDialog','Đã lưu tham số')}
+    function openAccess(email){const form=$('#accessForm');form.reset();const row=email&&state.data.access.find(a=>a.Email===email);if(row)fillForm(form,row);$('#accessDialog').showModal()}
+    async function submitAccess(event){event.preventDefault();const record=formObject(event.target);record.Active=record.Active==='true';await saveReference('saveAccessRule',record,'accessDialog','Đã lưu phân quyền')}
+    async function saveReference(method,record,dialog,message){setLoading(true,'Đang cập nhật danh mục…');try{await serverCall(method,activeProfile().spreadsheetId,record);$('#'+dialog).close();await loadData();toast(message,'success')}catch(error){toast(error.message||error,'error')}finally{setLoading(false)}}
+
+    function openSourceDialog(){ $('#sourceForm').reset(); $('#sourceDialog').showModal(); }
+    async function submitSource(event){event.preventDefault();const form=formObject(event.target),id=form.ProfileID||'src_'+Date.now(),profile={id,name:form.Name.trim(),spreadsheetId:extractSheetId(form.SpreadsheetID)};if(!profile.spreadsheetId)return toast('URL hoặc Spreadsheet ID không hợp lệ','error');const index=state.profiles.findIndex(p=>p.id===id);if(index>=0)state.profiles[index]=profile;else state.profiles.push(profile);persistProfiles();$('#sourceDialog').close();await connectSource(id)}
+    function useDemoSource(){let profile=state.profiles.find(p=>p.spreadsheetId==='DEMO');if(!profile){profile={id:'demo',name:'Dữ liệu mẫu',spreadsheetId:'DEMO'};state.profiles.push(profile);persistProfiles()}$('#sourceDialog').close();connectSource(profile.id)}
+    function renderSourceControls(){
+      const options=state.profiles.map(p=>`<option value="${esc(p.id)}" ${p.id===state.activeId?'selected':''}>${esc(p.actualName||p.name)}</option>`).join(''); $('#sourceSelect').innerHTML=options||'<option>Chưa có nguồn</option>';
+      $('#sourceGrid').innerHTML=state.profiles.length?state.profiles.map(p=>`<article class="source-card ${p.id===state.activeId?'active':''}">${p.id===state.activeId?'<span class="source-status">ĐANG DÙNG</span>':''}<h3>${esc(p.actualName||p.name)}</h3><p>${esc(p.spreadsheetId==='DEMO'?'Dữ liệu mô phỏng trên trình duyệt':p.spreadsheetId)}</p><div class="source-actions"><button class="btn small" data-use-source="${esc(p.id)}">Mở nguồn</button><button class="btn small danger" data-remove-source="${esc(p.id)}">Gỡ cấu hình</button></div></article>`).join(''):emptyInline('Chưa có nguồn dữ liệu');
+      $$('[data-use-source]').forEach(btn=>btn.addEventListener('click',()=>connectSource(btn.dataset.useSource)));$$('[data-remove-source]').forEach(btn=>btn.addEventListener('click',()=>removeSource(btn.dataset.removeSource)));
+    }
+    function removeSource(id){const p=state.profiles.find(x=>x.id===id);if(!p||!confirm('Gỡ cấu hình “'+p.name+'” khỏi trình duyệt? Dữ liệu trong Google Sheet không bị xóa.'))return;state.profiles=state.profiles.filter(x=>x.id!==id);if(state.activeId===id){state.activeId=state.profiles[0]?.id||null;state.data=null;localStorage.setItem(STORAGE.ACTIVE,state.activeId||'')}persistProfiles();renderAll();if(state.activeId)connectSource(state.activeId)}
+
+    function filteredTasks(includeFilters){if(!state.data)return[];let tasks=state.data.tasks.slice();const q=(state.filters.q||'').toLowerCase().trim();if(q)tasks=tasks.filter(t=>[t.ID,t.Title,t.Description,t.Assignee,t.Owner,t.Labels,t.Project].some(v=>String(v||'').toLowerCase().includes(q)));if(includeFilters){['project','status','priority','assignee'].forEach(key=>{if(state.filters[key])tasks=tasks.filter(t=>String(t[cap(key)]||'')===state.filters[key])})}return tasks.sort(taskSort)}
+    function taskSort(a,b){const weight={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3};return (weight[a.Priority]??9)-(weight[b.Priority]??9)||String(a.DueDate||'9999').localeCompare(String(b.DueDate||'9999'))}
+    function taskById(id){return state.data&&state.data.tasks.find(t=>t.ID===id)}
+    function activeProfile(){return state.profiles.find(p=>p.id===state.activeId)}
+    function hasPermission(permission){return !!(state.data&&state.data.permissions&&state.data.permissions.includes(permission))}
+    function active(row){return row.Active===true||String(row.Active).toLowerCase()==='true'||String(row.Active)==='1'}
+    function paramOptions(category){if(!state.data)return[];return state.data.parameters.filter(p=>p.Category===category&&active(p)).sort((a,b)=>Number(a.SortOrder)-Number(b.SortOrder)).map(p=>[p.Code,p.Label])}
+    function label(code){const p=state.data&&state.data.parameters.find(x=>x.Code===code);return p?p.Label:(FALLBACK_LABELS[code]||code||'—')}
+    function projectName(code){const p=state.data&&state.data.projects.find(x=>x.Code===code);return p?p.Name:(code||'—')}
+    function personName(email){if(!email||email==='__none')return email==='__none'?'Chưa phân công':'—';const p=state.data&&state.data.people.find(x=>String(x.Email).toLowerCase()===String(email).toLowerCase());return p?p.FullName:email}
+    function personCell(email){const name=personName(email);return `<div class="person"><div class="avatar">${initials(name)}</div><span title="${esc(email||'')}">${esc(name)}</span></div>`}
+    function activeBadge(value){return active({Active:value})?'<span class="badge DONE">Hoạt động</span>':'<span class="badge BACKLOG">Tạm dừng</span>'}
+    function initials(value){return String(value||'--').split(/\s+/).filter(Boolean).slice(-2).map(x=>x[0]).join('').toUpperCase()||'--'}
+    function dateKey(value){const m=String(value||'').match(/^\d{4}-\d{2}-\d{2}/);return m?m[0]:''}
+    function todayKey(){const d=new Date(),off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,10)}
+    function daysFromToday(value){const key=dateKey(value);if(!key)return 99999;return Math.ceil((new Date(key+'T00:00:00')-new Date(todayKey()+'T00:00:00'))/86400000)}
+    function dueClass(task){if(task.Status==='DONE')return'';const d=daysFromToday(task.DueDate);return d<0?'overdue':d<=7?'soon':''}
+    function formatDate(value){const key=dateKey(value);if(!key)return'';const [y,m,d]=key.split('-');return `${d}/${m}/${y}`}
+    function formatDateTime(value){if(!value)return'—';const d=new Date(value);return isNaN(d)?String(value):new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
+    function cap(value){return value.charAt(0).toUpperCase()+value.slice(1)}
+    function setOptions(select,items,placeholder,selected){select.innerHTML=(placeholder!==undefined?`<option value="">${esc(placeholder)}</option>`:'')+items.map(([value,text])=>`<option value="${esc(value)}" ${String(value)===String(selected)?'selected':''}>${esc(text)}</option>`).join('')}
+    function clearFilters(){state.filters={q:'',project:'',status:'',priority:'',assignee:''};$('#globalSearch').value=$('#taskSearch').value='';renderFilterOptions();renderTasks();renderKanban();renderDashboard()}
+    function bindTaskClicks(root){root.querySelectorAll('[data-task-id]').forEach(row=>row.addEventListener('click',()=>openTask(row.dataset.taskId)))}
+    function fillForm(form,obj){Object.entries(obj||{}).forEach(([key,value])=>{const el=form.elements[key];if(!el)return;if(el.type==='date')el.value=dateKey(value);else el.value=value==null?'':value})}
+    function formObject(form){return Object.fromEntries(new FormData(form).entries())}
+    function emptyInline(text){return `<div class="empty"><div class="empty-icon">◇</div><b>${esc(text)}</b></div>`}
+    function extractSheetId(value){const raw=String(value||'').trim();if(raw==='DEMO')return raw;const m=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);const id=m?m[1]:raw;return /^[a-zA-Z0-9-_]{20,}$/.test(id)?id:''}
+    function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key))||fallback}catch(_){return fallback}}
+    function persistProfiles(){localStorage.setItem(STORAGE.SOURCES,JSON.stringify(state.profiles))}
+    function setLoading(show,text){$('#loadingText').textContent=text||'Đang xử lý…';$('#loading').classList.toggle('show',show)}
+    function toast(message,type){const el=document.createElement('div');el.className='toast '+(type||'');el.innerHTML=`<span>${type==='error'?'⚠':'✓'}</span><span>${esc(message)}</span>`;$('#toastStack').appendChild(el);setTimeout(()=>el.remove(),4500)}
+
+    function serverCall(method,...args){
+      if(args[0]==='DEMO') return demoAdapter(method,...args);
+      if(window.google&&google.script&&google.script.run){return new Promise((resolve,reject)=>{const runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(error=>reject(new Error(error&&error.message||error)));runner[method](...args)})}
+      return demoAdapter(method,...args);
+    }
+
+    function demoAdapter(method,...args){
+      return new Promise((resolve,reject)=>{try{let data=demoData();
+        if(method==='getWorkspaceInfo')return resolve({id:'DEMO',name:'Không gian mẫu',initialized:true,actor:'admin@example.vn'});
+        if(method==='initializeWorkspace'||method==='getAppData')return resolve(structuredClone(data));
+        if(method==='saveTask'){let input=structuredClone(args[1]),idx=data.tasks.findIndex(t=>t.ID===input.ID);if(idx>=0){input.Version=Number(data.tasks[idx].Version)+1;input.CreatedAt=data.tasks[idx].CreatedAt;data.tasks[idx]=input}else{input.ID='TSK-'+new Date().getFullYear()+'-'+String(data.tasks.length+1).padStart(4,'0');input.Version=1;input.CreatedAt=new Date().toISOString();data.tasks.push(input)}input.UpdatedAt=new Date().toISOString();input.UpdatedBy=data.currentUser.email;data.audit.unshift({Timestamp:input.UpdatedAt,Actor:data.currentUser.email,Action:idx>=0?'UPDATE':'CREATE',Entity:'TASK',EntityID:input.ID});saveDemo(data);return resolve(input)}
+        if(method==='archiveTask'){data.tasks=data.tasks.filter(t=>t.ID!==args[1]);saveDemo(data);return resolve({ok:true})}
+        const map={savePerson:['people','Email'],saveProject:['projects','Code'],saveAccessRule:['access','Email']};if(map[method]){const [list,key]=map[method],record=args[1],idx=data[list].findIndex(x=>x[key]===record[key]);idx>=0?data[list][idx]=record:data[list].push(record);saveDemo(data);return resolve(record)}
+        if(method==='saveParameter'){const record=args[1],idx=data.parameters.findIndex(x=>x.Category===record.Category&&x.Code===record.Code);idx>=0?data.parameters[idx]=record:data.parameters.push(record);saveDemo(data);return resolve(record)}
+        reject(new Error('Thao tác mô phỏng chưa được hỗ trợ: '+method));
+      }catch(error){reject(error)}});
+    }
+    function saveDemo(data){localStorage.setItem(STORAGE.DEMO,JSON.stringify(data))}
+    function demoData(){const saved=readJson(STORAGE.DEMO,null);if(saved)return saved;const now=new Date(),iso=n=>{const d=new Date(now);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)},people=[
+      {Email:'admin@example.vn',FullName:'Nguyễn Minh An',Unit:'Vận hành',Position:'Trưởng nhóm',ManagerEmail:'',Active:true},
+      {Email:'lan@example.vn',FullName:'Trần Thu Lan',Unit:'Phát triển',Position:'Chuyên viên',ManagerEmail:'admin@example.vn',Active:true},
+      {Email:'hung@example.vn',FullName:'Lê Quốc Hùng',Unit:'Kiểm thử',Position:'Chuyên viên',ManagerEmail:'admin@example.vn',Active:true},
+      {Email:'mai@example.vn',FullName:'Phạm Ngọc Mai',Unit:'Quản trị rủi ro',Position:'Kiểm soát viên',ManagerEmail:'admin@example.vn',Active:true}
+    ],params=[];Object.entries({STATUS:['BACKLOG','TODO','IN_PROGRESS','BLOCKED','REVIEW','DONE'],PRIORITY:['CRITICAL','HIGH','MEDIUM','LOW'],TYPE:['TASK','MILESTONE','INCIDENT','RISK'],RISK:['NONE','LOW','MEDIUM','HIGH'],CONTROL_STATUS:['NOT_REQUIRED','PENDING','PASSED','FAILED']}).forEach(([cat,codes])=>codes.forEach((code,i)=>params.push({Category:cat,Code:code,Label:FALLBACK_LABELS[code],SortOrder:(i+1)*10,Active:true})));
+      const tasks=[
+        ['Rà soát năng lực hệ thống giờ cao điểm','OPS','HIGH','IN_PROGRESS','lan@example.vn','admin@example.vn',iso(5),65,'MEDIUM','PENDING'],
+        ['Xử lý lỗi đối soát giao dịch cuối ngày','OPS','CRITICAL','BLOCKED','hung@example.vn','admin@example.vn',iso(-2),40,'HIGH','FAILED'],
+        ['Cập nhật tài liệu quy trình triển khai','REL','MEDIUM','REVIEW','lan@example.vn','mai@example.vn',iso(2),90,'LOW','PENDING'],
+        ['Kiểm tra tham số lãi suất sản phẩm mới','OPS','HIGH','TODO','mai@example.vn','admin@example.vn',iso(7),10,'MEDIUM','PENDING'],
+        ['Hoàn thành bộ kiểm thử hồi quy','REL','MEDIUM','DONE','hung@example.vn','admin@example.vn',iso(-1),100,'NONE','PASSED'],
+        ['Xây dựng dashboard SLA nhà cung cấp','VND','LOW','BACKLOG','lan@example.vn','admin@example.vn',iso(14),0,'LOW','NOT_REQUIRED']
+      ].map((x,i)=>({ID:'TSK-'+new Date().getFullYear()+'-'+String(i+1).padStart(4,'0'),Title:x[0],Description:'Dữ liệu mẫu để xem trước giao diện.',Project:x[1],Type:'TASK',Priority:x[2],Status:x[3],Assignee:x[4],Owner:x[5],Reporter:'admin@example.vn',StartDate:iso(-5),DueDate:x[6],Progress:x[7],Labels:'mẫu',Watchers:'',Dependency:'',EstimateHours:16,ActualHours:8,Risk:x[8],ControlStatus:x[9],CreatedAt:now.toISOString(),CreatedBy:'admin@example.vn',UpdatedAt:now.toISOString(),UpdatedBy:'admin@example.vn',CompletedAt:x[3]==='DONE'?now.toISOString():'',Version:1,Archived:false}));
+      return {workspace:{id:'DEMO',name:'Không gian mẫu',url:'#',appVersion:'1.0.0'},currentUser:{email:'admin@example.vn',role:'ADMIN',scope:'*',displayName:'Nguyễn Minh An'},permissions:['READ','TASK_CREATE','TASK_UPDATE','TASK_ARCHIVE','CATALOG_WRITE','ACCESS_WRITE'],tasks,people,projects:[{Code:'OPS',Name:'Công việc vận hành',OwnerEmail:'admin@example.vn',Active:true},{Code:'REL',Name:'Nâng cấp & phát hành',OwnerEmail:'admin@example.vn',Active:true},{Code:'VND',Name:'Quản lý nhà cung cấp',OwnerEmail:'admin@example.vn',Active:true}],parameters:params,access:[{Email:'admin@example.vn',Role:'ADMIN',Scope:'*',Active:true,Notes:'Tài khoản quản trị mẫu'},{Email:'lan@example.vn',Role:'MEMBER',Scope:'*',Active:true,Notes:''}],audit:[]};
+    }
+  </script>
+</body>
+</html>
