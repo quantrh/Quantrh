@@ -1,0 +1,88 @@
+{
+"parameters": {
+"version": "1.1",
+"currency": "VND",
+"guardrails": {
+"callStartTime": 8,
+"callEndTime": 21
+},
+"storageKeys": {
+"cases": "bcollection_cases_v4",
+"interactions": "bcollection_interactions_v4",
+"ptps": "bcollection_ptps_v4",
+"payments": "bcollection_payments_v4"
+}
+},
+"cases": [
+{
+"id": "HDTD001234", "cif": "1234567890", "name": "Nguyễn Minh An", "type": "Vay tiêu dùng",
+"amount": 500000000, "overdue": 12500000, "dpd": 12, "riskLevel": 3, "riskStr": "Cao",
+"status": "Đang xử lý", "assignee": "Vũ Hoàng", "phone": "0903 *** 678", "email": "nma***@gmail.com",
+"address": "Thanh Xuân, Hà Nội", "dob": "15/08/1990", "job": "Nhân viên văn phòng",
+"segment": "Bán lẻ - Đại trà", "company": "Công ty CP ABC", "avatar": "NA", "isCorp": false,
+"nbaTitle": "Xác nhận lịch thanh toán",
+"nbaDesc": "Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết 5.000.000 đ vào ngày mai.",
+"persona": { "pay": 75, "collab": 60, "contact": 80, "break": 30, "priority": 85, "digital": 70 },
+"ews": [
+{ "text": "Số dư tài khoản thường xuyên thấp", "level": "Cao", "color": "red" },
+{ "text": "Giảm thu nhập qua tài khoản", "level": "Trung bình", "color": "yellow" }
+],
+"loans": [
+{ "id": "LN-TD-1001", "type": "Vay tiêu dùng", "balance": 400000000, "interest": 5000000, "overdue": 10000000, "dpd": 12, "status": "Quá hạn" },
+{ "id": "CC-1002", "type": "Thẻ tín dụng", "balance": 100000000, "interest": 1000000, "overdue": 2500000, "dpd": 5, "status": "Quá hạn" }
+],
+"collaterals": [
+{ "type": "Bất động sản", "desc": "Căn hộ chung cư HH1 Linh Đàm", "value": 2500000000, "status": "Đang thế chấp" }
+]
+},
+{
+"id": "HDTD005678", "cif": "0987654321", "name": "Trần Thị Bích Ngọc", "type": "Thẻ tín dụng",
+"amount": 120000000, "overdue": 8200000, "dpd": 28, "riskLevel": 2, "riskStr": "Trung bình",
+"status": "Chưa liên hệ", "assignee": "Lê Thu Hà", "phone": "0912 *** 678", "email": "ngoc***@yahoo.com",
+"address": "Cầu Giấy, Hà Nội", "dob": "22/11/1985", "job": "Kinh doanh tự do",
+"segment": "Bán lẻ - Đại trà", "company": "N/A", "avatar": "TN", "isCorp": false,
+"nbaTitle": "Cảnh báo chuyển nhóm nợ",
+"nbaDesc": "Sắp chạm mốc 30 ngày. Ưu tiên gửi Zalo ZNS cảnh báo văn bản do khách hay từ chối nghe máy.",
+"persona": { "pay": 40, "collab": 25, "contact": 60, "break": 60, "priority": 70, "digital": 85 },
+"ews": [
+{ "text": "Phát sinh nợ nhóm 2 tại TCTD khác", "level": "Cao", "color": "red" }
+],
+"loans": [
+{ "id": "CC-2001", "type": "Thẻ tín dụng", "balance": 120000000, "interest": 4000000, "overdue": 8200000, "dpd": 28, "status": "Quá hạn" }
+],
+"collaterals": []
+},
+{
+"id": "HDDN009876", "cif": "1122334455", "name": "Công ty TNHH An Phát", "type": "Vay TNNN",
+"amount": 5200000000, "overdue": 45000000, "dpd": 45, "riskLevel": 3, "riskStr": "Cao",
+"status": "Đã liên hệ", "assignee": "Phạm Tuấn", "phone": "0243 *** 456", "email": "contact@anphat.vn",
+"address": "KCN Từ Liêm, HN", "dob": "N/A", "job": "Doanh nghiệp",
+"segment": "SME", "company": "Công ty TNHH An Phát", "avatar": "AP", "isCorp": true,
+"nbaTitle": "Đôn đốc PTP Doanh nghiệp",
+"nbaDesc": "Giám sát PTP. Đã có cam kết trả 20tr vào 15/09. Liên hệ Kế toán trưởng qua luồng chuyên trách SME.",
+"persona": { "pay": 50, "collab": 70, "contact": 90, "break": 20, "priority": 95, "digital": 50 },
+"ews": [
+{ "text": "Chỉ số tài chính suy giảm", "level": "Cao", "color": "red" },
+{ "text": "Chậm nộp thuế", "level": "Trung bình", "color": "yellow" }
+],
+"loans": [
+{ "id": "SME-LN-3001", "type": "Vay vốn lưu động", "balance": 5200000000, "interest": 12000000, "overdue": 45000000, "dpd": 45, "status": "Quá hạn" }
+],
+"collaterals": [
+{ "type": "Máy móc thiết bị", "desc": "Dây chuyền sản xuất bao bì", "value": 3000000000, "status": "Đang thế chấp" }
+]
+}
+],
+"interactions": [
+{ "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi (8 phút)", "date": "2026-09-08T10:30:00Z", "notes": "Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.", "user": "Vũ Hoàng" },
+{ "id": 2, "caseId": "HDTD001234", "type": "Tạo PTP", "date": "2026-08-31T14:15:00Z", "notes": "KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.", "user": "Vũ Hoàng" },
+{ "id": 3, "caseId": "HDDN009876", "type": "Gặp mặt trực tiếp", "date": "2026-09-05T09:00:00Z", "notes": "Đến trụ sở công ty làm việc với Kế toán trưởng. Cam kết thanh toán một phần.", "user": "Phạm Tuấn" }
+],
+"ptps": [
+{ "id": 1, "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-12T00:00:00Z", "status": "pending" },
+{ "id": 2, "caseId": "HDDN009876", "amount": 20000000, "date": "2026-09-15T00:00:00Z", "status": "pending" }
+],
+"payments": [
+{ "id": "PAY_100192", "caseId": "HDTD001234", "amount": 3000000, "date": "2026-08-26T15:20:00Z", "status": "Thành công", "method": "Chuyển khoản" }
+]
+}
