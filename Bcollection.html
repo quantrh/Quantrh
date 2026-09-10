@@ -1208,7 +1208,14 @@
                 try {
                     const response = await fetch('data.json');
                     if (response.ok) {
-                        appData = await response.json();
+                        const fetchedData = await response.json();
+                        const mock = getMockData();
+                        // Chống lỗi: Nếu data.json trên Github là bản cũ, tự động bù dữ liệu mới vào
+                        appData.cases = (fetchedData.cases && fetchedData.cases.length > 0) ? fetchedData.cases : mock.cases;
+                        appData.interactions = fetchedData.interactions || mock.interactions;
+                        appData.ptps = fetchedData.ptps || mock.ptps;
+                        appData.payments = fetchedData.payments || mock.payments;
+                        appData.dashboardStats = fetchedData.dashboardStats || mock.dashboardStats;
                     } else {
                         appData = getMockData();
                     }
