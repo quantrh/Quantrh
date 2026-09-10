@@ -44,6 +44,10 @@
             display: flex; align-items: center; justify-content: center;
         }
         .gauge-inner { width: 90px; height: 90px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     </style>
 </head>
 <body class="bg-[#f8f9fa] text-bidv-text font-sans h-screen flex overflow-hidden relative">
@@ -83,9 +87,6 @@
             <a href="javascript:void(0)" onclick="navTo('workflow')" id="nav-workflow" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 font-medium transition-all hover:bg-white/10 hover:text-white text-sm">
                 <i class="fas fa-project-diagram w-5 text-center"></i> 6. Workflow Approval
             </a>
-            <a href="javascript:void(0)" onclick="navTo('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 font-medium transition-all hover:bg-white/10 hover:text-white text-sm">
-                <i class="fas fa-chart-line w-5 text-center"></i> 7. Reporting & Analytics
-            </a>
             
             <div class="pt-4 mt-4 border-t border-white/10"></div>
             <a href="javascript:void(0)" onclick="navTo('settings')" id="nav-settings" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 font-medium transition-all hover:bg-white/10 hover:text-white text-sm">
@@ -98,7 +99,6 @@
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full bg-gray-50">
-        <!-- Header -->
         <header class="bg-white h-16 border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 shrink-0 shadow-sm">
             <div class="flex items-center gap-4 flex-1">
                 <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-bidv-green text-xl focus:outline-none">
@@ -121,13 +121,13 @@
             <div class="flex items-center gap-4 md:gap-6 flex-1 justify-end">
                  <div class="relative cursor-pointer">
                     <i class="far fa-bell text-xl text-gray-500 hover:text-bidv-green transition-colors"></i>
-                    <span class="absolute 1 top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                 </div>
                 <div class="flex items-center gap-3 pl-4 border-l border-gray-200 cursor-pointer">
                     <div class="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center text-white font-bold text-sm shadow-sm">VH</div>
                     <div class="hidden sm:block text-right">
                         <p class="text-sm font-bold text-gray-800 leading-none">Vũ Hoàng</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Collector <i class="fas fa-chevron-down text-[9px] ml-1"></i></p>
+                        <p class="text-[11px] text-gray-500 mt-1">Quản lý <i class="fas fa-chevron-down text-[9px] ml-1"></i></p>
                     </div>
                 </div>
                 <div class="hidden xl:block text-right pl-4 border-l border-gray-200 w-32">
@@ -139,13 +139,12 @@
 
         <div class="flex-1 overflow-y-auto" id="view-container">
             
-            <!-- VIEW: DASHBOARD (7. Reporting & Analytics) -->
             <div id="view-dashboard" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
                  <div class="mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">7. Reporting & Analytics</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">Tổng quan (Reporting & Analytics)</h2>
                     <p class="text-sm text-gray-500 mt-1">Dashboard tác nghiệp, đo lường hiệu quả và cảnh báo insight.</p>
                 </div>
-                 <!-- Row 1: KPI Cards -->
+                 
                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                          <div class="flex justify-between items-start mb-2">
@@ -153,63 +152,54 @@
                              <div class="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-folder-open"></i></div>
                          </div>
                          <h3 class="text-2xl font-bold text-gray-800" id="dash-total">0</h3>
-                         <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 12% <span class="text-gray-400">so với tháng trước</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                          <div class="flex justify-between items-start mb-2">
-                             <p class="text-sm text-gray-500 font-medium">PTP đến hạn hôm nay</p>
+                             <p class="text-sm text-gray-500 font-medium">PTP đang theo dõi</p>
                              <div class="w-8 h-8 rounded bg-yellow-50 text-yellow-600 flex items-center justify-center"><i class="far fa-calendar-check"></i></div>
                          </div>
                          <h3 class="text-2xl font-bold text-gray-800" id="dash-ptp">0</h3>
-                         <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-up"></i> 5% <span class="text-gray-400">so với tuần trước</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-red-50">
                          <div class="flex justify-between items-start mb-2">
-                             <p class="text-sm text-red-500 font-medium">Hồ sơ quá hạn cao</p>
+                             <p class="text-sm text-red-500 font-medium">Hồ sơ rủi ro cao</p>
                              <div class="w-8 h-8 rounded bg-red-50 text-red-600 flex items-center justify-center"><i class="fas fa-exclamation-triangle"></i></div>
                          </div>
                          <h3 class="text-2xl font-bold text-gray-800" id="dash-high">0</h3>
-                         <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-up"></i> 3 <span class="text-gray-400">hồ sơ mới</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                          <div class="flex justify-between items-start mb-2">
-                             <p class="text-sm text-gray-500 font-medium">Số tiền cam kết (Tháng)</p>
+                             <p class="text-sm text-gray-500 font-medium">Tiền PTP (Tháng)</p>
                              <div class="w-8 h-8 rounded bg-green-50 text-green-600 flex items-center justify-center"><i class="fas fa-money-bill-wave"></i></div>
                          </div>
                          <h3 class="text-2xl font-bold text-gray-800" id="dash-amount">0 <span class="text-lg">triệu</span></h3>
-                         <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 18% <span class="text-gray-400">so với tháng trước</span></p>
                      </div>
                  </div>
 
-                 <!-- Row 2: Charts & Tasks -->
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                     <!-- Col 1: Charts -->
                      <div class="lg:col-span-2 space-y-6">
-                         <!-- CSS Trend Chart -->
                          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                             <h3 class="font-bold text-gray-800 mb-6">Xu hướng xử lý hồ sơ (7 ngày qua)</h3>
-                             <div class="h-48 flex items-end justify-between gap-2 px-2">
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 60%;"></div><span class="text-xs text-gray-400">04/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 40%;"></div><span class="text-xs text-gray-400">05/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 70%;"></div><span class="text-xs text-gray-400">06/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 50%;"></div><span class="text-xs text-gray-400">07/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 80%;"></div><span class="text-xs text-gray-400">08/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-600 rounded-t" style="height: 90%;"></div><span class="text-xs text-gray-400">09/09</span></div>
-                                 <div class="w-full flex flex-col items-center gap-1"><div class="w-full max-w-[30px] bg-teal-500 rounded-t opacity-50" style="height: 30%;"></div><span class="text-xs text-gray-400">10/09</span></div>
+                             <div class="flex justify-between items-center mb-6">
+                                 <h3 class="font-bold text-gray-800">Xu hướng xử lý hồ sơ (7 ngày qua)</h3>
+                                 <div class="flex gap-4 text-xs font-medium">
+                                     <span class="flex items-center gap-1"><div class="w-3 h-3 bg-teal-600 rounded-sm"></div> Đã xử lý</span>
+                                     <span class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-200 rounded-sm"></div> Đang chờ (New)</span>
+                                 </div>
+                             </div>
+                             <div class="h-48 flex items-end justify-between gap-4 px-2" id="trend-chart-container">
+                                 <!-- JS sẽ fill dữ liệu vào đây -->
                              </div>
                          </div>
                          
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                                   <div>
-                                      <h3 class="font-bold text-gray-800 mb-1">Tỷ lệ xử lý hồ sơ</h3>
-                                      <p class="text-xs text-gray-500 mb-4">Mục tiêu tháng 9/2026</p>
+                                      <h3 class="font-bold text-gray-800 mb-1">Tỷ lệ hoàn thành</h3>
+                                      <p class="text-xs text-gray-500 mb-4">Mục tiêu tháng</p>
                                       <div class="text-sm text-gray-600"><span class="font-bold text-gray-800">248</span> / 345 hồ sơ</div>
                                   </div>
                                   <div class="gauge-chart" style="--val: 72%;">
-                                      <div class="gauge-inner">
-                                          <span class="text-2xl font-bold text-teal-700">72%</span>
-                                      </div>
+                                      <div class="gauge-inner"><span class="text-2xl font-bold text-teal-700">72%</span></div>
                                   </div>
                               </div>
                               <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -220,55 +210,33 @@
                                           <div class="progress-bar-bg"><div class="progress-bar-fill bg-teal-600" style="width: 65%;"></div></div>
                                       </div>
                                       <div>
-                                          <div class="flex justify-between text-xs mb-1"><span class="text-gray-600">Đang chờ</span><span class="font-bold">25%</span></div>
+                                          <div class="flex justify-between text-xs mb-1"><span class="text-gray-600">Chờ khách hàng</span><span class="font-bold">25%</span></div>
                                           <div class="progress-bar-bg"><div class="progress-bar-fill bg-yellow-400" style="width: 25%;"></div></div>
-                                      </div>
-                                      <div>
-                                          <div class="flex justify-between text-xs mb-1"><span class="text-gray-600">Cần rà soát</span><span class="font-bold text-red-600">10%</span></div>
-                                          <div class="progress-bar-bg"><div class="progress-bar-fill bg-red-500" style="width: 10%;"></div></div>
                                       </div>
                                   </div>
                               </div>
                          </div>
                      </div>
 
-                     <!-- Col 2: Task List -->
                      <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
                          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-                             <h3 class="font-bold text-gray-800">Việc cần làm hôm nay <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full ml-1">8</span></h3>
-                             <a href="javascript:void(0)" class="text-xs text-bidv-green hover:underline">Xem tất cả</a>
+                             <h3 class="font-bold text-gray-800">Việc cần làm hôm nay <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full ml-1">3</span></h3>
                          </div>
                          <div class="p-0 flex-1 overflow-y-auto">
-                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer" onclick="navTo('cases')">
+                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer">
                                  <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">09:00</div>
                                  <div class="w-2 h-2 mt-1.5 rounded-full bg-red-500 shrink-0"></div>
                                  <div>
-                                     <p class="text-sm font-semibold text-gray-800 leading-snug mb-1">Gọi lại KH Nguyễn Minh An</p>
-                                     <p class="text-xs text-gray-500">Khách hàng lỡ hẹn PTP ngày hôm qua. Cần gọi xác nhận.</p>
+                                     <p class="text-sm font-semibold text-gray-800 leading-snug mb-1">Duyệt đề xuất Pháp lý</p>
+                                     <p class="text-xs text-gray-500">Khách hàng: Công ty CP Đầu tư ABC</p>
                                  </div>
                              </div>
-                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer" onclick="navTo('payments')">
-                                 <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">10:30</div>
+                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer">
+                                 <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">14:30</div>
                                  <div class="w-2 h-2 mt-1.5 rounded-full bg-yellow-500 shrink-0"></div>
                                  <div>
-                                     <p class="text-sm font-semibold text-gray-800 leading-snug mb-1">Kiểm tra TT Trần Thị Bích Ngọc</p>
+                                     <p class="text-sm font-semibold text-gray-800 leading-snug mb-1">Kiểm tra PTP</p>
                                      <p class="text-xs text-gray-500">Đến hạn thanh toán 5.000.000đ.</p>
-                                 </div>
-                             </div>
-                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3">
-                                 <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">14:00</div>
-                                 <div class="w-2 h-2 mt-1.5 rounded-full bg-teal-500 shrink-0"></div>
-                                 <div>
-                                     <p class="text-sm font-semibold text-gray-800 leading-snug mb-1">Gửi thông báo nợ KH Lê Văn Hoàng</p>
-                                     <p class="text-xs text-gray-500">Gửi Zalo ZNS cảnh báo nợ chuyển nhóm.</p>
-                                 </div>
-                             </div>
-                             <div class="p-4 hover:bg-gray-50 transition-colors flex gap-3 opacity-60">
-                                 <div class="text-xs font-bold text-gray-400 w-10 pt-0.5">16:00</div>
-                                 <div class="w-2 h-2 mt-1.5 rounded-full bg-gray-300 shrink-0"></div>
-                                 <div>
-                                     <p class="text-sm font-semibold text-gray-500 leading-snug mb-1 line-through">Duyệt hồ sơ cơ cấu</p>
-                                     <p class="text-xs text-gray-400">Đã hoàn thành</p>
                                  </div>
                              </div>
                          </div>
@@ -276,7 +244,6 @@
                  </div>
             </div>
 
-            <!-- VIEW: CASES (1. Case Management) -->
             <div id="view-cases" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
@@ -294,11 +261,10 @@
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <!-- Filters -->
                     <div class="p-4 border-b border-gray-100 flex flex-col lg:flex-row gap-4 lg:items-center bg-gray-50/50">
                          <div class="relative w-full lg:w-72 shrink-0">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" placeholder="Tìm kiếm tên, CIF, HĐ..." class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-bidv-green focus:ring-1 focus:ring-bidv-green shadow-sm">
+                            <input type="text" placeholder="Tìm kiếm tên, CIF, HĐ..." class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-bidv-green shadow-sm">
                         </div>
                         <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
                             <select class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-bidv-green shadow-sm">
@@ -319,7 +285,6 @@
                         </div>
                     </div>
 
-                    <!-- Table -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[1000px]">
                             <thead>
@@ -353,10 +318,7 @@
                 </div>
             </div>
 
-            <!-- VIEW: DETAIL (2. Debtor 360) -->
             <div id="view-detail" class="view-section hidden fade-in bg-gray-100 min-h-full pb-10">
-                
-                <!-- Sticky Header -->
                 <div class="bg-white border-b border-gray-200 px-4 md:px-8 py-3 mb-6 sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 shadow-sm">
                      <div class="flex items-center gap-3">
                          <button onclick="navTo('cases')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-bidv-green hover:text-white transition flex items-center justify-center">
@@ -369,13 +331,11 @@
                      </div>
                      <div class="flex gap-2">
                          <button class="px-3 py-1.5 border border-gray-300 bg-white text-gray-700 text-sm rounded-lg hover:bg-gray-50 font-medium">Báo cáo</button>
-                         <button class="px-3 py-1.5 border border-gray-300 bg-white text-gray-700 text-sm rounded-lg hover:bg-gray-50 font-medium">Lịch sử sửa đổi</button>
                      </div>
                 </div>
 
                 <div class="max-w-[1600px] mx-auto px-4 md:px-8 space-y-6">
-                    
-                    <!-- Top Panel: Customer Summary -->
+                    <!-- Top Panel -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-full bg-teal-700 text-white flex items-center justify-center text-2xl font-bold shadow-md" id="detail-avatar">NA</div>
@@ -429,41 +389,15 @@
                     <!-- TAB CONTENT: OVERVIEW -->
                     <div id="tab-content-overview" class="detail-tab-content block fade-in grid grid-cols-1 lg:grid-cols-12 gap-6">
                         
-                        <!-- Col 1: Left Info -->
                         <div class="lg:col-span-3 space-y-6">
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">Thông tin chính</h3>
-                                    <button class="text-blue-600 text-xs font-medium hover:underline"><i class="fas fa-edit"></i> Sửa</button>
                                 </div>
                                 <div class="p-4 space-y-3">
                                     <div class="grid grid-cols-[100px_1fr] gap-2 text-sm"><span class="text-gray-500">Ngày sinh</span><span class="text-gray-800 font-medium" id="info-dob">15/08/1990</span></div>
                                     <div class="grid grid-cols-[100px_1fr] gap-2 text-sm"><span class="text-gray-500">Nghề nghiệp</span><span class="text-gray-800 font-medium" id="info-job">Nhân viên văn phòng</span></div>
-                                    <div class="grid grid-cols-[100px_1fr] gap-2 text-sm"><span class="text-gray-500">Chi nhánh QL</span><span class="text-gray-800 font-medium">BIDV Hà Nội</span></div>
                                     <div class="grid grid-cols-[100px_1fr] gap-2 text-sm"><span class="text-gray-500">Nơi công tác</span><span class="text-gray-800 font-medium" id="info-company">Công ty CP ABC</span></div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                                <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
-                                    <h3 class="font-bold text-gray-800 text-sm">Lịch sử thanh toán</h3>
-                                </div>
-                                <div class="p-4">
-                                    <div class="flex justify-end gap-3 text-[10px] mb-4">
-                                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-teal-600"></span> Đã trả</span>
-                                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-orange-400"></span> Quá hạn</span>
-                                    </div>
-                                    <!-- Simple CSS Chart -->
-                                    <div class="h-32 flex items-end justify-between gap-2 border-b border-gray-200 pb-1">
-                                        <div class="w-1/5 flex flex-col items-center"><span class="text-[10px] text-gray-500 mb-1">15</span><div class="w-full bg-teal-600 rounded-t-sm" style="height: 60%;"></div></div>
-                                        <div class="w-1/5 flex flex-col items-center"><span class="text-[10px] text-gray-500 mb-1">5</span><div class="w-full bg-teal-600 rounded-t-sm" style="height: 20%;"></div></div>
-                                        <div class="w-1/5 flex flex-col items-center"><span class="text-[10px] text-gray-500 mb-1">0</span><div class="w-full bg-teal-600 rounded-t-sm" style="height: 0%;"></div></div>
-                                        <div class="w-1/5 flex flex-col items-center"><span class="text-[10px] text-orange-500 font-bold mb-1">12</span><div class="w-full bg-orange-400 rounded-t-sm" style="height: 40%;"></div></div>
-                                        <div class="w-1/5 flex flex-col items-center"><span class="text-[10px] text-gray-500 mb-1">0</span><div class="w-full bg-teal-600 rounded-t-sm" style="height: 0%;"></div></div>
-                                    </div>
-                                    <div class="flex justify-between mt-2 text-[9px] text-gray-400">
-                                        <span>05/2026</span><span>06/2026</span><span>07/2026</span><span>08/2026</span><span>09/2026</span>
-                                    </div>
                                 </div>
                             </div>
                             
@@ -472,20 +406,14 @@
                                     <h3 class="font-bold text-gray-800 text-sm">PTP hiện tại</h3>
                                     <button class="text-blue-600 text-xs font-medium hover:underline" onclick="switchTab('finance')">Chi tiết</button>
                                 </div>
-                                <div class="p-4" id="detail-ptp-container">
-                                    <!-- Rendered via JS -->
-                                </div>
+                                <div class="p-4" id="detail-ptp-container"></div>
                             </div>
                         </div>
 
-                        <!-- Col 2: Middle Data Tables -->
                         <div class="lg:col-span-5 space-y-6">
-                            
-                            <!-- Obligations -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                     <h3 class="font-bold text-gray-800 text-sm">Tổng nghĩa vụ <span class="font-normal text-gray-500 text-xs" id="detail-loan-count-title">(0 khoản vay)</span></h3>
-                                    <button class="text-bidv-green text-xs font-medium hover:underline" onclick="switchTab('loans')">Xem tất cả</button>
                                 </div>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-left text-sm whitespace-nowrap">
@@ -497,30 +425,21 @@
                                                 <th class="px-4 py-3 font-semibold text-center">DPD</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-100" id="detail-loans-overview">
-                                            <!-- Injected via JS -->
-                                        </tbody>
+                                        <tbody class="divide-y divide-gray-100" id="detail-loans-overview"></tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Interactions -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">Tương tác gần đây</h3>
                                     <button class="text-bidv-green text-xs font-medium hover:underline" onclick="switchTab('interactions')">Xem tất cả <i class="fas fa-arrow-right text-[10px]"></i></button>
                                 </div>
-                                <div class="p-5 max-h-[350px] overflow-y-auto" id="interaction-history-overview">
-                                    <!-- Injected via JS -->
-                                </div>
+                                <div class="p-5 max-h-[350px] overflow-y-auto" id="interaction-history-overview"></div>
                             </div>
-
                         </div>
 
-                        <!-- Col 3: Right AI & Actions -->
                         <div class="lg:col-span-4 space-y-6">
-                            
-                            <!-- Action & Guardrail Panel -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative overflow-hidden">
                                 <div class="absolute top-0 left-0 w-full h-1 bg-bidv-green"></div>
                                 <h3 class="font-bold text-gray-800 text-sm mb-4">Hành động đề xuất</h3>
@@ -540,9 +459,7 @@
                                         <i class="fas fa-shield-check text-green-600"></i>
                                         <h4 class="text-xs font-bold text-gray-700 uppercase">Kiểm tra Guardrail</h4>
                                     </div>
-                                    <ul class="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100" id="guardrail-panel">
-                                        <!-- Injected via JS based on time -->
-                                    </ul>
+                                    <ul class="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100" id="guardrail-panel"></ul>
                                 </div>
 
                                 <button onclick="simulateCall()" id="btn-call" class="w-full bg-bidv-green text-white font-bold py-3 rounded-lg hover:bg-teal-800 transition shadow-md flex items-center justify-center gap-2 mb-3">
@@ -550,51 +467,31 @@
                                 </button>
                                 
                                 <div class="grid grid-cols-2 gap-2">
-                                    <button class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-comment-alt text-blue-500"></i> Gửi SMS
-                                    </button>
-                                    <button onclick="switchTab('finance')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-file-signature text-yellow-600"></i> Tạo PTP
-                                    </button>
-                                    <button class="bg-gray-50 border border-gray-200 text-gray-600 font-medium py-2 rounded-lg hover:bg-gray-100 transition text-xs flex items-center justify-center gap-2">
-                                        Đề xuất cơ cấu
-                                    </button>
-                                     <button class="bg-red-50 border border-red-100 text-red-600 font-medium py-2 rounded-lg hover:bg-red-100 transition text-xs flex items-center justify-center gap-2">
-                                        Chuyển pháp lý
-                                    </button>
+                                    <button class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2"><i class="fas fa-comment-alt text-blue-500"></i> Gửi SMS</button>
+                                    <button onclick="switchTab('finance')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2"><i class="fas fa-file-signature text-yellow-600"></i> Tạo PTP</button>
                                 </div>
                             </div>
 
-                            <!-- Persona 360 -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:border-bidv-green transition" onclick="navTo('strategy')">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">Persona 360</h3>
                                     <span class="text-[10px] text-bidv-green flex items-center gap-1 font-medium">Xem phân tích <i class="fas fa-chevron-right text-[8px]"></i></span>
                                 </div>
-                                <div class="p-5 space-y-4" id="persona-bars">
-                                    <!-- Injected via JS -->
-                                </div>
+                                <div class="p-5 space-y-4" id="persona-bars"></div>
                             </div>
 
-                            <!-- EWS -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">Tín hiệu EWS liên quan</h3>
                                 </div>
-                                <div class="p-4 space-y-3" id="ews-list">
-                                    <!-- Injected via JS -->
-                                </div>
+                                <div class="p-4 space-y-3" id="ews-list"></div>
                             </div>
-
                         </div>
                     </div>
 
-                    <!-- TAB CONTENT: LOANS (Khoản vay) -->
+                    <!-- SUB TABS OF DETAIL 360 -->
                     <div id="tab-content-loans" class="detail-tab-content hidden fade-in space-y-6">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800">Danh sách khoản vay / Khế ước</h3>
-                            </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead>
@@ -608,34 +505,25 @@
                                             <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100" id="tab-loans-table">
-                                        <!-- Injected via JS -->
-                                    </tbody>
+                                    <tbody class="divide-y divide-gray-100" id="tab-loans-table"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB CONTENT: INTERACTIONS (Lịch sử tương tác) -->
                     <div id="tab-content-interactions" class="detail-tab-content hidden fade-in space-y-6">
                          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-800">Toàn bộ lịch sử tương tác</h3>
                                 <button onclick="simulateCall()" class="px-3 py-1.5 bg-bidv-green text-white text-xs rounded hover:bg-teal-800"><i class="fas fa-plus"></i> Ghi nhận mới</button>
                             </div>
-                            <div class="p-6" id="tab-interactions-timeline">
-                                <!-- Injected via JS -->
-                            </div>
+                            <div class="p-6" id="tab-interactions-timeline"></div>
                         </div>
                     </div>
 
-                    <!-- TAB CONTENT: PTP & PAYMENTS (Tài chính) -->
                     <div id="tab-content-finance" class="detail-tab-content hidden fade-in grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Left: PTPs -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800">Cam kết thanh toán (PTP)</h3>
-                            </div>
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50"><h3 class="font-bold text-gray-800">Cam kết thanh toán (PTP)</h3></div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead>
@@ -645,18 +533,12 @@
                                             <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100" id="tab-ptps-table">
-                                        <!-- Injected via JS -->
-                                    </tbody>
+                                    <tbody class="divide-y divide-gray-100" id="tab-ptps-table"></tbody>
                                 </table>
                             </div>
                         </div>
-
-                        <!-- Right: Actual Payments -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800">Lịch sử thanh toán (Core)</h3>
-                            </div>
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50"><h3 class="font-bold text-gray-800">Lịch sử thanh toán (Core)</h3></div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead>
@@ -667,20 +549,14 @@
                                             <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100" id="tab-payments-table">
-                                        <!-- Injected via JS -->
-                                    </tbody>
+                                    <tbody class="divide-y divide-gray-100" id="tab-payments-table"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB CONTENT: ASSETS (Tài sản) -->
                     <div id="tab-content-assets" class="detail-tab-content hidden fade-in space-y-6">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800">Tài sản bảo đảm & Bảo lãnh</h3>
-                            </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead>
@@ -691,133 +567,107 @@
                                             <th class="px-4 py-3 font-semibold text-center">Trạng thái pháp lý</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100" id="tab-assets-table">
-                                        <!-- Injected via JS -->
+                                    <tbody class="divide-y divide-gray-100" id="tab-assets-table"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-strategy" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
+                 <div class="mb-2">
+                    <h2 class="text-2xl font-bold text-gray-800">3. Strategy & Decision (Rule Engine)</h2>
+                    <p class="text-sm text-gray-500 mt-1">Hệ thống phân loại khách hàng và tự động áp dụng chiến lược nhắc nợ dựa trên dữ liệu (Data-Driven).</p>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 shadow-sm"><i class="fas fa-sitemap text-xl"></i></div>
+                    <div>
+                        <h3 class="font-bold text-blue-800 text-lg mb-2">Cơ chế phân loại Khách hàng (Segmentation)</h3>
+                        <p class="text-sm text-blue-900 mb-3 leading-relaxed">Hệ thống phân loại tự động (Auto-tagging) căn cứ vào sự kết hợp của nhiều nguồn dữ liệu (Data Sources) để tạo ra Persona 360:</p>
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm text-blue-800">
+                            <li><i class="fas fa-check-circle text-blue-500 mr-1"></i> <strong>DPD & Lịch sử nợ (Core Banking):</strong> Phân loại nhóm nợ (Nhóm 1, 2, 3..).</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-1"></i> <strong>Địa vị/Phân khúc (CRM):</strong> Xác định KH là Mass, VIP, KH Ưu tiên, KOL (Người nổi tiếng).</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-1"></i> <strong>Thái độ hợp tác (AI Text-to-Speech):</strong> Phân tích từ khóa cuộc gọi (Thiện chí trả nợ vs. Bất hợp tác/Chây ì).</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-1"></i> <strong>Tần suất bắt máy (Call Center):</strong> Đếm số lần từ chối nghe máy (Ví dụ: Không nghe máy 3 lần).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-4">
+                    <div class="xl:col-span-2 space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800"><i class="fas fa-filter text-gray-400 mr-2"></i>Bảng Quy tắc Chiến lược (Rule Engine)</h3>
+                                <button onclick="simulateRuleEngine()" class="text-xs bg-bidv-yellow text-bidv-green px-4 py-2 rounded font-bold hover:brightness-95 transition shadow-sm flex items-center gap-2"><i class="fas fa-play"></i> Chạy thử (Simulator)</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-gray-50 text-gray-500 text-[11px] uppercase border-b border-gray-100">
+                                            <th class="px-4 py-3 font-semibold w-1/4">Phân khúc/Thái độ</th>
+                                            <th class="px-4 py-3 font-semibold">Tình trạng (DPD/Lịch sử)</th>
+                                            <th class="px-4 py-3 font-semibold">Hành động Đề xuất (NBA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3">
+                                                <div class="font-bold text-gray-800">Khách VIP / KHCC / KOL</div>
+                                                <div class="text-[10px] text-gray-500">Người có địa vị, sợ ảnh hưởng uy tín</div>
+                                            </td>
+                                            <td class="px-4 py-3 text-xs text-gray-600">Bất kỳ DPD nào (VD: DPD > 0)</td>
+                                            <td class="px-4 py-3">
+                                                <div class="bg-blue-50 text-blue-700 px-2 py-1.5 rounded text-xs border border-blue-200 font-medium inline-block"><i class="fas fa-user-tie mr-1"></i> Gọi Outbound bởi CBNV (Không dùng Bot)</div>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3">
+                                                <div class="font-bold text-gray-800">Khách hàng Thiện chí</div>
+                                                <div class="text-[10px] text-gray-500">Phân khúc Mass (Other)</div>
+                                            </td>
+                                            <td class="px-4 py-3 text-xs text-gray-600">Mới quá hạn (DPD 1 - 10)</td>
+                                            <td class="px-4 py-3">
+                                                <div class="bg-teal-50 text-teal-700 px-2 py-1.5 rounded text-xs border border-teal-200 font-medium inline-block"><i class="fas fa-sms mr-1"></i> Nhắc nợ nhẹ nhàng (SMS / ZNS / Voicebot)</div>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3">
+                                                <div class="font-bold text-gray-800">Khách hàng Chây ì</div>
+                                                <div class="text-[10px] text-gray-500">Bất hợp tác / Phá PTP nhiều lần</div>
+                                            </td>
+                                            <td class="px-4 py-3 text-xs text-gray-600">DPD cao HOẶC Không nghe máy 3 lần</td>
+                                            <td class="px-4 py-3">
+                                                <div class="bg-red-50 text-red-700 px-2 py-1.5 rounded text-xs border border-red-200 font-medium inline-block"><i class="fas fa-gavel mr-1"></i> Cảnh báo Pháp lý & Chuyển Chi nhánh thu</div>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                </div>
-            </div>
-
-            <!-- VIEW: STRATEGY & DECISION (3. Strategy & Decision) -->
-            <div id="view-strategy" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
-                 <div class="mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">3. Strategy & Decision</h2>
-                    <p class="text-sm text-gray-500 mt-1">Phân loại khách hàng, đề xuất chiến lược (NBA), Guardrails & Policy.</p>
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Left: Strategy Matrix -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800">Cấu hình Chiến lược Thu hồi nợ (Rule Engine)</h3>
-                                <button class="text-xs bg-bidv-green text-white px-3 py-1.5 rounded font-medium hover:bg-teal-800 transition">Thêm Rule</button>
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+                                <h3 class="font-bold text-gray-800"><i class="fas fa-shield-alt text-gray-400 mr-2"></i>Guardrails (Chặn an toàn)</h3>
                             </div>
-                            <div class="p-5">
-                                 <div class="overflow-x-auto">
-                                    <table class="w-full text-left text-sm whitespace-nowrap">
-                                        <thead>
-                                            <tr class="bg-gray-50 text-gray-500 text-[11px] uppercase border-b border-gray-100">
-                                                <th class="px-4 py-3 font-semibold">Tên Chiến lược</th>
-                                                <th class="px-4 py-3 font-semibold">Điều kiện (Segment/DPD/Persona)</th>
-                                                <th class="px-4 py-3 font-semibold">Hành động Đề xuất (NBA)</th>
-                                                <th class="px-4 py-3 font-semibold text-center">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-100">
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-4 py-3 font-bold text-gray-800">Nhắc nợ sớm - Mass</td>
-                                                <td class="px-4 py-3 text-xs text-gray-600">DPD < 15, Segment: Retail, Contact: Tốt</td>
-                                                <td class="px-4 py-3"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs border border-blue-200"><i class="fas fa-sms"></i> Auto SMS/ZNS</span></td>
-                                                <td class="px-4 py-3 text-center"><i class="fas fa-toggle-on text-green-500 text-lg"></i></td>
-                                            </tr>
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-4 py-3 font-bold text-gray-800">Thương lượng PTP - High Risk</td>
-                                                <td class="px-4 py-3 text-xs text-gray-600">DPD 15-30, Willingness: Tr.Bình, Ability: Tốt</td>
-                                                <td class="px-4 py-3"><span class="bg-teal-50 text-teal-600 px-2 py-1 rounded text-xs border border-teal-200"><i class="fas fa-phone-alt"></i> Outbound Call (Agent)</span></td>
-                                                <td class="px-4 py-3 text-center"><i class="fas fa-toggle-on text-green-500 text-lg"></i></td>
-                                            </tr>
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-4 py-3 font-bold text-gray-800">Tiền pháp lý - Không hợp tác</td>
-                                                <td class="px-4 py-3 text-xs text-gray-600">DPD > 60, Willingness: Kém</td>
-                                                <td class="px-4 py-3"><span class="bg-red-50 text-red-600 px-2 py-1 rounded text-xs border border-red-200"><i class="fas fa-gavel"></i> Cảnh báo Pháp lý</span></td>
-                                                <td class="px-4 py-3 text-center"><i class="fas fa-toggle-on text-green-500 text-lg"></i></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="p-4 space-y-3">
+                                <div class="p-3 border border-gray-100 rounded bg-gray-50 flex gap-3">
+                                    <i class="fas fa-clock text-orange-500 mt-1"></i>
+                                    <div><p class="text-sm font-bold text-gray-800">Giờ giấc (G01)</p><p class="text-xs text-gray-500 mt-0.5">Không gọi điện, SMS nhắc nợ ngoài khung 08:00 - 21:00.</p></div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Guardrails -->
-                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 bg-gray-50/50">
-                                <h3 class="font-bold text-gray-800">Chính sách Kiểm soát (Guardrails)</h3>
-                                <p class="text-[11px] text-gray-500">Quy tắc ràng buộc trước khi thực thi bất kỳ Action nào.</p>
-                            </div>
-                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="border border-gray-200 p-3 rounded-lg flex items-start gap-3">
-                                    <i class="fas fa-clock text-blue-500 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-800">Khung giờ liên hệ (G01)</p>
-                                        <p class="text-xs text-gray-600 mt-1">Chỉ cho phép gọi ra (Voice) từ 08:00 đến 21:00. Chặn tuyệt đối giờ nghỉ ngơi.</p>
-                                    </div>
-                                </div>
-                                <div class="border border-gray-200 p-3 rounded-lg flex items-start gap-3">
+                                <div class="p-3 border border-gray-100 rounded bg-gray-50 flex gap-3">
                                     <i class="fas fa-phone-slash text-red-500 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-800">Tần suất gọi (G02)</p>
-                                        <p class="text-xs text-gray-600 mt-1">Tối đa 3 cuộc gọi/ngày và 10 cuộc/tuần cho một khách hàng. Block nếu vượt ngưỡng.</p>
-                                    </div>
+                                    <div><p class="text-sm font-bold text-gray-800">Do Not Call (G02)</p><p class="text-xs text-gray-500 mt-0.5">Khách KOL/VIP từ chối làm phiền -> Block toàn bộ Bot.</p></div>
                                 </div>
-                                <div class="border border-gray-200 p-3 rounded-lg flex items-start gap-3">
-                                    <i class="fas fa-user-shield text-green-600 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-800">DNC (Do Not Call) (G03)</p>
-                                        <p class="text-xs text-gray-600 mt-1">Kiểm tra cờ DNC từ hệ thống CRM/MDM. Không liên hệ nếu KH đã yêu cầu chặn.</p>
-                                    </div>
-                                </div>
-                            </div>
-                         </div>
-                    </div>
-
-                    <!-- Right: ML Models -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
-                            <h3 class="font-bold text-gray-800">AI / ML Models Inventory</h3>
-                        </div>
-                        <div class="p-4 divide-y divide-gray-100">
-                            <div class="py-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <p class="text-sm font-bold text-gray-800">Self-Cure Prediction</p>
-                                    <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">Active v2.1</span>
-                                </div>
-                                <p class="text-xs text-gray-500">Dự báo khả năng KH tự trả nợ không cần nhắc nhở.</p>
-                            </div>
-                            <div class="py-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <p class="text-sm font-bold text-gray-800">Roll Rate Risk</p>
-                                    <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">Active v1.5</span>
-                                </div>
-                                <p class="text-xs text-gray-500">Dự báo nguy cơ chuyển nhóm nợ xấu hơn trong 30 ngày.</p>
-                            </div>
-                            <div class="py-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <p class="text-sm font-bold text-gray-800">Best Time to Call</p>
-                                    <span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">Testing v1.0</span>
-                                </div>
-                                <p class="text-xs text-gray-500">Gợi ý khung giờ liên hệ có xác suất bắt máy cao nhất.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: INTERACTIONS (4. Engagement) -->
             <div id="view-interactions" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
@@ -838,15 +688,12 @@
                                     <th class="p-4">Người thực hiện</th>
                                 </tr>
                             </thead>
-                            <tbody id="interactions-table-body" class="divide-y divide-gray-100 text-sm">
-                                <!-- Data injected via JS -->
-                            </tbody>
+                            <tbody id="interactions-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: PTPs & PAYMENTS (5. PTP & Payment) -->
             <div id="view-ptps" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-4">
                     <div>
@@ -854,12 +701,9 @@
                         <p class="text-sm text-gray-500 mt-1">Lập cam kết PTP, đối soát thanh toán thực tế với PTP.</p>
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                            <h3 class="font-bold text-gray-800">Quản lý Cam kết (PTPs)</h3>
-                        </div>
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50"><h3 class="font-bold text-gray-800">Quản lý Cam kết (PTPs)</h3></div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm whitespace-nowrap">
                                 <thead>
@@ -870,17 +714,12 @@
                                         <th class="p-3 text-center">Trạng thái</th>
                                     </tr>
                                 </thead>
-                                <tbody id="ptps-table-body" class="divide-y divide-gray-100">
-                                    <!-- Data injected via JS -->
-                                </tbody>
+                                <tbody id="ptps-table-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
                     </div>
-                    
                      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                            <h3 class="font-bold text-gray-800">Giao dịch Thanh toán (Core)</h3>
-                        </div>
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50"><h3 class="font-bold text-gray-800">Giao dịch Thanh toán (Core)</h3></div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm whitespace-nowrap">
                                 <thead>
@@ -891,20 +730,19 @@
                                         <th class="p-3 text-center">Đối soát</th>
                                     </tr>
                                 </thead>
-                                <tbody id="payments-table-body" class="divide-y divide-gray-100">
-                                    <!-- Data injected via JS -->
-                                </tbody>
+                                <tbody id="payments-table-body" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: WORKFLOW APPROVAL (6. Workflow Approval) -->
             <div id="view-workflow" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
-                <div class="mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">6. Workflow Approval</h2>
-                    <p class="text-sm text-gray-500 mt-1">Quy trình xử lý, Đề xuất tái cơ cấu, Chuyển pháp lý/AMC, Phê duyệt & ký số.</p>
+                <div class="mb-4 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">6. Workflow Approval</h2>
+                        <p class="text-sm text-gray-500 mt-1">Phê duyệt Đề xuất tái cơ cấu, Chuyển pháp lý, Thu giữ tài sản.</p>
+                    </div>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -917,14 +755,14 @@
                                     <th class="p-4">Khách hàng / Hồ sơ</th>
                                     <th class="p-4">Người đề xuất</th>
                                     <th class="p-4">Ngày tạo</th>
-                                    <th class="p-4 text-center">Trạng thái phê duyệt</th>
+                                    <th class="p-4 text-center">Trạng thái</th>
                                     <th class="p-4 text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-4 font-bold text-bidv-green">WF-CC-20260901</td>
-                                    <td class="p-4 font-medium text-gray-800">Đề xuất Tái cơ cấu (Hardship)</td>
+                                    <td class="p-4 font-medium text-gray-800"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block mr-1"></span>Tái cơ cấu (Hardship)</td>
                                     <td class="p-4">
                                         <div class="font-bold text-gray-800">Lê Văn Hoàng</div>
                                         <div class="text-xs text-gray-500">HDTD007890</div>
@@ -933,12 +771,12 @@
                                     <td class="p-4 text-gray-500 text-xs">08/09/2026</td>
                                     <td class="p-4 text-center"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold border border-yellow-200">Chờ phê duyệt</span></td>
                                     <td class="p-4 text-center">
-                                        <button class="bg-bidv-green text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-teal-800">Xem & Duyệt</button>
+                                        <button onclick="openWorkflowModal('Lê Văn Hoàng', 'Tái cơ cấu nợ', 'Chờ phê duyệt')" class="bg-bidv-green text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-teal-800 shadow-sm transition">Xem & Duyệt</button>
                                     </td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-4 font-bold text-bidv-green">WF-PL-20260905</td>
-                                    <td class="p-4 font-medium text-gray-800">Chuyển xử lý Pháp lý</td>
+                                    <td class="p-4 font-medium text-gray-800"><span class="w-2 h-2 rounded-full bg-red-500 inline-block mr-1"></span>Chuyển xử lý Pháp lý</td>
                                     <td class="p-4">
                                         <div class="font-bold text-gray-800">Công ty CP Đầu tư ABC</div>
                                         <div class="text-xs text-gray-500">HDDN002345</div>
@@ -947,21 +785,7 @@
                                     <td class="p-4 text-gray-500 text-xs">05/09/2026</td>
                                     <td class="p-4 text-center"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold border border-green-200">Đã phê duyệt</span></td>
                                     <td class="p-4 text-center">
-                                        <button class="text-blue-600 hover:underline text-xs font-medium">Xem chi tiết</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="p-4 font-bold text-bidv-green">WF-TS-20260910</td>
-                                    <td class="p-4 font-medium text-gray-800">Thu giữ TSBĐ</td>
-                                    <td class="p-4">
-                                        <div class="font-bold text-gray-800">Hoàng Văn Nam</div>
-                                        <div class="text-xs text-gray-500">HDTD004567</div>
-                                    </td>
-                                    <td class="p-4 text-gray-600">Vũ Hoàng</td>
-                                    <td class="p-4 text-gray-500 text-xs">10/09/2026</td>
-                                    <td class="p-4 text-center"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold border border-yellow-200">Chờ phê duyệt</span></td>
-                                    <td class="p-4 text-center">
-                                        <button class="bg-bidv-green text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-teal-800">Xem & Duyệt</button>
+                                        <button onclick="openWorkflowModal('Công ty CP Đầu tư ABC', 'Chuyển Pháp lý', 'Đã phê duyệt')" class="border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 px-4 py-1.5 rounded text-xs font-medium transition">Xem chi tiết</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -970,76 +794,57 @@
                 </div>
             </div>
 
-            <!-- MODAL: CALL LOGGING (Thuộc 4. Engagement) -->
+            <div id="view-settings" class="view-section hidden fade-in p-6 lg:p-8 max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="mb-8 border-b border-gray-100 pb-4">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Cài đặt & Quản trị Dữ liệu</h2>
+                        <p class="text-sm text-gray-500">Mô phỏng kiến trúc dữ liệu LocalStorage (Không cần Backend).</p>
+                    </div>
+                    <div class="space-y-4">
+                        <button onclick="resetData()" class="w-full p-4 border border-blue-200 bg-blue-50 rounded-xl flex items-center justify-between hover:bg-blue-100 transition group text-left">
+                            <div><h3 class="font-bold text-blue-800 mb-1">Khôi phục dữ liệu mẫu (Reset Default)</h3><p class="text-xs text-blue-600">Tạo lại bộ 12 hồ sơ, lịch sử tương tác và PTP theo kịch bản demo.</p></div>
+                            <i class="fas fa-sync-alt text-blue-400 group-hover:text-blue-600 text-xl"></i>
+                        </button>
+                        <button onclick="clearData()" class="w-full p-4 border border-red-200 bg-red-50 rounded-xl flex items-center justify-between hover:bg-red-100 transition group text-left">
+                            <div><h3 class="font-bold text-red-800 mb-1">Xóa toàn bộ dữ liệu (Clear All)</h3><p class="text-xs text-red-600">Xóa sạch LocalStorage để kiểm tra kịch bản bảng trống.</p></div>
+                            <i class="fas fa-trash-alt text-red-400 group-hover:text-red-600 text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div id="view-call-log" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
                  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden max-h-[95vh] fade-in">
-                     
-                     <!-- Call Transcript (Left) -->
                      <div class="w-full md:w-1/2 bg-[#1e293b] text-gray-300 p-6 flex flex-col h-[600px] border-r border-gray-800">
                          <div class="flex justify-between items-center mb-6">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30"><i class="fas fa-robot text-lg"></i></div>
-                                <div>
-                                    <h3 class="text-white font-bold text-sm">AI Hỗ trợ Hội thoại (Speech-to-Text)</h3>
-                                    <p class="text-xs text-gray-400 mt-0.5">Khách hàng: <span id="modal-kh-name" class="text-white font-bold">...</span></p>
-                                </div>
+                                <div><h3 class="text-white font-bold text-sm">AI Hỗ trợ Hội thoại</h3><p class="text-xs text-gray-400 mt-0.5">Khách hàng: <span id="modal-kh-name" class="text-white font-bold">...</span></p></div>
                             </div>
                          </div>
-                         
                          <div class="bg-gray-900/50 rounded-lg p-4 flex-1 overflow-y-auto space-y-4 text-sm border border-gray-700/50 custom-scroll">
-                             <div class="flex gap-3">
-                                 <span class="font-bold text-teal-400 w-24 shrink-0">Chuyên viên:</span>
-                                 <span class="text-white">Chào anh/chị, em gọi từ bộ phận thu hồi nợ BIDV. Khoản vay của anh/chị đã quá hạn <span id="modal-kh-dpd">...</span> ngày.</span>
-                             </div>
-                              <div class="flex gap-3">
-                                 <span class="font-bold text-yellow-500 w-24 shrink-0">Khách hàng:</span>
-                                 <span class="text-white">Chào bạn. Đợt này kẹt tiền quá, chưa xoay kịp. Chắc vài ngày nữa mình thu xếp.</span>
-                             </div>
-                              <div class="flex gap-3">
-                                 <span class="font-bold text-teal-400 w-24 shrink-0">Chuyên viên:</span>
-                                 <span class="text-white">Dạ, ngân hàng rất chia sẻ. Vậy anh/chị có thể cam kết thanh toán một khoản vào ngày nào ạ?</span>
-                             </div>
-                             <div class="flex gap-3">
-                                 <span class="font-bold text-yellow-500 w-24 shrink-0">Khách hàng:</span>
-                                 <span class="text-white">Khoảng ngày <span id="modal-mock-date" class="font-bold text-yellow-300">...</span> mình sẽ chuyển trước 5 triệu nhé.</span>
-                             </div>
-                         </div>
-                         
-                         <div class="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap gap-2">
-                             <span class="px-3 py-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 rounded-lg text-xs font-medium"><i class="fas fa-smile-meh mr-1"></i> Cảm xúc: Hợp tác (Bình thường)</span>
-                             <span class="px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg text-xs font-medium"><i class="fas fa-shield-check mr-1"></i> Tuân thủ L6: PASSED</span>
+                             <div class="flex gap-3"><span class="font-bold text-teal-400 w-24 shrink-0">Chuyên viên:</span><span class="text-white">Chào anh/chị, khoản vay đã quá hạn <span id="modal-kh-dpd">...</span> ngày.</span></div>
+                             <div class="flex gap-3"><span class="font-bold text-yellow-500 w-24 shrink-0">Khách hàng:</span><span class="text-white">Chào bạn. Đợt này kẹt tiền quá.</span></div>
+                             <div class="flex gap-3"><span class="font-bold text-teal-400 w-24 shrink-0">Chuyên viên:</span><span class="text-white">Dạ, anh/chị có thể cam kết thanh toán vào ngày nào ạ?</span></div>
+                             <div class="flex gap-3"><span class="font-bold text-yellow-500 w-24 shrink-0">Khách hàng:</span><span class="text-white">Ngày <span id="modal-mock-date" class="font-bold text-yellow-300">...</span> mình sẽ chuyển trước 5 triệu nhé.</span></div>
                          </div>
                      </div>
-
-                     <!-- Form (Right) -->
                      <div class="w-full md:w-1/2 bg-white p-6 md:p-8 flex flex-col h-[600px] overflow-y-auto">
                          <div class="flex justify-between items-center mb-6">
                             <h2 class="text-xl font-bold text-gray-800">Kết quả & Hành động</h2>
                             <button onclick="closeCallModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
                          </div>
-                         
                          <div class="space-y-5 flex-1">
                              <div>
-                                 <div class="flex justify-between items-center mb-1.5">
-                                    <label class="block text-sm font-bold text-gray-700">Kết quả cuộc gọi</label>
-                                    <span class="text-[10px] text-teal-600 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-100"><i class="fas fa-magic"></i> AI phát hiện</span>
-                                 </div>
-                                 <select id="input-call-result" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green focus:ring-1 focus:ring-bidv-green outline-none font-medium bg-gray-50">
+                                 <label class="block text-sm font-bold text-gray-700 mb-1.5">Kết quả cuộc gọi</label>
+                                 <select id="input-call-result" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green outline-none bg-gray-50">
                                      <option value="Đã liên hệ - Có PTP">✅ Đã liên hệ / Có cam kết thanh toán (PTP)</option>
-                                     <option value="Đã liên hệ - Hẹn gọi lại">Đã liên hệ / Hẹn gọi lại</option>
-                                     <option value="Từ chối">Khách hàng từ chối / Bất hợp tác</option>
-                                     <option value="Không liên lạc được">Không liên lạc được</option>
                                  </select>
                              </div>
-
                              <div>
-                                 <div class="flex justify-between items-center mb-1.5">
-                                    <label class="block text-sm font-bold text-gray-700">Tóm tắt nội dung</label>
-                                    <span class="text-[10px] text-teal-600 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-100"><i class="fas fa-magic"></i> AI tóm tắt</span>
-                                 </div>
-                                 <textarea id="input-notes" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green focus:ring-1 focus:ring-bidv-green outline-none text-gray-800 leading-relaxed bg-gray-50">Khách hàng xác nhận khó khăn tài chính tạm thời. Cam kết sẽ thanh toán 5.000.000đ. Thái độ hợp tác.</textarea>
+                                 <label class="block text-sm font-bold text-gray-700 mb-1.5">Tóm tắt nội dung</label>
+                                 <textarea id="input-notes" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green outline-none bg-gray-50">Khách hàng xác nhận khó khăn tài chính tạm thời. Cam kết sẽ thanh toán 5.000.000đ.</textarea>
                              </div>
-
                              <div class="bg-[#f8f9fa] border border-gray-200 rounded-xl p-5">
                                  <label class="flex items-center gap-2 text-sm font-bold text-gray-800 mb-4 cursor-pointer">
                                      <input type="checkbox" id="input-create-ptp" checked class="rounded border-gray-300 text-bidv-green focus:ring-bidv-green w-4 h-4 cursor-pointer"> Tạo cam kết thanh toán (PTP)
@@ -1056,54 +861,107 @@
                                  </div>
                              </div>
                          </div>
-                         
-                         <div class="pt-6 flex gap-3 justify-end border-t border-gray-100 mt-4">
-                             <button onclick="closeCallModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Bỏ qua</button>
-                             <button onclick="saveInteraction()" class="px-6 py-2.5 text-sm font-bold bg-bidv-green text-white hover:bg-teal-800 rounded-lg transition-colors shadow-lg flex items-center gap-2">
-                                 <i class="fas fa-check-circle"></i> XÁC NHẬN & LƯU HỒ SƠ
-                             </button>
+                         <div class="pt-6 flex justify-end gap-3 border-t border-gray-100 mt-4">
+                             <button onclick="closeCallModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Bỏ qua</button>
+                             <button onclick="saveInteraction()" class="px-6 py-2.5 text-sm font-bold bg-bidv-green text-white hover:bg-teal-800 rounded-lg">XÁC NHẬN LƯU</button>
                          </div>
                      </div>
-
                  </div>
             </div>
 
-            <!-- VIEW: SETTINGS -->
-            <div id="view-settings" class="view-section hidden fade-in p-6 lg:p-8 max-w-3xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                    <div class="mb-8 border-b border-gray-100 pb-4">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Cài đặt & Quản trị Dữ liệu</h2>
-                        <p class="text-sm text-gray-500">Mô phỏng kiến trúc dữ liệu LocalStorage (Không cần Backend).</p>
+            <!-- Modal Mô phỏng Rule Engine -->
+            <div id="modal-rule-simulator" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden fade-in flex flex-col max-h-[90vh]">
+                    <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-cogs text-gray-500 mr-2"></i>Mô phỏng Phân luồng Khách hàng</h2>
+                        <button onclick="closeSimulator()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
                     </div>
-                    <div class="space-y-4">
-                        <button onclick="resetData()" class="w-full p-4 border border-blue-200 bg-blue-50 rounded-xl flex items-center justify-between hover:bg-blue-100 transition group text-left">
-                            <div>
-                                <h3 class="font-bold text-blue-800 mb-1">Khôi phục dữ liệu mẫu (Reset Default)</h3>
-                                <p class="text-xs text-blue-600">Tạo lại bộ 12 hồ sơ, lịch sử tương tác và PTP theo kịch bản demo.</p>
-                            </div>
-                            <i class="fas fa-sync-alt text-blue-400 group-hover:text-blue-600 text-xl"></i>
-                        </button>
-                        <button onclick="clearData()" class="w-full p-4 border border-red-200 bg-red-50 rounded-xl flex items-center justify-between hover:bg-red-100 transition group text-left">
-                            <div>
-                                <h3 class="font-bold text-red-800 mb-1">Xóa toàn bộ dữ liệu (Clear All)</h3>
-                                <p class="text-xs text-red-600">Xóa sạch LocalStorage để kiểm tra kịch bản bảng trống.</p>
-                            </div>
-                            <i class="fas fa-trash-alt text-red-400 group-hover:text-red-600 text-xl"></i>
-                        </button>
+                    <div class="p-6 overflow-y-auto flex-1">
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Chọn kịch bản khách hàng để test Rule:</label>
+                            <select id="sim-scenario" class="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-bidv-green outline-none" onchange="runSimLogic()">
+                                <option value="kol">Kịch bản 1: Khách hàng là Doanh nhân/KOL (Sợ mất uy tín)</option>
+                                <option value="good">Kịch bản 2: Khách hàng Thiện chí (Quên hạn trả nợ)</option>
+                                <option value="bad">Kịch bản 3: Khách hàng Chây ì (Cố tình né tránh, không nghe máy)</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-900 rounded-xl p-5 text-gray-300 font-mono text-sm space-y-3" id="sim-console"></div>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </main>
+            <!-- Modal Workflow Approval -->
+            <div id="modal-workflow-detail" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden h-[85vh] fade-in">
+                    <div class="w-full md:w-[60%] bg-gray-50 flex flex-col border-r border-gray-200">
+                        <div class="p-4 border-b border-gray-200 bg-white flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg" id="wf-title">Tờ trình</h3>
+                                <p class="text-xs text-gray-500 mt-1">Khách hàng: <span id="wf-customer" class="font-semibold text-gray-700"></span></p>
+                            </div>
+                            <span id="wf-status-badge" class="px-2 py-1 rounded text-xs font-bold">...</span>
+                        </div>
+                        <div class="p-6 flex-1 overflow-y-auto custom-scroll">
+                            <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+                                <div class="text-center mb-8 border-b pb-4">
+                                    <h2 class="text-xl font-bold uppercase text-gray-800">TỜ TRÌNH XỬ LÝ NỢ</h2>
+                                    <p class="text-sm text-gray-500">Số: 123/TTr-BCOLLECTION</p>
+                                </div>
+                                <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+                                    <p><strong>1. Khách hàng:</strong> <span id="wf-doc-name">...</span></p>
+                                    <p><strong>2. Tổng dư nợ:</strong> 5.000.000.000 VNĐ</p>
+                                    <p><strong>3. Số ngày quá hạn (DPD):</strong> 120 ngày (Nợ nhóm 3)</p>
+                                    <p><strong>4. Đánh giá tình hình:</strong> Khách hàng đã được liên hệ 15 lần qua điện thoại, gửi 3 thông báo bằng văn bản nhưng vẫn không có phản hồi và không hợp tác trả nợ. Căn cứ Rule Engine, hệ thống tự động gắn cờ "Chây ì/Trốn tránh".</p>
+                                    <p><strong>5. Đề xuất:</strong> <span id="wf-doc-action" class="font-bold text-red-600">...</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-[40%] bg-white flex flex-col h-full">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800">Luồng phê duyệt</h3>
+                            <button onclick="closeWorkflowModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+                        </div>
+                        <div class="p-5 flex-1 overflow-y-auto bg-gray-50/50">
+                            <div class="relative border-l-2 border-gray-200 ml-3 space-y-6">
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-green-500 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-gray-800">Khởi tạo</p>
+                                    <p class="text-xs text-gray-500">Người tạo: Vũ Hoàng - 08/09/2026</p>
+                                </div>
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-blue-500 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-gray-800">Trưởng nhóm Tác nghiệp</p>
+                                    <p class="text-xs text-green-600 font-medium">Đã đồng ý (09/09/2026)</p>
+                                </div>
+                                <div class="relative pl-6 opacity-60">
+                                    <div class="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-gray-300 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-gray-800">Giám đốc Trung tâm</p>
+                                    <p class="text-xs text-gray-500">Đang chờ xử lý</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 border-t border-gray-200 bg-white" id="wf-action-area">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Ý kiến phê duyệt:</label>
+                            <textarea rows="2" class="w-full border border-gray-300 p-2 text-sm rounded focus:ring-bidv-green outline-none mb-3" placeholder="Nhập ý kiến (nếu có)..."></textarea>
+                            <div class="flex gap-2">
+                                <button class="flex-1 border border-red-500 text-red-600 font-bold py-2 rounded hover:bg-red-50 transition text-sm">Từ chối</button>
+                                <button onclick="closeWorkflowModal(); showToast('Đã phê duyệt tờ trình thành công!', 'success')" class="flex-1 bg-bidv-green text-white font-bold py-2 rounded hover:bg-teal-800 transition text-sm">Phê duyệt</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+        </div> 
+    </main>
     <div id="toast-container"></div>
 
     <script>
-        const STORAGE_KEY_CASES = 'bcollection_cases_v2';
-        const STORAGE_KEY_INTERACTIONS = 'bcollection_interactions_v2';
-        const STORAGE_KEY_PTPS = 'bcollection_ptps_v2';
-        const STORAGE_KEY_PAYMENTS = 'bcollection_payments_v2';
+        const STORAGE_KEY_CASES = 'bcollection_cases_v3';
+        const STORAGE_KEY_INTERACTIONS = 'bcollection_interactions_v3';
+        const STORAGE_KEY_PTPS = 'bcollection_ptps_v3';
+        const STORAGE_KEY_PAYMENTS = 'bcollection_payments_v3';
 
         let appData = { cases: [], interactions: [], ptps: [], payments: [] };
         let currentCaseId = null;
@@ -1139,30 +997,21 @@
                       { id: 'SME-LN-3001', type: 'Vay vốn lưu động', balance: 5200000000, interest: 12000000, overdue: 45000000, dpd: 45, status: 'Quá hạn' }
                   ],
                   collaterals: [
-                      { type: 'Máy móc thiết bị', desc: 'Dây chuyền sản xuất bao bì', value: 3000000000, status: 'Đang thế chấp' },
-                      { type: 'Hàng tồn kho', desc: 'Nguyên vật liệu nhựa', value: 1500000000, status: 'Quyền luân chuyển' }
+                      { type: 'Máy móc thiết bị', desc: 'Dây chuyền sản xuất bao bì', value: 3000000000, status: 'Đang thế chấp' }
                   ]
                 }
             ];
-
             const mockInteractions = [
-                { id: 1, caseId: 'HDTD001234', type: 'Cuộc gọi đi (8 phút)', date: new Date(Date.now() - 86400000 * 2).toISOString(), notes: 'Trao đổi về lịch thanh toán. KH trình bày đang đợi lương. Hẹn sẽ gọi lại vào hôm sau để chốt số tiền.', user: 'Vũ Hoàng' },
-                { id: 2, caseId: 'HDTD001234', type: 'Gửi SMS', date: new Date(Date.now() - 86400000 * 4).toISOString(), notes: 'Gửi nhắc nợ kỳ hạn qua SMS Brandname.', user: 'Hệ thống' },
-                { id: 3, caseId: 'HDTD001234', type: 'Tạo PTP', date: new Date(Date.now() - 86400000 * 10).toISOString(), notes: 'KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.', user: 'Vũ Hoàng' },
-                { id: 4, caseId: 'HDTD005678', type: 'Zalo ZNS', date: new Date().toISOString(), notes: 'Đã gửi thông báo nợ tự động qua Zalo.', user: 'Hệ thống' }
+                { id: 1, caseId: 'HDTD001234', type: 'Cuộc gọi đi (8 phút)', date: new Date(Date.now() - 86400000 * 2).toISOString(), notes: 'Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.', user: 'Vũ Hoàng' },
+                { id: 2, caseId: 'HDTD001234', type: 'Tạo PTP', date: new Date(Date.now() - 86400000 * 10).toISOString(), notes: 'KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.', user: 'Vũ Hoàng' }
             ];
-
             const mockPtps = [
                 { id: 1, caseId: 'HDTD001234', amount: 5000000, date: new Date(Date.now() + 86400000 * 2).toISOString(), status: 'pending' },
-                { id: 2, caseId: 'HDDN009876', amount: 20000000, date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'pending' },
-                { id: 3, caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'kept' }
+                { id: 2, caseId: 'HDDN009876', amount: 20000000, date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'pending' }
             ];
-
             const mockPayments = [
-                { id: 'PAY_100192', caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'Thành công', method: 'Chuyển khoản' },
-                { id: 'PAY_100194', caseId: 'HDDN009876', amount: 50000000, date: new Date(Date.now() - 86400000 * 30).toISOString(), status: 'Thành công', method: 'Tại quầy' }
+                { id: 'PAY_100192', caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'Thành công', method: 'Chuyển khoản' }
             ];
-
             return { cases: mockCases, interactions: mockInteractions, ptps: mockPtps, payments: mockPayments };
         }
 
@@ -1185,7 +1034,7 @@
                 localStorage.setItem(STORAGE_KEY_INTERACTIONS, JSON.stringify(appData.interactions));
                 localStorage.setItem(STORAGE_KEY_PTPS, JSON.stringify(appData.ptps));
                 localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(appData.payments));
-            } catch(e) { console.error("Error saving data", e); }
+            } catch(e) {}
         }
 
         function clearData() {
@@ -1211,7 +1060,6 @@
             updateClock();
             setInterval(updateClock, 60000);
             
-            // Set default date in modal to tomorrow
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('input-ptp-date').value = tomorrow.toISOString().split('T')[0];
@@ -1223,34 +1071,47 @@
                 document.getElementById('input-ptp-date').classList.toggle('opacity-50');
             });
 
-            navTo('dashboard');
+            navTo('dashboard'); // Default view
         }
 
         function navTo(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            // Ngăn chặn các ID modal kích hoạt qua menu logic chính
+            const modals = ['call-log', 'rule-simulator', 'workflow-detail'];
+            if(modals.includes(viewId)) return;
+
+            // Ẩn tất cả view
+            document.querySelectorAll('.view-section').forEach(el => {
+                if(!modals.includes(el.id.replace('view-', '').replace('modal-', ''))) {
+                    el.classList.add('hidden');
+                }
+            });
+            
+            // Xử lý CSS cho menu sidebar
             document.querySelectorAll('.nav-btn').forEach(el => {
                 el.classList.remove('bg-white/20', 'text-white');
                 el.classList.add('text-white/70');
             });
+            
+            const targetView = document.getElementById(`view-${viewId}`);
+            if(targetView) targetView.classList.remove('hidden');
 
-            // Prevent showing modal accidentally via navigation
-            if(viewId === 'call-log') return; 
-
-            document.getElementById(`view-${viewId}`).classList.remove('hidden');
             const navEl = document.getElementById(`nav-${viewId}`);
             if (navEl) {
                 navEl.classList.add('bg-white/20', 'text-white');
                 navEl.classList.remove('text-white/70');
             }
 
+            // Đóng sidebar trên mobile
             if (window.innerWidth < 1024) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('mobile-overlay').classList.add('hidden');
             }
 
+            // Gọi logic render tương ứng
             if (viewId === 'dashboard') {
-                document.getElementById('breadcrumb-title').innerText = "7. Reporting & Analytics";
-                renderDashboard();
+                document.getElementById('breadcrumb-title').innerText = "Tổng quan";
+                renderTrendChart();
+                renderDashboardData();
             } else if (viewId === 'cases') {
                 document.getElementById('breadcrumb-title').innerText = "1. Case Management";
                 renderCasesList();
@@ -1272,70 +1133,124 @@
                 document.getElementById('breadcrumb-title').innerText = "Cài đặt & Dữ liệu";
             }
         }
-        function renderAllPtpsAndPayments() {
-            // Render PTPs
-            const ptpTbody = document.getElementById('ptps-table-body');
-            ptpTbody.innerHTML = '';
-            const sortedPtps = [...appData.ptps].sort((a,b) => new Date(b.date) - new Date(a.date));
-            if(sortedPtps.length === 0) {
-                ptpTbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Chưa có cam kết PTP nào.</td></tr>';
-            } else {
-                sortedPtps.forEach(p => {
-                    const c = appData.cases.find(x => x.id === p.caseId) || {};
-                    let statusClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : (p.status === 'kept' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
-                    let statusText = p.status === 'pending' ? 'Chờ thanh toán' : (p.status === 'kept' ? 'Đã thanh toán' : 'Vi phạm (Broken)');
 
-                    ptpTbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3">
-                                <div class="font-bold text-gray-800">${c.name || 'N/A'}</div>
-                                <div class="text-[11px] text-gray-500 hover:text-bidv-green cursor-pointer" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</div>
-                            </td>
-                            <td class="p-3 text-gray-800 font-medium text-sm"><i class="far fa-calendar-alt text-gray-400 mr-1"></i> ${formatDate(p.date)}</td>
-                            <td class="p-3 text-right font-bold text-gray-800 text-sm">${formatCurrency(p.amount)}</td>
-                            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusClass}">${statusText}</span></td>
-                        </tr>
-                    `);
-                });
-            }
-
-            // Render Payments
-            const payTbody = document.getElementById('payments-table-body');
-            payTbody.innerHTML = '';
-            const sortedPayments = [...appData.payments].sort((a,b) => new Date(b.date) - new Date(a.date));
-            if(sortedPayments.length === 0) {
-                payTbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Chưa có giao dịch thanh toán nào.</td></tr>';
-            } else {
-                sortedPayments.forEach(pay => {
-                    const c = appData.cases.find(x => x.id === pay.caseId) || {};
-                    payTbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3">
-                                <div class="font-bold text-gray-600 text-xs"><i class="fas fa-receipt text-gray-300 mr-1"></i> ${pay.id}</div>
-                                <div class="text-[11px] text-gray-500">${formatDateTimeShort(pay.date)}</div>
-                            </td>
-                            <td class="p-3">
-                                <div class="font-bold text-gray-800">${c.name || 'N/A'}</div>
-                                <div class="text-[11px] text-gray-500 hover:text-bidv-green cursor-pointer" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</div>
-                            </td>
-                            <td class="p-3 text-right font-bold text-teal-700 text-sm">${formatCurrency(pay.amount)}</td>
-                            <td class="p-3 text-center">
-                                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold border border-green-200">
-                                    <i class="fas fa-check-circle"></i> Đã đối soát
-                                </span>
-                            </td>
-                        </tr>
-                    `);
-                });
-            }
-        }
-
-        function renderDashboard() {
+        function renderDashboardData() {
             document.getElementById('dash-total').innerText = appData.cases.length;
             document.getElementById('dash-ptp').innerText = appData.ptps.filter(p => p.status === 'pending').length;
             document.getElementById('dash-high').innerText = appData.cases.filter(c => c.riskLevel === 3).length;
             const totalAmt = appData.ptps.reduce((sum, p) => sum + p.amount, 0);
             document.getElementById('dash-amount').innerHTML = `${(totalAmt/1000000).toFixed(1)} <span class="text-lg font-medium text-gray-500">triệu</span>`;
+        }
+
+        function renderTrendChart() {
+            const container = document.getElementById('trend-chart-container');
+            container.innerHTML = '';
+            const today = new Date();
+            let chartHtml = '';
+            
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dayStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`;
+                
+                let hCompleted = Math.floor(Math.random() * 50) + 30;
+                let hPending = Math.floor(Math.random() * 30) + 10;
+                if (i === 0) { hCompleted = 25; hPending = 40; } // Current day
+
+                chartHtml += `
+                    <div class="w-full flex flex-col items-center gap-1 group relative">
+                        <div class="w-full h-full flex items-end justify-center gap-1">
+                            <div class="w-1/2 max-w-[20px] bg-teal-600 rounded-t transition-all hover:bg-teal-500" style="height: ${hCompleted}%;" title="Đã xử lý: ${hCompleted}"></div>
+                            <div class="w-1/2 max-w-[20px] bg-gray-300 rounded-t transition-all hover:bg-gray-400" style="height: ${hPending}%;" title="Đang chờ: ${hPending}"></div>
+                        </div>
+                        <span class="text-[10px] ${i===0 ? 'text-teal-600 font-bold' : 'text-gray-400'}">${dayStr}</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = chartHtml;
+        }
+
+        function openWorkflowModal(customer, type, status) {
+            document.getElementById('modal-workflow-detail').classList.remove('hidden');
+            document.getElementById('wf-title').innerText = `Tờ trình: ${type}`;
+            document.getElementById('wf-customer').innerText = customer;
+            document.getElementById('wf-doc-name').innerText = customer;
+            document.getElementById('wf-doc-action').innerText = `Chấp thuận ${type.toLowerCase()} cho khách hàng.`;
+            
+            const badge = document.getElementById('wf-status-badge');
+            const actionArea = document.getElementById('wf-action-area');
+            
+            if(status === 'Đã phê duyệt') {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200";
+                badge.innerText = "Đã phê duyệt";
+                actionArea.classList.add('hidden');
+            } else {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200";
+                badge.innerText = "Chờ phê duyệt";
+                actionArea.classList.remove('hidden');
+            }
+        }
+        function closeWorkflowModal() {
+            document.getElementById('modal-workflow-detail').classList.add('hidden');
+        }
+
+        function simulateRuleEngine() {
+            document.getElementById('modal-rule-simulator').classList.remove('hidden');
+            runSimLogic();
+        }
+        function closeSimulator() {
+            document.getElementById('modal-rule-simulator').classList.add('hidden');
+        }
+        function runSimLogic() {
+            const scenario = document.getElementById('sim-scenario').value;
+            const consoleEl = document.getElementById('sim-console');
+            let output = `<div class="text-yellow-400">>> SYSTEM_START: Data Aggregation...</div>`;
+            
+            if (scenario === 'kol') {
+                output += `
+                    <div class="text-gray-400">Fetching Core Banking... DPD: 5 days.</div>
+                    <div class="text-gray-400">Fetching CRM... Segment: <span class="text-purple-400">VIP/KOL</span></div>
+                    <div class="text-gray-400">Evaluate Rules:</div>
+                    <div class="ml-4 border-l border-gray-600 pl-2">
+                        <div>Rule 1 (Mass): <span class="text-red-400">FAIL</span></div>
+                        <div>Rule 2 (KOL/VIP): <span class="text-green-400">PASS</span></div>
+                    </div>
+                    <div class="text-teal-400 mt-2">>> NBA: Không dùng SMS/Voicebot tự động. Phân bổ cho Quản lý cấp cao gọi điện Outbound để bảo mật thông tin, giữ uy tín KH.</div>
+                `;
+            } else if (scenario === 'good') {
+                output += `
+                    <div class="text-gray-400">Fetching Core Banking... DPD: 3 days.</div>
+                    <div class="text-gray-400">Fetching CRM... Segment: Mass (Phổ thông).</div>
+                    <div class="text-gray-400">Evaluate Rules:</div>
+                    <div class="ml-4 border-l border-gray-600 pl-2">
+                        <div>Rule 1 (Mass - Thiện chí): <span class="text-green-400">PASS</span> (DPD < 10)</div>
+                    </div>
+                    <div class="text-blue-400 mt-2">>> NBA: Kích hoạt Auto Zalo ZNS / SMS nhắc nợ nhẹ nhàng.</div>
+                `;
+            } else if (scenario === 'bad') {
+                output += `
+                    <div class="text-gray-400">Fetching Core Banking... DPD: 45 days.</div>
+                    <div class="text-gray-400">Fetching Call Center... Missed Calls: <span class="text-red-400">5 lần liên tiếp</span>.</div>
+                    <div class="text-gray-400">Evaluate Rules:</div>
+                    <div class="ml-4 border-l border-gray-600 pl-2">
+                        <div>Condition: DPD > 30 AND Unreachable > 3.</div>
+                        <div>Rule 3 (Chây ì/Trốn tránh): <span class="text-green-400">PASS</span></div>
+                    </div>
+                    <div class="text-red-400 mt-2 font-bold">>> NBA: Ngừng gọi điện (Tốn resource). Đẩy hồ sơ vào luồng Workflow Chuyển Pháp lý.</div>
+                `;
+            }
+            
+            consoleEl.innerHTML = '';
+            let i = 0;
+            const lines = output.split('</div>');
+            function typeLine() {
+                if(i < lines.length - 1) {
+                    consoleEl.innerHTML += lines[i] + '</div>';
+                    i++;
+                    setTimeout(typeLine, 300);
+                }
+            }
+            typeLine();
         }
 
         function renderCasesList() {
@@ -1390,28 +1305,17 @@
         function openDetail(caseId) {
             currentCaseId = caseId;
             navTo('detail');
-            switchTab('overview'); // Reset to overview when opening new case
+            switchTab('overview');
         }
 
         function switchTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.detail-tab-content').forEach(el => {
-                el.classList.add('hidden');
-            });
-
-            // Remove active styles from all tabs
+            document.querySelectorAll('.detail-tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('#detail-tabs button').forEach(btn => {
                 btn.classList.remove('text-bidv-green', 'border-b-2', 'border-bidv-green', 'bg-white', 'font-bold');
                 btn.classList.add('text-gray-500', 'font-medium', 'hover:text-gray-800', 'hover:bg-gray-50');
             });
-
-            // Show selected tab content
             const activeContent = document.getElementById(`tab-content-${tabId}`);
-            if (activeContent) {
-                activeContent.classList.remove('hidden');
-            }
-
-            // Add active styles to selected tab
+            if (activeContent) activeContent.classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-btn-${tabId}`);
             if (activeBtn) {
                 activeBtn.classList.remove('text-gray-500', 'font-medium', 'hover:text-gray-800', 'hover:bg-gray-50');
@@ -1423,13 +1327,11 @@
             const c = appData.cases.find(x => x.id === currentCaseId);
             if (!c) return;
 
-            // Update Tab Counts
             document.getElementById('tab-count-loans').innerText = c.loans ? c.loans.length : 0;
             const cInts = appData.interactions.filter(i => i.caseId === c.id);
             document.getElementById('tab-count-interactions').innerText = cInts.length;
             document.getElementById('tab-count-assets').innerText = c.collaterals ? c.collaterals.length : 0;
 
-            // Header Top
             document.getElementById('detail-avatar').innerText = c.avatar;
             document.getElementById('detail-name').innerText = c.name;
             document.getElementById('detail-type-badge').innerText = c.segment;
@@ -1443,17 +1345,14 @@
             document.getElementById('detail-email').innerText = c.email;
             document.getElementById('detail-address').innerText = c.address;
             document.getElementById('detail-status').innerText = c.status;
-
             document.getElementById('detail-total-balance').innerText = formatCurrency(c.amount);
             document.getElementById('detail-total-overdue').innerText = formatCurrency(c.overdue);
             document.getElementById('detail-max-dpd').innerText = c.dpd;
 
-            // Info Card
             document.getElementById('info-dob').innerText = c.dob;
             document.getElementById('info-job').innerText = c.job;
             document.getElementById('info-company').innerText = c.company;
 
-            // NBA
             document.getElementById('detail-nba-title').innerText = c.nbaTitle;
             document.getElementById('detail-nba-desc').innerText = c.nbaDesc;
             const nbaIcon = document.getElementById('detail-nba-icon');
@@ -1474,10 +1373,7 @@
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
                             <span class="text-xs font-semibold text-gray-700">${b.label}</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-bold ${badgeColor} px-1.5 rounded">${badge}</span>
-                                <span class="text-xs font-bold text-gray-800 w-6 text-right">${b.val}</span>
-                            </div>
+                            <div class="flex items-center gap-2"><span class="text-[10px] font-bold ${badgeColor} px-1.5 rounded">${badge}</span><span class="text-xs font-bold text-gray-800 w-6 text-right">${b.val}</span></div>
                         </div>
                         <div class="progress-bar-bg"><div class="progress-bar-fill ${b.color}" style="width: ${b.val}%;"></div></div>
                     </div>
@@ -1491,13 +1387,7 @@
             else {
                 c.ews.forEach(e => {
                     let iconColor = e.color === 'red' ? 'text-red-500 bg-red-100' : 'text-yellow-600 bg-yellow-100';
-                    let badgeColor = e.color === 'red' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
-                    ehtml += `
-                        <div class="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
-                            <div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center shrink-0 text-[10px]"><i class="fas fa-exclamation"></i></div>
-                            <div class="flex-1 text-sm text-gray-700 font-medium leading-snug">${e.text}</div>
-                        </div>
-                    `;
+                    ehtml += `<div class="flex items-start gap-3 p-2 rounded hover:bg-gray-50"><div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center shrink-0 text-[10px]"><i class="fas fa-exclamation"></i></div><div class="flex-1 text-sm text-gray-700 font-medium leading-snug">${e.text}</div></div>`;
                 });
             }
             document.getElementById('ews-list').innerHTML = ehtml;
@@ -1516,15 +1406,13 @@
                 callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
             }
 
-            // PTP Current Box (Overview)
+            // PTP Current
             const casePtps = appData.ptps.filter(p => p.caseId === c.id && p.status === 'pending');
             const ptpContainer = document.getElementById('detail-ptp-container');
             if(casePtps.length > 0) {
                 ptpContainer.innerHTML = `
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-yellow-800">Cam kết trả: <span class="text-sm ml-1">${formatCurrency(casePtps[0].amount)}</span></span>
-                        </div>
+                        <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-yellow-800">Cam kết trả: <span class="text-sm ml-1">${formatCurrency(casePtps[0].amount)}</span></span></div>
                         <div class="text-xs text-gray-600 flex items-center gap-1"><i class="far fa-clock"></i> Ngày hẹn: <span class="font-bold text-gray-800">${formatDate(casePtps[0].date)}</span></div>
                     </div>`;
             } else {
@@ -1535,31 +1423,20 @@
         }
 
         function renderDetailTabs(c, interactions) {
-            // Tab: Loans
+            // Loans
             document.getElementById('detail-loan-count-title').innerText = `(${c.loans ? c.loans.length : 0} khoản vay)`;
             let loanHtml = '';
             if (c.loans && c.loans.length > 0) {
                 c.loans.forEach(l => {
-                    loanHtml += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-bold text-teal-800">${l.id}</td>
-                            <td class="px-4 py-3 text-gray-600 text-xs">${l.type}</td>
-                            <td class="px-4 py-3 text-right font-medium text-gray-800">${formatCurrency(l.balance)}</td>
-                            <td class="px-4 py-3 text-right text-gray-600">${formatCurrency(l.interest)}</td>
-                            <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(l.overdue)}</td>
-                            <td class="px-4 py-3 text-center ${l.dpd > 0 ? 'text-red-600 font-bold' : 'text-gray-500'}">${l.dpd}</td>
-                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">${l.status}</span></td>
-                        </tr>
-                    `;
+                    loanHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-bold text-teal-800">${l.id}</td><td class="px-4 py-3 text-gray-600 text-xs">${l.type}</td><td class="px-4 py-3 text-right font-medium text-gray-800">${formatCurrency(l.balance)}</td><td class="px-4 py-3 text-right text-gray-600">${formatCurrency(l.interest)}</td><td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(l.overdue)}</td><td class="px-4 py-3 text-center ${l.dpd > 0 ? 'text-red-600 font-bold' : 'text-gray-500'}">${l.dpd}</td><td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">${l.status}</span></td></tr>`;
                 });
             } else {
                 loanHtml = `<tr><td colspan="7" class="p-4 text-center text-gray-500 text-sm">Không có khoản vay chi tiết.</td></tr>`;
             }
             document.getElementById('tab-loans-table').innerHTML = loanHtml;
-            // Also update the mini table on the overview tab
             document.getElementById('detail-loans-overview').innerHTML = loanHtml; 
 
-            // Tab: Interactions
+            // Interactions
             let intHtml = '';
             const sortedInts = interactions.sort((a,b) => new Date(b.date) - new Date(a.date));
             if(sortedInts.length > 0) {
@@ -1568,43 +1445,22 @@
                     let icon = 'fa-comment-dots'; let color = 'text-blue-500 bg-blue-50 border-blue-200';
                     if(i.type.includes('gọi')) { icon = 'fa-phone-alt'; color = 'text-teal-600 bg-teal-50 border-teal-200'; }
                     if(i.type.includes('PTP')) { icon = 'fa-file-signature'; color = 'text-yellow-600 bg-yellow-50 border-yellow-200'; }
-                    intHtml += `
-                        <div class="relative pl-6">
-                            <div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div>
-                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-gray-800">${i.type}</span>
-                                    <span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span>
-                                </div>
-                                <p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p>
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user.charAt(0)}</div>
-                                    <span class="text-[10px] font-medium text-gray-500">${i.user}</span>
-                                </div>
-                            </div>
-                        </div>`;
+                    intHtml += `<div class="relative pl-6"><div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div><div class="bg-gray-50 rounded-lg p-3 border border-gray-100"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-gray-800">${i.type}</span><span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span></div><p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p><div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user.charAt(0)}</div><span class="text-[10px] font-medium text-gray-500">${i.user}</span></div></div></div>`;
                 });
                 intHtml += '</div>';
             } else {
                 intHtml = '<p class="text-sm text-gray-500 py-4">Chưa có lịch sử tương tác.</p>';
             }
             document.getElementById('tab-interactions-timeline').innerHTML = intHtml;
-            // Also update the mini timeline on the overview tab (just slice top 3)
             document.getElementById('interaction-history-overview').innerHTML = intHtml;
 
-
-            // Tab: Finance (PTPs & Payments)
+            // Finance (PTPs & Payments)
             const cPtps = appData.ptps.filter(p => p.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
             let ptpHtml = '';
             if(cPtps.length > 0) {
                 cPtps.forEach(p => {
                     let stClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600' : (p.status === 'kept' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600');
-                    ptpHtml += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td>
-                            <td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td>
-                            <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold border border-gray-200 ${stClass}">${p.status}</span></td>
-                        </tr>`;
+                    ptpHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold border border-gray-200 ${stClass}">${p.status}</span></td></tr>`;
                 });
             } else ptpHtml = `<tr><td colspan="3" class="p-4 text-center text-gray-500 text-sm">Chưa có PTP.</td></tr>`;
             document.getElementById('tab-ptps-table').innerHTML = ptpHtml;
@@ -1613,34 +1469,21 @@
             let payHtml = '';
             if(cPays.length > 0) {
                 cPays.forEach(p => {
-                    payHtml += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td>
-                            <td class="px-4 py-3 text-xs text-gray-600">${p.method}</td>
-                            <td class="px-4 py-3 text-right font-bold text-teal-700">${formatCurrency(p.amount)}</td>
-                            <td class="px-4 py-3 text-center"><i class="fas fa-check-circle text-green-500"></i></td>
-                        </tr>`;
+                    payHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-xs text-gray-600">${p.method}</td><td class="px-4 py-3 text-right font-bold text-teal-700">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><i class="fas fa-check-circle text-green-500"></i></td></tr>`;
                 });
             } else payHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Chưa có giao dịch.</td></tr>`;
             document.getElementById('tab-payments-table').innerHTML = payHtml;
 
-            // Tab: Assets (Tài sản)
+            // Assets
             let assetHtml = '';
             if (c.collaterals && c.collaterals.length > 0) {
                 c.collaterals.forEach(a => {
-                    assetHtml += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-bold text-gray-700">${a.type}</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">${a.desc}</td>
-                            <td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(a.value)}</td>
-                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 border border-blue-200">${a.status}</span></td>
-                        </tr>`;
+                    assetHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-bold text-gray-700">${a.type}</td><td class="px-4 py-3 text-sm text-gray-600">${a.desc}</td><td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(a.value)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 border border-blue-200">${a.status}</span></td></tr>`;
                 });
             } else assetHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Không có tài sản bảo đảm.</td></tr>`;
             document.getElementById('tab-assets-table').innerHTML = assetHtml;
         }
 
-        // FULL VIEWS RENDERING
         function renderAllInteractions() {
             const tbody = document.getElementById('interactions-table-body');
             tbody.innerHTML = '';
@@ -1654,73 +1497,38 @@
                 let icon = 'fa-comment-dots text-blue-500'; 
                 if(i.type.includes('gọi')) icon = 'fa-phone-alt text-teal-600'; 
                 if(i.type.includes('PTP')) icon = 'fa-file-signature text-yellow-600';
-
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 text-gray-600 font-medium">${formatDateTimeShort(i.date)}</td>
-                        <td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td>
-                        <td class="p-4 text-gray-500 cursor-pointer hover:text-bidv-green hover:underline" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</td>
-                        <td class="p-4"><div class="flex items-center gap-2"><i class="fas ${icon}"></i> <span class="text-gray-700 font-medium">${i.type}</span></div></td>
-                        <td class="p-4 text-gray-600 truncate max-w-xs" title="${i.notes}">${i.notes}</td>
-                        <td class="p-4 text-gray-500">${i.user}</td>
-                    </tr>
-                `);
+                tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50"><td class="p-4 text-gray-600 font-medium">${formatDateTimeShort(i.date)}</td><td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td><td class="p-4 text-gray-500 cursor-pointer hover:text-bidv-green hover:underline" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</td><td class="p-4"><div class="flex items-center gap-2"><i class="fas ${icon}"></i> <span class="text-gray-700 font-medium">${i.type}</span></div></td><td class="p-4 text-gray-600 truncate max-w-xs" title="${i.notes}">${i.notes}</td><td class="p-4 text-gray-500">${i.user}</td></tr>`);
             });
         }
 
-        function renderAllPtps() {
-            const tbody = document.getElementById('ptps-table-body');
-            tbody.innerHTML = '';
-            const sortedPtps = [...appData.ptps].sort((a,b) => new Date(a.date) - new Date(b.date));
+        function renderAllPtpsAndPayments() {
+            const ptpTbody = document.getElementById('ptps-table-body');
+            ptpTbody.innerHTML = '';
+            const sortedPtps = [...appData.ptps].sort((a,b) => new Date(b.date) - new Date(a.date));
             if(sortedPtps.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">Chưa có cam kết PTP nào.</td></tr>';
-                return;
+                ptpTbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Chưa có cam kết PTP nào.</td></tr>';
+            } else {
+                sortedPtps.forEach(p => {
+                    const c = appData.cases.find(x => x.id === p.caseId) || {};
+                    let statusClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : (p.status === 'kept' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
+                    let statusText = p.status === 'pending' ? 'Chờ thanh toán' : (p.status === 'kept' ? 'Đã thanh toán' : 'Vi phạm (Broken)');
+                    ptpTbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50"><td class="p-3"><div class="font-bold text-gray-800">${c.name || 'N/A'}</div><div class="text-[11px] text-gray-500 hover:text-bidv-green cursor-pointer" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</div></td><td class="p-3 text-gray-800 font-medium text-sm"><i class="far fa-calendar-alt text-gray-400 mr-1"></i> ${formatDate(p.date)}</td><td class="p-3 text-right font-bold text-gray-800 text-sm">${formatCurrency(p.amount)}</td><td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusClass}">${statusText}</span></td></tr>`);
+                });
             }
-            sortedPtps.forEach(p => {
-                const c = appData.cases.find(x => x.id === p.caseId) || {};
-                let statusClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : (p.status === 'kept' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
-                let statusText = p.status === 'pending' ? 'Chờ thanh toán' : (p.status === 'kept' ? 'Đã thanh toán' : 'Vi phạm (Broken)');
 
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td>
-                        <td class="p-4 text-gray-500 cursor-pointer hover:text-bidv-green hover:underline" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</td>
-                        <td class="p-4 text-gray-800 font-medium"><i class="far fa-calendar-alt text-gray-400 mr-1"></i> ${formatDate(p.date)}</td>
-                        <td class="p-4 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td>
-                        <td class="p-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold border ${statusClass}">${statusText}</span></td>
-                        <td class="p-4 text-center">
-                            <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
-                `);
-            });
-        }
-
-        function renderAllPayments() {
-            const tbody = document.getElementById('payments-table-body');
-            tbody.innerHTML = '';
+            const payTbody = document.getElementById('payments-table-body');
+            payTbody.innerHTML = '';
             const sortedPayments = [...appData.payments].sort((a,b) => new Date(b.date) - new Date(a.date));
             if(sortedPayments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500">Chưa có giao dịch thanh toán nào.</td></tr>';
-                return;
+                payTbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Chưa có giao dịch thanh toán nào.</td></tr>';
+            } else {
+                sortedPayments.forEach(pay => {
+                    const c = appData.cases.find(x => x.id === pay.caseId) || {};
+                    payTbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50"><td class="p-3"><div class="font-bold text-gray-600 text-xs"><i class="fas fa-receipt text-gray-300 mr-1"></i> ${pay.id}</div><div class="text-[11px] text-gray-500">${formatDateTimeShort(pay.date)}</div></td><td class="p-3"><div class="font-bold text-gray-800">${c.name || 'N/A'}</div><div class="text-[11px] text-gray-500 hover:text-bidv-green cursor-pointer" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</div></td><td class="p-3 text-right font-bold text-teal-700 text-sm">${formatCurrency(pay.amount)}</td><td class="p-3 text-center"><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold border border-green-200"><i class="fas fa-check-circle"></i> Đã đối soát</span></td></tr>`);
+                });
             }
-            sortedPayments.forEach(pay => {
-                const c = appData.cases.find(x => x.id === pay.caseId) || {};
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 font-bold text-gray-600"><i class="fas fa-receipt text-gray-300 mr-1"></i> ${pay.id}</td>
-                        <td class="p-4 text-gray-600 font-medium">${formatDateTimeShort(pay.date)}</td>
-                        <td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td>
-                        <td class="p-4 text-gray-500 cursor-pointer hover:text-bidv-green hover:underline" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</td>
-                        <td class="p-4 text-right font-bold text-teal-700">${formatCurrency(pay.amount)}</td>
-                        <td class="p-4 text-gray-600">${pay.method}</td>
-                        <td class="p-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold border bg-green-50 text-green-600 border-green-200"><i class="fas fa-check-circle mr-1"></i> ${pay.status}</span></td>
-                    </tr>
-                `);
-            });
         }
 
-        // CALL MODAL LOGIC
         function simulateCall() {
             const hour = new Date().getHours();
             if (hour < 8 || hour > 21) {
@@ -1743,14 +1551,7 @@
             const notes = document.getElementById('input-notes').value.trim();
             const createPTP = document.getElementById('input-create-ptp').checked;
             
-            appData.interactions.push({
-                id: Date.now(),
-                caseId: currentCaseId,
-                type: 'Cuộc gọi đi',
-                date: new Date().toISOString(),
-                notes: `[Kết quả: ${result}] ${notes}`,
-                user: 'Vũ Hoàng'
-            });
+            appData.interactions.push({ id: Date.now(), caseId: currentCaseId, type: 'Cuộc gọi đi', date: new Date().toISOString(), notes: `[Kết quả: ${result}] ${notes}`, user: 'Vũ Hoàng' });
 
             if (createPTP) {
                 const ptpAmount = document.getElementById('input-ptp-amount').value;
@@ -1760,13 +1561,7 @@
                     appData.interactions.pop();
                     return;
                 }
-                appData.ptps.push({
-                    id: Date.now(),
-                    caseId: currentCaseId,
-                    amount: parseFloat(ptpAmount),
-                    date: new Date(ptpDate).toISOString(),
-                    status: 'pending'
-                });
+                appData.ptps.push({ id: Date.now(), caseId: currentCaseId, amount: parseFloat(ptpAmount), date: new Date(ptpDate).toISOString(), status: 'pending' });
                 const caseIndex = appData.cases.findIndex(c => c.id === currentCaseId);
                 if (caseIndex !== -1) appData.cases[caseIndex].status = 'Đã có PTP';
             }
@@ -1783,33 +1578,28 @@
             const d = new Date(isoStr);
             return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} - ${d.toLocaleDateString('vi-VN')}`;
         }
-
         function updateClock() {
             const now = new Date();
             const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
             document.getElementById('current-date-header').innerText = `${days[now.getDay()]}, ${now.toLocaleDateString('vi-VN')}`;
             document.getElementById('current-time-header').innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute:'2-digit' });
         }
-
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
         }
-
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             let bg = type === 'success' ? 'bg-bidv-green' : (type === 'error' ? 'bg-red-600' : 'bg-gray-800');
             let icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
-            
             toast.className = `toast ${bg} flex items-center gap-3 text-sm`;
             toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
         }
 
+        // Initialize application on load
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
