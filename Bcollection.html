@@ -100,7 +100,7 @@
                 <div class="text-sm text-gray-500 hidden md:block">
                     <span class="text-bidv-green font-medium">B.Collection</span>
                     <i class="fas fa-chevron-right text-[10px] mx-2"></i>
-                    <span id="breadcrumb-title" class="text-gray-700 font-medium">Danh sách hồ sơ</span>
+                    <span id="breadcrumb-title" class="text-gray-700 font-medium">Tổng quan</span>
                 </div>
             </div>
 
@@ -142,7 +142,7 @@
                              <p class="text-sm text-gray-500 font-medium">Hồ sơ đang xử lý</p>
                              <div class="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-folder-open"></i></div>
                          </div>
-                         <h3 class="text-2xl font-bold text-gray-800" id="dash-total">248</h3>
+                         <h3 class="text-2xl font-bold text-gray-800" id="dash-total">0</h3>
                          <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 12% <span class="text-gray-400">so với tháng trước</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -150,7 +150,7 @@
                              <p class="text-sm text-gray-500 font-medium">PTP đến hạn hôm nay</p>
                              <div class="w-8 h-8 rounded bg-yellow-50 text-yellow-600 flex items-center justify-center"><i class="far fa-calendar-check"></i></div>
                          </div>
-                         <h3 class="text-2xl font-bold text-gray-800" id="dash-ptp">36</h3>
+                         <h3 class="text-2xl font-bold text-gray-800" id="dash-ptp">0</h3>
                          <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-up"></i> 5% <span class="text-gray-400">so với tuần trước</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-red-50">
@@ -158,7 +158,7 @@
                              <p class="text-sm text-red-500 font-medium">Hồ sơ quá hạn cao</p>
                              <div class="w-8 h-8 rounded bg-red-50 text-red-600 flex items-center justify-center"><i class="fas fa-exclamation-triangle"></i></div>
                          </div>
-                         <h3 class="text-2xl font-bold text-gray-800" id="dash-high">12</h3>
+                         <h3 class="text-2xl font-bold text-gray-800" id="dash-high">0</h3>
                          <p class="text-xs text-red-500 mt-1"><i class="fas fa-arrow-up"></i> 3 <span class="text-gray-400">hồ sơ mới</span></p>
                      </div>
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -166,7 +166,7 @@
                              <p class="text-sm text-gray-500 font-medium">Số tiền cam kết (Tháng)</p>
                              <div class="w-8 h-8 rounded bg-green-50 text-green-600 flex items-center justify-center"><i class="fas fa-money-bill-wave"></i></div>
                          </div>
-                         <h3 class="text-2xl font-bold text-gray-800" id="dash-amount">420 <span class="text-lg">triệu</span></h3>
+                         <h3 class="text-2xl font-bold text-gray-800" id="dash-amount">0 <span class="text-lg">triệu</span></h3>
                          <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 18% <span class="text-gray-400">so với tháng trước</span></p>
                      </div>
                  </div>
@@ -226,10 +226,10 @@
                      <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
                          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
                              <h3 class="font-bold text-gray-800">Việc cần làm hôm nay <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full ml-1">8</span></h3>
-                             <a href="#" class="text-xs text-bidv-green hover:underline">Xem tất cả</a>
+                             <a href="javascript:void(0)" class="text-xs text-bidv-green hover:underline">Xem tất cả</a>
                          </div>
                          <div class="p-0 flex-1 overflow-y-auto">
-                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3">
+                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer" onclick="navTo('cases')">
                                  <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">09:00</div>
                                  <div class="w-2 h-2 mt-1.5 rounded-full bg-red-500 shrink-0"></div>
                                  <div>
@@ -237,7 +237,7 @@
                                      <p class="text-xs text-gray-500">Khách hàng lỡ hẹn PTP ngày hôm qua. Cần gọi xác nhận.</p>
                                  </div>
                              </div>
-                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3">
+                             <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-3 cursor-pointer" onclick="navTo('payments')">
                                  <div class="text-xs font-bold text-gray-500 w-10 pt-0.5">10:30</div>
                                  <div class="w-2 h-2 mt-1.5 rounded-full bg-yellow-500 shrink-0"></div>
                                  <div>
@@ -266,6 +266,7 @@
                  </div>
             </div>
 
+            <!-- VIEW: CASES -->
             <div id="view-cases" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
@@ -315,7 +316,7 @@
                                 <tr class="bg-gray-50 text-gray-500 text-xs font-semibold border-b border-gray-200">
                                     <th class="p-3 w-10 text-center"><input type="checkbox" class="rounded border-gray-300"></th>
                                     <th class="p-3">Khách hàng</th>
-                                    <th class="p-3">Số hợp đồng</th>
+                                    <th class="p-3">Số hợp đồng chính</th>
                                     <th class="p-3">Sản phẩm</th>
                                     <th class="p-3 text-right">Dư nợ (VNĐ)</th>
                                     <th class="p-3 text-center">Quá hạn</th>
@@ -342,6 +343,7 @@
                 </div>
             </div>
 
+            <!-- VIEW: DETAIL (Debtor 360) -->
             <div id="view-detail" class="view-section hidden fade-in bg-gray-100 min-h-full pb-10">
                 
                 <!-- Sticky Header -->
@@ -385,17 +387,17 @@
                         <div class="flex flex-wrap md:flex-nowrap gap-6 md:gap-8 bg-gray-50 p-4 rounded-xl border border-gray-100 w-full xl:w-auto">
                             <div>
                                 <p class="text-[11px] font-semibold text-gray-500 mb-0.5 uppercase">Tổng nợ quá hạn</p>
-                                <p class="text-xl font-bold text-red-600" id="detail-total-overdue">12.500.000 đ</p>
+                                <p class="text-xl font-bold text-red-600" id="detail-total-overdue">0 đ</p>
                             </div>
                             <div class="hidden md:block w-px bg-gray-200"></div>
                             <div>
                                 <p class="text-[11px] font-semibold text-gray-500 mb-0.5 uppercase">Tổng dư nợ</p>
-                                <p class="text-xl font-bold text-gray-800" id="detail-total-balance">500.000.000 đ</p>
+                                <p class="text-xl font-bold text-gray-800" id="detail-total-balance">0 đ</p>
                             </div>
                             <div class="hidden md:block w-px bg-gray-200"></div>
                             <div>
                                 <p class="text-[11px] font-semibold text-gray-500 mb-0.5 uppercase">DPD cao nhất</p>
-                                <p class="text-xl font-bold text-red-600"><span id="detail-max-dpd">12</span> ngày</p>
+                                <p class="text-xl font-bold text-red-600"><span id="detail-max-dpd">0</span> ngày</p>
                             </div>
                             <div class="hidden md:block w-px bg-gray-200"></div>
                             <div>
@@ -406,16 +408,16 @@
                     </div>
 
                     <!-- Inner Navigation Tabs -->
-                    <div class="flex gap-1 border-b border-gray-200 overflow-x-auto">
-                        <button class="px-5 py-2.5 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap">Tổng quan</button>
-                        <button class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg transition whitespace-nowrap">Khoản vay (3)</button>
-                        <button class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg transition whitespace-nowrap">Lịch sử tương tác (5)</button>
-                        <button class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg transition whitespace-nowrap">PTP & Thanh toán</button>
-                        <button class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg transition whitespace-nowrap">Tài sản (2)</button>
+                    <div class="flex gap-1 border-b border-gray-200 overflow-x-auto" id="detail-tabs">
+                        <button onclick="switchTab('overview')" id="tab-btn-overview" class="px-5 py-2.5 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap transition">Tổng quan</button>
+                        <button onclick="switchTab('loans')" id="tab-btn-loans" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Khoản vay (<span id="tab-count-loans">0</span>)</button>
+                        <button onclick="switchTab('interactions')" id="tab-btn-interactions" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Lịch sử tương tác (<span id="tab-count-interactions">0</span>)</button>
+                        <button onclick="switchTab('finance')" id="tab-btn-finance" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">PTP & Thanh toán</button>
+                        <button onclick="switchTab('assets')" id="tab-btn-assets" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Tài sản (<span id="tab-count-assets">0</span>)</button>
                     </div>
 
-                    <!-- 3 Columns Layout -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- TAB CONTENT: OVERVIEW -->
+                    <div id="tab-content-overview" class="detail-tab-content block fade-in grid grid-cols-1 lg:grid-cols-12 gap-6">
                         
                         <!-- Col 1: Left Info -->
                         <div class="lg:col-span-3 space-y-6">
@@ -458,7 +460,7 @@
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">PTP hiện tại</h3>
-                                    <button class="text-blue-600 text-xs font-medium hover:underline">Sửa</button>
+                                    <button class="text-blue-600 text-xs font-medium hover:underline" onclick="switchTab('finance')">Chi tiết</button>
                                 </div>
                                 <div class="p-4" id="detail-ptp-container">
                                     <!-- Rendered via JS -->
@@ -472,7 +474,8 @@
                             <!-- Obligations -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                    <h3 class="font-bold text-gray-800 text-sm">Tổng nghĩa vụ <span class="font-normal text-gray-500 text-xs" id="detail-loan-count">(1 khoản vay)</span></h3>
+                                    <h3 class="font-bold text-gray-800 text-sm">Tổng nghĩa vụ <span class="font-normal text-gray-500 text-xs" id="detail-loan-count-title">(0 khoản vay)</span></h3>
+                                    <button class="text-bidv-green text-xs font-medium hover:underline" onclick="switchTab('loans')">Xem tất cả</button>
                                 </div>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-left text-sm whitespace-nowrap">
@@ -482,10 +485,9 @@
                                                 <th class="px-4 py-3 font-semibold text-right">Dư nợ gốc</th>
                                                 <th class="px-4 py-3 font-semibold text-right">Nợ quá hạn</th>
                                                 <th class="px-4 py-3 font-semibold text-center">DPD</th>
-                                                <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-100" id="detail-loans-table">
+                                        <tbody class="divide-y divide-gray-100" id="detail-loans-overview">
                                             <!-- Injected via JS -->
                                         </tbody>
                                     </table>
@@ -495,10 +497,10 @@
                             <!-- Interactions -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-                                    <h3 class="font-bold text-gray-800 text-sm">Lịch sử tương tác</h3>
-                                    <button class="text-bidv-green text-xs font-medium hover:underline">Xem tất cả <i class="fas fa-arrow-right text-[10px]"></i></button>
+                                    <h3 class="font-bold text-gray-800 text-sm">Tương tác gần đây</h3>
+                                    <button class="text-bidv-green text-xs font-medium hover:underline" onclick="switchTab('interactions')">Xem tất cả <i class="fas fa-arrow-right text-[10px]"></i></button>
                                 </div>
-                                <div class="p-5 max-h-[350px] overflow-y-auto" id="interaction-history">
+                                <div class="p-5 max-h-[350px] overflow-y-auto" id="interaction-history-overview">
                                     <!-- Injected via JS -->
                                 </div>
                             </div>
@@ -508,14 +510,14 @@
                         <!-- Col 3: Right AI & Actions -->
                         <div class="lg:col-span-4 space-y-6">
                             
-                            <!-- Action & Guardrail Panel (Top priority) -->
+                            <!-- Action & Guardrail Panel -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative overflow-hidden">
                                 <div class="absolute top-0 left-0 w-full h-1 bg-bidv-green"></div>
                                 <h3 class="font-bold text-gray-800 text-sm mb-4">Hành động đề xuất</h3>
                                 
                                 <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-4">
                                     <div class="flex gap-2 items-start">
-                                        <i class="fas fa-lightbulb text-yellow-600 mt-1"></i>
+                                        <i class="fas fa-lightbulb text-yellow-600 mt-1" id="detail-nba-icon"></i>
                                         <div>
                                             <p class="text-sm font-bold text-gray-800 mb-1" id="detail-nba-title">Xác nhận lịch thanh toán</p>
                                             <p class="text-xs text-gray-600" id="detail-nba-desc">Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết vào cuối ngày.</p>
@@ -541,7 +543,7 @@
                                     <button class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
                                         <i class="fas fa-comment-alt text-blue-500"></i> Gửi SMS
                                     </button>
-                                    <button class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
+                                    <button onclick="switchTab('finance')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
                                         <i class="fas fa-file-signature text-yellow-600"></i> Tạo PTP
                                     </button>
                                     <button class="bg-gray-50 border border-gray-200 text-gray-600 font-medium py-2 rounded-lg hover:bg-gray-100 transition text-xs flex items-center justify-center gap-2">
@@ -576,6 +578,117 @@
 
                         </div>
                     </div>
+
+                    <!-- TAB CONTENT: LOANS (Khoản vay) -->
+                    <div id="tab-content-loans" class="detail-tab-content hidden fade-in space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Danh sách khoản vay / Khế ước</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-white text-gray-500 text-[11px] uppercase border-b border-gray-100">
+                                            <th class="px-4 py-3 font-semibold">Số hợp đồng</th>
+                                            <th class="px-4 py-3 font-semibold">Sản phẩm</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Dư nợ gốc</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Dư nợ lãi & phí</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Tổng quá hạn</th>
+                                            <th class="px-4 py-3 font-semibold text-center">DPD</th>
+                                            <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100" id="tab-loans-table">
+                                        <!-- Injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB CONTENT: INTERACTIONS (Lịch sử tương tác) -->
+                    <div id="tab-content-interactions" class="detail-tab-content hidden fade-in space-y-6">
+                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Toàn bộ lịch sử tương tác</h3>
+                                <button onclick="simulateCall()" class="px-3 py-1.5 bg-bidv-green text-white text-xs rounded hover:bg-teal-800"><i class="fas fa-plus"></i> Ghi nhận mới</button>
+                            </div>
+                            <div class="p-6" id="tab-interactions-timeline">
+                                <!-- Injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB CONTENT: PTP & PAYMENTS (Tài chính) -->
+                    <div id="tab-content-finance" class="detail-tab-content hidden fade-in grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left: PTPs -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Cam kết thanh toán (PTP)</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-white text-gray-500 text-[11px] uppercase border-b border-gray-100">
+                                            <th class="px-4 py-3 font-semibold">Ngày hẹn</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Số tiền</th>
+                                            <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100" id="tab-ptps-table">
+                                        <!-- Injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right: Actual Payments -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Lịch sử thanh toán (Core)</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-white text-gray-500 text-[11px] uppercase border-b border-gray-100">
+                                            <th class="px-4 py-3 font-semibold">Ngày GD</th>
+                                            <th class="px-4 py-3 font-semibold">Phương thức</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Số tiền (VNĐ)</th>
+                                            <th class="px-4 py-3 font-semibold text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100" id="tab-payments-table">
+                                        <!-- Injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB CONTENT: ASSETS (Tài sản) -->
+                    <div id="tab-content-assets" class="detail-tab-content hidden fade-in space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Tài sản bảo đảm & Bảo lãnh</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-white text-gray-500 text-[11px] uppercase border-b border-gray-100">
+                                            <th class="px-4 py-3 font-semibold">Loại tài sản</th>
+                                            <th class="px-4 py-3 font-semibold">Mô tả</th>
+                                            <th class="px-4 py-3 font-semibold text-right">Giá trị ước tính</th>
+                                            <th class="px-4 py-3 font-semibold text-center">Trạng thái pháp lý</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100" id="tab-assets-table">
+                                        <!-- Injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -667,6 +780,7 @@
                 </div>
             </div>
 
+            <!-- MODAL: CALL LOGGING -->
             <div id="view-call-log" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
                  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden max-h-[95vh] fade-in">
                      
@@ -804,68 +918,59 @@
         let appData = { cases: [], interactions: [], ptps: [], payments: [] };
         let currentCaseId = null;
 
-        // Expanded Mock Data
         function getMockData() {
             const mockCases = [
-                { id: 'HDTD001234', cif: '1234567890', name: 'Nguyễn Minh An', type: 'Vay tiêu dùng', amount: 500000000, overdue: 12500000, dpd: 12, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Vũ Hoàng', phone: '0903 *** 678', email: 'nma***@gmail.com', address: 'Thanh Xuân, Hà Nội', dob: '15/08/1990', job: 'Nhân viên văn phòng', segment: 'Retail - Mass', company: 'Công ty CP ABC', avatar: 'NA', isCorp: false, 
+                { id: 'HDTD001234', cif: '1234567890', name: 'Nguyễn Minh An', type: 'Vay tiêu dùng', amount: 500000000, overdue: 12500000, dpd: 12, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Vũ Hoàng', phone: '0903 *** 678', email: 'nma***@gmail.com', address: 'Thanh Xuân, Hà Nội', dob: '15/08/1990', job: 'Nhân viên văn phòng', segment: 'Bán lẻ - Đại trà', company: 'Công ty CP ABC', avatar: 'NA', isCorp: false, 
                   nbaTitle: 'Xác nhận lịch thanh toán', nbaDesc: 'Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết 5.000.000 đ vào ngày mai.',
                   persona: { pay: 75, collab: 60, contact: 80, break: 30, priority: 85, digital: 70 },
-                  ews: [{ text: 'Số dư tài khoản thường xuyên thấp', level: 'Cao', color: 'red' }, { text: 'Giảm thu nhập qua tài khoản', level: 'Trung bình', color: 'yellow' }]
+                  ews: [{ text: 'Số dư tài khoản thường xuyên thấp', level: 'Cao', color: 'red' }, { text: 'Giảm thu nhập qua tài khoản', level: 'Trung bình', color: 'yellow' }],
+                  loans: [
+                      { id: 'LN-TD-1001', type: 'Vay tiêu dùng', balance: 400000000, interest: 5000000, overdue: 10000000, dpd: 12, status: 'Quá hạn' },
+                      { id: 'CC-1002', type: 'Thẻ tín dụng', balance: 100000000, interest: 1000000, overdue: 2500000, dpd: 5, status: 'Quá hạn' }
+                  ],
+                  collaterals: [
+                      { type: 'Bất động sản', desc: 'Căn hộ chung cư HH1 Linh Đàm', value: 2500000000, status: 'Đang thế chấp' }
+                  ]
                 },
-                { id: 'HDTD005678', cif: '0987654321', name: 'Trần Thị Bích Ngọc', type: 'Thẻ tín dụng', amount: 120000000, overdue: 8200000, dpd: 28, riskLevel: 2, riskStr: 'Trung bình', status: 'Chưa liên hệ', assignee: 'Lê Thu Hà', phone: '0912 *** 678', email: 'ngoc***@yahoo.com', address: 'Cầu Giấy, Hà Nội', dob: '22/11/1985', job: 'Kinh doanh tự do', segment: 'Retail - Mass', company: 'N/A', avatar: 'TN', isCorp: false,
+                { id: 'HDTD005678', cif: '0987654321', name: 'Trần Thị Bích Ngọc', type: 'Thẻ tín dụng', amount: 120000000, overdue: 8200000, dpd: 28, riskLevel: 2, riskStr: 'Trung bình', status: 'Chưa liên hệ', assignee: 'Lê Thu Hà', phone: '0912 *** 678', email: 'ngoc***@yahoo.com', address: 'Cầu Giấy, Hà Nội', dob: '22/11/1985', job: 'Kinh doanh tự do', segment: 'Bán lẻ - Đại trà', company: 'N/A', avatar: 'TN', isCorp: false,
                   nbaTitle: 'Cảnh báo chuyển nhóm nợ', nbaDesc: 'Sắp chạm mốc 30 ngày. Ưu tiên gửi Zalo ZNS cảnh báo văn bản do khách hay từ chối nghe máy.',
                   persona: { pay: 40, collab: 25, contact: 60, break: 60, priority: 70, digital: 85 },
-                  ews: [{ text: 'Phát sinh nợ nhóm 2 tại TCTD khác', level: 'Cao', color: 'red' }]
+                  ews: [{ text: 'Phát sinh nợ nhóm 2 tại TCTD khác', level: 'Cao', color: 'red' }],
+                  loans: [
+                      { id: 'CC-2001', type: 'Thẻ tín dụng', balance: 120000000, interest: 4000000, overdue: 8200000, dpd: 28, status: 'Quá hạn' }
+                  ],
+                  collaterals: []
                 },
                 { id: 'HDDN009876', cif: '1122334455', name: 'Công ty TNHH An Phát', type: 'Vay TNNN', amount: 5200000000, overdue: 45000000, dpd: 45, riskLevel: 3, riskStr: 'Cao', status: 'Đã liên hệ', assignee: 'Phạm Tuấn', phone: '0243 *** 456', email: 'contact@anphat.vn', address: 'KCN Từ Liêm, HN', dob: 'N/A', job: 'Doanh nghiệp', segment: 'SME', company: 'Công ty TNHH An Phát', avatar: 'AP', isCorp: true,
                   nbaTitle: 'Đôn đốc PTP Doanh nghiệp', nbaDesc: 'Giám sát PTP. Đã có cam kết trả 20tr vào 15/09. Liên hệ Kế toán trưởng qua luồng chuyên trách SME.',
                   persona: { pay: 50, collab: 70, contact: 90, break: 20, priority: 95, digital: 50 },
-                  ews: [{ text: 'Chỉ số tài chính suy giảm', level: 'Cao', color: 'red' }, { text: 'Chậm nộp thuế', level: 'Trung bình', color: 'yellow' }]
-                },
-                { id: 'HDTD007890', cif: '2233445566', name: 'Lê Văn Hoàng', type: 'Vay mua nhà', amount: 2500000000, overdue: 30000000, dpd: 28, riskLevel: 3, riskStr: 'Cao', status: 'Chờ PTP', assignee: 'Nguyễn Thu Trang', phone: '0988 *** 655', email: 'lvh***@gmail.com', address: 'Q7, TP.HCM', dob: '05/04/1978', job: 'Trưởng phòng', segment: 'Retail - Affluent', company: 'Tập đoàn XYZ', avatar: 'LH', isCorp: false,
-                  nbaTitle: 'Xác minh khả năng trả nợ', nbaDesc: 'Khoản vay lớn, sắp quá hạn nhóm 2. Chuyển chi nhánh phối hợp thẩm định lại khả năng tài chính.',
-                  persona: { pay: 65, collab: 50, contact: 70, break: 40, priority: 90, digital: 60 }, ews: []
-                },
-                { id: 'HDTD006789', cif: '3344556677', name: 'Phạm Thị Thu Hà', type: 'Vay tiêu dùng', amount: 300000000, overdue: 3000000, dpd: 3, riskLevel: 1, riskStr: 'Thấp', status: 'Đã có PTP', assignee: 'Trần Văn Nam', phone: '0977 *** 123', email: 'thuha***@gmail.com', address: 'Ba Đình, Hà Nội', dob: '12/12/1995', job: 'Giáo viên', segment: 'Retail - Payroll', company: 'Trường THPT X', avatar: 'PH', isCorp: false,
-                  nbaTitle: 'Theo dõi tự động (Auto-cure)', nbaDesc: 'Khách hàng rủi ro thấp, đã có PTP. Hệ thống tự động SMS nhắc trước 1 ngày, không cần gọi.',
-                  persona: { pay: 90, collab: 95, contact: 95, break: 10, priority: 30, digital: 80 }, ews: []
-                },
-                { id: 'HDTD004567', cif: '4455667788', name: 'Hoàng Văn Nam', type: 'Thẻ tín dụng', amount: 80000000, overdue: 15000000, dpd: 15, riskLevel: 2, riskStr: 'Trung bình', status: 'Chưa liên hệ', assignee: 'Vũ Hoàng', phone: '0966 *** 345', email: 'namhv***@gmail.com', address: 'Đống Đa, Hà Nội', dob: '01/01/1988', job: 'Kỹ sư IT', segment: 'Retail - Mass', company: 'FPT Software', avatar: 'HN', isCorp: false,
-                  nbaTitle: 'Gọi nhắc nợ tiêu chuẩn', nbaDesc: 'Khách hàng có lịch sử trả nợ tốt trước đây, mức độ Digital cao, ưu tiên tương tác ZNS rồi mới gọi.',
-                  persona: { pay: 70, collab: 80, contact: 85, break: 25, priority: 60, digital: 90 }, ews: []
-                },
-                 { id: 'HDTD009988', cif: '9988776655', name: 'Đặng Kim Lan', type: 'Vay thấu chi', amount: 50000000, overdue: 50000000, dpd: 80, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Lê Thu Hà', phone: '0901 *** 222', email: 'landk***@gmail.com', address: 'Hải Phòng', dob: '10/10/1980', job: 'Buôn bán tự do', segment: 'Retail - Mass', company: 'Cửa hàng tự doanh', avatar: 'DL', isCorp: false,
-                  nbaTitle: 'Đề xuất chuyển pháp lý', nbaDesc: 'Đã quá hạn lâu, bất hợp tác nhiều lần, khả năng trả nợ kém. Chuyển hồ sơ xem xét pháp lý/AMC.',
-                  persona: { pay: 20, collab: 10, contact: 30, break: 90, priority: 95, digital: 40 }, 
-                  ews: [{ text: 'Mất liên lạc qua số điện thoại chính', level: 'Cao', color: 'red' }]
-                },
-                { id: 'HDDN002345', cif: '5566778899', name: 'Công ty CP Đầu tư ABC', type: 'Vay lưu động', amount: 12000000000, overdue: 120000000, dpd: 65, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Lê Thu Hà', phone: '0283 *** 789', email: 'contact@abc-invest.com', address: 'Quận 1, TP.HCM', dob: 'N/A', job: 'Doanh nghiệp', segment: 'Corporate', company: 'Công ty CP Đầu tư ABC', avatar: 'AB', isCorp: true,
-                  nbaTitle: 'Họp với Giám đốc/Kế toán trưởng', nbaDesc: 'Dư nợ lớn, quá hạn sâu. Đề xuất thiết lập cuộc họp trực tiếp để xem xét cơ cấu lại nợ.',
-                  persona: { pay: 40, collab: 50, contact: 80, break: 40, priority: 95, digital: 30 },
-                  ews: [{ text: 'BCTC chậm nộp', level: 'Trung bình', color: 'yellow' }]
+                  ews: [{ text: 'Chỉ số tài chính suy giảm', level: 'Cao', color: 'red' }, { text: 'Chậm nộp thuế', level: 'Trung bình', color: 'yellow' }],
+                  loans: [
+                      { id: 'SME-LN-3001', type: 'Vay vốn lưu động', balance: 5200000000, interest: 12000000, overdue: 45000000, dpd: 45, status: 'Quá hạn' }
+                  ],
+                  collaterals: [
+                      { type: 'Máy móc thiết bị', desc: 'Dây chuyền sản xuất bao bì', value: 3000000000, status: 'Đang thế chấp' },
+                      { type: 'Hàng tồn kho', desc: 'Nguyên vật liệu nhựa', value: 1500000000, status: 'Quyền luân chuyển' }
+                  ]
                 }
             ];
 
             const mockInteractions = [
                 { id: 1, caseId: 'HDTD001234', type: 'Cuộc gọi đi (8 phút)', date: new Date(Date.now() - 86400000 * 2).toISOString(), notes: 'Trao đổi về lịch thanh toán. KH trình bày đang đợi lương. Hẹn sẽ gọi lại vào hôm sau để chốt số tiền.', user: 'Vũ Hoàng' },
                 { id: 2, caseId: 'HDTD001234', type: 'Gửi SMS', date: new Date(Date.now() - 86400000 * 4).toISOString(), notes: 'Gửi nhắc nợ kỳ hạn qua SMS Brandname.', user: 'Hệ thống' },
-                { id: 3, caseId: 'HDTD001234', type: 'Tạo PTP', date: new Date(Date.now() - 86400000 * 10).toISOString(), notes: 'KH cam kết trả 5tr. Đã tạo PTP trên hệ thống.', user: 'Nguyễn Thị Lan' },
-                { id: 4, caseId: 'HDTD005678', type: 'Zalo ZNS', date: new Date().toISOString(), notes: 'Đã gửi thông báo nợ tự động qua Zalo.', user: 'Hệ thống' },
-                { id: 5, caseId: 'HDTD009988', type: 'Cuộc gọi đi (0 phút)', date: new Date(Date.now() - 86400000 * 1).toISOString(), notes: 'Thuê bao không liên lạc được.', user: 'Lê Thu Hà' },
-                { id: 6, caseId: 'HDTD009988', type: 'Thư mời làm việc', date: new Date(Date.now() - 86400000 * 5).toISOString(), notes: 'Đã gửi thư mời lên chi nhánh làm việc do quá hạn lâu.', user: 'Lê Thu Hà' }
+                { id: 3, caseId: 'HDTD001234', type: 'Tạo PTP', date: new Date(Date.now() - 86400000 * 10).toISOString(), notes: 'KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.', user: 'Vũ Hoàng' },
+                { id: 4, caseId: 'HDTD005678', type: 'Zalo ZNS', date: new Date().toISOString(), notes: 'Đã gửi thông báo nợ tự động qua Zalo.', user: 'Hệ thống' }
             ];
 
             const mockPtps = [
                 { id: 1, caseId: 'HDTD001234', amount: 5000000, date: new Date(Date.now() + 86400000 * 2).toISOString(), status: 'pending' },
                 { id: 2, caseId: 'HDDN009876', amount: 20000000, date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'pending' },
-                { id: 3, caseId: 'HDTD006789', amount: 3000000, date: new Date(Date.now() - 86400000 * 1).toISOString(), status: 'kept' },
-                { id: 4, caseId: 'HDTD009988', amount: 15000000, date: new Date(Date.now() - 86400000 * 2).toISOString(), status: 'broken' }
+                { id: 3, caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'kept' }
             ];
 
             const mockPayments = [
-                { id: 'PAY_100192', caseId: 'HDTD006789', amount: 3000000, date: new Date(Date.now() - 86400000 * 1).toISOString(), status: 'Thành công', method: 'Chuyển khoản' },
-                { id: 'PAY_100193', caseId: 'HDTD004567', amount: 2000000, date: new Date(Date.now() - 86400000 * 3).toISOString(), status: 'Thành công', method: 'Trích nợ tự động' },
-                { id: 'PAY_100194', caseId: 'HDDN002345', amount: 50000000, date: new Date(Date.now() - 86400000 * 5).toISOString(), status: 'Thành công', method: 'Tại quầy' }
+                { id: 'PAY_100192', caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'Thành công', method: 'Chuyển khoản' },
+                { id: 'PAY_100194', caseId: 'HDDN009876', amount: 50000000, date: new Date(Date.now() - 86400000 * 30).toISOString(), status: 'Thành công', method: 'Tại quầy' }
             ];
 
             return { cases: mockCases, interactions: mockInteractions, ptps: mockPtps, payments: mockPayments };
@@ -945,7 +1050,10 @@
                 navEl.classList.remove('text-white/70');
             }
 
-            if (window.innerWidth < 1024) toggleSidebar(); // Close mobile menu
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('mobile-overlay').classList.add('hidden');
+            }
 
             if (viewId === 'dashboard') {
                 document.getElementById('breadcrumb-title').innerText = "Tổng quan";
@@ -955,7 +1063,7 @@
                 renderCasesList();
             } else if (viewId === 'detail') {
                 document.getElementById('breadcrumb-title').innerText = "Chi tiết hồ sơ";
-                if(!currentCaseId && appData.cases.length > 0) currentCaseId = appData.cases[0].id; // fallback
+                if(!currentCaseId && appData.cases.length > 0) currentCaseId = appData.cases[0].id;
                 renderCaseDetail();
             } else if (viewId === 'interactions') {
                 document.getElementById('breadcrumb-title').innerText = "Tương tác";
@@ -971,11 +1079,35 @@
             }
         }
 
+        // TAB NAVIGATION IN DEBTOR 360
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.detail-tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block', 'grid'); // Remove display block/grid
+            });
+            
+            // Reset all tab buttons to inactive
+            document.querySelectorAll('#detail-tabs button').forEach(btn => {
+                btn.className = "px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition";
+            });
+
+            // Show selected tab content
+            const contentEl = document.getElementById(`tab-content-${tabId}`);
+            contentEl.classList.remove('hidden');
+            if(tabId === 'overview') contentEl.classList.add('grid');
+            else if(tabId === 'finance') contentEl.classList.add('grid');
+            else contentEl.classList.add('block');
+
+            // Style active button
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            activeBtn.className = "px-5 py-2.5 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap transition";
+        }
+
         function renderDashboard() {
             document.getElementById('dash-total').innerText = appData.cases.length;
             document.getElementById('dash-ptp').innerText = appData.ptps.filter(p => p.status === 'pending').length;
             document.getElementById('dash-high').innerText = appData.cases.filter(c => c.riskLevel === 3).length;
-            
             const totalAmt = appData.ptps.reduce((sum, p) => sum + p.amount, 0);
             document.getElementById('dash-amount').innerHTML = `${(totalAmt/1000000).toFixed(1)} <span class="text-lg font-medium text-gray-500">triệu</span>`;
         }
@@ -983,17 +1115,14 @@
         function renderCasesList() {
             const tbody = document.getElementById('cases-table-body');
             tbody.innerHTML = '';
-            
             const statusFilter = document.getElementById('filter-status').value;
             let filteredCases = appData.cases;
             if(statusFilter !== 'all') {
                 filteredCases = filteredCases.filter(c => c.status === statusFilter);
             }
-
             document.getElementById('visible-count').innerText = filteredCases.length;
-
             if (filteredCases.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-500">Không tìm thấy hồ sơ nào phù hợp.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-500">Không tìm thấy hồ sơ nào.</td></tr>`;
                 return;
             }
 
@@ -1023,9 +1152,7 @@
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusClass}">${c.status}</span></td>
                         <td class="p-3 text-center" onclick="event.stopPropagation()">
                             <div class="flex justify-center gap-1">
-                                <button onclick="openDetail('${c.id}'); setTimeout(simulateCall, 300);" class="w-7 h-7 rounded-full bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition" title="Gọi điện"><i class="fas fa-phone-alt text-xs"></i></button>
-                                <button class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-600 hover:text-white transition"><i class="fas fa-file-alt text-xs"></i></button>
-                                <button class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-600 hover:text-white transition"><i class="fas fa-ellipsis-h text-xs"></i></button>
+                                <button onclick="openDetail('${c.id}'); setTimeout(simulateCall, 300);" class="w-7 h-7 rounded-full bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition"><i class="fas fa-phone-alt text-xs"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1037,16 +1164,23 @@
         function openDetail(caseId) {
             currentCaseId = caseId;
             navTo('detail');
+            switchTab('overview'); // Reset to overview when opening new case
         }
 
         function renderCaseDetail() {
             const c = appData.cases.find(x => x.id === currentCaseId);
             if (!c) return;
 
+            // Update Tab Counts
+            document.getElementById('tab-count-loans').innerText = c.loans ? c.loans.length : 0;
+            const cInts = appData.interactions.filter(i => i.caseId === c.id);
+            document.getElementById('tab-count-interactions').innerText = cInts.length;
+            document.getElementById('tab-count-assets').innerText = c.collaterals ? c.collaterals.length : 0;
+
             // Header Top
             document.getElementById('detail-avatar').innerText = c.avatar;
             document.getElementById('detail-name').innerText = c.name;
-            document.getElementById('detail-type-badge').innerText = c.segment; // Use segment here
+            document.getElementById('detail-type-badge').innerText = c.segment;
             
             const riskBadge = document.getElementById('detail-risk-badge');
             riskBadge.innerText = c.riskStr;
@@ -1067,38 +1201,19 @@
             document.getElementById('info-job').innerText = c.job;
             document.getElementById('info-company').innerText = c.company;
 
-            // Loans Table
-            document.getElementById('detail-loans-table').innerHTML = `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-bold text-teal-800">${c.id}</td>
-                    <td class="px-4 py-3 text-right font-medium text-gray-800">${formatCurrency(c.amount)}</td>
-                    <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(c.overdue)}</td>
-                    <td class="px-4 py-3 text-center ${c.dpd > 0 ? 'text-red-600 font-bold' : 'text-gray-500'}">${c.dpd}</td>
-                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">Quá hạn</span></td>
-                </tr>
-            `;
-
             // NBA
             document.getElementById('detail-nba-title').innerText = c.nbaTitle;
             document.getElementById('detail-nba-desc').innerText = c.nbaDesc;
-
-            // Adjust NBA Icon based on title keywords
-            const nbaIcon = document.getElementById('detail-nba-icon') || document.createElement('i');
-            nbaIcon.id = 'detail-nba-icon';
-            if(!document.getElementById('detail-nba-icon')){
-               document.getElementById('detail-nba-title').parentElement.parentElement.prepend(nbaIcon);
-            }
+            const nbaIcon = document.getElementById('detail-nba-icon');
             nbaIcon.className = `fas mt-1 ${c.nbaTitle.toLowerCase().includes('pháp lý') ? 'fa-gavel text-red-600' : (c.nbaTitle.toLowerCase().includes('sms') || c.nbaTitle.toLowerCase().includes('zalo') ? 'fa-comment-alt text-blue-500' : 'fa-lightbulb text-yellow-600')}`;
 
             // Persona Bars
             const pBars = [
-                { label: 'Khả năng trả nợ (Ability)', val: c.persona.pay, color: 'bg-teal-500' },
-                { label: 'Mức độ hợp tác (Willingness)', val: c.persona.collab, color: c.persona.collab >= 50 ? 'bg-yellow-400' : 'bg-red-500' },
-                { label: 'Khả năng liên hệ (Contactability)', val: c.persona.contact, color: 'bg-green-500' },
-                { label: 'Rủi ro phá PTP (Break Risk)', val: c.persona.break, color: c.persona.break >= 50 ? 'bg-red-500' : 'bg-teal-500' },
-                { label: 'Mức độ ưu tiên (Priority)', val: c.persona.priority, color: 'bg-blue-500' }
+                { label: 'Khả năng trả nợ', val: c.persona.pay, color: 'bg-teal-500' },
+                { label: 'Mức độ hợp tác', val: c.persona.collab, color: c.persona.collab >= 50 ? 'bg-yellow-400' : 'bg-red-500' },
+                { label: 'Khả năng liên hệ', val: c.persona.contact, color: 'bg-green-500' },
+                { label: 'Rủi ro phá PTP', val: c.persona.break, color: c.persona.break >= 50 ? 'bg-red-500' : 'bg-teal-500' }
             ];
-            
             let phtml = '';
             pBars.forEach(b => {
                 let badge = b.val >= 70 ? 'Tốt' : (b.val >= 40 ? 'Tr.Bình' : 'Kém');
@@ -1106,7 +1221,7 @@
                 phtml += `
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-xs font-semibold text-gray-700 flex items-center gap-2"><i class="fas fa-check-circle text-gray-300"></i> ${b.label}</span>
+                            <span class="text-xs font-semibold text-gray-700">${b.label}</span>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold ${badgeColor} px-1.5 rounded">${badge}</span>
                                 <span class="text-xs font-bold text-gray-800 w-6 text-right">${b.val}</span>
@@ -1129,110 +1244,166 @@
                         <div class="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
                             <div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center shrink-0 text-[10px]"><i class="fas fa-exclamation"></i></div>
                             <div class="flex-1 text-sm text-gray-700 font-medium leading-snug">${e.text}</div>
-                            <div class="text-[10px] font-bold ${badgeColor} px-1.5 py-0.5 rounded shrink-0">${e.level}</div>
                         </div>
                     `;
                 });
             }
             document.getElementById('ews-list').innerHTML = ehtml;
 
-            // Guardrail logic
+            // Guardrail
             const hour = new Date().getHours();
             const gPanel = document.getElementById('guardrail-panel');
             const callBtn = document.getElementById('btn-call');
-            
             if (hour >= 8 && hour <= 21) {
-                gPanel.innerHTML = `
-                    <li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Khung giờ cho phép (08:00 - 21:00)</li>
-                    <li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Không có yêu cầu ngừng liên hệ</li>
-                `;
+                gPanel.innerHTML = `<li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Khung giờ cho phép (08:00 - 21:00)</li>`;
                 callBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
                 callBtn.classList.add('bg-bidv-green', 'hover:bg-teal-800');
             } else {
-                gPanel.innerHTML = `
-                    <li class="flex items-center gap-2 text-xs font-bold text-red-600"><i class="fas fa-times-circle text-red-500"></i> Ngoài khung giờ (Chỉ từ 08:00 - 21:00)</li>
-                    <li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Không có yêu cầu ngừng liên hệ</li>
-                `;
+                gPanel.innerHTML = `<li class="flex items-center gap-2 text-xs font-bold text-red-600"><i class="fas fa-times-circle text-red-500"></i> Ngoài khung giờ (Chỉ từ 08:00 - 21:00)</li>`;
                 callBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
                 callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
             }
 
-            // PTP
+            // PTP Current Box (Overview)
             const casePtps = appData.ptps.filter(p => p.caseId === c.id && p.status === 'pending');
             const ptpContainer = document.getElementById('detail-ptp-container');
             if(casePtps.length > 0) {
-                const p = casePtps[0];
                 ptpContainer.innerHTML = `
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-yellow-800">Cam kết trả: <span class="text-sm ml-1">${formatCurrency(p.amount)}</span></span>
-                            <span class="bg-white text-yellow-600 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-200">Chờ thanh toán</span>
+                            <span class="text-xs font-bold text-yellow-800">Cam kết trả: <span class="text-sm ml-1">${formatCurrency(casePtps[0].amount)}</span></span>
                         </div>
-                        <div class="text-xs text-gray-600 flex items-center gap-1"><i class="far fa-clock"></i> Ngày hẹn: <span class="font-bold text-gray-800">${formatDate(p.date)}</span></div>
-                    </div>
-                `;
+                        <div class="text-xs text-gray-600 flex items-center gap-1"><i class="far fa-clock"></i> Ngày hẹn: <span class="font-bold text-gray-800">${formatDate(casePtps[0].date)}</span></div>
+                    </div>`;
             } else {
                 ptpContainer.innerHTML = `<div class="p-3 text-center border border-dashed border-gray-300 rounded-lg text-xs text-gray-500">Chưa có cam kết thanh toán (PTP)</div>`;
             }
 
-            renderInteractions();
+            renderDetailTabs(c, cInts);
         }
 
-        function renderInteractions() {
-            const container = document.getElementById('interaction-history');
-            const interactions = appData.interactions.filter(i => i.caseId === currentCaseId).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            if(interactions.length === 0) {
-                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Chưa có lịch sử tương tác.</p>';
-                return;
+        function renderDetailTabs(c, interactions) {
+            // Tab: Loans
+            document.getElementById('detail-loan-count-title').innerText = `(${c.loans ? c.loans.length : 0} khoản vay)`;
+            let loanHtml = '';
+            if (c.loans && c.loans.length > 0) {
+                c.loans.forEach(l => {
+                    loanHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-bold text-teal-800">${l.id}</td>
+                            <td class="px-4 py-3 text-gray-600 text-xs">${l.type}</td>
+                            <td class="px-4 py-3 text-right font-medium text-gray-800">${formatCurrency(l.balance)}</td>
+                            <td class="px-4 py-3 text-right text-gray-600">${formatCurrency(l.interest)}</td>
+                            <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(l.overdue)}</td>
+                            <td class="px-4 py-3 text-center ${l.dpd > 0 ? 'text-red-600 font-bold' : 'text-gray-500'}">${l.dpd}</td>
+                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">${l.status}</span></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                loanHtml = `<tr><td colspan="7" class="p-4 text-center text-gray-500 text-sm">Không có khoản vay chi tiết.</td></tr>`;
             }
+            document.getElementById('tab-loans-table').innerHTML = loanHtml;
+            // Also update the mini table on the overview tab
+            document.getElementById('detail-loans-overview').innerHTML = loanHtml; 
 
-            let html = '<div class="relative border-l-2 border-gray-100 ml-3 space-y-5 pb-2">';
-            interactions.forEach(i => {
-                let icon = 'fa-comment-dots'; let color = 'text-blue-500 bg-blue-50 border-blue-200';
-                if(i.type.includes('gọi')) { icon = 'fa-phone-alt'; color = 'text-teal-600 bg-teal-50 border-teal-200'; }
-                if(i.type.includes('PTP')) { icon = 'fa-file-signature'; color = 'text-yellow-600 bg-yellow-50 border-yellow-200'; }
+            // Tab: Interactions
+            let intHtml = '';
+            const sortedInts = interactions.sort((a,b) => new Date(b.date) - new Date(a.date));
+            if(sortedInts.length > 0) {
+                intHtml = '<div class="relative border-l-2 border-gray-100 ml-3 space-y-5 pb-2">';
+                sortedInts.forEach(i => {
+                    let icon = 'fa-comment-dots'; let color = 'text-blue-500 bg-blue-50 border-blue-200';
+                    if(i.type.includes('gọi')) { icon = 'fa-phone-alt'; color = 'text-teal-600 bg-teal-50 border-teal-200'; }
+                    if(i.type.includes('PTP')) { icon = 'fa-file-signature'; color = 'text-yellow-600 bg-yellow-50 border-yellow-200'; }
+                    intHtml += `
+                        <div class="relative pl-6">
+                            <div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div>
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-gray-800">${i.type}</span>
+                                    <span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span>
+                                </div>
+                                <p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user.charAt(0)}</div>
+                                    <span class="text-[10px] font-medium text-gray-500">${i.user}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                intHtml += '</div>';
+            } else {
+                intHtml = '<p class="text-sm text-gray-500 py-4">Chưa có lịch sử tương tác.</p>';
+            }
+            document.getElementById('tab-interactions-timeline').innerHTML = intHtml;
+            // Also update the mini timeline on the overview tab (just slice top 3)
+            document.getElementById('interaction-history-overview').innerHTML = intHtml;
 
-                html += `
-                    <div class="relative pl-6">
-                        <div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div>
-                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs font-bold text-gray-800">${i.type}</span>
-                                <span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span>
-                            </div>
-                            <p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p>
-                            <div class="flex items-center gap-1.5">
-                                <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user.charAt(0)}</div>
-                                <span class="text-[10px] font-medium text-gray-500">${i.user}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
+
+            // Tab: Finance (PTPs & Payments)
+            const cPtps = appData.ptps.filter(p => p.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+            let ptpHtml = '';
+            if(cPtps.length > 0) {
+                cPtps.forEach(p => {
+                    let stClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600' : (p.status === 'kept' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600');
+                    ptpHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td>
+                            <td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td>
+                            <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold border border-gray-200 ${stClass}">${p.status}</span></td>
+                        </tr>`;
+                });
+            } else ptpHtml = `<tr><td colspan="3" class="p-4 text-center text-gray-500 text-sm">Chưa có PTP.</td></tr>`;
+            document.getElementById('tab-ptps-table').innerHTML = ptpHtml;
+
+            const cPays = appData.payments.filter(p => p.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+            let payHtml = '';
+            if(cPays.length > 0) {
+                cPays.forEach(p => {
+                    payHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td>
+                            <td class="px-4 py-3 text-xs text-gray-600">${p.method}</td>
+                            <td class="px-4 py-3 text-right font-bold text-teal-700">${formatCurrency(p.amount)}</td>
+                            <td class="px-4 py-3 text-center"><i class="fas fa-check-circle text-green-500"></i></td>
+                        </tr>`;
+                });
+            } else payHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Chưa có giao dịch.</td></tr>`;
+            document.getElementById('tab-payments-table').innerHTML = payHtml;
+
+            // Tab: Assets (Tài sản)
+            let assetHtml = '';
+            if (c.collaterals && c.collaterals.length > 0) {
+                c.collaterals.forEach(a => {
+                    assetHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-bold text-gray-700">${a.type}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">${a.desc}</td>
+                            <td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(a.value)}</td>
+                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 border border-blue-200">${a.status}</span></td>
+                        </tr>`;
+                });
+            } else assetHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Không có tài sản bảo đảm.</td></tr>`;
+            document.getElementById('tab-assets-table').innerHTML = assetHtml;
         }
 
+        // FULL VIEWS RENDERING
         function renderAllInteractions() {
             const tbody = document.getElementById('interactions-table-body');
             tbody.innerHTML = '';
-            
             const sortedInteractions = [...appData.interactions].sort((a,b) => new Date(b.date) - new Date(a.date));
-            
             if(sortedInteractions.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">Chưa có tương tác nào.</td></tr>';
                 return;
             }
-
             sortedInteractions.forEach(i => {
                 const c = appData.cases.find(x => x.id === i.caseId) || {};
-                
                 let icon = 'fa-comment-dots text-blue-500'; 
                 if(i.type.includes('gọi')) icon = 'fa-phone-alt text-teal-600'; 
                 if(i.type.includes('PTP')) icon = 'fa-file-signature text-yellow-600';
 
-                let row = `
+                tbody.insertAdjacentHTML('beforeend', `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 text-gray-600 font-medium">${formatDateTimeShort(i.date)}</td>
                         <td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td>
@@ -1241,32 +1412,24 @@
                         <td class="p-4 text-gray-600 truncate max-w-xs" title="${i.notes}">${i.notes}</td>
                         <td class="p-4 text-gray-500">${i.user}</td>
                     </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
+                `);
             });
         }
 
         function renderAllPtps() {
             const tbody = document.getElementById('ptps-table-body');
             tbody.innerHTML = '';
-            
             const sortedPtps = [...appData.ptps].sort((a,b) => new Date(a.date) - new Date(b.date));
-            
             if(sortedPtps.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">Chưa có cam kết PTP nào.</td></tr>';
                 return;
             }
-
             sortedPtps.forEach(p => {
                 const c = appData.cases.find(x => x.id === p.caseId) || {};
-                
-                let statusClass = '';
-                let statusText = '';
-                if(p.status === 'pending') { statusClass = 'bg-yellow-50 text-yellow-600 border-yellow-200'; statusText = 'Chờ thanh toán'; }
-                else if(p.status === 'kept') { statusClass = 'bg-green-50 text-green-600 border-green-200'; statusText = 'Đã thanh toán'; }
-                else if(p.status === 'broken') { statusClass = 'bg-red-50 text-red-600 border-red-200'; statusText = 'Vi phạm (Broken)'; }
+                let statusClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : (p.status === 'kept' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
+                let statusText = p.status === 'pending' ? 'Chờ thanh toán' : (p.status === 'kept' ? 'Đã thanh toán' : 'Vi phạm (Broken)');
 
-                let row = `
+                tbody.insertAdjacentHTML('beforeend', `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-bold text-gray-800">${c.name || 'N/A'}</td>
                         <td class="p-4 text-gray-500 cursor-pointer hover:text-bidv-green hover:underline" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</td>
@@ -1275,29 +1438,23 @@
                         <td class="p-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold border ${statusClass}">${statusText}</span></td>
                         <td class="p-4 text-center">
                             <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash-alt"></i></button>
                         </td>
                     </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
+                `);
             });
         }
 
         function renderAllPayments() {
             const tbody = document.getElementById('payments-table-body');
             tbody.innerHTML = '';
-            
             const sortedPayments = [...appData.payments].sort((a,b) => new Date(b.date) - new Date(a.date));
-            
             if(sortedPayments.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500">Chưa có giao dịch thanh toán nào.</td></tr>';
                 return;
             }
-
             sortedPayments.forEach(pay => {
                 const c = appData.cases.find(x => x.id === pay.caseId) || {};
-                
-                let row = `
+                tbody.insertAdjacentHTML('beforeend', `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-bold text-gray-600"><i class="fas fa-receipt text-gray-300 mr-1"></i> ${pay.id}</td>
                         <td class="p-4 text-gray-600 font-medium">${formatDateTimeShort(pay.date)}</td>
@@ -1307,11 +1464,11 @@
                         <td class="p-4 text-gray-600">${pay.method}</td>
                         <td class="p-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold border bg-green-50 text-green-600 border-green-200"><i class="fas fa-check-circle mr-1"></i> ${pay.status}</span></td>
                     </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
+                `);
             });
         }
 
+        // CALL MODAL LOGIC
         function simulateCall() {
             const hour = new Date().getHours();
             if (hour < 8 || hour > 21) {
@@ -1321,21 +1478,15 @@
             const c = appData.cases.find(x => x.id === currentCaseId);
             document.getElementById('modal-kh-name').innerText = c.name;
             document.getElementById('modal-kh-dpd').innerText = c.dpd;
-            
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('modal-mock-date').innerText = tomorrow.toLocaleDateString('vi-VN');
-            
             document.getElementById('view-call-log').classList.remove('hidden');
         }
 
-        function closeCallModal() {
-            document.getElementById('view-call-log').classList.add('hidden');
-        }
+        function closeCallModal() { document.getElementById('view-call-log').classList.add('hidden'); }
 
         function saveInteraction() {
             if (!currentCaseId) return;
-
             const result = document.getElementById('input-call-result').value;
             const notes = document.getElementById('input-notes').value.trim();
             const createPTP = document.getElementById('input-create-ptp').checked;
@@ -1364,7 +1515,6 @@
                     date: new Date(ptpDate).toISOString(),
                     status: 'pending'
                 });
-                
                 const caseIndex = appData.cases.findIndex(c => c.id === currentCaseId);
                 if (caseIndex !== -1) appData.cases[caseIndex].status = 'Đã có PTP';
             }
@@ -1405,7 +1555,6 @@
             toast.className = `toast ${bg} flex items-center gap-3 text-sm`;
             toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
             container.appendChild(toast);
-            
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
         }
 
