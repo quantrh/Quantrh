@@ -1,18 +1,4 @@
 {
-"parameters": {
-"version": "1.2",
-"currency": "VND",
-"guardrails": {
-"callStartTime": 8,
-"callEndTime": 21
-},
-"storageKeys": {
-"cases": "bcollection_cases_v5",
-"interactions": "bcollection_interactions_v5",
-"ptps": "bcollection_ptps_v5",
-"payments": "bcollection_payments_v5"
-}
-},
 "dashboardStats": {
 "personal": {
 "totalProcessing": 12,
@@ -78,8 +64,7 @@
 { "text": "Giảm thu nhập qua tài khoản", "level": "Trung bình", "color": "yellow" }
 ],
 "loans": [
-{ "id": "LN-TD-1001", "type": "Vay tiêu dùng", "balance": 400000000, "interest": 5000000, "overdue": 10000000, "dpd": 12, "status": "Quá hạn" },
-{ "id": "CC-1002", "type": "Thẻ tín dụng", "balance": 100000000, "interest": 1000000, "overdue": 2500000, "dpd": 5, "status": "Quá hạn" }
+{ "id": "LN-TD-1001", "type": "Vay tiêu dùng", "balance": 400000000, "interest": 5000000, "overdue": 10000000, "dpd": 12, "status": "Quá hạn" }
 ],
 "collaterals": [
 { "type": "Bất động sản", "desc": "Căn hộ chung cư HH1 Linh Đàm", "value": 2500000000, "status": "Đang thế chấp" }
@@ -94,9 +79,7 @@
 "nbaTitle": "Cảnh báo chuyển nhóm nợ",
 "nbaDesc": "Sắp chạm mốc 30 ngày. Ưu tiên gửi Zalo ZNS cảnh báo văn bản do khách hay từ chối nghe máy.",
 "persona": { "pay": 40, "collab": 25, "contact": 60, "break": 60, "priority": 70, "digital": 85 },
-"ews": [
-{ "text": "Phát sinh nợ nhóm 2 tại TCTD khác", "level": "Cao", "color": "red" }
-],
+"ews": [{ "text": "Phát sinh nợ nhóm 2 tại TCTD khác", "level": "Cao", "color": "red" }],
 "loans": [
 { "id": "CC-2001", "type": "Thẻ tín dụng", "balance": 120000000, "interest": 4000000, "overdue": 8200000, "dpd": 28, "status": "Quá hạn" }
 ],
@@ -124,9 +107,10 @@
 }
 ],
 "interactions": [
-{ "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi (8 phút)", "date": "2026-09-08T10:30:00Z", "notes": "Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.", "user": "Vũ Hoàng" },
-{ "id": 2, "caseId": "HDTD001234", "type": "Tạo PTP", "date": "2026-08-31T14:15:00Z", "notes": "KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.", "user": "Vũ Hoàng" },
-{ "id": 3, "caseId": "HDDN009876", "type": "Gặp mặt trực tiếp", "date": "2026-09-05T09:00:00Z", "notes": "Đến trụ sở công ty làm việc với Kế toán trưởng. Cam kết thanh toán một phần.", "user": "Phạm Tuấn" }
+{ "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-08T10:30:00Z", "notes": "[✅ Thành công] Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.", "user": "Vũ Hoàng" },
+{ "id": 2, "caseId": "HDTD001234", "type": "Tạo PTP", "date": "2026-08-31T14:15:00Z", "notes": "[Đã có cam kết] KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.", "user": "Vũ Hoàng" },
+{ "id": 3, "caseId": "HDDN009876", "type": "Trinh sát / Thu thập thông tin", "date": "2026-09-05T09:00:00Z", "notes": "[✅ Có thông tin giá trị] Điều tra qua Mạng xã hội: Giám đốc công ty vừa mua xe sang mới, không có dấu hiệu suy kiệt tài chính. Có khả năng chây ì.", "user": "Phạm Tuấn" },
+{ "id": 4, "caseId": "HDDN009876", "type": "Gặp trực tiếp / Hiện trường", "date": "2026-09-07T14:30:00Z", "notes": "[⚠️ Bất hợp tác] Cử xe ngân hàng xuống trụ sở làm việc nhưng giám đốc lảng tránh không tiếp.", "user": "Phạm Tuấn" }
 ],
 "ptps": [
 { "id": 1, "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-12T00:00:00Z", "status": "pending" },
