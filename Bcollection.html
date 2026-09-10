@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -22,6 +23,7 @@
             }
         }
     </script>
+    
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -37,7 +39,6 @@
         .progress-bar-bg { background-color: #e5e7eb; border-radius: 9999px; height: 6px; width: 100%; overflow: hidden; }
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.5s ease; }
         
-        /* CSS Gauge Chart */
         .gauge-chart {
             width: 120px; height: 120px; border-radius: 50%;
             background: conic-gradient(#008578 var(--val), #e5e7eb 0);
@@ -99,6 +100,8 @@
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full bg-gray-50">
+        
+        <!-- Header -->
         <header class="bg-white h-16 border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 shrink-0 shadow-sm">
             <div class="flex items-center gap-4 flex-1">
                 <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-bidv-green text-xl focus:outline-none">
@@ -137,6 +140,7 @@
             </div>
         </header>
 
+        <!-- Main View Container -->
         <div class="flex-1 overflow-y-auto" id="view-container">
             
             <div id="view-dashboard" class="view-section hidden fade-in p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
@@ -335,7 +339,6 @@
                 </div>
 
                 <div class="max-w-[1600px] mx-auto px-4 md:px-8 space-y-6">
-                    <!-- Top Panel -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-full bg-teal-700 text-white flex items-center justify-center text-2xl font-bold shadow-md" id="detail-avatar">NA</div>
@@ -377,7 +380,6 @@
                         </div>
                     </div>
 
-                    <!-- Inner Navigation Tabs -->
                     <div class="flex gap-1 border-b border-gray-200 overflow-x-auto" id="detail-tabs">
                         <button onclick="switchTab('overview')" id="tab-btn-overview" class="px-5 py-2.5 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap transition">Tổng quan</button>
                         <button onclick="switchTab('loans')" id="tab-btn-loans" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Khoản vay (<span id="tab-count-loans">0</span>)</button>
@@ -798,11 +800,11 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                     <div class="mb-8 border-b border-gray-100 pb-4">
                         <h2 class="text-2xl font-bold text-gray-800 mb-2">Cài đặt & Quản trị Dữ liệu</h2>
-                        <p class="text-sm text-gray-500">Mô phỏng kiến trúc dữ liệu LocalStorage (Không cần Backend).</p>
+                        <p class="text-sm text-gray-500">Dữ liệu được quản lý qua LocalStorage và fetch từ data.json.</p>
                     </div>
                     <div class="space-y-4">
                         <button onclick="resetData()" class="w-full p-4 border border-blue-200 bg-blue-50 rounded-xl flex items-center justify-between hover:bg-blue-100 transition group text-left">
-                            <div><h3 class="font-bold text-blue-800 mb-1">Khôi phục dữ liệu mẫu (Reset Default)</h3><p class="text-xs text-blue-600">Tạo lại bộ 12 hồ sơ, lịch sử tương tác và PTP theo kịch bản demo.</p></div>
+                            <div><h3 class="font-bold text-blue-800 mb-1">Khôi phục dữ liệu từ data.json (Reset Default)</h3><p class="text-xs text-blue-600">Fetch lại toàn bộ dữ liệu mẫu từ tệp JSON gốc.</p></div>
                             <i class="fas fa-sync-alt text-blue-400 group-hover:text-blue-600 text-xl"></i>
                         </button>
                         <button onclick="clearData()" class="w-full p-4 border border-red-200 bg-red-50 rounded-xl flex items-center justify-between hover:bg-red-100 transition group text-left">
@@ -869,7 +871,6 @@
                  </div>
             </div>
 
-            <!-- Modal Mô phỏng Rule Engine -->
             <div id="modal-rule-simulator" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden fade-in flex flex-col max-h-[90vh]">
                     <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -890,7 +891,6 @@
                 </div>
             </div>
 
-            <!-- Modal Workflow Approval -->
             <div id="modal-workflow-detail" class="view-section hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden h-[85vh] fade-in">
                     <div class="w-full md:w-[60%] bg-gray-50 flex flex-col border-r border-gray-200">
@@ -958,61 +958,35 @@
     <div id="toast-container"></div>
 
     <script>
-        const STORAGE_KEY_CASES = 'bcollection_cases_v3';
-        const STORAGE_KEY_INTERACTIONS = 'bcollection_interactions_v3';
-        const STORAGE_KEY_PTPS = 'bcollection_ptps_v3';
-        const STORAGE_KEY_PAYMENTS = 'bcollection_payments_v3';
+        const STORAGE_KEY_CASES = 'bcollection_cases_v4';
+        const STORAGE_KEY_INTERACTIONS = 'bcollection_interactions_v4';
+        const STORAGE_KEY_PTPS = 'bcollection_ptps_v4';
+        const STORAGE_KEY_PAYMENTS = 'bcollection_payments_v4';
 
         let appData = { cases: [], interactions: [], ptps: [], payments: [] };
         let currentCaseId = null;
 
-        function getMockData() {
-            const mockCases = [
-                { id: 'HDTD001234', cif: '1234567890', name: 'Nguyễn Minh An', type: 'Vay tiêu dùng', amount: 500000000, overdue: 12500000, dpd: 12, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Vũ Hoàng', phone: '0903 *** 678', email: 'nma***@gmail.com', address: 'Thanh Xuân, Hà Nội', dob: '15/08/1990', job: 'Nhân viên văn phòng', segment: 'Bán lẻ - Đại trà', company: 'Công ty CP ABC', avatar: 'NA', isCorp: false, 
-                  nbaTitle: 'Xác nhận lịch thanh toán', nbaDesc: 'Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết 5.000.000 đ vào ngày mai.',
-                  persona: { pay: 75, collab: 60, contact: 80, break: 30, priority: 85, digital: 70 },
-                  ews: [{ text: 'Số dư tài khoản thường xuyên thấp', level: 'Cao', color: 'red' }, { text: 'Giảm thu nhập qua tài khoản', level: 'Trung bình', color: 'yellow' }],
-                  loans: [
-                      { id: 'LN-TD-1001', type: 'Vay tiêu dùng', balance: 400000000, interest: 5000000, overdue: 10000000, dpd: 12, status: 'Quá hạn' },
-                      { id: 'CC-1002', type: 'Thẻ tín dụng', balance: 100000000, interest: 1000000, overdue: 2500000, dpd: 5, status: 'Quá hạn' }
-                  ],
-                  collaterals: [
-                      { type: 'Bất động sản', desc: 'Căn hộ chung cư HH1 Linh Đàm', value: 2500000000, status: 'Đang thế chấp' }
-                  ]
-                },
-                { id: 'HDTD005678', cif: '0987654321', name: 'Trần Thị Bích Ngọc', type: 'Thẻ tín dụng', amount: 120000000, overdue: 8200000, dpd: 28, riskLevel: 2, riskStr: 'Trung bình', status: 'Chưa liên hệ', assignee: 'Lê Thu Hà', phone: '0912 *** 678', email: 'ngoc***@yahoo.com', address: 'Cầu Giấy, Hà Nội', dob: '22/11/1985', job: 'Kinh doanh tự do', segment: 'Bán lẻ - Đại trà', company: 'N/A', avatar: 'TN', isCorp: false,
-                  nbaTitle: 'Cảnh báo chuyển nhóm nợ', nbaDesc: 'Sắp chạm mốc 30 ngày. Ưu tiên gửi Zalo ZNS cảnh báo văn bản do khách hay từ chối nghe máy.',
-                  persona: { pay: 40, collab: 25, contact: 60, break: 60, priority: 70, digital: 85 },
-                  ews: [{ text: 'Phát sinh nợ nhóm 2 tại TCTD khác', level: 'Cao', color: 'red' }],
-                  loans: [
-                      { id: 'CC-2001', type: 'Thẻ tín dụng', balance: 120000000, interest: 4000000, overdue: 8200000, dpd: 28, status: 'Quá hạn' }
-                  ],
-                  collaterals: []
-                },
-                { id: 'HDDN009876', cif: '1122334455', name: 'Công ty TNHH An Phát', type: 'Vay TNNN', amount: 5200000000, overdue: 45000000, dpd: 45, riskLevel: 3, riskStr: 'Cao', status: 'Đã liên hệ', assignee: 'Phạm Tuấn', phone: '0243 *** 456', email: 'contact@anphat.vn', address: 'KCN Từ Liêm, HN', dob: 'N/A', job: 'Doanh nghiệp', segment: 'SME', company: 'Công ty TNHH An Phát', avatar: 'AP', isCorp: true,
-                  nbaTitle: 'Đôn đốc PTP Doanh nghiệp', nbaDesc: 'Giám sát PTP. Đã có cam kết trả 20tr vào 15/09. Liên hệ Kế toán trưởng qua luồng chuyên trách SME.',
-                  persona: { pay: 50, collab: 70, contact: 90, break: 20, priority: 95, digital: 50 },
-                  ews: [{ text: 'Chỉ số tài chính suy giảm', level: 'Cao', color: 'red' }, { text: 'Chậm nộp thuế', level: 'Trung bình', color: 'yellow' }],
-                  loans: [
-                      { id: 'SME-LN-3001', type: 'Vay vốn lưu động', balance: 5200000000, interest: 12000000, overdue: 45000000, dpd: 45, status: 'Quá hạn' }
-                  ],
-                  collaterals: [
-                      { type: 'Máy móc thiết bị', desc: 'Dây chuyền sản xuất bao bì', value: 3000000000, status: 'Đang thế chấp' }
-                  ]
-                }
-            ];
-            const mockInteractions = [
-                { id: 1, caseId: 'HDTD001234', type: 'Cuộc gọi đi (8 phút)', date: new Date(Date.now() - 86400000 * 2).toISOString(), notes: 'Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.', user: 'Vũ Hoàng' },
-                { id: 2, caseId: 'HDTD001234', type: 'Tạo PTP', date: new Date(Date.now() - 86400000 * 10).toISOString(), notes: 'KH cam kết trả 5.000.000đ. Đã tạo PTP trên hệ thống.', user: 'Vũ Hoàng' }
-            ];
-            const mockPtps = [
-                { id: 1, caseId: 'HDTD001234', amount: 5000000, date: new Date(Date.now() + 86400000 * 2).toISOString(), status: 'pending' },
-                { id: 2, caseId: 'HDDN009876', amount: 20000000, date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'pending' }
-            ];
-            const mockPayments = [
-                { id: 'PAY_100192', caseId: 'HDTD001234', amount: 3000000, date: new Date(Date.now() - 86400000 * 15).toISOString(), status: 'Thành công', method: 'Chuyển khoản' }
-            ];
-            return { cases: mockCases, interactions: mockInteractions, ptps: mockPtps, payments: mockPayments };
+        // Cơ chế Fallback Data trong trường hợp chạy trực tiếp file HTML (lỗi CORS local file://)
+        function getFallbackData() {
+            return {
+                cases: [{ id: 'HDTD001234', cif: '1234567890', name: 'Nguyễn Minh An (Local Mode)', type: 'Vay tiêu dùng', amount: 500000000, overdue: 12500000, dpd: 12, riskLevel: 3, riskStr: 'Cao', status: 'Đang xử lý', assignee: 'Vũ Hoàng', phone: '0903 *** 678', email: 'nma***@gmail.com', address: 'Thanh Xuân, Hà Nội', dob: '15/08/1990', job: 'Nhân viên văn phòng', segment: 'Bán lẻ - Đại trà', company: 'Công ty CP ABC', avatar: 'NA', isCorp: false, nbaTitle: 'Xác nhận lịch thanh toán', nbaDesc: 'Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết 5.000.000 đ vào ngày mai.', persona: { pay: 75, collab: 60, contact: 80, break: 30, priority: 85, digital: 70 }, ews: [{ text: 'Số dư tài khoản thường xuyên thấp', level: 'Cao', color: 'red' }, { text: 'Giảm thu nhập qua tài khoản', level: 'Trung bình', color: 'yellow' }], loans: [{ id: 'LN-TD-1001', type: 'Vay tiêu dùng', balance: 400000000, interest: 5000000, overdue: 10000000, dpd: 12, status: 'Quá hạn' }, { id: 'CC-1002', type: 'Thẻ tín dụng', balance: 100000000, interest: 1000000, overdue: 2500000, dpd: 5, status: 'Quá hạn' }], collaterals: [{ type: 'Bất động sản', desc: 'Căn hộ chung cư HH1 Linh Đàm', value: 2500000000, status: 'Đang thế chấp' }] }],
+                interactions: [{ id: 1, caseId: 'HDTD001234', type: 'Cuộc gọi đi', date: new Date().toISOString(), notes: 'Data từ Local Fallback.', user: 'System' }],
+                ptps: [],
+                payments: []
+            };
+        }
+
+        // Fetch Data from JSON file
+        async function fetchJSONData() {
+            try {
+                const response = await fetch('./data.json');
+                if (!response.ok) throw new Error('Không thể fetch data.json');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.warn("⚠️ Fetch data.json thất bại (Thường do chạy trực tiếp file html trên máy tính). Chuyển sang dùng Fallback Data.", error);
+                return getFallbackData();
+            }
         }
 
         function loadFromStorage() {
@@ -1025,7 +999,7 @@
                 if (i) appData.interactions = JSON.parse(i);
                 if (p) appData.ptps = JSON.parse(p);
                 if (pay) appData.payments = JSON.parse(pay);
-            } catch (e) { console.error("Error loading data", e); }
+            } catch (e) { console.error("Error loading local storage data", e); }
         }
 
         function saveToStorage() {
@@ -1044,19 +1018,33 @@
             showToast("Đã xóa toàn bộ dữ liệu trong LocalStorage!", "success");
         }
 
-        function resetData() {
-            appData = getMockData();
+        async function resetData() {
+            showToast("Đang tải dữ liệu từ data.json...", "info");
+            const newData = await fetchJSONData();
+            appData.cases = newData.cases || [];
+            appData.interactions = newData.interactions || [];
+            appData.ptps = newData.ptps || [];
+            appData.payments = newData.payments || [];
+            
             saveToStorage();
             navTo('dashboard');
-            showToast("Đã khôi phục dữ liệu mẫu thành công!", "success");
+            showToast("Đã khôi phục dữ liệu gốc thành công!", "success");
         }
 
-        function initApp() {
+        // Khởi tạo ứng dụng
+        async function initApp() {
             loadFromStorage();
+            
+            // Nếu chưa có data trong LocalStorage, tiến hành gọi API (hoặc file json)
             if (appData.cases.length === 0) {
-                appData = getMockData();
+                const fetchedData = await fetchJSONData();
+                appData.cases = fetchedData.cases || [];
+                appData.interactions = fetchedData.interactions || [];
+                appData.ptps = fetchedData.ptps || [];
+                appData.payments = fetchedData.payments || [];
                 saveToStorage();
             }
+            
             updateClock();
             setInterval(updateClock, 60000);
             
@@ -1071,22 +1059,19 @@
                 document.getElementById('input-ptp-date').classList.toggle('opacity-50');
             });
 
-            navTo('dashboard'); // Default view
+            navTo('dashboard'); 
         }
 
         function navTo(viewId) {
-            // Ngăn chặn các ID modal kích hoạt qua menu logic chính
             const modals = ['call-log', 'rule-simulator', 'workflow-detail'];
             if(modals.includes(viewId)) return;
 
-            // Ẩn tất cả view
             document.querySelectorAll('.view-section').forEach(el => {
                 if(!modals.includes(el.id.replace('view-', '').replace('modal-', ''))) {
                     el.classList.add('hidden');
                 }
             });
             
-            // Xử lý CSS cho menu sidebar
             document.querySelectorAll('.nav-btn').forEach(el => {
                 el.classList.remove('bg-white/20', 'text-white');
                 el.classList.add('text-white/70');
@@ -1101,13 +1086,11 @@
                 navEl.classList.remove('text-white/70');
             }
 
-            // Đóng sidebar trên mobile
             if (window.innerWidth < 1024) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('mobile-overlay').classList.add('hidden');
             }
 
-            // Gọi logic render tương ứng
             if (viewId === 'dashboard') {
                 document.getElementById('breadcrumb-title').innerText = "Tổng quan";
                 renderTrendChart();
@@ -1155,8 +1138,8 @@
                 
                 let hCompleted = Math.floor(Math.random() * 50) + 30;
                 let hPending = Math.floor(Math.random() * 30) + 10;
-                if (i === 0) { hCompleted = 25; hPending = 40; } // Current day
-
+                if (i === 0) { hCompleted = 25; hPending = 40; } // Hiện tại
+                
                 chartHtml += `
                     <div class="w-full flex flex-col items-center gap-1 group relative">
                         <div class="w-full h-full flex items-end justify-center gap-1">
@@ -1358,7 +1341,6 @@
             const nbaIcon = document.getElementById('detail-nba-icon');
             nbaIcon.className = `fas mt-1 ${c.nbaTitle.toLowerCase().includes('pháp lý') ? 'fa-gavel text-red-600' : (c.nbaTitle.toLowerCase().includes('sms') || c.nbaTitle.toLowerCase().includes('zalo') ? 'fa-comment-alt text-blue-500' : 'fa-lightbulb text-yellow-600')}`;
 
-            // Persona Bars
             const pBars = [
                 { label: 'Khả năng trả nợ', val: c.persona.pay, color: 'bg-teal-500' },
                 { label: 'Mức độ hợp tác', val: c.persona.collab, color: c.persona.collab >= 50 ? 'bg-yellow-400' : 'bg-red-500' },
@@ -1381,7 +1363,6 @@
             });
             document.getElementById('persona-bars').innerHTML = phtml;
 
-            // EWS
             let ehtml = '';
             if(c.ews.length === 0) { ehtml = '<p class="text-xs text-gray-500 italic">Không có tín hiệu rủi ro nổi bật.</p>'; }
             else {
@@ -1392,7 +1373,6 @@
             }
             document.getElementById('ews-list').innerHTML = ehtml;
 
-            // Guardrail
             const hour = new Date().getHours();
             const gPanel = document.getElementById('guardrail-panel');
             const callBtn = document.getElementById('btn-call');
@@ -1406,7 +1386,6 @@
                 callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
             }
 
-            // PTP Current
             const casePtps = appData.ptps.filter(p => p.caseId === c.id && p.status === 'pending');
             const ptpContainer = document.getElementById('detail-ptp-container');
             if(casePtps.length > 0) {
@@ -1423,7 +1402,6 @@
         }
 
         function renderDetailTabs(c, interactions) {
-            // Loans
             document.getElementById('detail-loan-count-title').innerText = `(${c.loans ? c.loans.length : 0} khoản vay)`;
             let loanHtml = '';
             if (c.loans && c.loans.length > 0) {
@@ -1436,7 +1414,6 @@
             document.getElementById('tab-loans-table').innerHTML = loanHtml;
             document.getElementById('detail-loans-overview').innerHTML = loanHtml; 
 
-            // Interactions
             let intHtml = '';
             const sortedInts = interactions.sort((a,b) => new Date(b.date) - new Date(a.date));
             if(sortedInts.length > 0) {
@@ -1454,7 +1431,6 @@
             document.getElementById('tab-interactions-timeline').innerHTML = intHtml;
             document.getElementById('interaction-history-overview').innerHTML = intHtml;
 
-            // Finance (PTPs & Payments)
             const cPtps = appData.ptps.filter(p => p.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
             let ptpHtml = '';
             if(cPtps.length > 0) {
@@ -1474,7 +1450,6 @@
             } else payHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Chưa có giao dịch.</td></tr>`;
             document.getElementById('tab-payments-table').innerHTML = payHtml;
 
-            // Assets
             let assetHtml = '';
             if (c.collaterals && c.collaterals.length > 0) {
                 c.collaterals.forEach(a => {
@@ -1599,7 +1574,6 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
         }
 
-        // Initialize application on load
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
