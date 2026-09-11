@@ -495,21 +495,24 @@
                                     <ul class="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100" id="guardrail-panel"></ul>
                                 </div>
 
+                                <div class="grid grid-cols-3 gap-2 mb-3">
+                                    <button onclick="simulateCall('call')" id="btn-call" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-xs flex flex-col items-center justify-center gap-1">
+                                        <i class="fas fa-phone-alt text-teal-600 text-lg"></i> Gọi điện
+                                    </button>
+                                    <button onclick="simulateCall('sms')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-xs flex flex-col items-center justify-center gap-1">
+                                        <i class="fas fa-comment-alt text-blue-500 text-lg"></i> Gửi SMS
+                                    </button>
+                                    <button onclick="simulateCall('field')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-xs flex flex-col items-center justify-center gap-1">
+                                        <i class="fas fa-car text-orange-500 text-lg"></i> Hiện trường
+                                    </button>
+                                </div>
+
                                 <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-40 lg:static lg:p-0 lg:bg-transparent lg:border-none lg:z-auto">
-                                    <button onclick="simulateCall('call')" id="btn-call" class="w-full bg-bidv-green text-white font-bold py-3.5 rounded-xl hover:bg-teal-800 transition shadow-lg lg:shadow-md flex items-center justify-center gap-2 lg:mb-3">
-                                        <i class="fas fa-plus-circle text-lg"></i> CẬP NHẬT THÔNG TIN
+                                    <button onclick="simulateCall('intel')" class="w-full bg-bidv-green text-white font-bold py-3.5 rounded-xl hover:bg-teal-800 transition shadow-lg lg:shadow-md flex items-center justify-center gap-2">
+                                        <i class="fas fa-user-edit text-lg"></i> GHI NHẬN TƯƠNG TÁC / TRINH SÁT
                                     </button>
                                 </div>
                                 <div class="h-20 lg:hidden"></div>
-                                
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button onclick="simulateCall('sms')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-comment-alt text-blue-500"></i> Gửi SMS
-                                    </button>
-                                    <button onclick="simulateCall('field')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-car text-orange-500"></i> Hiện trường
-                                    </button>
-                                </div>
                             </div>
 
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:border-bidv-green transition" onclick="navTo('strategy')">
@@ -1685,6 +1688,19 @@
                 document.getElementById('persona-bars').innerHTML = phtml;
             }
 
+            // EWS
+            let ehtml = '';
+            if(c.ews && c.ews.length > 0) {
+                c.ews.forEach(e => {
+                    let iconColor = e.color === 'red' ? 'text-red-500 bg-red-100' : 'text-yellow-600 bg-yellow-100';
+                    ehtml += `<div class="flex items-start gap-3 p-2 rounded hover:bg-gray-50"><div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center shrink-0 text-[10px]"><i class="fas fa-exclamation"></i></div><div class="flex-1 text-sm text-gray-700 font-medium leading-snug">${e.text}</div></div>`;
+                });
+            } else {
+                ehtml = '<p class="text-xs text-gray-500 italic">Không có tín hiệu rủi ro nổi bật.</p>';
+            }
+            const ewsList = document.getElementById('ews-list');
+            if (ewsList) ewsList.innerHTML = ehtml;
+
             // Guardrail Logic
             const hour = new Date().getHours();
             const gPanel = document.getElementById('guardrail-panel');
@@ -1693,12 +1709,16 @@
             
             if (hour >= 8 && hour <= 21) {
                 guardrailHtml += `<li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Khung giờ cho phép (08:00 - 21:00)</li>`;
-                callBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                callBtn.classList.add('bg-bidv-green', 'hover:bg-teal-800');
+                if(callBtn) {
+                    callBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                    callBtn.classList.add('bg-bidv-green', 'hover:bg-teal-800');
+                }
             } else {
                 guardrailHtml += `<li class="flex items-center gap-2 text-xs font-bold text-red-600"><i class="fas fa-times-circle text-red-500"></i> Ngoài khung giờ (Chỉ từ 08:00 - 21:00)</li>`;
-                callBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
+                if(callBtn) {
+                    callBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                    callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
+                }
             }
 
             if (c.nbaTitle.includes('Danh tiếng')) {
@@ -1708,7 +1728,7 @@
                         [COMPLIANCE] Chú ý: Giao tiếp chuẩn mực, không đe dọa. Chỉ mặc đồng phục, đi xe biển Ngân hàng.
                     </li>`;
             }
-            gPanel.innerHTML = guardrailHtml;
+            if(gPanel) gPanel.innerHTML = guardrailHtml;
 
             // Customer Graph Rendering (Reputation Linkages)
             let graphHtml = '';
@@ -1723,22 +1743,20 @@
                             <div class="flex-1">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="text-sm font-bold text-gray-800">${rp.name} <span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded ml-1">${rp.type}</span></p>
-                                        <p class="text-xs text-gray-600 mt-1">${rp.job} - ${rp.compType}</p>
+                                        <h4 class="font-bold text-gray-800 text-sm">${rp.name} <span class="text-xs font-normal text-gray-500">(${rp.type})</span></h4>
+                                        <p class="text-xs text-gray-600 mt-0.5">${rp.job} - ${rp.compType}</p>
                                     </div>
-                                    <div class="text-right flex flex-col items-end">
-                                        <span class="text-[10px] font-bold text-gray-500 mb-1">Độ nhạy cảm uy tín</span>
-                                        <span class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${rp.score}/100</span>
-                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">Điểm uy tín: ${rp.score}</span>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
             } else {
-                graphHtml = `<p class="text-xs text-gray-500 italic text-center py-2">Chưa có dữ liệu mạng lưới quan hệ.</p>`;
+                graphHtml = '<div class="p-4 text-center border border-dashed border-gray-300 rounded-lg text-sm text-gray-500">Chưa có thông tin mạng lưới quan hệ.</div>';
             }
-            document.getElementById('customer-graph-container').innerHTML = graphHtml;
+            const customerGraph = document.getElementById('customer-graph-container');
+            if (customerGraph) customerGraph.innerHTML = graphHtml;
 
             // PTP Current
             const casePtps = appData.ptps.filter(p => p.caseId === c.id && p.status === 'pending');
@@ -1879,28 +1897,63 @@
             }
         }
 
+        window.handleInteractionTypeChange = function() {
+            const typeDropdown = document.getElementById('input-interaction-type');
+            const intelForm = document.getElementById('intel-dynamic-form');
+            if (typeDropdown && intelForm) {
+                if (typeDropdown.value === "Trinh sát / Thu thập thông tin") {
+                    intelForm.classList.remove('hidden');
+                } else {
+                    intelForm.classList.add('hidden');
+                }
+            }
+        };
+
         function simulateCall(type = 'call', explicitCaseId = null) {
+            const hour = new Date().getHours();
+            if ((type === 'call' || type === 'sms') && (hour < 8 || hour > 21)) {
+                showToast("Guardrail Block: Không cho phép gọi điện/SMS ngoài khung giờ 08:00 - 21:00!", "error");
+                return;
+            }
+            
+            const targetId = explicitCaseId || currentCaseId;
+            if(!targetId) return;
+            
+            const c = appData.cases.find(x => x.id === targetId);
+            currentCaseId = targetId;
+            
+            document.getElementById('modal-kh-name').innerText = c.name;
+            document.getElementById('modal-kh-dpd').innerText = c.dpd;
+            document.getElementById('modal-kh-nba').innerText = c.nbaTitle;
+            
             const typeDropdown = document.getElementById('input-interaction-type');
             if(type === 'sms') typeDropdown.value = "Gửi SMS / Zalo";
             else if(type === 'field') typeDropdown.value = "Gặp trực tiếp / Hiện trường";
             else if(type === 'intel') typeDropdown.value = "Trinh sát / Thu thập thông tin";
             else typeDropdown.value = "Cuộc gọi đi";
             
-            handleInteractionTypeChange(); // Make sure form shows/hides properly
-            
+            if(window.handleInteractionTypeChange) {
+                window.handleInteractionTypeChange();
+            }
+
             document.getElementById('input-notes').value = "";
-            const cb = document.getElementById('input-create-ptp');
-            if(cb) cb.checked = false;
+            document.getElementById('input-create-ptp').checked = false;
+            document.getElementById('input-ptp-amount').disabled = true;
+            document.getElementById('input-ptp-date').disabled = true;
+            document.getElementById('input-ptp-amount').classList.add('opacity-50');
+            document.getElementById('input-ptp-date').classList.add('opacity-50');
+            
+            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('input-ptp-date').value = tomorrow.toISOString().split('T')[0];
             
             document.getElementById('view-call-log').classList.remove('hidden');
         }
 
-        window.closeCallModal = function() { 
-            document.getElementById('view-call-log').classList.add('hidden'); 
-        }
+        window.simulateCall = simulateCall;
 
-        // Calculates Reputation Score explicitly mapped from BRD Section 4.1
-        function calculateReputationScore(jobTitle, companyType) {
+        window.closeCallModal = function() { document.getElementById('view-call-log').classList.add('hidden'); }
+
+        window.calculateReputationScore = function(jobTitle, companyType) {
             let score = 30; // Default
             if (!jobTitle) return score;
             const job = jobTitle.toUpperCase();
@@ -1917,7 +1970,7 @@
             return score;
         }
 
-        window.saveInteraction = function() {
+        function saveInteraction() {
             if (!currentCaseId) return;
             const interactionType = document.getElementById('input-interaction-type').value;
             const result = document.getElementById('input-call-result').value;
@@ -1932,30 +1985,27 @@
             const caseIndex = appData.cases.findIndex(c => c.id === currentCaseId);
             const c = appData.cases[caseIndex];
 
-            // 1. RULE ENGINE / SKIP TRACING LOGIC
+            // RULE ENGINE / SKIP TRACING LOGIC
             if (interactionType === 'Trinh sát / Thu thập thông tin') {
-                const relType = document.getElementById('intel-rel-type').value;
-                const relName = document.getElementById('intel-rel-name').value.trim();
-                const relJob = document.getElementById('intel-rel-job').value.trim();
-                const relCompType = document.getElementById('intel-rel-company-type').value;
+                const relType = document.getElementById('intel-rel-type') ? document.getElementById('intel-rel-type').value : 'Người thân';
+                const relName = document.getElementById('intel-rel-name') ? document.getElementById('intel-rel-name').value.trim() : '';
+                const relJob = document.getElementById('intel-rel-job') ? document.getElementById('intel-rel-job').value.trim() : '';
+                const relCompType = document.getElementById('intel-rel-company-type') ? document.getElementById('intel-rel-company-type').value : '';
 
                 if (relName) {
-                    const repScore = calculateReputationScore(relJob, relCompType);
+                    const repScore = window.calculateReputationScore(relJob, relCompType);
                     const newRp = { type: relType, name: relName, job: relJob, compType: relCompType, score: repScore };
                     
-                    // Upsert related party
                     c.relatedParties = [newRp]; 
                     
-                    // TRIGGER RULE ENGINE SIMULATOR (STG_REPUTATION_LEVERAGE_01)
                     if (c.dpd >= 90 && c.persona && c.persona.collab < 30 && repScore >= 75) {
                         c.nbaTitle = "Áp lực Danh tiếng Người liên quan";
                         c.nbaDesc = `Hệ thống phát hiện ${relType} KH làm "${relJob}" tại ${relCompType}. Điểm nhạy cảm uy tín: ${repScore}/100.\n👉 Đề xuất: Cử xe Ngân hàng & Cán bộ mặc đồng phục đến nhà thu nợ.`;
-                        showToast("Hệ thống (Rule Engine) đã phân tích tình báo và thay đổi Chiến lược (NBA)!", "success");
+                        showToast("Rule Engine đã phân tích tình báo và thay đổi Chiến lược (NBA)!", "success");
                     }
                 }
             }
             
-            // 2. Save Interaction Log
             appData.interactions.push({
                 id: Date.now(),
                 caseId: currentCaseId,
@@ -1974,18 +2024,19 @@
                     return;
                 }
                 appData.ptps.push({ id: Date.now(), caseId: currentCaseId, amount: parseFloat(ptpAmount), date: new Date(ptpDate).toISOString(), status: 'pending' });
-                c.status = 'Đã có PTP';
+                if (caseIndex !== -1) appData.cases[caseIndex].status = 'Đã có PTP';
             }
 
             saveToStorage();
-            closeCallModal();
+            window.closeCallModal();
             renderCaseDetail();
             if (interactionType !== 'Trinh sát / Thu thập thông tin') {
-                showToast("Đã lưu tương tác thành công!", "success");
+                showToast("Đã lưu hồ sơ thành công!", "success");
             }
         }
 
-        // Helpers
+        window.saveInteraction = saveInteraction;
+
         function formatCurrency(val) { return new Intl.NumberFormat('vi-VN').format(val) + ' đ'; }
         function formatDate(isoStr) { return new Date(isoStr).toLocaleDateString('vi-VN'); }
         function formatDateTimeShort(isoStr) { 
