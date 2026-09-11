@@ -55,18 +55,9 @@
         
         /* Tối ưu UX bảng dữ liệu trên Mobile */
         @media (max-width: 1024px) {
-            table th:nth-child(1), table td:nth-child(1) {
-                position: sticky; left: 0; z-index: 10; background-color: inherit;
-            }
-            table th:nth-child(2), table td:nth-child(2) {
-                position: sticky; left: 40px; /* Bù trừ độ rộng cột 1 */
-                z-index: 10; background-color: white;
-                box-shadow: 4px 0 6px -4px rgba(0,0,0,0.1);
-            }
-            table thead th:nth-child(1), table thead th:nth-child(2) {
-                background-color: #f9fafb; z-index: 11;
-            }
-            /* Highlight nhẹ dòng đang xem trên mobile */
+            table th:nth-child(1), table td:nth-child(1) { position: sticky; left: 0; z-index: 10; background-color: inherit; }
+            table th:nth-child(2), table td:nth-child(2) { position: sticky; left: 40px; z-index: 10; background-color: white; box-shadow: 4px 0 6px -4px rgba(0,0,0,0.1); }
+            table thead th:nth-child(1), table thead th:nth-child(2) { background-color: #f9fafb; z-index: 11; }
             tbody tr:active td { background-color: #f3f4f6; }
         }
     </style>
@@ -166,7 +157,6 @@
                     <p class="text-sm text-gray-500 mt-1">Dashboard tác nghiệp, đo lường hiệu quả và cảnh báo insight.</p>
                 </div>
                  
-                 <!-- Tabs: Personal / Dept / Branch -->
                  <div class="flex gap-6 border-b border-gray-200 mb-6">
                     <button onclick="switchDashTab('personal')" id="dash-tab-personal" class="pb-2 border-b-2 border-bidv-green font-bold text-bidv-green transition-colors">Cá nhân (Của tôi)</button>
                     <button onclick="switchDashTab('department')" id="dash-tab-department" class="pb-2 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors">Phòng ban (Team)</button>
@@ -214,10 +204,7 @@
                                      <span class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-200 rounded-sm"></div> Tồn đọng / Pending</span>
                                  </div>
                              </div>
-                             <!-- Khối biểu đồ đã được sửa class h-full justify-end -->
-                             <div class="h-48 flex items-end justify-between gap-4 px-2" id="trend-chart-container">
-                                 <!-- JS sẽ fill dữ liệu vào đây -->
-                             </div>
+                             <div class="h-48 flex items-end justify-between gap-4 px-2" id="trend-chart-container"></div>
                          </div>
                          
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -467,6 +454,15 @@
                                 </div>
                             </div>
 
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
+                                    <h3 class="font-bold text-gray-800 text-sm"><i class="fas fa-project-diagram text-purple-500 mr-2"></i>Mạng lưới quan hệ (Customer Graph)</h3>
+                                </div>
+                                <div class="p-5" id="customer-graph-container">
+                                    <!-- Rendered via JS -->
+                                </div>
+                            </div>
+
                             <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                                     <h3 class="font-bold text-gray-800 text-sm">Tương tác gần đây</h3>
@@ -481,9 +477,9 @@
                                 <div class="absolute top-0 left-0 w-full h-1 bg-bidv-green"></div>
                                 <h3 class="font-bold text-gray-800 text-sm mb-4">Hành động đề xuất (NBA)</h3>
                                 
-                                <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-4">
+                                <div id="detail-nba-box" class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-4 transition-colors duration-500">
                                     <div class="flex gap-2 items-start">
-                                        <i class="fas fa-lightbulb text-yellow-600 mt-1" id="detail-nba-icon"></i>
+                                        <i class="fas fa-lightbulb text-yellow-600 mt-1 text-lg" id="detail-nba-icon"></i>
                                         <div>
                                             <p class="text-sm font-bold text-gray-800 mb-1" id="detail-nba-title">Xác nhận lịch thanh toán</p>
                                             <p class="text-xs text-gray-600" id="detail-nba-desc">Khách hàng có thiện chí, đề xuất gọi xác nhận cam kết vào cuối ngày.</p>
@@ -939,7 +935,7 @@
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                  <div>
                                      <label class="block text-sm font-bold text-gray-700 mb-1.5">Loại hình tác nghiệp <span class="text-red-500">*</span></label>
-                                     <select id="input-interaction-type" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green outline-none font-medium bg-white shadow-sm">
+                                     <select id="input-interaction-type" onchange="handleInteractionTypeChange()" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-bidv-green outline-none font-medium bg-white shadow-sm">
                                          <option value="Cuộc gọi đi">📞 Gọi điện thoại</option>
                                          <option value="Gửi SMS / Zalo">💬 Gửi SMS / Zalo ZNS</option>
                                          <option value="Gặp trực tiếp / Hiện trường">🚗 Xuống hiện trường / Gặp trực tiếp</option>
@@ -955,6 +951,37 @@
                                          <option value="Không liên lạc được / Vắng mặt">❌ Không gặp / Tắt máy</option>
                                          <option value="Từ chối hợp tác">⚠️ Bất hợp tác / Phản ứng gắt</option>
                                      </select>
+                                 </div>
+                             </div>
+
+                             <!-- Dynamic Skip Tracing Form -->
+                             <div id="intel-dynamic-form" class="hidden bg-purple-50 border border-purple-200 rounded-xl p-5 shadow-inner">
+                                 <h4 class="text-sm font-bold text-purple-800 mb-4"><i class="fas fa-user-secret mr-1"></i> Bổ sung thông tin Người liên quan (Phân tích Danh tiếng)</h4>
+                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div>
+                                         <label class="block text-xs font-bold text-gray-700 mb-1">Mối quan hệ</label>
+                                         <select id="intel-rel-type" class="w-full border border-gray-300 rounded p-2 text-sm outline-none bg-white focus:border-purple-500">
+                                             <option value="Vợ">Vợ</option><option value="Chồng">Chồng</option>
+                                             <option value="Bố/Mẹ">Bố/Mẹ</option><option value="Con cái">Con cái</option>
+                                         </select>
+                                     </div>
+                                     <div>
+                                         <label class="block text-xs font-bold text-gray-700 mb-1">Họ tên người liên quan</label>
+                                         <input type="text" id="intel-rel-name" placeholder="VD: Nguyễn Thị B..." class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:border-purple-500">
+                                     </div>
+                                     <div>
+                                         <label class="block text-xs font-bold text-gray-700 mb-1">Loại hình cơ quan công tác</label>
+                                         <select id="intel-rel-company-type" class="w-full border border-gray-300 rounded p-2 text-sm outline-none bg-white focus:border-purple-500">
+                                             <option value="Cơ quan Nhà nước">Cơ quan Nhà nước (Ủy ban, Sở ban ngành...)</option>
+                                             <option value="Đơn vị sự nghiệp">Đơn vị sự nghiệp (Trường học, Bệnh viện công...)</option>
+                                             <option value="Doanh nghiệp FDI">Doanh nghiệp FDI / Cổ phần lớn</option>
+                                             <option value="Tư nhân / Tự do">Tư nhân nhỏ lẻ / Lao động tự do</option>
+                                         </select>
+                                     </div>
+                                     <div>
+                                         <label class="block text-xs font-bold text-gray-700 mb-1">Chức vụ hiện tại</label>
+                                         <input type="text" id="intel-rel-job" placeholder="VD: Phó Giám đốc, Giáo viên..." class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:border-purple-500">
+                                     </div>
                                  </div>
                              </div>
 
@@ -1104,58 +1131,131 @@
             return {
               "dashboardStats": {
                 "personal": {
-                  "totalProcessing": 12, "ptpPending": 5, "highRisk": 4, "ptpAmount": 35000000, "completionRate": 72,
+                  "totalProcessing": 248, "ptpPending": 36, "highRisk": 12, "ptpAmount": 420000000, "completionRate": 72,
                   "trendData": [
-                    {"date": "04/09", "completed": 25, "pending": 10}, {"date": "05/09", "completed": 30, "pending": 12},
-                    {"date": "06/09", "completed": 20, "pending": 15}, {"date": "07/09", "completed": 45, "pending": 8},
-                    {"date": "08/09", "completed": 35, "pending": 20}, {"date": "09/09", "completed": 50, "pending": 5},
-                    {"date": "10/09", "completed": 15, "pending": 40}
+                    {"date": "Tuần 1", "completed": 200, "pending": 100}, {"date": "Tuần 2", "completed": 350, "pending": 150},
+                    {"date": "Tuần 3", "completed": 250, "pending": 80}, {"date": "Tuần 4", "completed": 450, "pending": 120}
                   ]
                 },
                 "department": {
-                  "totalProcessing": 145, "ptpPending": 42, "highRisk": 28, "ptpAmount": 450000000, "completionRate": 65,
+                  "totalProcessing": 1450, "ptpPending": 240, "highRisk": 150, "ptpAmount": 2450000000, "completionRate": 65,
                   "trendData": [
-                    {"date": "04/09", "completed": 120, "pending": 50}, {"date": "05/09", "completed": 140, "pending": 60},
-                    {"date": "06/09", "completed": 110, "pending": 75}, {"date": "07/09", "completed": 180, "pending": 40},
-                    {"date": "08/09", "completed": 150, "pending": 80}, {"date": "09/09", "completed": 200, "pending": 30},
-                    {"date": "10/09", "completed": 85, "pending": 120}
+                    {"date": "Tuần 1", "completed": 1200, "pending": 500}, {"date": "Tuần 2", "completed": 1400, "pending": 600},
+                    {"date": "Tuần 3", "completed": 1100, "pending": 750}, {"date": "Tuần 4", "completed": 1800, "pending": 400}
                   ]
                 },
                 "branch": {
-                  "totalProcessing": 850, "ptpPending": 215, "highRisk": 112, "ptpAmount": 2150000000, "completionRate": 78,
+                  "totalProcessing": 4850, "ptpPending": 815, "highRisk": 412, "ptpAmount": 12150000000, "completionRate": 78,
                   "trendData": [
-                    {"date": "04/09", "completed": 600, "pending": 250}, {"date": "05/09", "completed": 650, "pending": 200},
-                    {"date": "06/09", "completed": 580, "pending": 300}, {"date": "07/09", "completed": 750, "pending": 180},
-                    {"date": "08/09", "completed": 700, "pending": 220}, {"date": "09/09", "completed": 820, "pending": 150},
-                    {"date": "10/09", "completed": 300, "pending": 500}
+                    {"date": "Tuần 1", "completed": 4600, "pending": 2500}, {"date": "Tuần 2", "completed": 5650, "pending": 2000},
+                    {"date": "Tuần 3", "completed": 4580, "pending": 3000}, {"date": "Tuần 4", "completed": 6750, "pending": 1800}
                   ]
                 }
               },
               "cases": [
-                { "id": "HDTD001234", "cif": "1234567890", "name": "Nguyễn Minh An", "type": "Vay tiêu dùng", "amount": 500000000, "overdue": 12500000, "dpd": 12, "riskLevel": 3, "riskStr": "Cao", "status": "Đang xử lý", "assignee": "Vũ Hoàng", "phone": "0903 *** 678", "email": "nma***@gmail.com", "address": "Thanh Xuân, Hà Nội", "dob": "15/08/1990", "job": "Nhân viên văn phòng", "segment": "Bán lẻ - Đại trà", "company": "Công ty CP ABC", "avatar": "NA", "isCorp": false, "nbaTitle": "Nhắc nợ sớm - Mass", "nbaDesc": "Khách hàng có thiện chí, đề xuất gửi ZNS xác nhận cam kết.", "persona": { "pay": 75, "collab": 60, "contact": 80, "break": 30, "priority": 85, "digital": 70 }, "ews": [{"text": "Số dư tài khoản thường xuyên thấp", "level": "Cao", "color": "red"}], "loans": [], "collaterals": [] },
-                { "id": "HDTD005678", "cif": "0987654321", "name": "Trần Thị Bích Ngọc", "type": "Thẻ tín dụng", "amount": 120000000, "overdue": 8200000, "dpd": 28, "riskLevel": 2, "riskStr": "Trung bình", "status": "Chưa liên hệ", "assignee": "Lê Thu Hà", "phone": "0912 *** 678", "email": "ngoc***@yahoo.com", "address": "Cầu Giấy, Hà Nội", "dob": "22/11/1985", "job": "Kinh doanh tự do", "segment": "Bán lẻ - Đại trà", "company": "N/A", "avatar": "TN", "isCorp": false, "nbaTitle": "Thương lượng PTP", "nbaDesc": "Sắp chạm mốc 30 ngày. Ưu tiên gọi điện trực tiếp.", "persona": { "pay": 40, "collab": 25, "contact": 60, "break": 60, "priority": 70, "digital": 85 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDDN009876", "cif": "1122334455", "name": "Công ty TNHH An Phát", "type": "Vay TNNN", "amount": 5200000000, "overdue": 45000000, "dpd": 45, "riskLevel": 3, "riskStr": "Cao", "status": "Đã có PTP", "assignee": "Phạm Tuấn", "phone": "0243 *** 456", "email": "contact@anphat.vn", "address": "KCN Từ Liêm, HN", "dob": "N/A", "job": "Doanh nghiệp", "segment": "SME", "company": "Công ty TNHH An Phát", "avatar": "AP", "isCorp": true, "nbaTitle": "Đôn đốc PTP SME", "nbaDesc": "Giám sát PTP. Đã có cam kết trả 20tr. Liên hệ Kế toán trưởng.", "persona": { "pay": 50, "collab": 70, "contact": 90, "break": 20, "priority": 95, "digital": 50 }, "ews": [{"text": "Chỉ số tài chính suy giảm", "level": "Cao", "color": "red"}], "loans": [], "collaterals": [] },
-                { "id": "HDOX004455", "cif": "2233445566", "name": "Lê Đình Cường", "type": "Vay mua ô tô", "amount": 800000000, "overdue": 15000000, "dpd": 5, "riskLevel": 1, "riskStr": "Thấp", "status": "Đang xử lý", "assignee": "Vũ Hoàng", "phone": "0988 *** 112", "email": "cuong.le@gmail.com", "address": "Đống Đa, Hà Nội", "dob": "10/02/1988", "job": "Lập trình viên", "segment": "Bán lẻ", "company": "Tech Corp", "avatar": "LC", "isCorp": false, "nbaTitle": "Nhắc nợ sớm - Mass", "nbaDesc": "Gửi thông báo qua Zalo ZNS do mới quá hạn 5 ngày.", "persona": { "pay": 90, "collab": 80, "contact": 85, "break": 10, "priority": 50, "digital": 90 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDCC006677", "cif": "3344556677", "name": "Phạm Xuân Mai", "type": "Thẻ tín dụng", "amount": 250000000, "overdue": 250000000, "dpd": 60, "riskLevel": 3, "riskStr": "Cao", "status": "Chưa liên hệ", "assignee": "Trần Tuấn", "phone": "0934 *** 999", "email": "mai.px@gmail.com", "address": "Quận 1, TP.HCM", "dob": "05/05/1992", "job": "Sale Manager", "segment": "VIP", "company": "Vingroup", "avatar": "PM", "isCorp": false, "nbaTitle": "Áp lực Danh tiếng", "nbaDesc": "Khách hàng VIP, sợ mất uy tín. Cử cán bộ gọi điện Outbound lịch sự.", "persona": { "pay": 60, "collab": 40, "contact": 50, "break": 80, "priority": 90, "digital": 80 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDMN008899", "cif": "4455667788", "name": "Hoàng Sơn Hải", "type": "Vay mua nhà", "amount": 2100000000, "overdue": 35000000, "dpd": 15, "riskLevel": 2, "riskStr": "Trung bình", "status": "Đã có PTP", "assignee": "Lê Thu Hà", "phone": "0911 *** 223", "email": "haihs@yahoo.com", "address": "Hai Bà Trưng, HN", "dob": "12/09/1980", "job": "Kỹ sư", "segment": "Bán lẻ", "company": "Xây dựng Hòa Bình", "avatar": "HH", "isCorp": false, "nbaTitle": "Theo dõi PTP Mua nhà", "nbaDesc": "Khách hàng đã hứa trả vào cuối tuần. Nhắc lại trước 1 ngày.", "persona": { "pay": 70, "collab": 80, "contact": 90, "break": 20, "priority": 75, "digital": 60 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDTC001122", "cif": "5566778899", "name": "Võ Thành Nam", "type": "Vay tín chấp", "amount": 300000000, "overdue": 300000000, "dpd": 120, "riskLevel": 3, "riskStr": "Cao", "status": "Đang xử lý", "assignee": "Vũ Hoàng", "phone": "0977 *** 554", "email": "nam.vo@gmail.com", "address": "Bình Thạnh, TP.HCM", "dob": "25/12/1995", "job": "Thất nghiệp", "segment": "Bán lẻ", "company": "N/A", "avatar": "VN", "isCorp": false, "nbaTitle": "Tiền pháp lý - Không hợp tác", "nbaDesc": "Khách chây ì, mất khả năng trả. Đẩy luồng trình duyệt Pháp lý.", "persona": { "pay": 10, "collab": 10, "contact": 20, "break": 95, "priority": 100, "digital": 40 }, "ews": [{"text": "Bị sa thải/Mất thu nhập", "level": "Cao", "color": "red"}], "loans": [], "collaterals": [] },
-                { "id": "HDCC002233", "cif": "6677889900", "name": "Bùi Anh Tuấn", "type": "Thẻ tín dụng", "amount": 45000000, "overdue": 2000000, "dpd": 2, "riskLevel": 1, "riskStr": "Thấp", "status": "Chưa liên hệ", "assignee": "Lê Thu Hà", "phone": "0909 *** 888", "email": "tuanba@gmail.com", "address": "Hà Đông, HN", "dob": "14/07/1993", "job": "Thiết kế đồ họa", "segment": "Bán lẻ", "company": "FPT", "avatar": "BT", "isCorp": false, "nbaTitle": "Nhắc nợ sớm - Mass", "nbaDesc": "Quên hạn thanh toán, hệ thống tự động gửi SMS.", "persona": { "pay": 95, "collab": 90, "contact": 95, "break": 5, "priority": 30, "digital": 95 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDDN003344", "cif": "7788990011", "name": "CTCP Bình Phát", "type": "Vay TNNN", "amount": 1500000000, "overdue": 50000000, "dpd": 10, "riskLevel": 1, "riskStr": "Thấp", "status": "Đang xử lý", "assignee": "Phạm Tuấn", "phone": "0243 *** 777", "email": "info@binhphat.vn", "address": "Bắc Ninh", "dob": "N/A", "job": "Sản xuất", "segment": "SME", "company": "Bình Phát", "avatar": "BP", "isCorp": true, "nbaTitle": "Call Outbound SME", "nbaDesc": "Doanh nghiệp chậm thanh toán do dòng tiền về trễ.", "persona": { "pay": 80, "collab": 85, "contact": 90, "break": 10, "priority": 60, "digital": 50 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDTD004455", "cif": "8899001122", "name": "Đặng Ngọc Lan", "type": "Vay tiêu dùng", "amount": 75000000, "overdue": 10000000, "dpd": 35, "riskLevel": 2, "riskStr": "Trung bình", "status": "Chưa liên hệ", "assignee": "Vũ Hoàng", "phone": "0933 *** 221", "email": "lan.dang@gmail.com", "address": "Ba Đình, HN", "dob": "30/04/1982", "job": "Giáo viên", "segment": "Bán lẻ", "company": "Trường THPT X", "avatar": "DL", "isCorp": false, "nbaTitle": "Thương lượng PTP", "nbaDesc": "Khách hàng quá hạn mốc 30. Cần gọi điện đốc thúc trực tiếp.", "persona": { "pay": 50, "collab": 40, "contact": 60, "break": 40, "priority": 80, "digital": 60 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDCC005566", "cif": "9900112233", "name": "Ngô Quốc Hùng", "type": "Thẻ tín dụng", "amount": 180000000, "overdue": 180000000, "dpd": 90, "riskLevel": 3, "riskStr": "Cao", "status": "Đã có PTP", "assignee": "Trần Tuấn", "phone": "0966 *** 555", "email": "hungnq@yahoo.com", "address": "Tân Bình, TP.HCM", "dob": "02/09/1975", "job": "Kinh doanh tự do", "segment": "Bán lẻ", "company": "N/A", "avatar": "NH", "isCorp": false, "nbaTitle": "Cảnh báo nợ xấu (N3)", "nbaDesc": "Đã chốt được PTP sau thời gian dài. Cần theo dõi gắt gao.", "persona": { "pay": 30, "collab": 50, "contact": 70, "break": 70, "priority": 95, "digital": 50 }, "ews": [], "loans": [], "collaterals": [] },
-                { "id": "HDDN006677", "cif": "0011223344", "name": "CT TNHH Hưng Phát", "type": "Vay TNNN", "amount": 3200000000, "overdue": 120000000, "dpd": 18, "riskLevel": 2, "riskStr": "Trung bình", "status": "Đang xử lý", "assignee": "Phạm Tuấn", "phone": "0283 *** 999", "email": "ketoan@hungphat.vn", "address": "Bình Dương", "dob": "N/A", "job": "Thương mại", "segment": "SME", "company": "Hưng Phát", "avatar": "HP", "isCorp": true, "nbaTitle": "Đôn đốc PTP SME", "nbaDesc": "Liên hệ lại Kế toán trưởng để hẹn ngày trả nợ chính xác.", "persona": { "pay": 60, "collab": 75, "contact": 80, "break": 30, "priority": 70, "digital": 55 }, "ews": [], "loans": [], "collaterals": [] }
+                {
+                  "id": "HDTD001234", "cif": "1234567890", "name": "Nguyễn Minh An", "type": "Vay tiêu dùng",
+                  "amount": 50000000, "overdue": 12500000, "dpd": 12, "riskLevel": 3, "riskStr": "Cao", "priority": "Cao",
+                  "status": "Đang xử lý", "assignee": "Vũ Hoàng", "phone": "0903 123 678", "email": "nma@gmail.com",
+                  "address": "Hà Nội", "dob": "15/08/1990", "job": "Nhân viên văn phòng",
+                  "segment": "Khách hàng cá nhân", "company": "Công ty CP ABC", "avatar": "NA", "isCorp": false,
+                  "nbaTitle": "Nhắc nợ nhẹ nhàng",
+                  "nbaDesc": "Xác nhận khả năng thanh toán. Lưu ý: Khách hàng thân thiện, hợp tác.",
+                  "persona": { "pay": 30, "collab": 60, "contact": 90, "break": 30, "priority": 85, "digital": 70 },
+                  "ews": [
+                    { "text": "Số dư tài khoản thường xuyên thấp", "level": "Cao", "color": "red" }
+                  ],
+                  "loans": [
+                    { "id": "HDTD001234", "type": "Vay tiêu dùng", "balance": 50000000, "interest": 2500000, "overdue": 12500000, "dpd": 12, "status": "Quá hạn" },
+                    { "id": "HDTD004321", "type": "Thẻ tín dụng", "balance": 30000000, "interest": 1000000, "overdue": 7500000, "dpd": 8, "status": "Quá hạn" }
+                  ],
+                  "collaterals": [
+                      { "type": "Bất động sản", "desc": "Căn hộ chung cư 70m2, Nam Từ Liêm, HN", "value": 2500000000, "status": "Đã thế chấp" }
+                  ]
+                },
+                {
+                  "id": "HDTD005678", "cif": "2345678901", "name": "Trần Thị Bích Ngọc", "type": "Vay mua xe",
+                  "amount": 120000000, "overdue": 8200000, "dpd": 28, "riskLevel": 2, "riskStr": "Trung bình", "priority": "Trung bình",
+                  "status": "Chưa liên hệ", "assignee": "Lê Thu Hà", "phone": "0912 345 678", "email": "ngoc@yahoo.com",
+                  "address": "Hà Nội", "dob": "22/11/1985", "job": "Kinh doanh tự do",
+                  "segment": "Khách hàng cá nhân", "company": "N/A", "avatar": "TN", "isCorp": false,
+                  "nbaTitle": "Cảnh báo chuyển nhóm nợ",
+                  "nbaDesc": "Sắp chạm mốc 30 ngày. Ưu tiên gửi Zalo ZNS cảnh báo văn bản do khách hay từ chối nghe máy.",
+                  "persona": { "pay": 40, "collab": 25, "contact": 60, "break": 60, "priority": 70, "digital": 85 },
+                  "ews": [],
+                  "loans": [
+                    { "id": "HDTD005678", "type": "Vay mua xe", "balance": 120000000, "interest": 4000000, "overdue": 8200000, "dpd": 28, "status": "Quá hạn" }
+                  ],
+                  "collaterals": [
+                      { "type": "Phương tiện vận tải", "desc": "Xe ô tô Toyota Vios 2023", "value": 450000000, "status": "Đã thế chấp" }
+                  ]
+                },
+                {
+                  "id": "HDTD009876", "cif": "3456789012", "name": "Lê Văn Hoàng", "type": "Vay kinh doanh",
+                  "amount": 500000000, "overdue": 75400000, "dpd": 45, "riskLevel": 3, "riskStr": "Cao", "priority": "Cao",
+                  "status": "Đang xử lý", "assignee": "Phạm Tuấn", "phone": "0988 123 456", "email": "hoanglv@gmail.com",
+                  "address": "Bắc Ninh", "dob": "10/05/1980", "job": "Chủ hộ kinh doanh",
+                  "segment": "Khách hàng cá nhân", "company": "N/A", "avatar": "LH", "isCorp": false,
+                  "nbaTitle": "Đôn đốc PTP Mức độ 2",
+                  "nbaDesc": "Cần xuống hiện trường xác minh tình trạng kinh doanh.",
+                  "persona": { "pay": 50, "collab": 70, "contact": 90, "break": 20, "priority": 95, "digital": 50 },
+                  "ews": [{ "text": "Cửa hàng tạm đóng cửa dài ngày", "level": "Trung bình", "color": "yellow" }],
+                  "loans": [
+                    { "id": "HDTD009876", "type": "Vay kinh doanh", "balance": 500000000, "interest": 15000000, "overdue": 75400000, "dpd": 45, "status": "Quá hạn" }
+                  ],
+                  "collaterals": [
+                    { "type": "Hàng hóa", "desc": "Hàng tồn kho vật liệu xây dựng", "value": 300000000, "status": "Đang rà soát" }
+                  ]
+                },
+                {
+                  "id": "HDTD001111", "cif": "4567890123", "name": "Phạm Thị Thu Hà", "type": "Thẻ tín dụng",
+                  "amount": 25000000, "overdue": 3000000, "dpd": 3, "riskLevel": 1, "riskStr": "Thấp", "priority": "Thấp",
+                  "status": "Mới", "assignee": "Vũ Hoàng", "phone": "0977 555 666", "email": "hapham@gmail.com",
+                  "address": "TP.HCM", "dob": "02/09/1995", "job": "Kế toán",
+                  "segment": "Khách hàng cá nhân", "company": "Công ty TNHH XYZ", "avatar": "PH", "isCorp": false,
+                  "nbaTitle": "Gửi SMS nhắc nợ",
+                  "nbaDesc": "Mới trễ hạn, khả năng cao khách hàng quên.",
+                  "persona": { "pay": 90, "collab": 80, "contact": 95, "break": 10, "priority": 30, "digital": 95 },
+                  "ews": [],
+                  "loans": [
+                    { "id": "CC-001111-1", "type": "Thẻ tín dụng", "balance": 25000000, "interest": 0, "overdue": 3000000, "dpd": 3, "status": "Quá hạn" }
+                  ],
+                  "collaterals": []
+                },
+                {
+                  "id": "HDTD002222", "cif": "5678901234", "name": "Hoàng Quốc Việt", "type": "Vay tiêu dùng",
+                  "amount": 350000000, "overdue": 120000000, "dpd": 67, "riskLevel": 3, "riskStr": "Cao", "priority": "Cao",
+                  "status": "Tạm dừng", "assignee": "Trần Tuấn", "phone": "0933 444 555", "email": "viethq@yahoo.com",
+                  "address": "Đà Nẵng", "dob": "11/11/1988", "job": "Trưởng phòng Sales",
+                  "segment": "Khách hàng cá nhân", "company": "Tập đoàn V", "avatar": "HV", "isCorp": false,
+                  "nbaTitle": "Tạo áp lực danh tiếng",
+                  "nbaDesc": "Khách hàng chức vụ cao, cố tình chây ì. Đề xuất luồng Field Collection.",
+                  "persona": { "pay": 80, "collab": 20, "contact": 40, "break": 90, "priority": 100, "digital": 80 },
+                  "ews": [],
+                  "loans": [
+                    { "id": "HDTD002222", "type": "Vay tín chấp", "balance": 350000000, "interest": 45000000, "overdue": 120000000, "dpd": 67, "status": "Quá hạn" }
+                  ],
+                  "collaterals": []
+                }
               ],
               "interactions": [
-                { "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-08T10:30:00Z", "notes": "[✅ Có thông tin giá trị] Trao đổi về lịch thanh toán. KH trình bày đang đợi lương.", "user": "Vũ Hoàng" },
-                { "id": 2, "caseId": "HDMN008899", "type": "Trinh sát / Thu thập thông tin", "date": "2026-09-05T09:00:00Z", "notes": "[✅ Có thông tin giá trị] Điều tra qua MXH: Khách vừa đi du lịch nước ngoài, không có dấu hiệu suy kiệt tài chính.", "user": "Phạm Tuấn" },
-                { "id": 3, "caseId": "HDTC001122", "type": "Gặp trực tiếp / Hiện trường", "date": "2026-09-07T14:30:00Z", "notes": "[⚠️ Bất hợp tác] Khách chây ì, khóa cửa không tiếp. Hỏi hàng xóm báo khách vẫn ở nhà.", "user": "Vũ Hoàng" }
+                { "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-10T18:24:00Z", "notes": "[Có cam kết] Khách hàng xác nhận sẽ thanh toán 5.000.000đ vào ngày 15/09. Đang gặp khó khăn tài chính tạm thời do chi phí học tập của con.", "user": "Vũ Hoàng" },
+                { "id": 2, "caseId": "HDTD001234", "type": "Gửi SMS / Zalo", "date": "2026-09-08T14:15:00Z", "notes": "[Thành công] Nhắc nợ, đề nghị thanh toán. Kết quả: Đã gửi", "user": "Hệ thống" },
+                { "id": 3, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-05T16:30:00Z", "notes": "[Không liên lạc được] Không nghe máy", "user": "Trần Lan" },
+                { "id": 4, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-02T10:12:00Z", "notes": "[N/A] Khách hàng đang công tác, hẹn tuần sau.", "user": "Vũ Hoàng" },
+                { "id": 5, "caseId": "HDTD005678", "type": "Gặp trực tiếp / Hiện trường", "date": "2026-09-09T14:00:00Z", "notes": "[Thành công] Đã gặp trực tiếp khách hàng tại nhà. Khách cam kết cuối tuần thanh toán.", "user": "Lê Thu Hà" },
+                { "id": 6, "caseId": "HDTD002222", "type": "Trinh sát / Thu thập thông tin", "date": "2026-09-01T10:00:00Z", "notes": "[Có thông tin giá trị] Phát hiện vợ làm Phó Giám Đốc Sở, rất sợ ảnh hưởng uy tín.", "user": "Trần Tuấn" },
+                { "id": 7, "caseId": "HDTD002222", "type": "Cuộc gọi đi", "date": "2026-09-05T15:00:00Z", "notes": "[Bất hợp tác] Khách hàng lớn tiếng, đe dọa báo công an nếu tiếp tục gọi.", "user": "Trần Tuấn" }
               ],
               "ptps": [
-                { "id": 1, "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-12T00:00:00Z", "status": "pending" },
-                { "id": 2, "caseId": "HDDN009876", "amount": 20000000, "date": "2026-09-15T00:00:00Z", "status": "pending" }
+                { "id": 1, "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-15T00:00:00Z", "status": "Đến hạn" },
+                { "id": 2, "caseId": "HDTD005678", "amount": 8200000, "date": "2026-09-12T00:00:00Z", "status": "Quá hạn" },
+                { "id": 3, "caseId": "HDTD009876", "amount": 10000000, "date": "2026-09-20T00:00:00Z", "status": "Đang theo dõi" },
+                { "id": 4, "caseId": "HDTD001111", "amount": 3000000, "date": "2026-09-10T00:00:00Z", "status": "Đã trả" }
               ],
               "payments": [
-                { "id": "PAY_100192", "caseId": "HDTD001234", "amount": 3000000, "date": "2026-08-26T15:20:00Z", "status": "Thành công", "method": "Chuyển khoản" }
+                { "id": "FT260915123456", "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-15T09:24:12Z", "status": "Thành công", "method": "BIDV SmartBanking" },
+                { "id": "FT260910987654", "caseId": "HDTD001111", "amount": 3000000, "date": "2026-09-10T14:20:00Z", "status": "Thành công", "method": "Chuyển khoản" }
               ]
             };
         }
@@ -1202,40 +1302,45 @@
         async function initApp() {
             loadFromStorage();
             if (!appData.dashboardStats || appData.cases.length === 0) {
-                try {
-                    const response = await fetch('data.json');
-                    if (response.ok) {
-                        const fetchedData = await response.json();
-                        const mock = getMockData();
-                        appData.cases = (fetchedData.cases && fetchedData.cases.length > 0) ? fetchedData.cases : mock.cases;
-                        appData.interactions = fetchedData.interactions || mock.interactions;
-                        appData.ptps = fetchedData.ptps || mock.ptps;
-                        appData.payments = fetchedData.payments || mock.payments;
-                        appData.dashboardStats = fetchedData.dashboardStats || mock.dashboardStats;
-                    } else {
-                        appData = getMockData();
-                    }
-                } catch (err) {
-                    console.warn("Could not load data.json via fetch. Using local fallback data.");
-                    appData = getMockData();
-                }
+                appData = getMockData();
                 saveToStorage();
             }
 
             updateClock();
             setInterval(updateClock, 60000);
             
-            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('input-ptp-date').value = tomorrow.toISOString().split('T')[0];
+            const ptpDateEl = document.getElementById('input-ptp-date');
+            if (ptpDateEl) {
+                const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+                ptpDateEl.value = tomorrow.toISOString().split('T')[0];
+            }
 
-            document.getElementById('input-create-ptp').addEventListener('change', function() {
-                document.getElementById('input-ptp-amount').disabled = !this.checked;
-                document.getElementById('input-ptp-date').disabled = !this.checked;
-                document.getElementById('input-ptp-amount').classList.toggle('opacity-50');
-                document.getElementById('input-ptp-date').classList.toggle('opacity-50');
-            });
+            const inputCreatePtp = document.getElementById('input-create-ptp');
+            if (inputCreatePtp) {
+                inputCreatePtp.addEventListener('change', function() {
+                    const amountInput = document.getElementById('input-ptp-amount');
+                    const dateInput = document.getElementById('input-ptp-date');
+                    amountInput.disabled = !this.checked;
+                    dateInput.disabled = !this.checked;
+                    amountInput.classList.toggle('opacity-50');
+                    dateInput.classList.toggle('opacity-50');
+                });
+            }
 
             navTo('dashboard');
+        }
+
+        // Dashboard Tab Switcher logic
+        window.switchDashTab = function(level) {
+            currentDashLevel = level;
+            document.querySelectorAll('[id^="dash-tab-"]').forEach(btn => {
+                btn.className = "pb-2 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors";
+            });
+            const activeBtn = document.getElementById('dash-tab-' + level);
+            if (activeBtn) {
+                activeBtn.className = "pb-2 border-b-2 border-bidv-green font-bold text-bidv-green transition-colors";
+            }
+            renderDashboardData();
         }
 
         function navTo(viewId) {
@@ -1264,7 +1369,8 @@
 
             if (window.innerWidth < 1024) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
-                document.getElementById('mobile-overlay').classList.add('hidden');
+                const overlay = document.getElementById('mobile-overlay');
+                if (overlay) overlay.classList.add('hidden');
             }
 
             if (viewId === 'dashboard') {
@@ -1292,18 +1398,10 @@
             }
         }
 
-        function switchDashTab(level) {
-            currentDashLevel = level;
-            document.querySelectorAll('[id^="dash-tab-"]').forEach(btn => {
-                btn.className = "pb-2 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors";
-            });
-            document.getElementById('dash-tab-' + level).className = "pb-2 border-b-2 border-bidv-green font-bold text-bidv-green transition-colors";
-            renderDashboardData();
-        }
-
         function renderDashboardData() {
             if(!appData.dashboardStats) return;
             const stats = appData.dashboardStats[currentDashLevel];
+            if (!stats) return;
             
             document.getElementById('dash-total').innerText = stats.totalProcessing;
             document.getElementById('dash-ptp').innerText = stats.ptpPending;
@@ -1318,6 +1416,7 @@
 
         function renderTrendChart(trendData) {
             const container = document.getElementById('trend-chart-container');
+            if(!container) return;
             container.innerHTML = '';
             let chartHtml = '';
             
@@ -1340,15 +1439,16 @@
             container.innerHTML = chartHtml;
         }
 
-        function simulateRuleEngine() {
+        // Rule Simulator Modal logic
+        window.simulateRuleEngine = function() {
             document.getElementById('modal-rule-simulator').classList.remove('hidden');
             runSimLogic();
         }
-        function closeSimulator() {
+        window.closeSimulator = function() {
             document.getElementById('modal-rule-simulator').classList.add('hidden');
         }
         
-        function runSimLogic() {
+        window.runSimLogic = function() {
             const scenario = document.getElementById('sim-scenario').value;
             const consoleEl = document.getElementById('sim-console');
             let output = `<div class="text-yellow-400">>> SYSTEM_START: Data Aggregation...</div>`;
@@ -1364,27 +1464,6 @@
                     </div>
                     <div class="text-teal-400 mt-2">>> NBA: Không dùng SMS/Voicebot tự động. Phân bổ cho Quản lý cấp cao gọi điện Outbound để bảo mật thông tin, giữ uy tín KH.</div>
                 `;
-            } else if (scenario === 'good') {
-                output += `
-                    <div class="text-gray-400">Fetching Core Banking... DPD: 3 days.</div>
-                    <div class="text-gray-400">Fetching CRM... Segment: Mass (Phổ thông).</div>
-                    <div class="text-gray-400">Evaluate Rules:</div>
-                    <div class="ml-4 border-l border-gray-600 pl-2">
-                        <div>Rule 1 (Mass - Thiện chí): <span class="text-green-400">PASS</span> (DPD < 10)</div>
-                    </div>
-                    <div class="text-blue-400 mt-2">>> NBA: Kích hoạt Auto Zalo ZNS / SMS nhắc nợ nhẹ nhàng.</div>
-                `;
-            } else if (scenario === 'bad') {
-                output += `
-                    <div class="text-gray-400">Fetching Core Banking... DPD: 45 days.</div>
-                    <div class="text-gray-400">Fetching Call Center... Missed Calls: <span class="text-red-400">5 lần liên tiếp</span>.</div>
-                    <div class="text-gray-400">Evaluate Rules:</div>
-                    <div class="ml-4 border-l border-gray-600 pl-2">
-                        <div>Condition: DPD > 30 AND Unreachable > 3.</div>
-                        <div>Rule 3 (Chây ì/Trốn tránh): <span class="text-green-400">PASS</span></div>
-                    </div>
-                    <div class="text-red-400 mt-2 font-bold">>> NBA: Ngừng gọi điện (Tốn resource). Đẩy hồ sơ vào luồng Workflow Chuyển Pháp lý.</div>
-                `;
             } else if (scenario === 'spouse_reputation') {
                 output += `
                     <div class="text-gray-400">Fetching Core Banking... Borrower DPD: 120 days (Chây ì).</div>
@@ -1396,7 +1475,7 @@
                         <div>Rule 4 (Stakeholder Reputation Leverage): <span class="text-green-400">PASS</span></div>
                     </div>
                     <div class="text-yellow-400 mt-2 font-bold">>> TACTIC: Field Collection (Thu nợ hiện trường).</div>
-                    <div class="text-teal-400 mt-1 leading-relaxed">>> ACTION: Cử xe ô tô có logo Ngân hàng + Cán bộ mặc đồng phục đến nhà vào khung giờ 19:00 - 20:00. Mục tiêu: Lịch sự nhưng tạo áp lực tâm lý giữ thể diện cho người liên quan.</div>
+                    <div class="text-teal-400 mt-1 leading-relaxed">>> ACTION: Cử xe ô tô có logo Ngân hàng + Cán bộ mặc đồng phục đến nhà. Mục tiêu: Lịch sự nhưng tạo áp lực tâm lý giữ thể diện cho người liên quan.</div>
                 `;
             }
             
@@ -1413,13 +1492,12 @@
             typeLine();
         }
 
-        function openWorkflowModal(caseId, wfId, type, status, creator) {
+        window.openWorkflowModal = function(caseId, wfId, type, status, creator) {
             const c = appData.cases.find(x => x.id === caseId);
             if(!c) return;
 
             document.getElementById('modal-workflow-detail').classList.remove('hidden');
             
-            // Set basic info
             document.getElementById('wf-title').innerText = `Tờ trình: ${type}`;
             document.getElementById('wf-id').innerText = wfId;
             document.getElementById('wf-doc-title').innerText = `TỜ TRÌNH ${type.toUpperCase()}`;
@@ -1432,7 +1510,6 @@
             document.getElementById('wf-doc-strategy').innerText = c.nbaTitle;
             document.getElementById('wf-doc-action').innerText = `Chấp thuận ${type.toLowerCase()} cho khách hàng.`;
             
-            // Render interactions history
             const historyEl = document.getElementById('wf-doc-history');
             const cInts = appData.interactions.filter(i => i.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
             if(cInts.length > 0) {
@@ -1454,21 +1531,20 @@
                 actionArea.classList.remove('hidden');
             }
         }
-        function closeWorkflowModal() {
+        window.closeWorkflowModal = function() {
             document.getElementById('modal-workflow-detail').classList.add('hidden');
         }
 
-        function renderCasesList() {
+        window.renderCasesList = function() {
             const tbody = document.getElementById('cases-table-body');
             tbody.innerHTML = '';
             
-            // Get filter values
-            const searchTerm = document.getElementById('filter-search').value.toLowerCase().trim();
-            const productFilter = document.getElementById('filter-product').value;
-            const riskFilter = document.getElementById('filter-risk').value;
-            const statusFilter = document.getElementById('filter-status').value;
+            const searchEl = document.getElementById('filter-search');
+            const searchTerm = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            const productFilter = document.getElementById('filter-product') ? document.getElementById('filter-product').value : 'all';
+            const riskFilter = document.getElementById('filter-risk') ? document.getElementById('filter-risk').value : 'all';
+            const statusFilter = document.getElementById('filter-status') ? document.getElementById('filter-status').value : 'all';
             
-            // Apply filters
             let filteredCases = appData.cases.filter(c => {
                 let matchSearch = !searchTerm || c.name.toLowerCase().includes(searchTerm) || c.id.toLowerCase().includes(searchTerm) || c.cif.includes(searchTerm);
                 let matchProduct = productFilter === 'all' || c.type === productFilter || c.type.includes(productFilter);
@@ -1510,8 +1586,7 @@
                         <td class="p-3 text-center" onclick="event.stopPropagation()">
                             <div class="flex justify-center gap-1.5">
                                 <button onclick="simulateCall('call', '${c.id}')" title="Gọi điện" class="w-7 h-7 rounded border border-gray-200 text-teal-600 hover:bg-teal-50 hover:border-teal-300 transition shadow-sm bg-white"><i class="fas fa-phone-alt text-[10px]"></i></button>
-                                <button onclick="simulateCall('sms', '${c.id}')" title="Gửi SMS/Zalo" class="w-7 h-7 rounded border border-gray-200 text-blue-500 hover:bg-blue-50 hover:border-blue-300 transition shadow-sm bg-white"><i class="fas fa-comment-alt text-[10px]"></i></button>
-                                <button onclick="simulateCall('field', '${c.id}')" title="Đi hiện trường" class="w-7 h-7 rounded border border-gray-200 text-orange-500 hover:bg-orange-50 hover:border-orange-300 transition shadow-sm bg-white"><i class="fas fa-car text-[10px]"></i></button>
+                                <button onclick="simulateCall('intel', '${c.id}')" title="Trinh sát" class="w-7 h-7 rounded border border-gray-200 text-purple-500 hover:bg-purple-50 hover:border-purple-300 transition shadow-sm bg-white"><i class="fas fa-search text-[10px]"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1520,13 +1595,13 @@
             });
         }
 
-        function openDetail(caseId) {
+        window.openDetail = function(caseId) {
             currentCaseId = caseId;
             navTo('detail');
             switchTab('overview');
         }
 
-        function switchTab(tabId) {
+        window.switchTab = function(tabId) {
             document.querySelectorAll('.detail-tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('#detail-tabs button').forEach(btn => {
                 btn.classList.remove('text-bidv-green', 'border-b-2', 'border-bidv-green', 'bg-white', 'font-bold');
@@ -1541,7 +1616,7 @@
             }
         }
 
-        function renderCaseDetail() {
+        window.renderCaseDetail = function() {
             const c = appData.cases.find(x => x.id === currentCaseId);
             if (!c) return;
 
@@ -1567,62 +1642,103 @@
             document.getElementById('detail-total-overdue').innerText = formatCurrency(c.overdue);
             document.getElementById('detail-max-dpd').innerText = c.dpd;
 
-            document.getElementById('info-dob').innerText = c.dob;
-            document.getElementById('info-job').innerText = c.job;
-            document.getElementById('info-company').innerText = c.company;
+            document.getElementById('info-dob').innerText = c.dob || 'N/A';
+            document.getElementById('info-job').innerText = c.job || 'N/A';
+            document.getElementById('info-company').innerText = c.company || 'N/A';
 
             document.getElementById('detail-nba-title').innerText = c.nbaTitle;
             document.getElementById('detail-nba-desc').innerText = c.nbaDesc;
+            
+            // Dynamic NBA styling based on Reputation Rule
+            const nbaBox = document.getElementById('detail-nba-box');
             const nbaIcon = document.getElementById('detail-nba-icon');
-            nbaIcon.className = `fas mt-1 ${c.nbaTitle.toLowerCase().includes('pháp lý') ? 'fa-gavel text-red-600' : (c.nbaTitle.toLowerCase().includes('sms') || c.nbaTitle.toLowerCase().includes('zalo') ? 'fa-comment-alt text-blue-500' : 'fa-lightbulb text-yellow-600')}`;
+            if (c.nbaTitle.includes('Danh tiếng')) {
+                nbaBox.className = "bg-orange-50 border border-orange-300 p-4 rounded-lg mb-4 shadow-sm transition-colors duration-500";
+                nbaIcon.className = "fas fa-car text-orange-600 mt-1 text-lg";
+            } else {
+                nbaBox.className = "bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-4 transition-colors duration-500";
+                nbaIcon.className = `fas mt-1 text-lg ${c.nbaTitle.toLowerCase().includes('pháp lý') ? 'fa-gavel text-red-600' : 'fa-lightbulb text-yellow-600'}`;
+            }
 
             // Persona Bars
-            const pBars = [
-                { label: 'Khả năng trả nợ', val: c.persona.pay, color: 'bg-teal-500' },
-                { label: 'Mức độ hợp tác', val: c.persona.collab, color: c.persona.collab >= 50 ? 'bg-yellow-400' : 'bg-red-500' },
-                { label: 'Khả năng liên hệ', val: c.persona.contact, color: 'bg-green-500' },
-                { label: 'Rủi ro phá PTP', val: c.persona.break, color: c.persona.break >= 50 ? 'bg-red-500' : 'bg-teal-500' }
-            ];
-            let phtml = '';
-            pBars.forEach(b => {
-                let badge = b.val >= 70 ? 'Tốt' : (b.val >= 40 ? 'Tr.Bình' : 'Kém');
-                let badgeColor = b.val >= 70 ? 'bg-green-100 text-green-700' : (b.val >= 40 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
-                phtml += `
-                    <div>
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-xs font-semibold text-gray-700">${b.label}</span>
-                            <div class="flex items-center gap-2"><span class="text-[10px] font-bold ${badgeColor} px-1.5 rounded">${badge}</span><span class="text-xs font-bold text-gray-800 w-6 text-right">${b.val}</span></div>
+            if (c.persona) {
+                const pBars = [
+                    { label: 'Khả năng trả nợ', val: c.persona.pay, color: 'bg-teal-500' },
+                    { label: 'Mức độ hợp tác', val: c.persona.collab, color: c.persona.collab >= 50 ? 'bg-yellow-400' : 'bg-red-500' },
+                    { label: 'Khả năng liên hệ', val: c.persona.contact, color: 'bg-green-500' },
+                    { label: 'Rủi ro phá PTP', val: c.persona.break, color: c.persona.break >= 50 ? 'bg-red-500' : 'bg-teal-500' }
+                ];
+                let phtml = '';
+                pBars.forEach(b => {
+                    let badge = b.val >= 70 ? 'Tốt' : (b.val >= 40 ? 'Tr.Bình' : 'Kém');
+                    let badgeColor = b.val >= 70 ? 'bg-green-100 text-green-700' : (b.val >= 40 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
+                    phtml += `
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="text-xs font-semibold text-gray-700">${b.label}</span>
+                                <div class="flex items-center gap-2"><span class="text-[10px] font-bold ${badgeColor} px-1.5 rounded">${badge}</span><span class="text-xs font-bold text-gray-800 w-6 text-right">${b.val}</span></div>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill ${b.color}" style="width: ${b.val}%;"></div></div>
                         </div>
-                        <div class="progress-bar-bg"><div class="progress-bar-fill ${b.color}" style="width: ${b.val}%;"></div></div>
-                    </div>
-                `;
-            });
-            document.getElementById('persona-bars').innerHTML = phtml;
-
-            // EWS
-            let ehtml = '';
-            if(c.ews.length === 0) { ehtml = '<p class="text-xs text-gray-500 italic">Không có tín hiệu rủi ro nổi bật.</p>'; }
-            else {
-                c.ews.forEach(e => {
-                    let iconColor = e.color === 'red' ? 'text-red-500 bg-red-100' : 'text-yellow-600 bg-yellow-100';
-                    ehtml += `<div class="flex items-start gap-3 p-2 rounded hover:bg-gray-50"><div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center shrink-0 text-[10px]"><i class="fas fa-exclamation"></i></div><div class="flex-1 text-sm text-gray-700 font-medium leading-snug">${e.text}</div></div>`;
+                    `;
                 });
+                document.getElementById('persona-bars').innerHTML = phtml;
             }
-            document.getElementById('ews-list').innerHTML = ehtml;
 
-            // Guardrail
+            // Guardrail Logic
             const hour = new Date().getHours();
             const gPanel = document.getElementById('guardrail-panel');
             const callBtn = document.getElementById('btn-call');
+            let guardrailHtml = '';
+            
             if (hour >= 8 && hour <= 21) {
-                gPanel.innerHTML = `<li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Khung giờ cho phép (08:00 - 21:00)</li>`;
+                guardrailHtml += `<li class="flex items-center gap-2 text-xs font-medium text-gray-700"><i class="fas fa-check-circle text-green-500"></i> Khung giờ cho phép (08:00 - 21:00)</li>`;
                 callBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
                 callBtn.classList.add('bg-bidv-green', 'hover:bg-teal-800');
             } else {
-                gPanel.innerHTML = `<li class="flex items-center gap-2 text-xs font-bold text-red-600"><i class="fas fa-times-circle text-red-500"></i> Ngoài khung giờ (Chỉ từ 08:00 - 21:00)</li>`;
+                guardrailHtml += `<li class="flex items-center gap-2 text-xs font-bold text-red-600"><i class="fas fa-times-circle text-red-500"></i> Ngoài khung giờ (Chỉ từ 08:00 - 21:00)</li>`;
                 callBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
                 callBtn.classList.remove('bg-bidv-green', 'hover:bg-teal-800');
             }
+
+            if (c.nbaTitle.includes('Danh tiếng')) {
+                guardrailHtml += `
+                    <li class="flex items-start gap-2 text-xs font-bold text-orange-700 mt-2 bg-orange-100 p-2 rounded">
+                        <i class="fas fa-shield-alt text-orange-600 mt-0.5"></i>
+                        [COMPLIANCE] Chú ý: Giao tiếp chuẩn mực, không đe dọa. Chỉ mặc đồng phục, đi xe biển Ngân hàng.
+                    </li>`;
+            }
+            gPanel.innerHTML = guardrailHtml;
+
+            // Customer Graph Rendering (Reputation Linkages)
+            let graphHtml = '';
+            if(c.relatedParties && c.relatedParties.length > 0) {
+                c.relatedParties.forEach(rp => {
+                    let badgeColor = rp.score >= 80 ? 'bg-red-100 text-red-700 border-red-200' : (rp.score >= 50 ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-gray-100 text-gray-600 border-gray-200');
+                    let icon = rp.type === 'Vợ' || rp.type === 'Chồng' ? 'fa-ring' : 'fa-user-friends';
+                    graphHtml += `
+                        <div class="border border-gray-200 rounded-lg p-3 flex items-start gap-3 bg-white relative overflow-hidden mb-3 last:mb-0">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 ${rp.score >= 80 ? 'bg-red-500' : 'bg-gray-300'}"></div>
+                            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 ml-1"><i class="fas ${icon}"></i></div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">${rp.name} <span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded ml-1">${rp.type}</span></p>
+                                        <p class="text-xs text-gray-600 mt-1">${rp.job} - ${rp.compType}</p>
+                                    </div>
+                                    <div class="text-right flex flex-col items-end">
+                                        <span class="text-[10px] font-bold text-gray-500 mb-1">Độ nhạy cảm uy tín</span>
+                                        <span class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${rp.score}/100</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                graphHtml = `<p class="text-xs text-gray-500 italic text-center py-2">Chưa có dữ liệu mạng lưới quan hệ.</p>`;
+            }
+            document.getElementById('customer-graph-container').innerHTML = graphHtml;
 
             // PTP Current
             const casePtps = appData.ptps.filter(p => p.caseId === c.id && p.status === 'pending');
@@ -1641,8 +1757,6 @@
         }
 
         function renderDetailTabs(c, interactions) {
-            // Loans
-            document.getElementById('detail-loan-count-title').innerText = `(${c.loans ? c.loans.length : 0} khoản vay)`;
             let loanHtml = '';
             if (c.loans && c.loans.length > 0) {
                 c.loans.forEach(l => {
@@ -1654,7 +1768,6 @@
             document.getElementById('tab-loans-table').innerHTML = loanHtml;
             document.getElementById('detail-loans-overview').innerHTML = loanHtml; 
 
-            // Interactions
             let intHtml = '';
             const sortedInts = interactions.sort((a,b) => new Date(b.date) - new Date(a.date));
             if(sortedInts.length > 0) {
@@ -1666,7 +1779,7 @@
                     if(i.type.includes('Hiện trường') || i.type.includes('trực tiếp')) { icon = 'fa-car'; color = 'text-orange-500 bg-orange-50 border-orange-200'; }
                     if(i.type.includes('Trinh sát')) { icon = 'fa-search'; color = 'text-purple-500 bg-purple-50 border-purple-200'; }
                     
-                    intHtml += `<div class="relative pl-6"><div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div><div class="bg-gray-50 rounded-lg p-3 border border-gray-100"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-gray-800">${i.type}</span><span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span></div><p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p><div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user.charAt(0)}</div><span class="text-[10px] font-medium text-gray-500">${i.user}</span></div></div></div>`;
+                    intHtml += `<div class="relative pl-6"><div class="absolute -left-[15px] top-0 w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] ring-4 ring-white border shadow-sm"><i class="fas ${icon}"></i></div><div class="bg-gray-50 rounded-lg p-3 border border-gray-100"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-gray-800">${i.type}</span><span class="text-[10px] text-gray-400">${formatDateTimeShort(i.date)}</span></div><p class="text-xs text-gray-600 mb-2 leading-relaxed">${i.notes}</p><div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">${i.user ? i.user.charAt(0) : 'U'}</div><span class="text-[10px] font-medium text-gray-500">${i.user || 'Unknown'}</span></div></div></div>`;
                 });
                 intHtml += '</div>';
             } else {
@@ -1683,13 +1796,13 @@
                 document.getElementById('modal-kh-last-intel').innerText = `"Chưa có thông tin trinh sát"`;
             }
 
-            // Finance (PTPs & Payments)
             const cPtps = appData.ptps.filter(p => p.caseId === c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
             let ptpHtml = '';
             if(cPtps.length > 0) {
                 cPtps.forEach(p => {
-                    let stClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600' : (p.status === 'kept' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600');
-                    ptpHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold border border-gray-200 ${stClass}">${p.status}</span></td></tr>`;
+                    let stClass = (p.status === 'pending' || p.status === 'Đến hạn' || p.status === 'Đang theo dõi') ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : 
+                                  (p.status === 'kept' || p.status === 'Đã trả' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
+                    ptpHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-right font-bold text-gray-800">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold border ${stClass}">${p.status}</span></td></tr>`;
                 });
             } else ptpHtml = `<tr><td colspan="3" class="p-4 text-center text-gray-500 text-sm">Chưa có PTP.</td></tr>`;
             document.getElementById('tab-ptps-table').innerHTML = ptpHtml;
@@ -1698,12 +1811,11 @@
             let payHtml = '';
             if(cPays.length > 0) {
                 cPays.forEach(p => {
-                    payHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-xs text-gray-600">${p.method}</td><td class="px-4 py-3 text-right font-bold text-teal-700">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><i class="fas fa-check-circle text-green-500"></i></td></tr>`;
+                    payHtml += `<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium text-gray-800">${formatDate(p.date)}</td><td class="px-4 py-3 text-xs text-gray-600">${p.method || 'N/A'}</td><td class="px-4 py-3 text-right font-bold text-teal-700">${formatCurrency(p.amount)}</td><td class="px-4 py-3 text-center"><i class="fas fa-check-circle text-green-500"></i></td></tr>`;
                 });
             } else payHtml = `<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Chưa có giao dịch.</td></tr>`;
             document.getElementById('tab-payments-table').innerHTML = payHtml;
 
-            // Assets
             let assetHtml = '';
             if (c.collaterals && c.collaterals.length > 0) {
                 c.collaterals.forEach(a => {
@@ -1725,7 +1837,7 @@
                 const c = appData.cases.find(x => x.id === i.caseId) || {};
                 let icon = 'fa-comment-dots text-blue-500'; 
                 if(i.type.includes('Gọi') || i.type.includes('gọi')) icon = 'fa-phone-alt text-teal-600'; 
-                if(i.type.includes('PTP')) icon = 'fa-file-signature text-yellow-600';
+                if(i.type.includes('PTP') || i.type.includes('SMS')) icon = 'fa-comment-alt text-blue-500';
                 if(i.type.includes('Hiện trường') || i.type.includes('trực tiếp')) icon = 'fa-car text-orange-500';
                 if(i.type.includes('Trinh sát')) icon = 'fa-search text-purple-500';
 
@@ -1742,8 +1854,14 @@
             } else {
                 sortedPtps.forEach(p => {
                     const c = appData.cases.find(x => x.id === p.caseId) || {};
-                    let statusClass = p.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : (p.status === 'kept' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
-                    let statusText = p.status === 'pending' ? 'Chờ thanh toán' : (p.status === 'kept' ? 'Đã thanh toán' : 'Vi phạm (Broken)');
+                    let statusClass = (p.status === 'pending' || p.status === 'Đến hạn' || p.status === 'Đang theo dõi') ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : 
+                                      (p.status === 'kept' || p.status === 'Đã trả' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200');
+                    
+                    let statusText = p.status;
+                    if(p.status === 'pending') statusText = 'Đang theo dõi';
+                    if(p.status === 'kept') statusText = 'Đã trả';
+                    if(p.status === 'broken') statusText = 'Quá hạn';
+
                     ptpTbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50"><td class="p-3"><div class="font-bold text-gray-800">${c.name || 'N/A'}</div><div class="text-[11px] text-gray-500 hover:text-bidv-green cursor-pointer" onclick="openDetail('${c.id}')">${c.id || 'N/A'}</div></td><td class="p-3 text-gray-800 font-medium text-sm"><i class="far fa-calendar-alt text-gray-400 mr-1"></i> ${formatDate(p.date)}</td><td class="p-3 text-right font-bold text-gray-800 text-sm">${formatCurrency(p.amount)}</td><td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusClass}">${statusText}</span></td></tr>`);
                 });
             }
@@ -1762,44 +1880,44 @@
         }
 
         function simulateCall(type = 'call', explicitCaseId = null) {
-            const hour = new Date().getHours();
-            if ((type === 'call' || type === 'sms') && (hour < 8 || hour > 21)) {
-                showToast("Guardrail Block: Không cho phép gọi điện/SMS ngoài khung giờ 08:00 - 21:00!", "error");
-                return;
-            }
-            
-            const targetId = explicitCaseId || currentCaseId;
-            if(!targetId) return;
-            
-            const c = appData.cases.find(x => x.id === targetId);
-            currentCaseId = targetId;
-            
-            document.getElementById('modal-kh-name').innerText = c.name;
-            document.getElementById('modal-kh-dpd').innerText = c.dpd;
-            document.getElementById('modal-kh-nba').innerText = c.nbaTitle;
-            
             const typeDropdown = document.getElementById('input-interaction-type');
             if(type === 'sms') typeDropdown.value = "Gửi SMS / Zalo";
             else if(type === 'field') typeDropdown.value = "Gặp trực tiếp / Hiện trường";
             else if(type === 'intel') typeDropdown.value = "Trinh sát / Thu thập thông tin";
             else typeDropdown.value = "Cuộc gọi đi";
             
-            document.getElementById('input-notes').value = "";
-            document.getElementById('input-create-ptp').checked = false;
-            document.getElementById('input-ptp-amount').disabled = true;
-            document.getElementById('input-ptp-date').disabled = true;
-            document.getElementById('input-ptp-amount').classList.add('opacity-50');
-            document.getElementById('input-ptp-date').classList.add('opacity-50');
+            handleInteractionTypeChange(); // Make sure form shows/hides properly
             
-            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('input-ptp-date').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('input-notes').value = "";
+            const cb = document.getElementById('input-create-ptp');
+            if(cb) cb.checked = false;
             
             document.getElementById('view-call-log').classList.remove('hidden');
         }
 
-        function closeCallModal() { document.getElementById('view-call-log').classList.add('hidden'); }
+        window.closeCallModal = function() { 
+            document.getElementById('view-call-log').classList.add('hidden'); 
+        }
 
-        function saveInteraction() {
+        // Calculates Reputation Score explicitly mapped from BRD Section 4.1
+        function calculateReputationScore(jobTitle, companyType) {
+            let score = 30; // Default
+            if (!jobTitle) return score;
+            const job = jobTitle.toUpperCase();
+            
+            if (companyType === 'Cơ quan Nhà nước' || companyType === 'Đơn vị sự nghiệp') {
+                if (job.includes('GIÁM ĐỐC') || job.includes('HIỆU TRƯỞNG') || job.includes('CHỦ TỊCH')) score = 90;
+                else if (job.includes('TRƯỞNG PHÒNG') || job.includes('PHÓ GIÁM ĐỐC')) score = 80;
+                else if (job.includes('GIÁO VIÊN') || job.includes('GIẢNG VIÊN')) score = 75;
+                else if (job.includes('CÁN BỘ') || job.includes('CHUYÊN VIÊN')) score = 70;
+            } else if (companyType === 'Doanh nghiệp FDI') {
+                if (job.includes('GIÁM ĐỐC') || job.includes('TỔNG GIÁM ĐỐC')) score = 85;
+                else if (job.includes('TRƯỞNG')) score = 70;
+            }
+            return score;
+        }
+
+        window.saveInteraction = function() {
             if (!currentCaseId) return;
             const interactionType = document.getElementById('input-interaction-type').value;
             const result = document.getElementById('input-call-result').value;
@@ -1810,7 +1928,34 @@
                 showToast("Vui lòng nhập nội dung chi tiết!", "error");
                 return;
             }
+
+            const caseIndex = appData.cases.findIndex(c => c.id === currentCaseId);
+            const c = appData.cases[caseIndex];
+
+            // 1. RULE ENGINE / SKIP TRACING LOGIC
+            if (interactionType === 'Trinh sát / Thu thập thông tin') {
+                const relType = document.getElementById('intel-rel-type').value;
+                const relName = document.getElementById('intel-rel-name').value.trim();
+                const relJob = document.getElementById('intel-rel-job').value.trim();
+                const relCompType = document.getElementById('intel-rel-company-type').value;
+
+                if (relName) {
+                    const repScore = calculateReputationScore(relJob, relCompType);
+                    const newRp = { type: relType, name: relName, job: relJob, compType: relCompType, score: repScore };
+                    
+                    // Upsert related party
+                    c.relatedParties = [newRp]; 
+                    
+                    // TRIGGER RULE ENGINE SIMULATOR (STG_REPUTATION_LEVERAGE_01)
+                    if (c.dpd >= 90 && c.persona && c.persona.collab < 30 && repScore >= 75) {
+                        c.nbaTitle = "Áp lực Danh tiếng Người liên quan";
+                        c.nbaDesc = `Hệ thống phát hiện ${relType} KH làm "${relJob}" tại ${relCompType}. Điểm nhạy cảm uy tín: ${repScore}/100.\n👉 Đề xuất: Cử xe Ngân hàng & Cán bộ mặc đồng phục đến nhà thu nợ.`;
+                        showToast("Hệ thống (Rule Engine) đã phân tích tình báo và thay đổi Chiến lược (NBA)!", "success");
+                    }
+                }
+            }
             
+            // 2. Save Interaction Log
             appData.interactions.push({
                 id: Date.now(),
                 caseId: currentCaseId,
@@ -1829,16 +1974,18 @@
                     return;
                 }
                 appData.ptps.push({ id: Date.now(), caseId: currentCaseId, amount: parseFloat(ptpAmount), date: new Date(ptpDate).toISOString(), status: 'pending' });
-                const caseIndex = appData.cases.findIndex(c => c.id === currentCaseId);
-                if (caseIndex !== -1) appData.cases[caseIndex].status = 'Đã có PTP';
+                c.status = 'Đã có PTP';
             }
 
             saveToStorage();
             closeCallModal();
             renderCaseDetail();
-            showToast("Đã lưu hồ sơ thành công!", "success");
+            if (interactionType !== 'Trinh sát / Thu thập thông tin') {
+                showToast("Đã lưu tương tác thành công!", "success");
+            }
         }
 
+        // Helpers
         function formatCurrency(val) { return new Intl.NumberFormat('vi-VN').format(val) + ' đ'; }
         function formatDate(isoStr) { return new Date(isoStr).toLocaleDateString('vi-VN'); }
         function formatDateTimeShort(isoStr) { 
@@ -1848,15 +1995,18 @@
         function updateClock() {
             const now = new Date();
             const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-            document.getElementById('current-date-header').innerText = `${days[now.getDay()]}, ${now.toLocaleDateString('vi-VN')}`;
-            document.getElementById('current-time-header').innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute:'2-digit' });
+            const dateEl = document.getElementById('current-date-header');
+            if(dateEl) dateEl.innerText = `${days[now.getDay()]}, ${now.toLocaleDateString('vi-VN')}`;
+            const timeEl = document.getElementById('current-time-header');
+            if(timeEl) timeEl.innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute:'2-digit' });
         }
-        function toggleSidebar() {
+        window.toggleSidebar = function() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('mobile-overlay').classList.toggle('hidden');
         }
-        function showToast(message, type = 'info') {
+        window.showToast = function(message, type = 'info') {
             const container = document.getElementById('toast-container');
+            if(!container) return;
             const toast = document.createElement('div');
             let bg = type === 'success' ? 'bg-bidv-green' : (type === 'error' ? 'bg-red-600' : 'bg-gray-800');
             let icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
