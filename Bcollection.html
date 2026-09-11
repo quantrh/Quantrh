@@ -52,6 +52,23 @@
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        
+        /* Tối ưu UX bảng dữ liệu trên Mobile */
+        @media (max-width: 1024px) {
+            table th:nth-child(1), table td:nth-child(1) {
+                position: sticky; left: 0; z-index: 10; background-color: inherit;
+            }
+            table th:nth-child(2), table td:nth-child(2) {
+                position: sticky; left: 40px; /* Bù trừ độ rộng cột 1 */
+                z-index: 10; background-color: white;
+                box-shadow: 4px 0 6px -4px rgba(0,0,0,0.1);
+            }
+            table thead th:nth-child(1), table thead th:nth-child(2) {
+                background-color: #f9fafb; z-index: 11;
+            }
+            /* Highlight nhẹ dòng đang xem trên mobile */
+            tbody tr:active td { background-color: #f3f4f6; }
+        }
     </style>
 </head>
 <body class="bg-[#f8f9fa] text-bidv-text font-sans h-screen flex overflow-hidden relative">
@@ -156,7 +173,7 @@
                     <button onclick="switchDashTab('branch')" id="dash-tab-branch" class="pb-2 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors">Chi nhánh</button>
                  </div>
 
-                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                          <div class="flex justify-between items-start mb-2">
                              <p class="text-sm text-gray-500 font-medium">Hồ sơ đang xử lý</p>
@@ -399,11 +416,11 @@
 
                     <!-- Inner Navigation Tabs -->
                     <div class="flex gap-1 border-b border-gray-200 overflow-x-auto hide-scrollbar" id="detail-tabs">
-                        <button onclick="switchTab('overview')" id="tab-btn-overview" class="px-5 py-2.5 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap transition">Tổng quan</button>
-                        <button onclick="switchTab('loans')" id="tab-btn-loans" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Khoản vay (<span id="tab-count-loans">0</span>)</button>
-                        <button onclick="switchTab('interactions')" id="tab-btn-interactions" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Lịch sử tương tác (<span id="tab-count-interactions">0</span>)</button>
-                        <button onclick="switchTab('finance')" id="tab-btn-finance" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">PTP & Thanh toán</button>
-                        <button onclick="switchTab('assets')" id="tab-btn-assets" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Tài sản (<span id="tab-count-assets">0</span>)</button>
+                        <button onclick="switchTab('overview')" id="tab-btn-overview" class="px-6 py-3 text-sm font-bold text-bidv-green border-b-2 border-bidv-green bg-white rounded-t-lg whitespace-nowrap transition">Tổng quan</button>
+                        <button onclick="switchTab('loans')" id="tab-btn-loans" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Khoản vay (<span id="tab-count-loans">0</span>)</button>
+                        <button onclick="switchTab('interactions')" id="tab-btn-interactions" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Lịch sử tương tác (<span id="tab-count-interactions">0</span>)</button>
+                        <button onclick="switchTab('finance')" id="tab-btn-finance" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">PTP & Thanh toán</button>
+                        <button onclick="switchTab('assets')" id="tab-btn-assets" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-t-lg whitespace-nowrap transition">Tài sản (<span id="tab-count-assets">0</span>)</button>
                     </div>
 
                     <!-- TAB CONTENT: OVERVIEW -->
@@ -482,9 +499,12 @@
                                     <ul class="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100" id="guardrail-panel"></ul>
                                 </div>
 
-                                <button onclick="simulateCall('call')" id="btn-call" class="w-full bg-bidv-green text-white font-bold py-3 rounded-lg hover:bg-teal-800 transition shadow-md flex items-center justify-center gap-2 mb-3">
-                                    <i class="fas fa-plus-circle"></i> CẬP NHẬT THÔNG TIN / TƯƠNG TÁC
-                                </button>
+                                <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-40 lg:static lg:p-0 lg:bg-transparent lg:border-none lg:z-auto">
+                                    <button onclick="simulateCall('call')" id="btn-call" class="w-full bg-bidv-green text-white font-bold py-3.5 rounded-xl hover:bg-teal-800 transition shadow-lg lg:shadow-md flex items-center justify-center gap-2 lg:mb-3">
+                                        <i class="fas fa-plus-circle text-lg"></i> CẬP NHẬT THÔNG TIN
+                                    </button>
+                                </div>
+                                <div class="h-20 lg:hidden"></div>
                                 
                                 <div class="grid grid-cols-2 gap-2">
                                     <button onclick="simulateCall('sms')" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2">
