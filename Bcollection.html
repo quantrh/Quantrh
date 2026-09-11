@@ -1220,35 +1220,34 @@
                   "nbaDesc": "Mới trễ hạn, khả năng cao khách hàng quên.",
                   "persona": { "pay": 90, "collab": 80, "contact": 95, "break": 10, "priority": 30, "digital": 95 },
                   "ews": [],
-                  "loans": [
-                    { "id": "CC-001111-1", "type": "Thẻ tín dụng", "balance": 25000000, "interest": 0, "overdue": 3000000, "dpd": 3, "status": "Quá hạn" }
-                  ],
+                  "loans": [],
                   "collaterals": []
                 },
                 {
-                  "id": "HDTD002222", "cif": "5678901234", "name": "Hoàng Quốc Việt", "type": "Vay tiêu dùng",
-                  "amount": 350000000, "overdue": 120000000, "dpd": 67, "riskLevel": 3, "riskStr": "Cao", "priority": "Cao",
-                  "status": "Tạm dừng", "assignee": "Trần Tuấn", "phone": "0933 444 555", "email": "viethq@yahoo.com",
-                  "address": "Đà Nẵng", "dob": "11/11/1988", "job": "Trưởng phòng Sales",
-                  "segment": "Khách hàng cá nhân", "company": "Tập đoàn V", "avatar": "HV", "isCorp": false,
-                  "nbaTitle": "Tạo áp lực danh tiếng",
-                  "nbaDesc": "Khách hàng chức vụ cao, cố tình chây ì. Đề xuất luồng Field Collection.",
+                  "id": "HDTD002222", "cif": "5678901234", "name": "Nguyễn Thành Nam", "type": "Vay tiêu dùng",
+                  "amount": 350000000, "overdue": 120000000, "dpd": 120, "riskLevel": 3, "riskStr": "Cao", "priority": "Cao",
+                  "status": "Đang xử lý", "assignee": "Trần Tuấn", "phone": "0933 444 555", "email": "nam.nt@yahoo.com",
+                  "address": "Đà Nẵng", "dob": "11/11/1988", "job": "Kinh doanh tự do",
+                  "segment": "Khách hàng cá nhân", "company": "N/A", "avatar": "NN", "isCorp": false,
+                  "nbaTitle": "Áp lực Danh tiếng Người liên quan",
+                  "nbaDesc": "Hệ thống phát hiện Vợ KH làm Phó Giám đốc Sở tại Cơ quan Nhà nước. Điểm nhạy cảm uy tín: 90/100.\n👉 Đề xuất: Cử xe Ngân hàng & Cán bộ mặc đồng phục đến nhà thu nợ để tạo áp lực lịch sự.",
                   "persona": { "pay": 80, "collab": 20, "contact": 40, "break": 90, "priority": 100, "digital": 80 },
                   "ews": [],
                   "loans": [
-                    { "id": "HDTD002222", "type": "Vay tín chấp", "balance": 350000000, "interest": 45000000, "overdue": 120000000, "dpd": 67, "status": "Quá hạn" }
+                    { "id": "HDTD002222", "type": "Vay tín chấp", "balance": 350000000, "interest": 45000000, "overdue": 120000000, "dpd": 120, "status": "Quá hạn" }
                   ],
-                  "collaterals": []
+                  "collaterals": [],
+                  "relatedParties": [
+                    { "type": "Vợ", "name": "Lê Thị Ngọc", "job": "Phó Giám đốc", "compType": "Cơ quan Nhà nước", "score": 90 }
+                  ]
                 }
               ],
               "interactions": [
-                { "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-10T18:24:00Z", "notes": "[Có cam kết] Khách hàng xác nhận sẽ thanh toán 5.000.000đ vào ngày 15/09. Đang gặp khó khăn tài chính tạm thời do chi phí học tập của con.", "user": "Vũ Hoàng" },
-                { "id": 2, "caseId": "HDTD001234", "type": "Gửi SMS / Zalo", "date": "2026-09-08T14:15:00Z", "notes": "[Thành công] Nhắc nợ, đề nghị thanh toán. Kết quả: Đã gửi", "user": "Hệ thống" },
-                { "id": 3, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-05T16:30:00Z", "notes": "[Không liên lạc được] Không nghe máy", "user": "Trần Lan" },
-                { "id": 4, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "date": "2026-09-02T10:12:00Z", "notes": "[N/A] Khách hàng đang công tác, hẹn tuần sau.", "user": "Vũ Hoàng" },
-                { "id": 5, "caseId": "HDTD005678", "type": "Gặp trực tiếp / Hiện trường", "date": "2026-09-09T14:00:00Z", "notes": "[Thành công] Đã gặp trực tiếp khách hàng tại nhà. Khách cam kết cuối tuần thanh toán.", "user": "Lê Thu Hà" },
-                { "id": 6, "caseId": "HDTD002222", "type": "Trinh sát / Thu thập thông tin", "date": "2026-09-01T10:00:00Z", "notes": "[Có thông tin giá trị] Phát hiện vợ làm Phó Giám Đốc Sở, rất sợ ảnh hưởng uy tín.", "user": "Trần Tuấn" },
-                { "id": 7, "caseId": "HDTD002222", "type": "Cuộc gọi đi", "date": "2026-09-05T15:00:00Z", "notes": "[Bất hợp tác] Khách hàng lớn tiếng, đe dọa báo công an nếu tiếp tục gọi.", "user": "Trần Tuấn" }
+                { "id": 1, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "duration": "8 phút 12 giây", "date": "2026-09-10T18:24:00Z", "notes": "Khách hàng xác nhận sẽ thanh toán 5.000.000đ vào ngày 15/09. Đang gặp khó khăn tài chính tạm thời do chi phí học tập của con.", "result": "Có cam kết", "user": "Vũ Hoàng" },
+                { "id": 2, "caseId": "HDTD001234", "type": "SMS", "duration": "", "date": "2026-09-08T14:15:00Z", "notes": "Nhắc nợ, đề nghị thanh toán. Kết quả: Đã gửi", "result": "Thành công", "user": "Hệ thống" },
+                { "id": 3, "caseId": "HDTD001234", "type": "Cuộc gọi đi", "duration": "0 phút 0 giây", "date": "2026-09-05T16:30:00Z", "notes": "Không nghe máy", "result": "Không liên lạc được", "user": "Trần Lan" },
+                { "id": 4, "caseId": "HDTD001234", "type": "Ghi chú", "duration": "", "date": "2026-09-02T10:12:00Z", "notes": "Khách hàng đang công tác, hẹn tuần sau.", "result": "N/A", "user": "Vũ Hoàng" },
+                { "id": 5, "caseId": "HDTD002222", "type": "Trinh sát / Thu thập thông tin", "duration": "", "date": "2026-09-01T10:00:00Z", "notes": "[✅ Có thông tin giá trị] Phát hiện vợ làm Phó Giám Đốc Sở, rất sợ ảnh hưởng uy tín.", "result": "Thành công", "user": "Trần Tuấn" }
               ],
               "ptps": [
                 { "id": 1, "caseId": "HDTD001234", "amount": 5000000, "date": "2026-09-15T00:00:00Z", "status": "Đến hạn" },
